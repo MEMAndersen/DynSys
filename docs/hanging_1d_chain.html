@@ -1,0 +1,2806 @@
+<!doctype html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+
+    <title>hanging_1d_chain API documentation</title>
+    <meta name="description" content="Class definition and test functions for hanging1DChain, a class used to define
+a chain hanging verti..." />
+
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
+  
+  <style type="text/css">
+  
+* {
+  box-sizing: border-box;
+}
+/*! normalize.css v1.1.1 | MIT License | git.io/normalize */
+
+/* ==========================================================================
+   HTML5 display definitions
+   ========================================================================== */
+
+/**
+ * Correct `block` display not defined in IE 6/7/8/9 and Firefox 3.
+ */
+
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+nav,
+section,
+summary {
+    display: block;
+}
+
+/**
+ * Correct `inline-block` display not defined in IE 6/7/8/9 and Firefox 3.
+ */
+
+audio,
+canvas,
+video {
+    display: inline-block;
+    *display: inline;
+    *zoom: 1;
+}
+
+/**
+ * Prevent modern browsers from displaying `audio` without controls.
+ * Remove excess height in iOS 5 devices.
+ */
+
+audio:not([controls]) {
+    display: none;
+    height: 0;
+}
+
+/**
+ * Address styling not present in IE 7/8/9, Firefox 3, and Safari 4.
+ * Known issue: no IE 6 support.
+ */
+
+[hidden] {
+    display: none;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+/**
+ * 1. Prevent system color scheme's background color being used in Firefox, IE,
+ *    and Opera.
+ * 2. Prevent system color scheme's text color being used in Firefox, IE, and
+ *    Opera.
+ * 3. Correct text resizing oddly in IE 6/7 when body `font-size` is set using
+ *    `em` units.
+ * 4. Prevent iOS text size adjust after orientation change, without disabling
+ *    user zoom.
+ */
+
+html {
+    background: #fff; /* 1 */
+    color: #000; /* 2 */
+    font-size: 100%; /* 3 */
+    -webkit-text-size-adjust: 100%; /* 4 */
+    -ms-text-size-adjust: 100%; /* 4 */
+}
+
+/**
+ * Address `font-family` inconsistency between `textarea` and other form
+ * elements.
+ */
+
+html,
+button,
+input,
+select,
+textarea {
+    font-family: sans-serif;
+}
+
+/**
+ * Address margins handled incorrectly in IE 6/7.
+ */
+
+body {
+    margin: 0;
+}
+
+/* ==========================================================================
+   Links
+   ========================================================================== */
+
+/**
+ * Address `outline` inconsistency between Chrome and other browsers.
+ */
+
+a:focus {
+    outline: thin dotted;
+}
+
+/**
+ * Improve readability when focused and also mouse hovered in all browsers.
+ */
+
+a:active,
+a:hover {
+    outline: 0;
+}
+
+/* ==========================================================================
+   Typography
+   ========================================================================== */
+
+/**
+ * Address font sizes and margins set differently in IE 6/7.
+ * Address font sizes within `section` and `article` in Firefox 4+, Safari 5,
+ * and Chrome.
+ */
+
+h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+}
+
+h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+}
+
+h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+}
+
+h4 {
+    font-size: 1em;
+    margin: 1.33em 0;
+}
+
+h5 {
+    font-size: 0.83em;
+    margin: 1.67em 0;
+}
+
+h6 {
+    font-size: 0.67em;
+    margin: 2.33em 0;
+}
+
+/**
+ * Address styling not present in IE 7/8/9, Safari 5, and Chrome.
+ */
+
+abbr[title] {
+    border-bottom: 1px dotted;
+}
+
+/**
+ * Address style set to `bolder` in Firefox 3+, Safari 4/5, and Chrome.
+ */
+
+b,
+strong {
+    font-weight: bold;
+}
+
+blockquote {
+    margin: 1em 40px;
+}
+
+/**
+ * Address styling not present in Safari 5 and Chrome.
+ */
+
+dfn {
+    font-style: italic;
+}
+
+/**
+ * Address differences between Firefox and other browsers.
+ * Known issue: no IE 6/7 normalization.
+ */
+
+hr {
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+    height: 0;
+}
+
+/**
+ * Address styling not present in IE 6/7/8/9.
+ */
+
+mark {
+    background: #ff0;
+    color: #000;
+}
+
+/**
+ * Address margins set differently in IE 6/7.
+ */
+
+p,
+pre {
+    margin: 1em 0;
+}
+
+/**
+ * Correct font family set oddly in IE 6, Safari 4/5, and Chrome.
+ */
+
+code,
+kbd,
+pre,
+samp {
+    font-family: monospace, serif;
+    _font-family: 'courier new', monospace;
+    font-size: 1em;
+}
+
+/**
+ * Improve readability of pre-formatted text in all browsers.
+ */
+
+pre {
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/**
+ * Address CSS quotes not supported in IE 6/7.
+ */
+
+q {
+    quotes: none;
+}
+
+/**
+ * Address `quotes` property not supported in Safari 4.
+ */
+
+q:before,
+q:after {
+    content: '';
+    content: none;
+}
+
+/**
+ * Address inconsistent and variable font size in all browsers.
+ */
+
+small {
+    font-size: 80%;
+}
+
+/**
+ * Prevent `sub` and `sup` affecting `line-height` in all browsers.
+ */
+
+sub,
+sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+
+sup {
+    top: -0.5em;
+}
+
+sub {
+    bottom: -0.25em;
+}
+
+/* ==========================================================================
+   Lists
+   ========================================================================== */
+
+/**
+ * Address margins set differently in IE 6/7.
+ */
+
+dl,
+menu,
+ol,
+ul {
+    margin: 1em 0;
+}
+
+dd {
+    margin: 0 0 0 40px;
+}
+
+/**
+ * Address paddings set differently in IE 6/7.
+ */
+
+menu,
+ol,
+ul {
+    padding: 0 0 0 40px;
+}
+
+/**
+ * Correct list images handled incorrectly in IE 7.
+ */
+
+nav ul,
+nav ol {
+    list-style: none;
+    list-style-image: none;
+}
+
+/* ==========================================================================
+   Embedded content
+   ========================================================================== */
+
+/**
+ * 1. Remove border when inside `a` element in IE 6/7/8/9 and Firefox 3.
+ * 2. Improve image quality when scaled in IE 7.
+ */
+
+img {
+    border: 0; /* 1 */
+    -ms-interpolation-mode: bicubic; /* 2 */
+}
+
+/**
+ * Correct overflow displayed oddly in IE 9.
+ */
+
+svg:not(:root) {
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Figures
+   ========================================================================== */
+
+/**
+ * Address margin not present in IE 6/7/8/9, Safari 5, and Opera 11.
+ */
+
+figure {
+    margin: 0;
+}
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+
+/**
+ * Correct margin displayed oddly in IE 6/7.
+ */
+
+form {
+    margin: 0;
+}
+
+/**
+ * Define consistent border, margin, and padding.
+ */
+
+fieldset {
+    border: 1px solid #c0c0c0;
+    margin: 0 2px;
+    padding: 0.35em 0.625em 0.75em;
+}
+
+/**
+ * 1. Correct color not being inherited in IE 6/7/8/9.
+ * 2. Correct text not wrapping in Firefox 3.
+ * 3. Correct alignment displayed oddly in IE 6/7.
+ */
+
+legend {
+    border: 0; /* 1 */
+    padding: 0;
+    white-space: normal; /* 2 */
+    *margin-left: -7px; /* 3 */
+}
+
+/**
+ * 1. Correct font size not being inherited in all browsers.
+ * 2. Address margins set differently in IE 6/7, Firefox 3+, Safari 5,
+ *    and Chrome.
+ * 3. Improve appearance and consistency in all browsers.
+ */
+
+button,
+input,
+select,
+textarea {
+    font-size: 100%; /* 1 */
+    margin: 0; /* 2 */
+    vertical-align: baseline; /* 3 */
+    *vertical-align: middle; /* 3 */
+}
+
+/**
+ * Address Firefox 3+ setting `line-height` on `input` using `!important` in
+ * the UA stylesheet.
+ */
+
+button,
+input {
+    line-height: normal;
+}
+
+/**
+ * Address inconsistent `text-transform` inheritance for `button` and `select`.
+ * All other form control elements do not inherit `text-transform` values.
+ * Correct `button` style inheritance in Chrome, Safari 5+, and IE 6+.
+ * Correct `select` style inheritance in Firefox 4+ and Opera.
+ */
+
+button,
+select {
+    text-transform: none;
+}
+
+/**
+ * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`
+ *    and `video` controls.
+ * 2. Correct inability to style clickable `input` types in iOS.
+ * 3. Improve usability and consistency of cursor style between image-type
+ *    `input` and others.
+ * 4. Remove inner spacing in IE 7 without affecting normal text inputs.
+ *    Known issue: inner spacing remains in IE 6.
+ */
+
+button,
+html input[type="button"], /* 1 */
+input[type="reset"],
+input[type="submit"] {
+    -webkit-appearance: button; /* 2 */
+    cursor: pointer; /* 3 */
+    *overflow: visible;  /* 4 */
+}
+
+/**
+ * Re-set default cursor for disabled elements.
+ */
+
+button[disabled],
+html input[disabled] {
+    cursor: default;
+}
+
+/**
+ * 1. Address box sizing set to content-box in IE 8/9.
+ * 2. Remove excess padding in IE 8/9.
+ * 3. Remove excess padding in IE 7.
+ *    Known issue: excess padding remains in IE 6.
+ */
+
+input[type="checkbox"],
+input[type="radio"] {
+    box-sizing: border-box; /* 1 */
+    padding: 0; /* 2 */
+    *height: 13px; /* 3 */
+    *width: 13px; /* 3 */
+}
+
+/**
+ * 1. Address `appearance` set to `searchfield` in Safari 5 and Chrome.
+ * 2. Address `box-sizing` set to `border-box` in Safari 5 and Chrome
+ *    (include `-moz` to future-proof).
+ */
+
+input[type="search"] {
+    -webkit-appearance: textfield; /* 1 */
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box; /* 2 */
+    box-sizing: content-box;
+}
+
+/**
+ * Remove inner padding and search cancel button in Safari 5 and Chrome
+ * on OS X.
+ */
+
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+}
+
+/**
+ * Remove inner padding and border in Firefox 3+.
+ */
+
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+}
+
+/**
+ * 1. Remove default vertical scrollbar in IE 6/7/8/9.
+ * 2. Improve readability and alignment in all browsers.
+ */
+
+textarea {
+    overflow: auto; /* 1 */
+    vertical-align: top; /* 2 */
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+/**
+ * Remove most spacing between table cells.
+ */
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+  </style>
+
+  <style type="text/css">
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+  body {
+    background: #fff;
+    font-family: "Source Sans Pro", "Helvetica Neueue", Helvetica, sans;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.6em;
+  }
+  #content {
+    width: 70%;
+    max-width: 850px;
+    float: left;
+    padding: 30px 60px;
+    border-left: 1px solid #ddd;
+  }
+  #sidebar {
+    width: 25%;
+    float: left;
+    padding: 30px;
+    overflow: hidden;
+  }
+  #nav {
+    font-size: 130%;
+    margin: 0 0 15px 0;
+  }
+
+  #top {
+    display: block;
+    position: fixed;
+    bottom: 5px;
+    left: 5px;
+    font-size: .85em;
+    text-transform: uppercase;
+  }
+
+  #footer {
+    font-size: .75em;
+    padding: 5px 30px;
+    border-top: 1px solid #ddd;
+    text-align: right;
+  }
+    #footer p {
+      margin: 0 0 0 30px;
+      display: inline-block;
+    }
+
+  h1, h2, h3, h4, h5 {
+    font-weight: 300;
+  }
+  h1 {
+    font-size: 2.5em;
+    line-height: 1.1em;
+    margin: 0 0 .50em 0;
+  }
+
+  h2 {
+    font-size: 1.75em;
+    margin: 1em 0 .50em 0;
+  }
+
+  h3 {
+    margin: 25px 0 10px 0;
+  }
+
+  h4 {
+    margin: 0;
+    font-size: 105%;
+  }
+
+  a {
+    color: #058;
+    text-decoration: none;
+    transition: color .3s ease-in-out;
+  }
+
+  a:hover {
+    color: #e08524;
+    transition: color .3s ease-in-out;
+  }
+
+  pre, code, .mono, .name {
+    font-family: "Ubuntu Mono", "Cousine", "DejaVu Sans Mono", monospace;
+  }
+
+  .title .name {
+    font-weight: bold;
+  }
+  .section-title {
+    margin-top: 2em;
+  }
+  .ident {
+    color: #900;
+  }
+
+  code {
+    background: #f9f9f9;
+  } 
+
+  pre {
+    background: #fefefe;
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 0 #f3f3f3;
+    margin: 0 30px;
+    padding: 15px 30px;
+  }
+
+  .codehilite {
+    margin: 0 30px 10px 30px;
+  }
+
+    .codehilite pre {
+      margin: 0;
+    }
+    .codehilite .err { background: #ff3300; color: #fff !important; } 
+
+  table#module-list {
+    font-size: 110%;
+  }
+
+    table#module-list tr td:first-child {
+      padding-right: 10px;
+      white-space: nowrap;
+    }
+
+    table#module-list td {
+      vertical-align: top;
+      padding-bottom: 8px;
+    }
+
+      table#module-list td p {
+        margin: 0 0 7px 0;
+      }
+
+  .def {
+    display: table;
+  }
+
+    .def p {
+      display: table-cell;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .def p:first-child {
+      white-space: nowrap;
+    }
+
+    .def p:last-child {
+      width: 100%;
+    }
+
+
+  #index {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+    ul#index .class_name {
+      /* font-size: 110%; */
+      font-weight: bold;
+    }
+    #index ul {
+      margin: 0;
+    }
+
+  .item {
+    margin: 0 0 15px 0;
+  }
+
+    .item .class {
+      margin: 0 0 25px 30px;
+    }
+
+      .item .class ul.class_list {
+        margin: 0 0 20px 0;
+      }
+
+    .item .name {
+      background: #fafafa;
+      margin: 0;
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 3px;
+      display: inline-block;
+      min-width: 40%;
+    }
+      .item .name:hover {
+        background: #f6f6f6;
+      }
+
+    .item .empty_desc {
+      margin: 0 0 5px 0;
+      padding: 0;
+    }
+
+    .item .inheritance {
+      margin: 3px 0 0 30px;
+    }
+
+    .item .inherited {
+      color: #666;
+    }
+
+    .item .desc {
+      padding: 0 8px;
+      margin: 0;
+    }
+
+      .item .desc p {
+        margin: 0 0 10px 0;
+      }
+
+    .source_cont {
+      margin: 0;
+      padding: 0;
+    }
+
+    .source_link a {
+      background: #ffc300;
+      font-weight: 400;
+      font-size: .75em;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 1px 1px 0 #f4b700;
+      
+      padding: 3px 8px;
+      border-radius: 2px;
+      transition: background .3s ease-in-out;
+    }
+      .source_link a:hover {
+        background: #FF7200;
+        text-shadow: none;
+        transition: background .3s ease-in-out;
+      }
+
+    .source {
+      display: none;
+      max-height: 600px;
+      overflow-y: scroll;
+      margin-bottom: 15px;
+    }
+
+      .source .codehilite {
+        margin: 0;
+      }
+
+  .desc h1, .desc h2, .desc h3 {
+    font-size: 100% !important;
+  }
+  .clear {
+    clear: both;
+  }
+
+  @media all and (max-width: 950px) {
+    #sidebar {
+      width: 35%;
+    }
+    #content {
+      width: 65%;
+    }
+  }
+  @media all and (max-width: 650px) {
+    #top {
+      display: none;
+    }
+    #sidebar {
+      float: none;
+      width: auto;
+    }
+    #content {
+      float: none;
+      width: auto;
+      padding: 30px;
+    }
+
+    #index ul {
+      padding: 0;
+      margin-bottom: 15px;
+    }
+    #index ul li {
+      display: inline-block;
+      margin-right: 30px;
+    }
+    #footer {
+      text-align: left;
+    }
+    #footer p {
+      display: block;
+      margin: inherit;
+    }
+  }
+
+  /*****************************/
+
+  </style>
+
+  <style type="text/css">
+  .codehilite .hll { background-color: #ffffcc }
+.codehilite  { background: #f8f8f8; }
+.codehilite .c { color: #408080; font-style: italic } /* Comment */
+.codehilite .err { border: 1px solid #FF0000 } /* Error */
+.codehilite .k { color: #008000; font-weight: bold } /* Keyword */
+.codehilite .o { color: #666666 } /* Operator */
+.codehilite .ch { color: #408080; font-style: italic } /* Comment.Hashbang */
+.codehilite .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.codehilite .cp { color: #BC7A00 } /* Comment.Preproc */
+.codehilite .cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
+.codehilite .c1 { color: #408080; font-style: italic } /* Comment.Single */
+.codehilite .cs { color: #408080; font-style: italic } /* Comment.Special */
+.codehilite .gd { color: #A00000 } /* Generic.Deleted */
+.codehilite .ge { font-style: italic } /* Generic.Emph */
+.codehilite .gr { color: #FF0000 } /* Generic.Error */
+.codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.codehilite .gi { color: #00A000 } /* Generic.Inserted */
+.codehilite .go { color: #888888 } /* Generic.Output */
+.codehilite .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.codehilite .gs { font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.codehilite .gt { color: #0044DD } /* Generic.Traceback */
+.codehilite .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.codehilite .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.codehilite .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.codehilite .kp { color: #008000 } /* Keyword.Pseudo */
+.codehilite .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.codehilite .kt { color: #B00040 } /* Keyword.Type */
+.codehilite .m { color: #666666 } /* Literal.Number */
+.codehilite .s { color: #BA2121 } /* Literal.String */
+.codehilite .na { color: #7D9029 } /* Name.Attribute */
+.codehilite .nb { color: #008000 } /* Name.Builtin */
+.codehilite .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.codehilite .no { color: #880000 } /* Name.Constant */
+.codehilite .nd { color: #AA22FF } /* Name.Decorator */
+.codehilite .ni { color: #999999; font-weight: bold } /* Name.Entity */
+.codehilite .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+.codehilite .nf { color: #0000FF } /* Name.Function */
+.codehilite .nl { color: #A0A000 } /* Name.Label */
+.codehilite .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+.codehilite .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.codehilite .nv { color: #19177C } /* Name.Variable */
+.codehilite .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+.codehilite .w { color: #bbbbbb } /* Text.Whitespace */
+.codehilite .mb { color: #666666 } /* Literal.Number.Bin */
+.codehilite .mf { color: #666666 } /* Literal.Number.Float */
+.codehilite .mh { color: #666666 } /* Literal.Number.Hex */
+.codehilite .mi { color: #666666 } /* Literal.Number.Integer */
+.codehilite .mo { color: #666666 } /* Literal.Number.Oct */
+.codehilite .sa { color: #BA2121 } /* Literal.String.Affix */
+.codehilite .sb { color: #BA2121 } /* Literal.String.Backtick */
+.codehilite .sc { color: #BA2121 } /* Literal.String.Char */
+.codehilite .dl { color: #BA2121 } /* Literal.String.Delimiter */
+.codehilite .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.codehilite .s2 { color: #BA2121 } /* Literal.String.Double */
+.codehilite .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+.codehilite .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.codehilite .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+.codehilite .sx { color: #008000 } /* Literal.String.Other */
+.codehilite .sr { color: #BB6688 } /* Literal.String.Regex */
+.codehilite .s1 { color: #BA2121 } /* Literal.String.Single */
+.codehilite .ss { color: #19177C } /* Literal.String.Symbol */
+.codehilite .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #0000FF } /* Name.Function.Magic */
+.codehilite .vc { color: #19177C } /* Name.Variable.Class */
+.codehilite .vg { color: #19177C } /* Name.Variable.Global */
+.codehilite .vi { color: #19177C } /* Name.Variable.Instance */
+.codehilite .vm { color: #19177C } /* Name.Variable.Magic */
+.codehilite .il { color: #666666 } /* Literal.Number.Integer.Long */
+  </style>
+
+  <style type="text/css">
+  
+/* ==========================================================================
+   EXAMPLE Media Queries for Responsive Design.
+   These examples override the primary ('mobile first') styles.
+   Modify as content requires.
+   ========================================================================== */
+
+@media only screen and (min-width: 35em) {
+    /* Style adjustments for viewports that meet the condition */
+}
+
+@media print,
+       (-o-min-device-pixel-ratio: 5/4),
+       (-webkit-min-device-pixel-ratio: 1.25),
+       (min-resolution: 120dpi) {
+    /* Style adjustments for high resolution devices */
+}
+
+/* ==========================================================================
+   Print styles.
+   Inlined to avoid required HTTP connection: h5bp.com/r
+   ========================================================================== */
+
+@media print {
+    * {
+        background: transparent !important;
+        color: #000 !important; /* Black prints faster: h5bp.com/s */
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    a,
+    a:visited {
+        text-decoration: underline;
+    }
+
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+
+    abbr[title]:after {
+        content: " (" attr(title) ")";
+    }
+
+    /*
+     * Don't show links for images, or javascript/internal links
+     */
+
+    .ir a:after,
+    a[href^="javascript:"]:after,
+    a[href^="#"]:after {
+        content: "";
+    }
+
+    pre,
+    blockquote {
+        border: 1px solid #999;
+        page-break-inside: avoid;
+    }
+
+    thead {
+        display: table-header-group; /* h5bp.com/t */
+    }
+
+    tr,
+    img {
+        page-break-inside: avoid;
+    }
+
+    img {
+        max-width: 100% !important;
+    }
+
+    @page {
+        margin: 0.5cm;
+    }
+
+    p,
+    h2,
+    h3 {
+        orphans: 3;
+        widows: 3;
+    }
+
+    h2,
+    h3 {
+        page-break-after: avoid;
+    }
+}
+
+  </style>
+
+  <script type="text/javascript">
+  function toggle(id, $link) {
+    $node = document.getElementById(id);
+    if (!$node)
+    return;
+    if (!$node.style.display || $node.style.display == 'none') {
+    $node.style.display = 'block';
+    $link.innerHTML = 'Hide source &nequiv;';
+    } else {
+    $node.style.display = 'none';
+    $link.innerHTML = 'Show source &equiv;';
+    }
+  }
+  </script>
+  
+  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+  
+</head>
+<body>
+<a href="#" id="top">Top</a>
+
+<div id="container">
+    
+  
+  <div id="sidebar">
+    <h1>Index</h1>
+    <ul id="index">
+    <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
+      
+  <ul>
+    <li class="mono"><a href="#hanging_1d_chain.currentVersion">currentVersion</a></li>
+  </ul>
+
+    </li>
+
+
+    <li class="set"><h3><a href="#header-classes">Classes</a></h3>
+      <ul>
+        <li class="mono">
+        <span class="class_name"><a href="#hanging_1d_chain.hanging1DChain">hanging1DChain</a></span>
+        
+          
+  <ul>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.__init__">__init__</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.AddConstraintEqns">AddConstraintEqns</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.AddOutputMtrx">AddOutputMtrx</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.AppendSystem">AppendSystem</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CalcEigenproperties">CalcEigenproperties</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CalcFreqResponse">CalcFreqResponse</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CalcLoadMatrix">CalcLoadMatrix</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CalcStateMatrix">CalcStateMatrix</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckConstraints">CheckConstraints</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckDOF">CheckDOF</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckOutputMtrx">CheckOutputMtrx</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.EqnOfMotion">EqnOfMotion</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetRealWorldDOFs">GetRealWorldDOFs</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetSystemMatrices">GetSystemMatrices</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystem">PlotSystem</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystems_all">PlotSystems_all</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PrintSystemMatrices">PrintSystemMatrices</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.freqVals">freqVals</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.hasConstraints">hasConstraints</a></li>
+  </ul>
+
+        </li>
+      </ul>
+    </li>
+
+    </ul>
+  </div>
+
+    <article id="content">
+      
+  
+
+  
+
+
+  <header id="section-intro">
+  <h1 class="title"><span class="name">hanging_1d_chain</span> module</h1>
+  <p>Class definition and test functions for hanging1DChain, a class used to define
+a chain hanging vertically under self-weight</p>
+  
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain" class="source">
+    <div class="codehilite"><pre><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class definition and test functions for hanging1DChain, a class used to define</span>
+<span class="sd">a chain hanging vertically under self-weight</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__init__</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">currentVersion</span>
+
+<span class="c1"># Std library imports</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">npy</span>
+
+<span class="c1"># Other imports</span>
+<span class="kn">import</span> <span class="nn">dynsys</span>
+
+
+<span class="k">class</span> <span class="nc">hanging1DChain</span><span class="p">(</span><span class="n">dynsys</span><span class="o">.</span><span class="n">DynSys</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Chain hanging vertically under self-weight</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    DOFs are transverse displacements of lumped masses.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    *Note*: Model is linearised; small rotations and displacements assumed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">nDOF</span><span class="p">,</span><span class="n">mass_per_length</span><span class="p">,</span><span class="n">length</span><span class="p">,</span><span class="n">modal_eta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">g</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">constrainFixedEnd</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation function</span>
+<span class="sd">        ***</span>
+<span class="sd">        </span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `mass_per_length`, mass per unit length (kg/m)</span>
+<span class="sd">        </span>
+<span class="sd">        * `length`, length of chain (m)</span>
+<span class="sd">        </span>
+<span class="sd">        * `nDOF`, number of lumped masses to be used to define subdivide chain</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        `nDOF=0` denotes the top of the chain. By default `nDOF=0` is </span>
+<span class="sd">        constrained to not displace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>    
+        
+        <span class="c1"># Define mass matrix</span>
+        <span class="n">M_vals</span> <span class="o">=</span> <span class="n">mass_per_length</span><span class="o">*</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,))</span>
+        <span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>               <span class="c1"># halve first mass to account for half-length</span>
+        <span class="n">M_vals</span><span class="p">[</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>     <span class="c1"># halve last mass to account for half-length</span>
+        <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
+        
+        <span class="c1"># Derive tensions in links between masses</span>
+        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    
+            <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">g</span>
+            
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1">#print(T_vals)</span>
+        
+        <span class="c1"># Define length of chain segments between masses</span>
+        <span class="n">L_vals</span> <span class="o">=</span> <span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+        
+        <span class="c1"># Define stiffness matrix</span>
+        <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="p">):</span>
+            
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>        
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=-</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">+=-</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="c1"># Define modal damping ratios and hence C matrix</span>
+        <span class="k">if</span> <span class="n">modal_eta</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;C_mtrx for non-zero modal_eta not yet implemented!&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Write details into object using parent init function</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">,</span><span class="n">C_mtrx</span><span class="p">,</span><span class="n">K_mtrx</span><span class="p">,</span><span class="n">isLinear</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="c1"># Define constraint equation to restrain node 0</span>
+        <span class="c1"># Which would be normal for chain where pivot point is fixed in space</span>
+        <span class="k">if</span> <span class="n">constrainFixedEnd</span><span class="p">:</span>
+            <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
+            <span class="n">Jrow</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jrow</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        
+        
+<span class="c1"># ********************** TEST ROUTINES ****************************************</span>
+<span class="c1"># (Only execute when running as a script / top level)</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    
+    <span class="n">dynSys1</span> <span class="o">=</span> <span class="n">hanging1DChain</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">PrintSystemMatrices</span><span class="p">()</span>
+</pre></div>
+
+  </div>
+
+  </header>
+
+  <section id="section-items">
+    <h2 class="section-title" id="header-variables">Module variables</h2>
+      <div class="item">
+      <p id="hanging_1d_chain.currentVersion" class="name">var <span class="ident">currentVersion</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
+
+
+    <h2 class="section-title" id="header-classes">Classes</h2>
+      
+      <div class="item">
+      <p id="hanging_1d_chain.hanging1DChain" class="name">class <span class="ident">hanging1DChain</span></p>
+      
+  
+    <div class="desc"><p>Chain hanging vertically under self-weight</p>
+<hr />
+<p>DOFs are transverse displacements of lumped masses.</p>
+<p><em>Note</em>: Model is linearised; small rotations and displacements assumed</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">hanging1DChain</span><span class="p">(</span><span class="n">dynsys</span><span class="o">.</span><span class="n">DynSys</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Chain hanging vertically under self-weight</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    DOFs are transverse displacements of lumped masses.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    *Note*: Model is linearised; small rotations and displacements assumed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">nDOF</span><span class="p">,</span><span class="n">mass_per_length</span><span class="p">,</span><span class="n">length</span><span class="p">,</span><span class="n">modal_eta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">g</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">constrainFixedEnd</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation function</span>
+<span class="sd">        ***</span>
+<span class="sd">        </span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `mass_per_length`, mass per unit length (kg/m)</span>
+<span class="sd">        </span>
+<span class="sd">        * `length`, length of chain (m)</span>
+<span class="sd">        </span>
+<span class="sd">        * `nDOF`, number of lumped masses to be used to define subdivide chain</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        `nDOF=0` denotes the top of the chain. By default `nDOF=0` is </span>
+<span class="sd">        constrained to not displace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>    
+        
+        <span class="c1"># Define mass matrix</span>
+        <span class="n">M_vals</span> <span class="o">=</span> <span class="n">mass_per_length</span><span class="o">*</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,))</span>
+        <span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>               <span class="c1"># halve first mass to account for half-length</span>
+        <span class="n">M_vals</span><span class="p">[</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>     <span class="c1"># halve last mass to account for half-length</span>
+        <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
+        
+        <span class="c1"># Derive tensions in links between masses</span>
+        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    
+            <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">g</span>
+            
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1">#print(T_vals)</span>
+        
+        <span class="c1"># Define length of chain segments between masses</span>
+        <span class="n">L_vals</span> <span class="o">=</span> <span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+        
+        <span class="c1"># Define stiffness matrix</span>
+        <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="p">):</span>
+            
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>        
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=-</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+            <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">+=-</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="c1"># Define modal damping ratios and hence C matrix</span>
+        <span class="k">if</span> <span class="n">modal_eta</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;C_mtrx for non-zero modal_eta not yet implemented!&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Write details into object using parent init function</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">,</span><span class="n">C_mtrx</span><span class="p">,</span><span class="n">K_mtrx</span><span class="p">,</span><span class="n">isLinear</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="c1"># Define constraint equation to restrain node 0</span>
+        <span class="c1"># Which would be normal for chain where pivot point is fixed in space</span>
+        <span class="k">if</span> <span class="n">constrainFixedEnd</span><span class="p">:</span>
+            <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
+            <span class="n">Jrow</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jrow</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+
+      <div class="class">
+          <h3>Ancestors (in MRO)</h3>
+          <ul class="class_list">
+          <li><a href="#hanging_1d_chain.hanging1DChain">hanging1DChain</a></li>
+          <li>dynsys.DynSys</li>
+          <li>builtins.object</li>
+          </ul>
+          <h3>Class variables</h3>
+            <div class="item">
+            <p id="hanging_1d_chain.hanging1DChain.description" class="name">var <span class="ident">description</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+          <h3>Static methods</h3>
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.__init__">
+    <p>def <span class="ident">__init__</span>(</p><p>self, nDOF, mass_per_length, length, modal_eta=0, g=10, constrainFixedEnd=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Initialisation function</p>
+<hr />
+<p>Required:</p>
+<ul>
+<li>
+<p><code>mass_per_length</code>, mass per unit length (kg/m)</p>
+</li>
+<li>
+<p><code>length</code>, length of chain (m)</p>
+</li>
+<li>
+<p><code>nDOF</code>, number of lumped masses to be used to define subdivide chain</p>
+</li>
+</ul>
+<p><code>nDOF=0</code> denotes the top of the chain. By default <code>nDOF=0</code> is 
+constrained to not displace.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.__init__" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">nDOF</span><span class="p">,</span><span class="n">mass_per_length</span><span class="p">,</span><span class="n">length</span><span class="p">,</span><span class="n">modal_eta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">g</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">constrainFixedEnd</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialisation function</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Required:</span>
+<span class="sd">        </span>
+<span class="sd">    * `mass_per_length`, mass per unit length (kg/m)</span>
+<span class="sd">    </span>
+<span class="sd">    * `length`, length of chain (m)</span>
+<span class="sd">    </span>
+<span class="sd">    * `nDOF`, number of lumped masses to be used to define subdivide chain</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    `nDOF=0` denotes the top of the chain. By default `nDOF=0` is </span>
+<span class="sd">    constrained to not displace.</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    
+    <span class="c1"># Define mass matrix</span>
+    <span class="n">M_vals</span> <span class="o">=</span> <span class="n">mass_per_length</span><span class="o">*</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,))</span>
+    <span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>               <span class="c1"># halve first mass to account for half-length</span>
+    <span class="n">M_vals</span><span class="p">[</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>     <span class="c1"># halve last mass to account for half-length</span>
+    <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
+    
+    <span class="c1"># Derive tensions in links between masses</span>
+    <span class="n">T_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+
+        <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">g</span>
+        
+        <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1">#print(T_vals)</span>
+    
+    <span class="c1"># Define length of chain segments between masses</span>
+    <span class="n">L_vals</span> <span class="o">=</span> <span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+    
+    <span class="c1"># Define stiffness matrix</span>
+    <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>        
+            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=-</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">+=-</span><span class="n">T_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">L_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    
+    <span class="c1"># Define modal damping ratios and hence C matrix</span>
+    <span class="k">if</span> <span class="n">modal_eta</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;C_mtrx for non-zero modal_eta not yet implemented!&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Write details into object using parent init function</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">,</span><span class="n">C_mtrx</span><span class="p">,</span><span class="n">K_mtrx</span><span class="p">,</span><span class="n">isLinear</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c1"># Define constraint equation to restrain node 0</span>
+    <span class="c1"># Which would be normal for chain where pivot point is fixed in space</span>
+    <span class="k">if</span> <span class="n">constrainFixedEnd</span><span class="p">:</span>
+        <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
+        <span class="n">Jrow</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jrow</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.AddConstraintEqns">
+    <p>def <span class="ident">AddConstraintEqns</span>(</p><p>self, Jnew, checkConstraints=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function is used to append a constraint equation</p>
+<hr />
+<p>Constraint equations must take the following form:
+$$ J\ddot{y} = 0 $$</p>
+<hr />
+<p>Practically this is done by adding a row to the <code>J_mtrx</code> of the system</p>
+<p><code>J_mtrx</code> has dimensions <em>[m,n]</em> where:</p>
+<ul>
+<li><em>m</em> denotes the number of constraint equations</li>
+<li><em>n</em> denotes the number of DOFS of the system</li>
+</ul>
+<p><strong>Important note</strong>: <code>J_mtrx</code> must be <em>full rank</em>, i.e. have
+independent constraints.</p>
+<p><code>CheckConstraints()</code> can be used to test whether
+constraint equations are independent</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.AddConstraintEqns', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.AddConstraintEqns" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddConstraintEqns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function is used to append a constraint equation</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Constraint equations must take the following form:</span>
+<span class="sd">    $$ J\ddot{y} = 0 $$</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Practically this is done by adding a row to the `J_mtrx` of the system</span>
+<span class="sd">    </span>
+<span class="sd">    `J_mtrx` has dimensions _[m,n]_ where:</span>
+<span class="sd">        </span>
+<span class="sd">    * _m_ denotes the number of constraint equations</span>
+<span class="sd">    * _n_ denotes the number of DOFS of the system</span>
+<span class="sd">        </span>
+<span class="sd">    **Important note**: `J_mtrx` must be *full rank*, i.e. have</span>
+<span class="sd">    independent constraints.</span>
+<span class="sd">    </span>
+<span class="sd">    `CheckConstraints()` can be used to test whether</span>
+<span class="sd">    constraint equations are independent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Convert Jnew to appropriate representation</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+        <span class="n">Jnew</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">Jnew</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Jnew</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">Jnew</span><span class="p">)</span>
+    
+    <span class="c1"># Check dimensions</span>
+    <span class="k">if</span> <span class="n">Jnew</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: constraint eqn dimensions inconsistent!&quot;</span><span class="p">)</span>
+            
+    <span class="c1"># Store constraint equation as attribute</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">Jnew</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+    <span class="c1"># Check constraints matrix is valid</span>
+    <span class="k">if</span> <span class="n">checkConstraints</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CheckConstraints</span><span class="p">()</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.AddOutputMtrx">
+    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, fName=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Appends <code>output_mtrx</code> to <code>outputsList</code></p>
+<hr />
+<p><code>output_mtrx</code> can either be supplied directly or else read from file 
+(as denoted by <code>fName</code>)</p>
+<p><code>output_mtrx</code> can be a list of matrices; each will be appended in turn</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.AddOutputMtrx', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.AddOutputMtrx" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">fName</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Appends `output_mtrx` to `outputsList`</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    `output_mtrx` can either be supplied directly or else read from file </span>
+<span class="sd">    (as denoted by `fName`)</span>
+<span class="sd">    </span>
+<span class="sd">    `output_mtrx` can be a list of matrices; each will be appended in turn</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Read from file if no output_mtrx provided</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Response {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        
+    <span class="c1"># Append to attribute</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">+=</span> <span class="n">output_names</span>
+    
+    <span class="c1"># Check dimensions of all output matrices defined</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">CheckOutputMtrx</span><span class="p">()</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.AppendSystem">
+    <p>def <span class="ident">AppendSystem</span>(</p><p>self, DOF1, DOF2, dynSys2)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function is used to join two dynamic systems by constraining
+two dofs to translate together</p>
+<hr />
+<p>Required arguments:</p>
+<ul>
+<li><code>DOF1</code>, DOF index in parent system </li>
+<li><code>DOF2</code>, DOF index in child system</li>
+<li><code>dynSys2</code>, instance of child system</li>
+</ul>
+<p><strong>Note</strong>: only applies to <em>linear</em> systems with constant <code>M</code>, <code>C</code>, <code>K</code>
+system matrices. (This is checked: an exception will be raised if used 
+with nonlinear systems).</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.AppendSystem', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.AppendSystem" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">DOF1</span><span class="p">,</span><span class="n">DOF2</span><span class="p">,</span><span class="n">dynSys2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function is used to join two dynamic systems by constraining</span>
+<span class="sd">    two dofs to translate together</span>
+<span class="sd">    ***</span>
+<span class="sd">    Required arguments:</span>
+
+<span class="sd">    * `DOF1`, DOF index in parent system </span>
+<span class="sd">    * `DOF2`, DOF index in child system</span>
+<span class="sd">    * `dynSys2`, instance of child system</span>
+<span class="sd">    </span>
+<span class="sd">    **Note**: only applies to *linear* systems with constant `M`, `C`, `K`</span>
+<span class="sd">    system matrices. (This is checked: an exception will be raised if used </span>
+<span class="sd">    with nonlinear systems).</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">dynSys1</span> <span class="o">=</span> <span class="bp">self</span>   <span class="c1"># for clarity in the following code</span>
+    
+    <span class="c1"># Check selected DOF indices are valid</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">CheckDOF</span><span class="p">(</span><span class="n">DOF1</span><span class="p">)</span>
+    <span class="n">dynSys2</span><span class="o">.</span><span class="n">CheckDOF</span><span class="p">(</span><span class="n">DOF2</span><span class="p">)</span>
+    
+    <span class="c1"># Check systems are linear</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: &#39;dynSys1&#39; is not linear!&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: &#39;dynSys2&#39; is not linear!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Retrieve system matrices for systems to be joined</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">n1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nDOF&quot;</span><span class="p">)</span>
+    <span class="n">M1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">)</span>
+    <span class="n">C1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">)</span>
+    <span class="n">K1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">)</span>
+    <span class="n">J1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">J1</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">m1</span> <span class="o">=</span> <span class="mi">0</span>                      <span class="c1"># no constraints</span>
+        <span class="n">J1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="n">n1</span><span class="p">))</span>      <span class="c1"># null array</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">m1</span> <span class="o">=</span> <span class="n">J1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">n2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nDOF&quot;</span><span class="p">)</span>
+    <span class="n">M2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">)</span>
+    <span class="n">C2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">)</span>
+    <span class="n">K2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">)</span>
+    <span class="n">J2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">J2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">m2</span> <span class="o">=</span> <span class="mi">0</span>                      <span class="c1"># no constraints</span>
+        <span class="n">J2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="n">n2</span><span class="p">))</span>      <span class="c1"># null array</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">m2</span> <span class="o">=</span> <span class="n">J2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+    <span class="c1"># ---- Update system matrices to reflect freely appending dynSys2 -----    </span>
+    
+    <span class="c1"># Assemble new mass, damping and stiffness matrices</span>
+    <span class="n">z1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n2</span><span class="p">,</span><span class="n">n1</span><span class="p">)))</span>
+    <span class="n">M_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">([[</span><span class="n">M1</span><span class="p">,</span><span class="n">z1</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">z1</span><span class="p">,</span><span class="n">M2</span><span class="p">]])</span>
+    <span class="n">C_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">([[</span><span class="n">C1</span><span class="p">,</span><span class="n">z1</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">z1</span><span class="p">,</span><span class="n">C2</span><span class="p">]])</span>
+    <span class="n">K_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">([[</span><span class="n">K1</span><span class="p">,</span><span class="n">z1</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">z1</span><span class="p">,</span><span class="n">K2</span><span class="p">]])</span>
+    
+    <span class="c1"># Assemble new constraints matrix</span>
+    <span class="n">J_new1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">J1</span><span class="p">,</span><span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m1</span><span class="p">,</span><span class="n">n2</span><span class="p">)))))</span>
+    <span class="n">J_new2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m2</span><span class="p">,</span><span class="n">n1</span><span class="p">))),</span><span class="n">J2</span><span class="p">))</span>
+    <span class="n">J_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">J_new1</span><span class="p">,</span><span class="n">J_new2</span><span class="p">))</span>
+    
+    <span class="c1"># Update calling object attibutes</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">dynSysList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dynSys2</span><span class="p">)</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">M_new</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">C_new</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">K_new</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">J_new</span>
+    <span class="n">dynSys1</span><span class="o">.</span><span class="n">nDOF</span> <span class="o">=</span> <span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span>
+    
+    <span class="c1"># ---- Define constraint equation to constrain DOF1 and DOF2 -----</span>
+    
+    <span class="c1"># Define dynSys1 part of constraint eqn.</span>
+    <span class="k">if</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
+        <span class="n">Jn1</span> <span class="o">=</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">modeshapes</span><span class="p">[</span><span class="n">DOF1</span><span class="p">,:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Jn1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n1</span><span class="p">,)))</span>
+        <span class="n">Jn1</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">DOF1</span><span class="p">]</span><span class="o">=+</span><span class="mi">1</span>
+    
+    <span class="c1"># Define dynSys2 part of constraint eqn.</span>
+    <span class="k">if</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
+        <span class="n">Jn2</span> <span class="o">=</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">modeshapes</span><span class="p">[</span><span class="n">DOF2</span><span class="p">,:]</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Jn2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n2</span><span class="p">,)))</span>
+        <span class="n">Jn2</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">DOF2</span><span class="p">]</span><span class="o">=-</span><span class="mi">1</span>
+        
+    <span class="c1"># Combine and assign</span>
+    <span class="n">Jn</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Jn1</span><span class="p">,</span><span class="n">Jn2</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jn</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>  <span class="c1"># note by definition new constraint is independent of other pre-defined constraints</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.CalcEigenproperties">
+    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, normaliseEigenvectors=True, ax=None, showPlots=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>General method for determining damped eigenvectors and eigenvalues 
+of system</p>
+<hr />
+<p>Note in general eigenproperties will be complex due to non-proportional
+damping.</p>
+<p>Eigendecomposition of the system state matrix <code>A_mtrx</code> is carried out to 
+obtain eigenvalues and displacement-velocity eigenvectors.</p>
+<p><strong>Important Note</strong>: this function cannot (currently) be used for 
+systems with constraint equations. An exception will be raised.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CalcEigenproperties', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.CalcEigenproperties" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                        <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">showPlots</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
+<span class="sd">    of system</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
+<span class="sd">    damping.</span>
+<span class="sd">    </span>
+<span class="sd">    Eigendecomposition of the system state matrix `A_mtrx` is carried out to </span>
+<span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    **Important Note**: this function cannot (currently) be used for </span>
+<span class="sd">    systems with constraint equations. An exception will be raised.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Check for constraints</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: cannot (currently) use function &quot;</span> <span class="o">+</span> 
+                         <span class="s2">&quot;&#39;CalcEigenproperties&#39; for systems &quot;</span> <span class="o">+</span> 
+                         <span class="s2">&quot;with constraints&quot;</span>
+                         <span class="p">)</span>
+    
+    <span class="c1"># Assemble continous-time state matrix A</span>
+    <span class="n">A_c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcStateMatrix</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+        <span class="n">A_c</span> <span class="o">=</span> <span class="n">A_c</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+    
+    <span class="c1"># Eigenvalue decomposition of continuous-time system matrix A</span>
+    <span class="n">s</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">A_c</span><span class="p">)</span>               <span class="c1"># s is vector of singular values, columns of X are right eigenvectors of A</span>
+    <span class="n">s_left</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">A_c</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>        <span class="c1"># s is vector of singular values, columns of Y are left eigenvectors of A</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+    
+    <span class="c1"># Determine left and right eigenvalues which correspond to one-another</span>
+    <span class="n">right_indexs</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">left_indexs</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">s_left</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">right_indexs</span><span class="p">]</span>
+    <span class="n">s_left</span> <span class="o">=</span> <span class="n">s_left</span><span class="p">[</span><span class="n">left_indexs</span><span class="p">]</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">right_indexs</span><span class="p">]</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">left_indexs</span><span class="p">]</span>
+            
+    <span class="k">if</span> <span class="n">normaliseEigenvectors</span><span class="p">:</span>
+        <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+    
+    <span class="c1"># Extract modal properties of system from eigenvalues</span>
+    <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="c1"># Sort eigenvalues into ascending order of f_n_abs</span>
+    <span class="n">i1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
+    <span class="n">f_n</span><span class="o">=</span><span class="n">f_n</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
+    <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
+    <span class="n">f_d</span><span class="o">=</span><span class="n">f_d</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
+    
+    <span class="c1"># Write results to object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">f_n</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">f_d</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
+    
+    <span class="k">if</span> <span class="n">showPlots</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    
+    <span class="c1"># Return complex eigensolution as dict</span>
+    <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">s</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">X</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">Y</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_n</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_n</span><span class="p">)</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">eta</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_d</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">d</span> 
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.CalcFreqResponse">
+    <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, fVals=None, fmax=None, A_mtrx=None, B_mtrx=None, output_mtrx=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Evaluates frequency response G(f) at specified frequencies</p>
+<p>Refer 
+<a href="../references/Frequency response from state-space representation.pdf">derivation</a> 
+for the basis of the implementation.</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>fVals</code>: <em>array-like</em> of frequencies (Hz) to evaluate G(f) at.
+If <code>None</code> (default) then frequencies list will be obtained using 
+<code>freqVals()</code> member function.</p>
+</li>
+<li>
+<p><code>A_mtrx</code>, <code>B_mtrx</code>: allows overriding of system and load matrices 
+held as attributes.</p>
+</li>
+<li>
+<p><code>output_mtrx</code>: allows custom output matrix (or list of output 
+matrices) to be provided. Otherwise <code>output_mtrx</code> attribute will be 
+used, if defined. Otherwise an exception will be raised.</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CalcFreqResponse', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.CalcFreqResponse" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">A_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">B_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span>
+                     <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates frequency response G(f) at specified frequencies</span>
+<span class="sd">    </span>
+<span class="sd">    Refer </span>
+<span class="sd">    [derivation](../references/Frequency response from state-space representation.pdf) </span>
+<span class="sd">    for the basis of the implementation.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
+<span class="sd">    If `None` (default) then frequencies list will be obtained using </span>
+<span class="sd">    `freqVals()` member function.</span>
+<span class="sd">    </span>
+<span class="sd">    * `A_mtrx`, `B_mtrx`: allows overriding of system and load matrices </span>
+<span class="sd">    held as attributes.</span>
+<span class="sd">    </span>
+<span class="sd">    * `output_mtrx`: allows custom output matrix (or list of output </span>
+<span class="sd">    matrices) to be provided. Otherwise `output_mtrx` attribute will be </span>
+<span class="sd">    used, if defined. Otherwise an exception will be raised.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Handle optional arguments</span>
+    <span class="k">if</span> <span class="n">fVals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fVals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
+        
+    <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">A_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">A_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcStateMatrix</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="n">B_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">B_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcLoadMatrix</span><span class="p">()</span>
+        
+    <span class="c1"># Get output matrix</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+            
+    <span class="c1"># Obtain only the part of the output matrix relating to state variables</span>
+    <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+    <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***</span><span class="se">\n</span><span class="s2">Warning: no output matrix defined. &quot;</span><span class="o">+</span>
+              <span class="s2">&quot;Identity matrix will be used instead</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
+              <span class="s2">&quot;Output matrix Gf will hence relate to state variables</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">)</span>
+    
+    <span class="c1"># Determine number of inputs and frequencies</span>
+    <span class="n">Ni</span> <span class="o">=</span> <span class="n">B_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
+    
+    <span class="c1"># Determine number of outputs</span>
+    <span class="n">No</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># Define array to contain frequency response for each </span>
+    <span class="n">G_f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">No</span><span class="p">,</span><span class="n">Ni</span><span class="p">,</span><span class="n">nf</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+    
+    <span class="c1"># Loop through frequencies</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)):</span>
+        
+        <span class="c1"># Define jw</span>
+        <span class="n">jw</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="o">+</span><span class="mi">1j</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">fVals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        
+        <span class="c1"># Define G(jw) at this frequency</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+            <span class="n">Gf</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">A_mtrx</span><span class="p">)</span> <span class="o">*</span> <span class="n">B_mtrx</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Gf</span> <span class="o">=</span> <span class="n">output_mtrx</span> <span class="o">*</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">A_mtrx</span><span class="p">)</span> <span class="o">*</span> <span class="n">B_mtrx</span>
+            
+        <span class="c1"># Store in array</span>
+        <span class="n">G_f</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf</span>
+    
+    <span class="c1"># Return values</span>
+    <span class="k">return</span> <span class="n">fVals</span><span class="p">,</span> <span class="n">G_f</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.CalcLoadMatrix">
+    <p>def <span class="ident">CalcLoadMatrix</span>(</p><p>self, saveAsAttr=True, M=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Assembles the load matrix <code>B_mtrx</code> used in state-space methods</p>
+<hr />
+<p>Load matrix <strong>B</strong> is given by the following:</p>
+<p>$$ B = [[0],[M^{-1}]] $$</p>
+<p>where <strong>M</strong> is the system mass matrix.</p>
+<hr />
+<p>Optional:</p>
+<p><em>Unless optional arguments are specified, system matrices stored as 
+class attributes will be used.</em></p>
+<ul>
+<li>
+<p><code>M</code>, mass matrix</p>
+</li>
+<li>
+<p><code>saveAsAttr</code>: if <code>True</code> state matrix returned will also be saved as 
+  an object instance attribute</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CalcLoadMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.CalcLoadMatrix" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcLoadMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                   <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assembles the load matrix `B_mtrx` used in state-space methods</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Load matrix **B** is given by the following:</span>
+<span class="sd">        </span>
+<span class="sd">    $$ B = [[0],[M^{-1}]] $$</span>
+<span class="sd">    </span>
+<span class="sd">    where **M** is the system mass matrix.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    _Unless optional arguments are specified, system matrices stored as </span>
+<span class="sd">    class attributes will be used._</span>
+<span class="sd">        </span>
+<span class="sd">    * `M`, mass matrix</span>
+<span class="sd">    </span>
+<span class="sd">    * `saveAsAttr`: if `True` state matrix returned will also be saved as </span>
+<span class="sd">      an object instance attribute</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Retrieve system matrices</span>
+    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">M_mtrx</span><span class="o">=</span><span class="n">M</span><span class="p">)</span>
+    
+    <span class="c1"># Assemble load matrix B=[[0],[M]]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+        <span class="n">Minv</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Minv</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        
+    
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+        <span class="n">B1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">Minv</span><span class="p">)</span>
+        <span class="n">B2</span> <span class="o">=</span> <span class="n">Minv</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">B1</span><span class="p">,</span><span class="n">B2</span><span class="p">))</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_B</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">None</span><span class="p">],[</span><span class="n">Minv</span><span class="p">]]</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_B</span><span class="p">)</span>
+    
+    <span class="c1"># Save as attribute</span>
+    <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">B_mtrx</span> <span class="o">=</span> <span class="n">B</span>
+        
+    <span class="k">return</span> <span class="n">B</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.CalcStateMatrix">
+    <p>def <span class="ident">CalcStateMatrix</span>(</p><p>self, applyConstraints=False, saveAsAttr=True, M=None, C=None, K=None, J=None, nDOF=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Assembles the continous-time state matrix <code>A_mtrx</code> used in state-space 
+methods</p>
+<hr />
+<p>The continuous-time state matrix is as follows:</p>
+<p>$$ A = [[0,I],[-M^{-1}K,-M^{-1}C]] $$</p>
+<p>where <strong>M</strong> is the system mass matrix, <strong>C</strong> is the system damping 
+matrix, <strong>K</strong> is the system stiffness matrix and <strong>I</strong> is an 
+identity matrix.</p>
+<p>When constraint equations <strong>J</strong> are defined, the following augmented 
+form is obtained:</p>
+<p>$$ A' = [[A, J^{T}],[J,0]] $$</p>
+<p>Given system matrices are of shape <em>[N,N]</em>, <strong>A</strong> is of shape <em>[2N,2N]</em>. 
+If <em>m</em> constraints are defined then <strong>A'</strong> is of shape <em>[2N+m,2N+m]</em>.</p>
+<hr />
+<p>Optional:</p>
+<p><em>Unless optional arguments are specified, system matrices stored as 
+class attributes will be used.</em></p>
+<ul>
+<li>
+<p><code>M</code>, mass matrix</p>
+</li>
+<li>
+<p><code>C</code>, damping matrix</p>
+</li>
+<li>
+<p><code>K</code>, stiffness matrix</p>
+</li>
+<li>
+<p><code>J</code>, constraints matrix</p>
+</li>
+<li>
+<p><code>applyConstraints</code>: if <code>True</code> then augmentated state matrix 
+    A = [[A,J.T],[J,0]] will be returned</p>
+</li>
+<li>
+<p><code>saveAsAttr</code>: if <code>True</code> state matrix returned will also be saved as 
+  an object instance attribute</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CalcStateMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.CalcStateMatrix" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">applyConstraints</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                    <span class="n">saveAsAttr</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                    <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">K</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">J</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">nDOF</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assembles the continous-time state matrix `A_mtrx` used in state-space </span>
+<span class="sd">    methods</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    The continuous-time state matrix is as follows:</span>
+<span class="sd">        </span>
+<span class="sd">    $$ A = [[0,I],[-M^{-1}K,-M^{-1}C]] $$</span>
+<span class="sd">    </span>
+<span class="sd">    where **M** is the system mass matrix, **C** is the system damping </span>
+<span class="sd">    matrix, **K** is the system stiffness matrix and **I** is an </span>
+<span class="sd">    identity matrix.</span>
+<span class="sd">    </span>
+<span class="sd">    When constraint equations **J** are defined, the following augmented </span>
+<span class="sd">    form is obtained:</span>
+<span class="sd">        </span>
+<span class="sd">    $$ A&#39; = [[A, J^{T}],[J,0]] $$</span>
+<span class="sd">    </span>
+<span class="sd">    Given system matrices are of shape _[N,N]_, **A** is of shape _[2N,2N]_. </span>
+<span class="sd">    If _m_ constraints are defined then **A&#39;** is of shape _[2N+m,2N+m]_.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    _Unless optional arguments are specified, system matrices stored as </span>
+<span class="sd">    class attributes will be used._</span>
+<span class="sd">        </span>
+<span class="sd">    * `M`, mass matrix</span>
+<span class="sd">    </span>
+<span class="sd">    * `C`, damping matrix</span>
+<span class="sd">    </span>
+<span class="sd">    * `K`, stiffness matrix</span>
+<span class="sd">    </span>
+<span class="sd">    * `J`, constraints matrix</span>
+<span class="sd">    </span>
+<span class="sd">    * `applyConstraints`: if `True` then augmentated state matrix </span>
+<span class="sd">        A = [[A,J.T],[J,0]] will be returned</span>
+<span class="sd">        </span>
+<span class="sd">    * `saveAsAttr`: if `True` state matrix returned will also be saved as </span>
+<span class="sd">      an object instance attribute</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Retrieve system matrices</span>
+    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx</span>
+    <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_mtrx</span>
+    <span class="k">if</span> <span class="n">J</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
+    <span class="k">if</span> <span class="n">nDOF</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+
+    <span class="c1"># Check shape of system matrices</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">M_mtrx</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
+                              <span class="n">C_mtrx</span><span class="o">=</span><span class="n">C</span><span class="p">,</span>
+                              <span class="n">K_mtrx</span><span class="o">=</span><span class="n">K</span><span class="p">,</span>
+                              <span class="n">J_mtrx</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                              <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">)</span>
+    
+    <span class="c1"># Assemble state matrix A=[[0,I],[-Minv*K,-Minv*C]]</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+        <span class="n">Minv</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nDOF</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Minv</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nDOF</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+        <span class="n">_A</span> <span class="o">=</span> <span class="p">[[</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">I</span><span class="p">),</span><span class="n">I</span><span class="p">],[</span><span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">K</span><span class="p">,</span> <span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">C</span><span class="p">]]</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_A</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">None</span><span class="p">,</span><span class="n">I</span><span class="p">],[</span><span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">K</span><span class="p">,</span> <span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">C</span><span class="p">]]</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">applyConstraints</span><span class="p">:</span>
+        
+        <span class="c1"># Augment with constraints</span>
+        <span class="n">_A</span> <span class="o">=</span> <span class="p">[[</span><span class="n">A</span><span class="p">,</span><span class="n">J</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">J</span><span class="p">,</span><span class="bp">None</span><span class="p">]]</span>
+    
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+            <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
+    <span class="c1"># Save as attribute</span>
+    <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_mtrx</span> <span class="o">=</span> <span class="n">A</span>
+    <span class="k">return</span> <span class="n">A</span>     
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.CheckConstraints">
+    <p>def <span class="ident">CheckConstraints</span>(</p><p>self, raiseException=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Check contraint equations are independent</p>
+<hr />
+<p>Practically this is done by checking that <code>J_mtrx</code> is full rank</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CheckConstraints', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.CheckConstraints" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">raiseException</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check contraint equations are independent</span>
+<span class="sd">    ***</span>
+<span class="sd">    Practically this is done by checking that `J_mtrx` is full rank</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>       
+        
+        <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        
+        <span class="n">r</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="n">m</span><span class="o">!=</span><span class="n">r</span><span class="p">:</span>
+            
+            <span class="n">errorStr</span><span class="o">=</span><span class="s2">&quot;Error: constraints matrix not full rank!</span><span class="se">\n</span><span class="s2">J.shape: {0}</span><span class="se">\n</span><span class="s2">Computed rank: {1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">r</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">raiseException</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errorStr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">errorStr</span><span class="p">)</span>
+                
+            <span class="k">return</span> <span class="bp">False</span>
+                
+    <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.CheckDOF">
+    <p>def <span class="ident">CheckDOF</span>(</p><p>self, DOF)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function is used to check is a certain requested DOF index is valid</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CheckDOF', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.CheckDOF" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckDOF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">DOF</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function is used to check is a certain requested DOF index is valid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isModal</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;isModal&quot;</span><span class="p">):</span>
+        <span class="c1"># Non-modal systems, i.e. DOFs are real-world</span>
+        
+        <span class="k">if</span> <span class="n">DOF</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">DOF</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: requested DOF invalid!&quot;</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Modal systems</span>
+        
+        <span class="k">if</span> <span class="n">DOF</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">DOF</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF_realWorld</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: requested real-world DOF invalid!&quot;</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.CheckOutputMtrx">
+    <p>def <span class="ident">CheckOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Checks that all defined output matrices are of the correct shape</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CheckOutputMtrx', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.CheckOutputMtrx" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks that all defined output matrices are of the correct shape</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Handle option arguments</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+        
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
+            
+    <span class="c1"># Check list lengths agree</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span><span class="o">!=</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of lists `output_names` &quot;</span><span class="o">+</span>
+                         <span class="s2">&quot;and rows of `output_mtrx` do not agree!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
+                         <span class="s2">&quot;len(output_names)={0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">))</span><span class="o">+</span>
+                         <span class="s2">&quot;output_mtrx.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    
+    <span class="c1"># Check shape of output matrix</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+        <span class="k">if</span> <span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nDOF_expected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;output_mtrx of invalid shape defined!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                             <span class="s2">&quot;Shape provided: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="s2">&quot;Cols expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nDOF_expected</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.EqnOfMotion">
+    <p>def <span class="ident">EqnOfMotion</span>(</p><p>self, x, t, forceFunc)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function defines equation of motion for dynamic system</p>
+<hr />
+<p>The behaviour of 2nd order dynamic systems is characterised by the 
+following ODE:</p>
+<p>$$ M\ddot{y} + C\dot{y} + Ky = f $$</p>
+<p>This can be re-arranged as:</p>
+<p>$$ \ddot{y} = M^{-1}(f - C\dot{y} - Ky) $$</p>
+<p>Dynamic systems may have constraint equations defined as follows:</p>
+<p>$$ J\ddot{y} = 0 $$</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.EqnOfMotion', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.EqnOfMotion" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">EqnOfMotion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">forceFunc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function defines equation of motion for dynamic system</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    The behaviour of 2nd order dynamic systems is characterised by the </span>
+<span class="sd">    following ODE:</span>
+<span class="sd">        </span>
+<span class="sd">    $$ M\ddot{y} + C\dot{y} + Ky = f $$</span>
+<span class="sd">    </span>
+<span class="sd">    This can be re-arranged as:</span>
+<span class="sd">        </span>
+<span class="sd">    $$ \ddot{y} = M^{-1}(f - C\dot{y} - Ky) $$</span>
+<span class="sd">    </span>
+<span class="sd">    Dynamic systems may have constraint equations defined as follows:</span>
+<span class="sd">        </span>
+<span class="sd">    $$ J\ddot{y} = 0 $$</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Obtain inputs from object</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_mtrx</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
+    <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+    <span class="n">isDense</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span>
+    
+    <span class="c1"># Obtain inverse mass matrix</span>
+    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;_M_inv&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+    
+        <span class="n">Minv</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="k">if</span> <span class="n">isDense</span><span class="p">:</span>
+            <span class="n">Minv</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Minv</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        
+        
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">,</span><span class="n">Minv</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+            
+        <span class="c1"># Obtain inverse of J.Minv.J.T</span>
+        <span class="n">attr1</span> <span class="o">=</span> <span class="s2">&quot;_A_inv&quot;</span>
+        
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr1</span><span class="p">):</span>
+        
+            <span class="n">Ainv</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr1</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="c1"># Multiply matrices</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">J</span> <span class="err">@</span> <span class="n">Minv</span> <span class="err">@</span> <span class="n">J</span><span class="o">.</span><span class="n">T</span>
+            
+            <span class="k">if</span> <span class="n">isDense</span><span class="p">:</span>
+                <span class="n">Ainv</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Ainv</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+                
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr1</span><span class="p">,</span><span class="n">Ainv</span><span class="p">)</span>
+    
+    <span class="c1"># Convert to column vector format</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    
+    <span class="c1"># Split x into components</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="n">nDOF</span><span class="p">]</span>
+    <span class="n">ydot</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:]</span>
+    
+    <span class="c1"># Get input force at time t</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">forceFunc</span><span class="p">(</span><span class="n">t</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    
+    <span class="c1"># Calculate net force (excluding constraint forces)</span>
+    <span class="n">f_net</span> <span class="o">=</span> <span class="n">f</span> <span class="o">-</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ydot</span><span class="p">)</span>
+    
+    <span class="c1"># Solve for accelerations</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        
+        <span class="c1"># Calculate lagrange multipliers (to satify constraint eqns)</span>
+        <span class="n">lagrange</span> <span class="o">=</span> <span class="n">Ainv</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span> <span class="n">J</span> <span class="o">*</span> <span class="n">Minv</span> <span class="o">*</span> <span class="n">f_net</span><span class="p">)</span>
+        
+        <span class="c1"># Define acceleration</span>
+        <span class="n">y2dot</span> <span class="o">=</span> <span class="n">Minv</span><span class="o">*</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">lagrange</span> <span class="o">+</span> <span class="n">f_net</span><span class="p">)</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="n">lagrange</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+            
+        <span class="n">y2dot</span> <span class="o">=</span> <span class="n">Minv</span><span class="o">*</span><span class="n">f_net</span>
+        
+    <span class="c1"># Obtain constraint forces</span>
+    <span class="n">f_constraint</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">lagrange</span>
+    
+    <span class="c1"># Returns results as dict</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">t</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;y2dot&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">y2dot</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ydot&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">ydot</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">y</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;lagrange&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">lagrange</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_constraint&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_constraint</span>
+    <span class="k">return</span> <span class="n">d</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.GetRealWorldDOFs">
+    <p>def <span class="ident">GetRealWorldDOFs</span>(</p><p>*args, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns dofs in real-world coordinate system</p>
+<p>(useful for system defined via modal properties)</p>
+<p>.. deprecated:: 0.1.0</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.GetRealWorldDOFs', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.GetRealWorldDOFs" class="source">
+    <div class="codehilite"><pre><span></span><span class="nd">@deprecation.deprecated</span><span class="p">(</span><span class="n">deprecated_in</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span><span class="n">current_version</span><span class="o">=</span><span class="n">currentVersion</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">GetRealWorldDOFs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns dofs in real-world coordinate system</span>
+<span class="sd">    </span>
+<span class="sd">    (useful for system defined via modal properties)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapes</span> <span class="o">*</span> <span class="n">v</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">v</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.GetSystemMatrices">
+    <p>def <span class="ident">GetSystemMatrices</span>(</p><p>*args, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function is used to retrieve system matrices</p>
+<p>Matrices are returned via a dictionary (for flexible usage)</p>
+<p>.. deprecated:: 0.1.0</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.GetSystemMatrices', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.GetSystemMatrices" class="source">
+    <div class="codehilite"><pre><span></span><span class="nd">@deprecation.deprecated</span><span class="p">(</span><span class="n">deprecated_in</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span><span class="n">current_version</span><span class="o">=</span><span class="n">currentVersion</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function is used to retrieve system matrices</span>
+<span class="sd">    </span>
+<span class="sd">    Matrices are returned via a dictionary (for flexible usage)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Create empty dictionay</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="c1"># Populate dictionary</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">K_mtrx</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">):</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
+    
+    <span class="c1"># Return dictionary</span>
+    <span class="k">return</span> <span class="n">d</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.PlotSystem">
+    <p>def <span class="ident">PlotSystem</span>(</p><p>self, ax, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Generic plotter function to display current configuration of this 
+<code>dynSys</code> object</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.PlotSystem', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.PlotSystem" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic plotter function to display current configuration of this </span>
+<span class="sd">    `dynSys` object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">None</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.PlotSystems_all">
+    <p>def <span class="ident">PlotSystems_all</span>(</p><p>self, ax, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Generic plotter function to display current configuration of 
+all systems and subsystems</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.PlotSystems_all', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.PlotSystems_all" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic plotter function to display current configuration of </span>
+<span class="sd">    all systems and subsystems</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">None</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.PrintSystemMatrices">
+    <p>def <span class="ident">PrintSystemMatrices</span>(</p><p>self, printShapes=True, printValues=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function is used to print system matrices to text window   </p>
+<hr />
+<p>Useful for documentation and debugging</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.PrintSystemMatrices', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.PrintSystemMatrices" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PrintSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">printShapes</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">printValues</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function is used to print system matrices to text window   </span>
+<span class="sd">    ***</span>
+<span class="sd">    Useful for documentation and debugging</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;C_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;K_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;J_mtrx&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;M_inv&quot;</span><span class="p">,</span> <span class="s2">&quot;A_inv&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;A_mtrx&quot;</span><span class="p">,</span><span class="s2">&quot;B_mtrx&quot;</span><span class="p">]</span>
+    
+    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_list</span><span class="p">:</span>
+    
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+            
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;{0} matrix:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="n">printShapes</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">printValues</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.ReadOutputMtrxFromFile">
+    <p>def <span class="ident">ReadOutputMtrxFromFile</span>(</p><p>self, fName=&#39;outputs.csv&#39;)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Reads output matrix file. Output matrix format required is as follows:</p>
+<hr />
+<p>$$ y = C.x $$</p>
+<p>where:
+$$ x = [q,\dot{q},\ddot{q}]^{T} $$ 
+is the (extended) <em>state variable</em> vector_ and y is <em>output vector</em>. 
+C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</strong> to <em>outputs</em> <strong>y</strong>.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.ReadOutputMtrxFromFile', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.ReadOutputMtrxFromFile" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads output matrix file. Output matrix format required is as follows:</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    $$ y = C.x $$</span>
+<span class="sd">    </span>
+<span class="sd">    where:</span>
+<span class="sd">    $$ x = [q,\dot{q},\ddot{q}]^{T} $$ </span>
+<span class="sd">    is the (extended) _state variable_ vector_ and y is _output vector_. </span>
+<span class="sd">    C is the _output matrix_ mapping _state variables_ **x** to _outputs_ **y**.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fName</span><span class="p">,</span><span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="n">outputNames</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">C_mtrx</span><span class="p">,</span><span class="n">outputNames</span> 
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.freqVals">
+    <p>def <span class="ident">freqVals</span>(</p><p>self, f_salient=None, nf_pad=100, fmax=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>"
+Define frequency values to evaluate frequency response G(f) at</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>f_salient</code>, <em>array-like</em> of salient frequencies (Hz)</p>
+</li>
+<li>
+<p><code>nf</code>, number of intermediate frequencies between salient points</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.freqVals', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.freqVals" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">freqVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">f_salient</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">nf_pad</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;&quot;</span>
+<span class="sd">    Define frequency values to evaluate frequency response G(f) at</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Optional:</span>
+<span class="sd">    </span>
+<span class="sd">    * `f_salient`, *array-like* of salient frequencies (Hz)</span>
+<span class="sd">        </span>
+<span class="sd">    * `nf`, number of intermediate frequencies between salient points</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Obtain f_salient</span>
+    <span class="k">if</span> <span class="n">f_salient</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">f_salient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span>
+        <span class="n">f_salient</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">f_salient</span><span class="p">)</span>
+        <span class="c1">#print(&quot;Salient frequencies: \n{0}&quot;.format(f_salient))</span>
+    
+    <span class="c1"># Flatten input</span>
+    <span class="n">f_salient</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">f_salient</span><span class="p">)</span>
+    
+    <span class="c1"># Append fmax to list of salient frequencies</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fmax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">f_salient</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(([</span><span class="o">-</span><span class="n">fmax</span><span class="p">],</span><span class="n">npy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">f_salient</span><span class="p">),[</span><span class="n">fmax</span><span class="p">]))</span>
+
+    <span class="c1"># Obtain full list of frequencies</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f_salient</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+
+        <span class="n">f1</span> <span class="o">=</span> <span class="n">f_salient</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">f2</span> <span class="o">=</span> <span class="n">f_salient</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">f2</span> <span class="o">-</span> <span class="n">f1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">nf_pad</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">newf</span> <span class="o">=</span> <span class="n">f1</span> <span class="o">+</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nf_pad</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">df</span>
+        
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">fVals</span> <span class="o">=</span> <span class="n">newf</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">fVals</span><span class="p">,</span><span class="n">newf</span><span class="p">))</span>
+
+    <span class="c1"># Add on end freq</span>
+    <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">fVals</span><span class="p">,</span><span class="n">f2</span><span class="p">))</span>
+            
+    <span class="k">return</span> <span class="n">fVals</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.hasConstraints">
+    <p>def <span class="ident">hasConstraints</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Tests whether constraint equations are defined</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.hasConstraints', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.hasConstraints" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">hasConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tests whether constraint equations are defined</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="mi">0</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+      </div>
+      </div>
+
+  </section>
+
+    </article>
+  <div class="clear"> </div>
+  <footer id="footer">
+    <p>
+      Documentation generated by
+      <a href="https://github.com/BurntSushi/pdoc">pdoc 0.3.2</a>
+    </p>
+
+    <p>pdoc is in the public domain with the
+      <a href="http://unlicense.org">UNLICENSE</a></p>
+
+    <p>Design by <a href="http://nadh.in">Kailash Nadh</a></p>
+  </footer>
+</div>
+</body>
+</html>

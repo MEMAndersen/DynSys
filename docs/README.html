@@ -1,0 +1,69 @@
+<h1>DynSys</h1>
+<p><em>Richard Hollamby, COWI UK Bridge, RIHY</em></p>
+<p><em>2018-02-27</em></p>
+<p>Provides useful classes and functions to faciliate the general dynamic 
+analysis of 2nd order structural systems, as characterised by their mass, 
+stiffness, damping and constraints.</p>
+<h2>Purpose/aim</h2>
+<p>This package is intended to serve as a structured repository for such content. 
+At present all modules are written by Richard Hollamby (COWI UK Bridge, RIHY). 
+However the aim is that others should feel able (and are strongly encouraged!) 
+to participate by submitting improvements. The only proviso for this is that 
+code improvements should be written to be <em>project-independent</em>.</p>
+<p>The overriding aim is for this package to be reliable, testable, and developed 
+in such a way that its performance and capabilities improve with time, due to 
+time investment made during projects.</p>
+<h2>Applications</h2>
+<p>Applications include (but are not limited to):</p>
+<ul>
+<li>
+<p>Time history analysis:</p>
+<ul>
+<li>
+<p>Based on full mass, stiffness and damping matrices</p>
+</li>
+<li>
+<p>As above, but for systems with multi-point constraints</p>
+</li>
+<li>
+<p>For systems represented by a (usually truncated) set of modes</p>
+</li>
+<li>
+<p>For systems with <em>non-proportional</em> damping</p>
+</li>
+</ul>
+</li>
+<li>
+<p>TMD design and analysis</p>
+<ul>
+<li>Proper account of non-proportional damping, which generally occurs when 
+  TMDs are appended to MDOF systems</li>
+</ul>
+</li>
+</ul>
+<h2>Benefits</h2>
+<p>Benefits of using this package:</p>
+<ul>
+<li>
+<p>Fully-documented python API (see <a href="/docs">Docs link</a>), where a rich html API 
+  is generated from docstrings in source code using <code>pdoc</code> and Markdown syntax.</p>
+</li>
+<li>
+<p>All routines written in Python 3, to allow dynamic analysis to be carried 
+  out within a more general routine, or used as an <code>import</code> in IPython notebook </p>
+</li>
+<li>
+<p>As everything is public (in principle) in Python, users familiar with the 
+  source code have options:</p>
+<ol>
+<li>
+<p>Add new functionality, to extent the capabilities of this package 
+(please consult RIHY to discuss long-term incorporation of improvements)</p>
+</li>
+<li>
+<p>Tweak existing functionality, for a given application
+(this is generally project-specific, so would not be incorporated)</p>
+</li>
+</ol>
+</li>
+</ul>

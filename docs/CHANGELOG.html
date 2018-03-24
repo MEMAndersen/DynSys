@@ -1,0 +1,124 @@
+<h1>Changelog</h1>
+<p>All notable changes to this project will be documented in this file.</p>
+<p>The format is based on: 
+<a href="http://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>
+and this project adheres to: 
+<a href="http://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<p><em>Note</em>: Version numbers correspond to version numbers in .py files. These will 
+in general differ from version numbers maintained by Portal version control 
+system. However major release number will always correspond.</p>
+<hr />
+<h2>[0.4.0] - 2018-03-19 - RIHY</h2>
+<h3>Added</h3>
+<ul>
+<li><code>tstep_results.WriteResults2File()</code> method allows time-series results to 
+  be written to file. Linking to this function made in <code>tstep</code> and 
+  <code>dyn_analysis</code> class methods. Files exported have QA-relevant headers (date, 
+  version etc)</li>
+<li><code>dyn_analysis.Dyn_Analysis</code>and <code>dyn_analysis.Multiple</code> objects can now be 
+  saved and loaded using <code>dill</code> module (similar to <code>pickle</code>). 
+  This allows objects (incl results) to be stored as binary files and 
+  reloaded later. This is very useful when carrying out lots of analyses, as 
+  it allows all data to be saved and reloaded later e.g. for further 
+  manuipluation</li>
+<li>Optional argument <code>fLimit</code> added to <code>modalsys.ModalSys()</code>, to allow maximum 
+  modal natural frequency to be specified. Modes with fn &gt; fLimit will not be 
+  included in analysis (a warning message is printed to show this)</li>
+<li><code>DynSys.PlotResponsePSD()</code> added to implement plotting of PSDs of response 
+  time series</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Code hide x_axis within <code>tstep_results.PlotResponseResults()</code> function 
+  removed as obsolete: subplots now use <code>sharex=True</code></li>
+</ul>
+<h3>Changed</h3>
+<h3>Removed</h3>
+<hr />
+<h2>[0.3.0] - 2018-03-16 - RIHY</h2>
+<h3>Added</h3>
+<ul>
+<li>In <code>DynSys.__init__()</code> option added to represent system matrices as sparse 
+  matrices (which they usually are), using <code>scipy.sparse.csc_matrix</code> format. 
+  Code updates implemented in all modules to handle sparse matrices. However 
+  current dense methods are used by default as this is regarded as a work in 
+  progress</li>
+<li>New module <code>tstep_analysis</code> added. This modules contains classes to implement 
+  certain forms of time-history analysis</li>
+<li><code>setup.py</code> created, per PyPi guidance</li>
+<li>Within <code>dynsys</code> and derived classes, output matrix and corresponding names no 
+  longer stored as a list of matrices / list of names, as this was proving 
+  unnecessarily confusing! Corrections made in all modules (I think...)</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>When <code>modalsys.AppendTMDs</code> is used, this has the effect of increasing the 
+  nDOF of system. Need therefore to adjust structure of <code>output_mtrx</code>. This is 
+  now done</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>If <code>J_mtrx=None</code> is passed into DynSys() <strong>init</strong> function then <code>J_mtrx</code> is 
+  now initialised as an array of shape [0,nDOF]</li>
+<li>Significant overhaul of <code>tstep</code> and <code>tstep_results</code></li>
+<li>Package version now in <code>__init__.py</code> as single point of reference</li>
+<li>Treatment of response / output matrices in <code>tstep_results</code>, <code>tstep</code> and 
+  <code>dynsys</code> harmonised</li>
+<li>Miscellaneous improvements / options added to results plotting routines</li>
+</ul>
+<h3>Removed</h3>
+<hr />
+<h2>[0.2.0] - 2018-03-02 - RIHY</h2>
+<h3>Added</h3>
+<ul>
+<li><code>/tests/tests_basic.py</code>, to contain test functions</li>
+<li><code>/tests/test_docs.py</code>, to auto-generate documentation concerning tests</li>
+<li>SDOF properties conversion functions added to <code>dynsys</code> for common use in 
+  other modules</li>
+<li><code>tstep</code> added to package, to provide time-stepping analysis functionality. 
+  This was previously a seperate package, but given inter-dependecies it makes 
+  more sense for this to be part of <code>dynsys</code></li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Package folder structure extended:<ul>
+<li><code>validation</code> subfolder created, to contain scripts which are more 
+involved than simple <code>unittest</code> routines and serve to validate the library 
+by comparing results obtained using <code>dynsys</code> routines against published 
+results given in classical dynamics literature</li>
+<li><code>docs</code>, <code>img</code>, <code>ref</code> subfolders created in <code>tests</code></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>[0.1.0] - 2018-02-28 - RIHY</h2>
+<h3>Added</h3>
+<ul>
+<li><code>CHANGELOG.md</code> (this file) created for the first time</li>
+<li><code>README.md</code> created for the first time</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>
+<p>Package folder structure changed:</p>
+<ul>
+<li>
+<p>All modules in <code>dynsys</code>: <code>import</code> statements revised accordingly</p>
+</li>
+<li>
+<p>Documentation in <code>doc</code>: this is generated by running <code>make_docs.py</code></p>
+</li>
+<li>
+<p>Tests to be in <code>tests</code>: this folder is for formal <code>unittest</code> routines</p>
+</li>
+<li>
+<p>Examples are in <code>examples</code>: these are not formal tests, but are examples 
+  of the functionality offered by this package</p>
+</li>
+<li>
+<p>References (e.g. PDFs of published papers, derivations) should be stored 
+  in the <code>references</code> folder. These should be linked to via docstrings.</p>
+</li>
+</ul>
+</li>
+</ul>
