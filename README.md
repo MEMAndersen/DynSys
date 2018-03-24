@@ -58,4 +58,6 @@ Benefits of using this package:
     2. Tweak existing functionality, for a given application
     (this is generally project-specific, so would not be incorporated)
     
+# Version control
 
+This project is hosted on GitHub and uses Git to provide robust version control
