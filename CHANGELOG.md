@@ -30,7 +30,6 @@ system. However major release number will always correspond.
 * `DynSys.PlotResponsePSD()` added to implement plotting of PSDs of response 
   time series
 * Git version control used now
-* Test2
 
 ### Fixed
 * Code hide x_axis within `tstep_results.PlotResponseResults()` function 
