@@ -26,7 +26,7 @@ class DynSys:
     def __init__(self,M,C,K,
                  J=None,
                  output_mtrx=None,
-                 output_names=[],
+                 output_names=None,
                  isLinear=True,
                  isSparse=False,
                  name=None):
@@ -129,6 +129,9 @@ class DynSys:
         output matrices defined.
         """
         
+        if output_names is None:
+            output_names = []
+        
         self.output_names = output_names
         """
         List of string descriptions for rows of `output_mtrx`.
@@ -211,6 +214,7 @@ class DynSys:
             output_names = self.output_names
                 
         # Check list lengths agree
+        
         if len(output_names)!=output_mtrx.shape[0]:
             raise ValueError("Length of lists `output_names` "+
                              "and rows of `output_mtrx` do not agree!\n"+
@@ -272,6 +276,7 @@ class DynSys:
             
             output_mtrx, output_names = self.ReadOutputMtrxFromFile(fName)
             
+        # Create default output names if none provided
         if output_names is None:
             output_names = ["Response {0}".format(x) for x in range(output_mtrx.shape[0])]
             
