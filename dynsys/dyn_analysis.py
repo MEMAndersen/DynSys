@@ -15,6 +15,7 @@ import os
 
 import tstep
 import loading
+import msd_chain
 
 def load(fName):
     """
@@ -634,18 +635,129 @@ class Multiple():
         
         return stats_dict
     
+# ********************** FUNCTIONS   ****************************************
+    
+def ResponseSpectrum(accFunc,
+                     T_vals=None,
+                     tResponse=10.0,
+                     eta = 0.05,
+                     makePlot = True,
+                     **kwargs):
+    """
+    Function to express ground acceleration time series as a seismic response 
+    spectrum
+    ***
+    
+    A _seismic response spectum_ summarise the peak acceleration response of a 
+    SDOF oscillator in response to ground acceleration time series. Seismic 
+    response spectra therefore represent a useful way of quantifying and 
+    graphically illustrating the severity of a given ground acceleration time 
+    series
+    
+    ***
+    Required:
+    
+    * `accFunc`, function a(t) defining the ground acceleration time series 
+      (usually this is most convenient to supply via an interpolation function)
+      
+    ***
+    Optional:
+        
+    * `tResponse`, time interval over which to carry out time-stepping
+      (set this to be at least the duration of the input acceleration time 
+      series!)
+      
+    * `T_vals`, _list_, periods at which response spectrum to be evaluated
+    
+    * `eta`, damping ratio to which response spectrum obtained is applicable 
+      (5% used by default as this is the default assumption in seismic design)
+      
+     `kwargs` may be used to pass additional arguments down to `TStep` object 
+     that is used to implement time-stepping analysis. Refer `tstep` docs for 
+     further details
+    
+    """
+    
+    # Handle optional inputs
+    if T_vals is None:
+        T_vals = numpy.arange(0.01,1.27,0.05)
+        
+    T_vals = numpy.ravel(T_vals).tolist()
+    
+    # Print summary of key inputs
+    print("Ground motion function supplied: %s" % accFunc.__name__)
+    print("Time-stepping analysis interval: [%.2f, %.2f]" % (0,tResponse))
+    print("Number of SDOF oscillators to be analysed: %d" % len(T_vals))
+    print("Damping ratio for SDOF oscillators: {:.2%}".format(eta))
+    
+    # Loop through all periods
+    M = 1.0 # unit mass for all oscillators
+    results_list = []
+    
+    print("Obtaining SDOF responses to ground acceleration...")
+    
+    for _T in T_vals:
+
+        period_str = "Period %.2fs" % _T
+        
+        # Define SDOF oscillator
+        SDOF_sys = msd_chain.MSD_Chain(name=period_str,
+                                       M_vals = M,
+                                       f_vals = 1/_T,
+                                       eta_vals = eta,
+                                       showMsgs=False)
+        
+        # Add output matrix to extract acceleration results
+        SDOF_sys.AddOutputMtrx(output_mtrx=numpy.asmatrix([0,0,1]),
+                               output_names=["Acc"])
+        
+        # Define forcing function
+        def forceFunc(t):
+            return M*accFunc(t)
+        
+        # Define time-stepping analysis
+        tstep_obj = tstep.TStep(SDOF_sys,
+                                tStart=0, tEnd=tResponse,
+                                force_func=forceFunc,
+                                retainDOFTimeSeries=False)
+        
+        # Run time-stepping analysis and append results
+        results_list.append(tstep_obj.run(showMsgs=False))
+        
+        # Tidy up
+        del SDOF_sys
+    
+    # Collate absmax statistics
+    print("Retrieving 'absmax' acceleration statistics...")
+    absmax_acc = [x.response_stats['absmax'][0] for x in results_list]
+    absmax_acc = numpy.asarray(absmax_acc)
+    
+    if makePlot:
+        
+        fig, ax = plt.subplots()
+        ax.plot(T_vals,absmax_acc)
+        ax.set_xlabel("Oscillator natural period T (secs)")
+        ax.set_ylabel("Peak acceleration response (m/$s^2$)")
+        ax.set_title("Response spectrum")
+        ax.set_xlim([0,numpy.max(T_vals)])
+    
+    return T_vals, absmax_acc
+    
+    
+    
+    
 # ********************** TEST ROUTINE ****************************************
 
 if __name__ == "__main__":
     
     testRoutine=4
     
-    import modalsys
-    
-    modal_sys = modalsys.ModalSys(isSparse=False)
-    modal_sys.AddOutputMtrx(fName="outputs.csv")
-    
     if testRoutine==1:
+        
+        import modalsys
+    
+        modal_sys = modalsys.ModalSys(isSparse=False)
+        modal_sys.AddOutputMtrx(fName="outputs.csv")
         
         def sine(t):
             return numpy.sin(5*t)
@@ -666,6 +778,11 @@ if __name__ == "__main__":
         
     elif testRoutine==2:
         
+        import modalsys
+    
+        modal_sys = modalsys.ModalSys(isSparse=False)
+        modal_sys.AddOutputMtrx(fName="outputs.csv")
+        
         loading_obj = loading.LoadTrain()
         
         ML_analysis = MovingLoadAnalysis(modalsys_obj=modal_sys,
@@ -679,6 +796,11 @@ if __name__ == "__main__":
     
     elif testRoutine==3:
         
+        import modalsys
+    
+        modal_sys = modalsys.ModalSys(isSparse=False)
+        modal_sys.AddOutputMtrx(fName="outputs.csv")
+        
         rslts = run_multiple("MovingLoadAnalysis",
                              dynsys_obj=modal_sys,
                              loadVel=(numpy.array([380,390,400])*1000/3600).tolist(),
@@ -686,6 +808,16 @@ if __name__ == "__main__":
                              dt=0.01)
         
         [x.PlotResults() for x in rslts]
+        
+    
+    elif testRoutine==4:    
+
+        def test_func(t):
+            return 0.02*numpy.sin(2.0*t)
+        
+        T, rs = ResponseSpectrum(test_func,
+                                 eta=0.005,
+                                 T_vals=numpy.linspace(0.01,8.0,num=80))
             
     else:
         raise ValueError("Test routine does not exist!")
