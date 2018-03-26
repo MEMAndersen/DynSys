@@ -638,7 +638,7 @@ class Multiple():
 
 if __name__ == "__main__":
     
-    testRoutine=2
+    testRoutine=4
     
     import modalsys
     
@@ -686,6 +686,6 @@ if __name__ == "__main__":
                              dt=0.01)
         
         [x.PlotResults() for x in rslts]
-        
+            
     else:
-        raise ValueError("Not implemented!")
+        raise ValueError("Test routine does not exist!")
