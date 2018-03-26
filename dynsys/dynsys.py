@@ -29,7 +29,8 @@ class DynSys:
                  output_names=None,
                  isLinear=True,
                  isSparse=False,
-                 name=None):
+                 name=None,
+                 showMsgs=True):
         """
         Dynamic systems, which may have constraints, are defined by the 
         following:
@@ -142,7 +143,8 @@ class DynSys:
         self._CheckSystemMatrices()
         self.CheckOutputMtrx()
         
-        print("{0} `{1}` initialised.".format(self.description,self.name))
+        if showMsgs:
+            print("%s `%s` initialised." % (self.description,self.name))
         
         if isSparse:
             print("Note: sparse matrix functionality as provided by Scipy "
