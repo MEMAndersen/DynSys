@@ -235,7 +235,7 @@ class TStep:
         t0 = self.tStart
         force0 = force_func(t0)
         
-        if len(force0)>0:
+        if isinstance(force0,list):
             if force0.shape[0]!=expected_nDOF:
                 raise ValueError("`force_func` returns vector of unexpected shape!\n" + 
                                  "Shape expected: ({0},)\n".format(expected_nDOF) + 
@@ -321,7 +321,7 @@ class TStep:
             i += 1
         
 
-    def run(self,method='RK45'):
+    def run(self,method='RK45',showMsgs=True):
         """
         Runs time-stepping analysis
         ***
@@ -340,7 +340,10 @@ class TStep:
         [solve_ivp]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp
         """
         
-        print("Running time-stepping analysis...")
+        if self.name is None:
+            print("Running time-stepping analysis...")
+        else:
+            print("Running time-stepping analysis: %s" % self.name)
         
         # Retrieve solver params from class attributes
         tmin = self.tStart
@@ -354,14 +357,14 @@ class TStep:
         kwargs["events"]=self.event_funcs
         
         # Print to denote parameters used
-        print("Analysis time interval: [%.2f, %.2f] seconds" % (tmin,tmax))
+        if showMsgs: print("Analysis time interval: [%.2f, %.2f] seconds" % (tmin,tmax))
         
         if self.dt is not None:
-            print("Fixed time step specified: %.2e seconds" % self.dt)
+            if showMsgs: print("Fixed time step specified: %.2e seconds" % self.dt)
             kwargs["t_eval"]=npy.arange(tmin,tmax,self.dt)
         else:
             if self.max_dt is not None:
-                print("Maximum time step specified: %.3f seconds" % self.max_dt)
+                if showMsgs: print("Maximum time step specified: %.3f seconds" % self.max_dt)
                 kwargs["max_step"]=self.max_dt
         
         # Define ODE function in the expected form dy/dt = f(t,y)
@@ -379,8 +382,6 @@ class TStep:
             return xdot
         
         # Run solver
-        
-        
         terminateSolver = False
         solvecount = 0
         eventcount = 0
@@ -445,7 +446,7 @@ class TStep:
                 
                 terminateSolver = True
                 print("Analysis complete!")
-                print(sol.message) 
+                if showMsgs: print(sol.message) 
                 
             else:
                 
@@ -453,13 +454,14 @@ class TStep:
                 
         # Calculate responses
         results_obj.CalcResponses(write_results_to_file=self.writeResults2File,
-                                  results_fName=self.results_fName)
+                                  results_fName=self.results_fName,
+                                  showMsgs=showMsgs)
         
-        print("Total time steps: {0}".format(results_obj.nResults))        
-        print("Overall solution time: %.3f seconds" % solve_time)
-        print("Overall post-processing time: %.3f seconds" % resultsproc_time)
+        if showMsgs: print("Total time steps: {0}".format(results_obj.nResults))        
+        if showMsgs: print("Overall solution time: %.3f seconds" % solve_time)
+        if showMsgs: print("Overall post-processing time: %.3f seconds" % resultsproc_time)
         
-        return sol.status
+        return self.results_obj
     
         
         

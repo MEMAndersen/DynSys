@@ -502,7 +502,8 @@ class TStep_Results:
         
     def CalcResponses(self,
                       write_results_to_file=False,
-                      results_fName="ts_results.csv"):
+                      results_fName="ts_results.csv",
+                      showMsgs=True):
         """
         Responses are obtained by pre-multiplying results by output matrices
         
@@ -523,11 +524,11 @@ class TStep_Results:
             
         # Calculate DOF statistics
         if self.calc_dof_stats:
-            self.CalcDOFStats()
+            self.CalcDOFStats(showMsgs=showMsgs)
             
         # Calculate response statistics
         if self.calc_response_stats:
-            self.CalcResponseStats()
+            self.CalcResponseStats(showMsgs=showMsgs)
             
         # Write time series results to file
         if write_results_to_file:
@@ -535,25 +536,25 @@ class TStep_Results:
             
         # Delete DOF time series data (to free-up memory)
         if not self.retainDOFTimeSeries:
-            print("Clearing DOF time series data to save memory...")
+            if showMsgs: print("Clearing DOF time series data to save memory...")
             del self.v
             del self.vdot
             del self.v2dot
         
         # Delete response time series data (to free up memory)
         if not self.retainResponseTimeSeries:
-            print("Clearing response time series data to save memory...")
+            if showMsgs: print("Clearing response time series data to save memory...")
             del self.responses
             del self.responseNames
         
-    def CalcDOFStats(self):
+    def CalcDOFStats(self,showMsgs=True):
         """
         Obtain basic statistics to describe DOF time series
         """
         
         if self.calc_dof_stats:
             
-            print("Calculating DOF statistics...")
+            if showMsgs: print("Calculating DOF statistics...")
             
             stats=[]
             
@@ -577,19 +578,20 @@ class TStep_Results:
             self.dof_stats=stats
             
         else:
-            print("calcResponseStats=False option set. Response statistics "+
-                  "will not be computed.")
+            if showMsgs:
+                print("calcResponseStats=False option set. " +
+                      "Response statistics will not be computed.")
         
         return stats
         
-    def CalcResponseStats(self):
+    def CalcResponseStats(self,showMsgs=True):
         """
         Obtain basic statistics to describe response time series
         """
         
         if self.calc_response_stats:
             
-            print("Calculating response statistics...")
+            if showMsgs: print("Calculating response statistics...")
             
             stats=[]
             
@@ -611,8 +613,9 @@ class TStep_Results:
             self.response_stats=stats
             
         else:
-            print("calcResponseStats=False option set. Response statistics "+
-                  "will not be computed.")
+            if showMsgs:
+                print("calcResponseStats=False option set." + 
+                      "Response statistics will not be computed.")
         
         return stats
     
