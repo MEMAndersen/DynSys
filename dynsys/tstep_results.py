@@ -592,9 +592,7 @@ class TStep_Results:
         if self.calc_response_stats:
             
             if showMsgs: print("Calculating response statistics...")
-            
-            stats=[]
-            
+                    
             # Calculate stats for each response time series
             maxVals = npy.ravel(npy.max(self.responses,axis=1))
             minVals = npy.ravel(npy.min(self.responses,axis=1))
@@ -602,22 +600,21 @@ class TStep_Results:
             absmaxVals = npy.ravel(npy.max(npy.abs(self.responses),axis=1))
         
             # Record stats within a dict
-            d={}
-            d["max"]=maxVals
-            d["min"]=minVals
-            d["std"]=stdVals
-            d["absmax"]=absmaxVals
-            stats.append(d)
+            stats_dict={}
+            stats_dict["max"]=maxVals
+            stats_dict["min"]=minVals
+            stats_dict["std"]=stdVals
+            stats_dict["absmax"]=absmaxVals
             
             # Store within object
-            self.response_stats=stats
+            self.response_stats=stats_dict
             
         else:
             if showMsgs:
                 print("calcResponseStats=False option set." + 
                       "Response statistics will not be computed.")
         
-        return stats
+        return stats_dict
     
     
     def WriteResults2File(self,output_fName="timeseries_results.csv"):
