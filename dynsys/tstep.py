@@ -340,10 +340,11 @@ class TStep:
         [solve_ivp]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp
         """
         
-        if self.name is None:
-            print("Running time-stepping analysis...")
-        else:
-            print("Running time-stepping analysis: %s" % self.name)
+        if showMsgs: 
+            if self.name is None:
+                print("Running time-stepping analysis...")
+            else:
+                print("Running time-stepping analysis: %s" % self.name)
         
         # Retrieve solver params from class attributes
         tmin = self.tStart
@@ -445,7 +446,7 @@ class TStep:
                 # The solver successfully reached the interval end
                 
                 terminateSolver = True
-                print("Analysis complete!")
+                if showMsgs: print("Analysis complete!")
                 if showMsgs: print(sol.message) 
                 
             else:
