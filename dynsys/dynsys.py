@@ -139,7 +139,7 @@ class DynSys:
         self._CheckSystemMatrices()
         self.CheckOutputMtrx()
         
-        print("{0} initialised.".format(self.description))
+        print("{0} `{1}` initialised.".format(self.description,self.name))
         
         if isSparse:
             print("Note: sparse matrix functionality as provided by Scipy "
@@ -292,6 +292,8 @@ class DynSys:
         attr_list = ["M_mtrx", "C_mtrx", "K_mtrx", "J_mtrx",
                      "M_inv", "A_inv",
                      "A_mtrx","B_mtrx"]
+        
+        print("System matrices for `{0}`:\n".format(self.name))
         
         for attr in attr_list:
         
