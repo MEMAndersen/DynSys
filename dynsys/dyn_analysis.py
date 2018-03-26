@@ -685,7 +685,8 @@ def ResponseSpectrum(accFunc,
     T_vals = numpy.ravel(T_vals).tolist()
     
     # Print summary of key inputs
-    print("Ground motion function supplied: %s" % accFunc.__name__)
+    if hasattr(accFunc,"__name__"):
+        print("Ground motion function supplied: %s" % accFunc.__name__)
     print("Time-stepping analysis interval: [%.2f, %.2f]" % (0,tResponse))
     print("Number of SDOF oscillators to be analysed: %d" % len(T_vals))
     print("Damping ratio for SDOF oscillators: {:.2%}".format(eta))
