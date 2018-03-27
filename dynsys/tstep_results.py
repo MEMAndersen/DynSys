@@ -304,12 +304,13 @@ class TStep_Results:
         if printProgress:
             print("Preparing results plot...")
             tic=timeit.default_timer()
+            
+        # Retrieve results from object
+        _responses = self.responses
+        _responseNames = self.responseNames
     
         # Determine total number of responses to plot
-        nResponses=0
-        for _responses in self.responses:
-            nResponses+=_responses.shape[1]
-            
+        nResponses =_responses.shape[0]
         print("nResponses to plot: {0}".format(nResponses))
         
         if nResponses == 0:
@@ -329,43 +330,42 @@ class TStep_Results:
             minVal = npy.min(self.responses)
             absmaxVal = npy.max([maxVal,minVal])
         
-        # Loop through all matrices in response list
+        # Loop through plotting all responses
         tvals = self.t
         
-        for i, _responses in enumerate(self.responses):
+        for r in range(nResponses):
             
-            _responseNames = self.responseNames[i]
+            if useCommonPlot:
+                ax = axarr
+            else:
+                ax = axarr[r]
             
-            for r in range(_responses.shape[1]):
-                
-                if useCommonPlot:
-                    ax = axarr
-                else:
-                    ax = axarr[r]
-                
-                vals = _responses[:,r]
-                print(vals.shape)
-                label_str = _responseNames[r]
-                print(label_str)
-                
-                ax.plot(tvals,vals,label=label_str)
-                                
-                ax.set_xlim([self.tstep_obj.tStart,self.tstep_obj.tEnd])
+            vals = _responses[r,:].T
+            label_str = _responseNames[r]
+            
+            ax.plot(tvals,vals,label=label_str)
+                            
+            ax.set_xlim([self.tstep_obj.tStart,self.tstep_obj.tEnd])
+            
+            if useCommonPlot:
+                if r == nResponses-1:
+                    ax.set_xlabel("Time [s]")
+            else:
                 ax.set_xlabel("Time [s]")
-                
-                if useCommonScale and not useCommonPlot:
-                    ax.set_ylim([-absmaxVal,+absmaxVal])
-                
-                if self.responseNames is not None:
-                    ax.legend(loc='best')
-                
-                # Plot horizontal lines to overlay values provided
-                # Only plot once in case of common plot
-                if (useCommonPlot and r==0) or (not useCommonPlot):
-    
-                    if y_overlay is not None:
-                        for y_val  in y_overlay:
-                            ax.axhline(y_val,color='r')
+            
+            if useCommonScale and not useCommonPlot:
+                ax.set_ylim([-absmaxVal,+absmaxVal])
+            
+            if self.responseNames is not None:
+                ax.legend(loc='right')
+            
+            # Plot horizontal lines to overlay values provided
+            # Only plot once in case of common plot
+            if (useCommonPlot and r==0) or (not useCommonPlot):
+
+                if y_overlay is not None:
+                    for y_val  in y_overlay:
+                        ax.axhline(y_val,color='r')
         
         if printProgress:
             toc=timeit.default_timer()
@@ -397,7 +397,6 @@ class TStep_Results:
                                           dofs2Plot=dofs2Plot))
         
         figs.append(self.PlotResponseResults(printProgress=printProgress,
-                                             raiseExceptions=False,
                                              useCommonPlot=useCommonPlot))
         
         return figs
@@ -413,7 +412,7 @@ class TStep_Results:
         
         """
         
-        print("Plotting PSD estimates of responses using Welch's method...")
+        print("Plotting PSD estimates of responses using periodograms...")
         
         if self.responses is None:
             raise ValueError("No response time series data avaliable!")
@@ -444,11 +443,11 @@ class TStep_Results:
         fig.legend(handles,self.responseNames,loc='upper right')
         
         # PSD plot
-        f, Pxx = scipy.signal.welch(responses,fs=fs,nperseg=nperseg)
+        f, Pxx = scipy.signal.periodogram(responses,fs)
         ax = axarr[1]
         ax.plot(f,Pxx.T)
         ax.set_xlim([0,fs/2])
-        ax.set_title("PSDs of responses")
+        ax.set_title("Periodograms of responses")
         ax.set_xlabel("Frequency (Hz)")
         
         if self.tstep_obj.name is not None:
@@ -459,6 +458,8 @@ class TStep_Results:
         fig.subplots_adjust(right=0.7)      # create space for figlegend
             
     def AnimateResults(self):
+        
+        ValueError("Unfinished - do not use!")
         
         n = self.nDOF
         
