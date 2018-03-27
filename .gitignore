@@ -1,0 +1,14 @@
+# Ignore files in the following folders
+
+# Spyder folders
+.spyproject/
+
+# Pycache folders
+docs/__pycache__/
+dynsys/__pycache__/
+examples/__pycache__/
+tests/__pycache__/
+validation/__pycache__/
+
+# Hypothesis folders
+tests/.hypothesis/
