@@ -714,10 +714,17 @@ def ResponseSpectrum(accFunc,
         tstep_obj = tstep.TStep(SDOF_sys,
                                 tStart=0, tEnd=tResponse,
                                 force_func=forceFunc,
-                                retainDOFTimeSeries=False)
+                                retainResponseTimeSeries=True)
         
         # Run time-stepping analysis and append results
         results_list.append(tstep_obj.run(showMsgs=False))
+        
+        # Obtain absolute acceleration by adding back in ground motion
+        results_obj = tstep_obj.results_obj
+        results_obj.responses[2,:] += accFunc(results_obj.t.T)
+        
+        # Recalculate statistics
+        results_obj.CalcResponseStats(showMsgs=False)
         
         # Tidy up
         del SDOF_sys
@@ -736,15 +743,18 @@ def ResponseSpectrum(accFunc,
         
         ax = axarr[0]
         ax.plot(T_vals,S_D)
-        ax.set_ylabel("$S_D$ (m)")
+        ax.set_ylabel("SD (m)")
+        ax.set_title("Relative displacement response spectrum")
         
         ax = axarr[1]
         ax.plot(T_vals,S_V)
-        ax.set_ylabel("$S_V$ (m/s)")
+        ax.set_ylabel("SV (m/s)")
+        ax.set_title("Relative velocity response spectrum")
         
         ax = axarr[2]
         ax.plot(T_vals,S_A)
-        ax.set_ylabel("$S_A$ (m/$s^2$)")
+        ax.set_ylabel("SA (m/$s^2$)")
+        ax.set_title("Absolute acceleration response spectrum")
         
         ax.set_xlim([0,numpy.max(T_vals)])
         ax.set_xlabel("Oscillator natural period T (secs)")
@@ -826,7 +836,7 @@ def DesignResponseSpectrum_BSEN1998_1(T_vals=None,
 
 if __name__ == "__main__":
     
-    testRoutine=5
+    testRoutine=4
     
     if testRoutine==1:
         
