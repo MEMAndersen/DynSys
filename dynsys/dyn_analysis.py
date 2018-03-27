@@ -15,6 +15,7 @@ import os
 
 import tstep
 import loading
+import msd_chain
 
 def load(fName):
     """
@@ -595,23 +596,17 @@ class Multiple():
         # Collate ndarray of 'absmax' stats
         def collate_specified_stats(stats_name = 'max'):
             
-            outer_list = []
+            stats_list = []
+            
             for i, results_obj in enumerate(results_list):
                 
-                stats_list = results_obj.response_stats
-                
-                inner_list=[]
-                
-                for r, _stats in enumerate(stats_list):
-                    
-                    vals = _stats[stats_name].tolist()
-                    if r==0: nResponses = len(vals)
-                    inner_list.append(vals)
-                                            
-                outer_list.append(inner_list)
+                stats_dict = results_obj.response_stats                    
+                stats_vals = stats_dict[stats_name].tolist()
+                if i==0: nResponses = len(stats_vals)
+                stats_list.append(stats_vals)
             
             # Flatten nested list
-            arr = numpy.ravel(outer_list)
+            arr = numpy.ravel(stats_list)
             
             # Reshape as ndarray
             newshape = self.vals2permute_shape + (nResponses,)
@@ -622,7 +617,7 @@ class Multiple():
             return arr
 
         # Loop over all stats
-        stats_keys = list(results_list[0].response_stats[0].keys())
+        stats_keys = list(results_list[0].response_stats.keys())
         stats_dict={}
 
         for _key in stats_keys:
@@ -634,18 +629,158 @@ class Multiple():
         
         return stats_dict
     
+# ********************** FUNCTIONS   ****************************************
+    
+def ResponseSpectrum(accFunc,
+                     T_vals=None,
+                     tResponse=10.0,
+                     eta = 0.05,
+                     makePlot = True,
+                     **kwargs):
+    """
+    Function to express ground acceleration time series as a seismic response 
+    spectrum
+    ***
+    
+    A _seismic response spectum_ summarise the peak acceleration response of a 
+    SDOF oscillator in response to ground acceleration time series. Seismic 
+    response spectra therefore represent a useful way of quantifying and 
+    graphically illustrating the severity of a given ground acceleration time 
+    series
+    
+    ***
+    Required:
+    
+    * `accFunc`, function a(t) defining the ground acceleration time series 
+      (usually this is most convenient to supply via an interpolation function)
+      
+    ***
+    Optional:
+        
+    * `tResponse`, time interval over which to carry out time-stepping
+      (set this to be at least the duration of the input acceleration time 
+      series!)
+      
+    * `T_vals`, _list_, periods at which response spectrum to be evaluated
+    
+    * `eta`, damping ratio to which response spectrum obtained is applicable 
+      (5% used by default as this is the default assumption in seismic design)
+      
+     `kwargs` may be used to pass additional arguments down to `TStep` object 
+     that is used to implement time-stepping analysis. Refer `tstep` docs for 
+     further details
+    
+    """
+    
+    # Handle optional inputs
+    if T_vals is None:
+        T_vals = numpy.arange(0.01,1.27,0.05)
+        
+    T_vals = numpy.ravel(T_vals).tolist()
+    
+    # Print summary of key inputs
+    if hasattr(accFunc,"__name__"):
+        print("Ground motion function supplied: %s" % accFunc.__name__)
+    print("Time-stepping analysis interval: [%.2f, %.2f]" % (0,tResponse))
+    print("Number of SDOF oscillators to be analysed: %d" % len(T_vals))
+    print("Damping ratio for SDOF oscillators: {:.2%}".format(eta))
+    
+    # Loop through all periods
+    M = 1.0 # unit mass for all oscillators
+    results_list = []
+    
+    print("Obtaining SDOF responses to ground acceleration...")
+    
+    for _T in T_vals:
+
+        period_str = "Period %.2fs" % _T
+        
+        # Define SDOF oscillator
+        SDOF_sys = msd_chain.MSD_Chain(name=period_str,
+                                       M_vals = M,
+                                       f_vals = 1/_T,
+                                       eta_vals = eta,
+                                       showMsgs=False)
+        
+        # Add output matrix to extract results
+        SDOF_sys.AddOutputMtrx(output_mtrx=numpy.identity(3),
+                               output_names=["Disp","Vel","Acc"])
+        
+        # Define forcing function
+        def forceFunc(t):
+            return M*accFunc(t)
+        
+        # Define time-stepping analysis
+        tstep_obj = tstep.TStep(SDOF_sys,
+                                tStart=0, tEnd=tResponse,
+                                force_func=forceFunc,
+                                retainDOFTimeSeries=False)
+        
+        # Run time-stepping analysis and append results
+        results_list.append(tstep_obj.run(showMsgs=False))
+        
+        # Tidy up
+        del SDOF_sys
+    
+    # Collate absmax statistics
+    print("Retrieving maximum response statistics...")
+    S_D = numpy.asarray([x.response_stats['absmax'][0] for x in results_list])
+    S_V = numpy.asarray([x.response_stats['absmax'][1] for x in results_list])
+    S_A = numpy.asarray([x.response_stats['absmax'][2] for x in results_list])
+    
+    if makePlot:
+        
+        fig, axarr = plt.subplots(3, sharex=True)
+        
+        fig.suptitle("Response spectra")
+        
+        ax = axarr[0]
+        ax.plot(T_vals,S_D)
+        ax.set_ylabel("$S_D$ (m)")
+        
+        ax = axarr[1]
+        ax.plot(T_vals,S_V)
+        ax.set_ylabel("$S_V$ (m/s)")
+        
+        ax = axarr[2]
+        ax.plot(T_vals,S_A)
+        ax.set_ylabel("$S_A$ (m/$s^2$)")
+        
+        ax.set_xlim([0,numpy.max(T_vals)])
+        ax.set_xlabel("Oscillator natural period T (secs)")
+        
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.90)
+    
+    # Return values as dict
+    return_dict = {}
+    return_dict["T_vals"]=T_vals
+    return_dict["S_D"]=S_D
+    return_dict["S_V"]=S_V
+    return_dict["S_A"]=S_A
+    
+    if makePlot:
+        return_dict["fig"]=fig
+    else:
+        return_dict["fig"]=None
+    
+    return return_dict
+    
+    
+    
+    
 # ********************** TEST ROUTINE ****************************************
 
 if __name__ == "__main__":
     
-    testRoutine=2
-    
-    import modalsys
-    
-    modal_sys = modalsys.ModalSys(isSparse=False)
-    modal_sys.AddOutputMtrx(fName="outputs.csv")
+    testRoutine=4
     
     if testRoutine==1:
+        
+        import modalsys
+    
+        modal_sys = modalsys.ModalSys(isSparse=False)
+        modal_sys.AddOutputMtrx(fName="outputs.csv")
         
         def sine(t):
             return numpy.sin(5*t)
@@ -666,6 +801,11 @@ if __name__ == "__main__":
         
     elif testRoutine==2:
         
+        import modalsys
+    
+        modal_sys = modalsys.ModalSys(isSparse=False)
+        modal_sys.AddOutputMtrx(fName="outputs.csv")
+        
         loading_obj = loading.LoadTrain()
         
         ML_analysis = MovingLoadAnalysis(modalsys_obj=modal_sys,
@@ -679,6 +819,11 @@ if __name__ == "__main__":
     
     elif testRoutine==3:
         
+        import modalsys
+    
+        modal_sys = modalsys.ModalSys(isSparse=False)
+        modal_sys.AddOutputMtrx(fName="outputs.csv")
+        
         rslts = run_multiple("MovingLoadAnalysis",
                              dynsys_obj=modal_sys,
                              loadVel=(numpy.array([380,390,400])*1000/3600).tolist(),
@@ -687,5 +832,15 @@ if __name__ == "__main__":
         
         [x.PlotResults() for x in rslts]
         
+    
+    elif testRoutine==4:    
+
+        def test_func(t):
+            return 0.02*numpy.sin(2.0*t)
+        
+        results = ResponseSpectrum(test_func,
+                                   eta=0.005,
+                                   T_vals=numpy.linspace(0.01,8.0,num=80))
+            
     else:
-        raise ValueError("Not implemented!")
+        raise ValueError("Test routine does not exist!")

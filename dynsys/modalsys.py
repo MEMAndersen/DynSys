@@ -96,7 +96,8 @@ class ModalSys(DynSys):
         """
         
         # Read modeshape data
-        self._DefineModeshapes(fname_modeshapes)
+        if fname_modeshapes is not None:
+            self._DefineModeshapes(fname_modeshapes)
         
         
     def _DefineModalParams(self,fName='modalParams.csv', fLimit=None):

@@ -11,6 +11,25 @@ in general differ from version numbers maintained by Portal version control
 system. However major release number will always correspond.
 
 ***
+## [0.5.0] - 2018-03-19 - RIHY
+
+### Added
+* `ResponseSpectrum` function added to `dyn_analysis` module, to allow 
+  calculation of SDOF response spectrum (per seismic analysis) based on ground 
+  motion acceleration time series
+
+### Fixed
+* Bugs in plotting routines within `tstep_results` arising from change to 
+  response results internal storage structure
+* Miscellaneous fixes associated with `None` optional arguments
+
+### Changed
+* Statistics calculated using `CalcResponseStats()` within `tstep_results` 
+  module are now returned as a dict, rather than list of dicts
+
+### Removed
+
+
 ## [0.4.0] - 2018-03-19 - RIHY
 
 ### Added
