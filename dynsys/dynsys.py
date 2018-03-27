@@ -261,7 +261,7 @@ class DynSys:
     def AddOutputMtrx(self,
                       output_mtrx=None,
                       output_names=None,
-                      fName=None):
+                      fName='outputs.csv'):
         """
         Appends `output_mtrx` to `outputsList`
         ***
