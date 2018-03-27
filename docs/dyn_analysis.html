@@ -1752,21 +1752,23 @@ table {
 <span class="c1"># ********************** FUNCTIONS   ****************************************</span>
     
 <span class="k">def</span> <span class="nf">ResponseSpectrum</span><span class="p">(</span><span class="n">accFunc</span><span class="p">,</span>
+                     <span class="n">tResponse</span><span class="p">,</span>
                      <span class="n">T_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">tResponse</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
-                     <span class="n">eta</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-                     <span class="n">makePlot</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+                     <span class="n">eta</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                     <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                      <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to express ground acceleration time series as a seismic response </span>
 <span class="sd">    spectrum</span>
 <span class="sd">    ***</span>
 <span class="sd">    </span>
-<span class="sd">    A _seismic response spectum_ summarise the peak acceleration response of a </span>
-<span class="sd">    SDOF oscillator in response to ground acceleration time series. Seismic </span>
-<span class="sd">    response spectra therefore represent a useful way of quantifying and </span>
-<span class="sd">    graphically illustrating the severity of a given ground acceleration time </span>
-<span class="sd">    series</span>
+<span class="sd">    _Seismic response spectra_ are used to summarises the vibration response </span>
+<span class="sd">    of a SDOF oscillator in response to a transient ground acceleration </span>
+<span class="sd">    time series. Seismic response spectra therefore represent a useful way of </span>
+<span class="sd">    quantifying and graphically illustrating the severity of a given </span>
+<span class="sd">    ground acceleration time series.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    Required:</span>
@@ -1774,27 +1776,57 @@ table {
 <span class="sd">    * `accFunc`, function a(t) defining the ground acceleration time series </span>
 <span class="sd">      (usually this is most convenient to supply via an interpolation function)</span>
 <span class="sd">      </span>
+<span class="sd">    * `tResponse`, time interval over which to carry out time-stepping analysis.</span>
+<span class="sd">      Set this to be at least the duration of the input acceleration time </span>
+<span class="sd">      series!</span>
+<span class="sd">      </span>
+<span class="sd">    **Important note**:</span>
+<span class="sd">        </span>
+<span class="sd">    This routine expects a(t) to have units of m/s&lt;sup&gt;2&lt;/sup&gt;. </span>
+<span class="sd">    It is common (at least in the field of seismic analysis) to quote ground </span>
+<span class="sd">    accelerations in terms of &#39;g&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    Any such time series must be pre-processed by multiplying by </span>
+<span class="sd">    g=9.81m/s&lt;sup&gt;2&lt;/sup&gt;) prior to using this function, such that the </span>
+<span class="sd">    supplied `accFunc` returns ground acceleration in m/s&lt;sup&gt;2&lt;/sup&gt;.</span>
+<span class="sd">      </span>
 <span class="sd">    ***</span>
 <span class="sd">    Optional:</span>
 <span class="sd">        </span>
-<span class="sd">    * `tResponse`, time interval over which to carry out time-stepping</span>
-<span class="sd">      (set this to be at least the duration of the input acceleration time </span>
-<span class="sd">      series!)</span>
+<span class="sd">    * `T_vals`, _list_, periods (in seconds) at which response spectra</span>
+<span class="sd">      are to be evaluated. If _None_ will be set to logarithmically span the range </span>
+<span class="sd">      [0.01,10.0] seconds, which is suitable for most applications.</span>
+<span class="sd">        </span>
+<span class="sd">    * `eta`, damping ratio to which response spectrum obtained is applicable. </span>
+<span class="sd">      5% is used by default, as this a common default in seismic design.</span>
 <span class="sd">      </span>
-<span class="sd">    * `T_vals`, _list_, periods at which response spectrum to be evaluated</span>
-<span class="sd">    </span>
-<span class="sd">    * `eta`, damping ratio to which response spectrum obtained is applicable </span>
-<span class="sd">      (5% used by default as this is the default assumption in seismic design)</span>
+<span class="sd">     * `makePlot`, _boolean_, controls whether results are plotted</span>
 <span class="sd">      </span>
 <span class="sd">     `kwargs` may be used to pass additional arguments down to `TStep` object </span>
 <span class="sd">     that is used to implement time-stepping analysis. Refer `tstep` docs for </span>
 <span class="sd">     further details</span>
+<span class="sd">     </span>
+<span class="sd">    ***</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        </span>
+<span class="sd">    Values are returned as a dictionary, containing the following entries:</span>
+<span class="sd">        </span>
+<span class="sd">    * `T_vals`, periods at which spectra are evaluated.</span>
+<span class="sd">    * `S_D`, relative displacement spectrum (in m)</span>
+<span class="sd">    * `S_V`, relative velocity spectrum (in m/s)</span>
+<span class="sd">    * `S_A`, absolute acceleration spectrum (in m/s&lt;sup&gt;2&lt;/sup&gt;)</span>
+<span class="sd">    * `PSV`, psuedo-velocity spectrum (in m/s)</span>
+<span class="sd">    * `PSA`, psuedo-acceleration spectrum (in m/s&lt;sup&gt;2&lt;/sup&gt;)</span>
+<span class="sd">    </span>
+<span class="sd">    In addition, if `makePlot=True`:</span>
+<span class="sd">        </span>
+<span class="sd">    * `fig`, figure object for plot</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Handle optional inputs</span>
     <span class="k">if</span> <span class="n">T_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">1.27</span><span class="p">,</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
         
     <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     
@@ -1895,9 +1927,11 @@ table {
     <span class="c1"># Return values as dict</span>
     <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;T_vals&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">T_vals</span>
+    
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_D&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_D</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_V&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_V</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_A&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_A</span>
+    
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;PSV&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">PSV</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;PSA&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">PSA</span>
     
@@ -2144,7 +2178,7 @@ Cl. 3.2.2.2 of BS EN 1998-1:2004</p>
       
   <div class="item">
     <div class="name def" id="dyn_analysis.ResponseSpectrum">
-    <p>def <span class="ident">ResponseSpectrum</span>(</p><p>accFunc, T_vals=None, tResponse=10.0, eta=0.05, makePlot=True, **kwargs)</p>
+    <p>def <span class="ident">ResponseSpectrum</span>(</p><p>accFunc, tResponse, T_vals=None, eta=0.05, makePlot=True, **kwargs)</p>
     </div>
     
 
@@ -2153,55 +2187,86 @@ Cl. 3.2.2.2 of BS EN 1998-1:2004</p>
     <div class="desc"><p>Function to express ground acceleration time series as a seismic response 
 spectrum</p>
 <hr />
-<p>A <em>seismic response spectum</em> summarise the peak acceleration response of a 
-SDOF oscillator in response to ground acceleration time series. Seismic 
-response spectra therefore represent a useful way of quantifying and 
-graphically illustrating the severity of a given ground acceleration time 
-series</p>
+<p><em>Seismic response spectra</em> are used to summarises the vibration response 
+of a SDOF oscillator in response to a transient ground acceleration 
+time series. Seismic response spectra therefore represent a useful way of 
+quantifying and graphically illustrating the severity of a given 
+ground acceleration time series.</p>
 <hr />
 <p>Required:</p>
 <ul>
-<li><code>accFunc</code>, function a(t) defining the ground acceleration time series 
-  (usually this is most convenient to supply via an interpolation function)</li>
+<li>
+<p><code>accFunc</code>, function a(t) defining the ground acceleration time series 
+  (usually this is most convenient to supply via an interpolation function)</p>
+</li>
+<li>
+<p><code>tResponse</code>, time interval over which to carry out time-stepping analysis.
+  Set this to be at least the duration of the input acceleration time 
+  series!</p>
+</li>
 </ul>
+<p><strong>Important note</strong>:</p>
+<p>This routine expects a(t) to have units of m/s<sup>2</sup>. 
+It is common (at least in the field of seismic analysis) to quote ground 
+accelerations in terms of 'g'.</p>
+<p>Any such time series must be pre-processed by multiplying by 
+g=9.81m/s<sup>2</sup>) prior to using this function, such that the 
+supplied <code>accFunc</code> returns ground acceleration in m/s<sup>2</sup>.</p>
 <hr />
 <p>Optional:</p>
 <ul>
 <li>
-<p><code>tResponse</code>, time interval over which to carry out time-stepping
-  (set this to be at least the duration of the input acceleration time 
-  series!)</p>
+<p><code>T_vals</code>, <em>list</em>, periods (in seconds) at which response spectra
+  are to be evaluated. If <em>None</em> will be set to logarithmically span the range 
+  [0.01,10.0] seconds, which is suitable for most applications.</p>
 </li>
 <li>
-<p><code>T_vals</code>, <em>list</em>, periods at which response spectrum to be evaluated</p>
+<p><code>eta</code>, damping ratio to which response spectrum obtained is applicable. 
+  5% is used by default, as this a common default in seismic design.</p>
 </li>
 <li>
-<p><code>eta</code>, damping ratio to which response spectrum obtained is applicable 
-  (5% used by default as this is the default assumption in seismic design)</p>
+<p><code>makePlot</code>, <em>boolean</em>, controls whether results are plotted</p>
 </li>
 </ul>
 <p><code>kwargs</code> may be used to pass additional arguments down to <code>TStep</code> object 
  that is used to implement time-stepping analysis. Refer <code>tstep</code> docs for 
- further details</p></div>
+ further details</p>
+<hr />
+<p>Returns:</p>
+<p>Values are returned as a dictionary, containing the following entries:</p>
+<ul>
+<li><code>T_vals</code>, periods at which spectra are evaluated.</li>
+<li><code>S_D</code>, relative displacement spectrum (in m)</li>
+<li><code>S_V</code>, relative velocity spectrum (in m/s)</li>
+<li><code>S_A</code>, absolute acceleration spectrum (in m/s<sup>2</sup>)</li>
+<li><code>PSV</code>, psuedo-velocity spectrum (in m/s)</li>
+<li><code>PSA</code>, psuedo-acceleration spectrum (in m/s<sup>2</sup>)</li>
+</ul>
+<p>In addition, if <code>makePlot=True</code>:</p>
+<ul>
+<li><code>fig</code>, figure object for plot</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.ResponseSpectrum', this);">Show source &equiv;</a></p>
   <div id="source-dyn_analysis.ResponseSpectrum" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">ResponseSpectrum</span><span class="p">(</span><span class="n">accFunc</span><span class="p">,</span>
+                     <span class="n">tResponse</span><span class="p">,</span>
                      <span class="n">T_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">tResponse</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
-                     <span class="n">eta</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-                     <span class="n">makePlot</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+                     <span class="n">eta</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                     <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                      <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to express ground acceleration time series as a seismic response </span>
 <span class="sd">    spectrum</span>
 <span class="sd">    ***</span>
 <span class="sd">    </span>
-<span class="sd">    A _seismic response spectum_ summarise the peak acceleration response of a </span>
-<span class="sd">    SDOF oscillator in response to ground acceleration time series. Seismic </span>
-<span class="sd">    response spectra therefore represent a useful way of quantifying and </span>
-<span class="sd">    graphically illustrating the severity of a given ground acceleration time </span>
-<span class="sd">    series</span>
+<span class="sd">    _Seismic response spectra_ are used to summarises the vibration response </span>
+<span class="sd">    of a SDOF oscillator in response to a transient ground acceleration </span>
+<span class="sd">    time series. Seismic response spectra therefore represent a useful way of </span>
+<span class="sd">    quantifying and graphically illustrating the severity of a given </span>
+<span class="sd">    ground acceleration time series.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    Required:</span>
@@ -2209,27 +2274,57 @@ series</p>
 <span class="sd">    * `accFunc`, function a(t) defining the ground acceleration time series </span>
 <span class="sd">      (usually this is most convenient to supply via an interpolation function)</span>
 <span class="sd">      </span>
+<span class="sd">    * `tResponse`, time interval over which to carry out time-stepping analysis.</span>
+<span class="sd">      Set this to be at least the duration of the input acceleration time </span>
+<span class="sd">      series!</span>
+<span class="sd">      </span>
+<span class="sd">    **Important note**:</span>
+<span class="sd">        </span>
+<span class="sd">    This routine expects a(t) to have units of m/s&lt;sup&gt;2&lt;/sup&gt;. </span>
+<span class="sd">    It is common (at least in the field of seismic analysis) to quote ground </span>
+<span class="sd">    accelerations in terms of &#39;g&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    Any such time series must be pre-processed by multiplying by </span>
+<span class="sd">    g=9.81m/s&lt;sup&gt;2&lt;/sup&gt;) prior to using this function, such that the </span>
+<span class="sd">    supplied `accFunc` returns ground acceleration in m/s&lt;sup&gt;2&lt;/sup&gt;.</span>
+<span class="sd">      </span>
 <span class="sd">    ***</span>
 <span class="sd">    Optional:</span>
 <span class="sd">        </span>
-<span class="sd">    * `tResponse`, time interval over which to carry out time-stepping</span>
-<span class="sd">      (set this to be at least the duration of the input acceleration time </span>
-<span class="sd">      series!)</span>
+<span class="sd">    * `T_vals`, _list_, periods (in seconds) at which response spectra</span>
+<span class="sd">      are to be evaluated. If _None_ will be set to logarithmically span the range </span>
+<span class="sd">      [0.01,10.0] seconds, which is suitable for most applications.</span>
+<span class="sd">        </span>
+<span class="sd">    * `eta`, damping ratio to which response spectrum obtained is applicable. </span>
+<span class="sd">      5% is used by default, as this a common default in seismic design.</span>
 <span class="sd">      </span>
-<span class="sd">    * `T_vals`, _list_, periods at which response spectrum to be evaluated</span>
-<span class="sd">    </span>
-<span class="sd">    * `eta`, damping ratio to which response spectrum obtained is applicable </span>
-<span class="sd">      (5% used by default as this is the default assumption in seismic design)</span>
+<span class="sd">     * `makePlot`, _boolean_, controls whether results are plotted</span>
 <span class="sd">      </span>
 <span class="sd">     `kwargs` may be used to pass additional arguments down to `TStep` object </span>
 <span class="sd">     that is used to implement time-stepping analysis. Refer `tstep` docs for </span>
 <span class="sd">     further details</span>
+<span class="sd">     </span>
+<span class="sd">    ***</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        </span>
+<span class="sd">    Values are returned as a dictionary, containing the following entries:</span>
+<span class="sd">        </span>
+<span class="sd">    * `T_vals`, periods at which spectra are evaluated.</span>
+<span class="sd">    * `S_D`, relative displacement spectrum (in m)</span>
+<span class="sd">    * `S_V`, relative velocity spectrum (in m/s)</span>
+<span class="sd">    * `S_A`, absolute acceleration spectrum (in m/s&lt;sup&gt;2&lt;/sup&gt;)</span>
+<span class="sd">    * `PSV`, psuedo-velocity spectrum (in m/s)</span>
+<span class="sd">    * `PSA`, psuedo-acceleration spectrum (in m/s&lt;sup&gt;2&lt;/sup&gt;)</span>
+<span class="sd">    </span>
+<span class="sd">    In addition, if `makePlot=True`:</span>
+<span class="sd">        </span>
+<span class="sd">    * `fig`, figure object for plot</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Handle optional inputs</span>
     <span class="k">if</span> <span class="n">T_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">1.27</span><span class="p">,</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
         
     <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     
@@ -2330,9 +2425,11 @@ series</p>
     <span class="c1"># Return values as dict</span>
     <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;T_vals&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">T_vals</span>
+    
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_D&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_D</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_V&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_V</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_A&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_A</span>
+    
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;PSV&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">PSV</span>
     <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;PSA&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">PSA</span>
     

@@ -632,21 +632,23 @@ class Multiple():
 # ********************** FUNCTIONS   ****************************************
     
 def ResponseSpectrum(accFunc,
+                     tResponse,
                      T_vals=None,
-                     tResponse=10.0,
-                     eta = 0.05,
-                     makePlot = True,
+                     eta=0.05,
+                     makePlot=True,
                      **kwargs):
     """
     Function to express ground acceleration time series as a seismic response 
     spectrum
     ***
     
-    A _seismic response spectum_ summarise the peak acceleration response of a 
-    SDOF oscillator in response to ground acceleration time series. Seismic 
-    response spectra therefore represent a useful way of quantifying and 
-    graphically illustrating the severity of a given ground acceleration time 
-    series
+    _Seismic response spectra_ are used to summarises the vibration response 
+    of a SDOF oscillator in response to a transient ground acceleration 
+    time series. Seismic response spectra therefore represent a useful way of 
+    quantifying and graphically illustrating the severity of a given 
+    ground acceleration time series.
+    
+    
     
     ***
     Required:
@@ -654,27 +656,57 @@ def ResponseSpectrum(accFunc,
     * `accFunc`, function a(t) defining the ground acceleration time series 
       (usually this is most convenient to supply via an interpolation function)
       
+    * `tResponse`, time interval over which to carry out time-stepping analysis.
+      Set this to be at least the duration of the input acceleration time 
+      series!
+      
+    **Important note**:
+        
+    This routine expects a(t) to have units of m/s<sup>2</sup>. 
+    It is common (at least in the field of seismic analysis) to quote ground 
+    accelerations in terms of 'g'.
+    
+    Any such time series must be pre-processed by multiplying by 
+    g=9.81m/s<sup>2</sup>) prior to using this function, such that the 
+    supplied `accFunc` returns ground acceleration in m/s<sup>2</sup>.
+      
     ***
     Optional:
         
-    * `tResponse`, time interval over which to carry out time-stepping
-      (set this to be at least the duration of the input acceleration time 
-      series!)
+    * `T_vals`, _list_, periods (in seconds) at which response spectra
+      are to be evaluated. If _None_ will be set to logarithmically span the range 
+      [0.01,10.0] seconds, which is suitable for most applications.
+        
+    * `eta`, damping ratio to which response spectrum obtained is applicable. 
+      5% is used by default, as this a common default in seismic design.
       
-    * `T_vals`, _list_, periods at which response spectrum to be evaluated
-    
-    * `eta`, damping ratio to which response spectrum obtained is applicable 
-      (5% used by default as this is the default assumption in seismic design)
+     * `makePlot`, _boolean_, controls whether results are plotted
       
      `kwargs` may be used to pass additional arguments down to `TStep` object 
      that is used to implement time-stepping analysis. Refer `tstep` docs for 
      further details
+     
+    ***
+    Returns:
+        
+    Values are returned as a dictionary, containing the following entries:
+        
+    * `T_vals`, periods at which spectra are evaluated.
+    * `S_D`, relative displacement spectrum (in m)
+    * `S_V`, relative velocity spectrum (in m/s)
+    * `S_A`, absolute acceleration spectrum (in m/s<sup>2</sup>)
+    * `PSV`, psuedo-velocity spectrum (in m/s)
+    * `PSA`, psuedo-acceleration spectrum (in m/s<sup>2</sup>)
+    
+    In addition, if `makePlot=True`:
+        
+    * `fig`, figure object for plot
     
     """
     
     # Handle optional inputs
     if T_vals is None:
-        T_vals = numpy.arange(0.01,1.27,0.05)
+        T_vals = numpy.logspace(-2,1,100)
         
     T_vals = numpy.ravel(T_vals).tolist()
     
@@ -775,9 +807,11 @@ def ResponseSpectrum(accFunc,
     # Return values as dict
     return_dict = {}
     return_dict["T_vals"]=T_vals
+    
     return_dict["S_D"]=S_D
     return_dict["S_V"]=S_V
     return_dict["S_A"]=S_A
+    
     return_dict["PSV"]=PSV
     return_dict["PSA"]=PSA
     
