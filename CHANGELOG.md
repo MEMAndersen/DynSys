@@ -12,6 +12,23 @@ system. However major release number will always correspond.
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+* Validation example added to verify accuracy or revised ResponseSpectrum()
+  function. Example computes response spectra for the classic El-Centro (1940)
+  earthquake and makes comparison against published plots. Excellent agreement 
+  found!
+
+### Fixed
+* Bug fix for ResponseSpectrum() function in `dyn_analysis`. 
+  Equation of motion corrected to be -M.a (minus sign previously omitted)
+  Acceleration spectrum now based on _absolute_ acceleration, as is conventional
+  (previous versions omitted to add the input ground motion to the SDOF responses 
+  calculated)
+
 ## [0.5.1] - 2018-03-19 - RIHY
 
 ### Changed
