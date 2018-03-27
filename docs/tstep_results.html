@@ -1400,12 +1400,13 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="k">if</span> <span class="n">printProgress</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Preparing results plot...&quot;</span><span class="p">)</span>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+            
+        <span class="c1"># Retrieve results from object</span>
+        <span class="n">_responses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span>
+        <span class="n">_responseNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span>
     
         <span class="c1"># Determine total number of responses to plot</span>
-        <span class="n">nResponses</span><span class="o">=</span><span class="mi">0</span>
-        <span class="k">for</span> <span class="n">_responses</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">:</span>
-            <span class="n">nResponses</span><span class="o">+=</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            
+        <span class="n">nResponses</span> <span class="o">=</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;nResponses to plot: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nResponses</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="n">nResponses</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -1425,43 +1426,42 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             <span class="n">minVal</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">)</span>
             <span class="n">absmaxVal</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">maxVal</span><span class="p">,</span><span class="n">minVal</span><span class="p">])</span>
         
-        <span class="c1"># Loop through all matrices in response list</span>
+        <span class="c1"># Loop through plotting all responses</span>
         <span class="n">tvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
         
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_responses</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResponses</span><span class="p">):</span>
             
-            <span class="n">_responseNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
             
-            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-                
-                <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
-                    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
-                
-                <span class="n">vals</span> <span class="o">=</span> <span class="n">_responses</span><span class="p">[:,</span><span class="n">r</span><span class="p">]</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-                <span class="n">label_str</span> <span class="o">=</span> <span class="n">_responseNames</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">label_str</span><span class="p">)</span>
-                
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tvals</span><span class="p">,</span><span class="n">vals</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
-                                
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">_responses</span><span class="p">[</span><span class="n">r</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">label_str</span> <span class="o">=</span> <span class="n">_responseNames</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tvals</span><span class="p">,</span><span class="n">vals</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
+                            
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+            
+            <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="n">nResponses</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [s]&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [s]&quot;</span><span class="p">)</span>
-                
-                <span class="k">if</span> <span class="n">useCommonScale</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">absmaxVal</span><span class="p">,</span><span class="o">+</span><span class="n">absmaxVal</span><span class="p">])</span>
-                
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
-                
-                <span class="c1"># Plot horizontal lines to overlay values provided</span>
-                <span class="c1"># Only plot once in case of common plot</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">useCommonPlot</span> <span class="ow">and</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">):</span>
-    
-                    <span class="k">if</span> <span class="n">y_overlay</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">y_val</span>  <span class="ow">in</span> <span class="n">y_overlay</span><span class="p">:</span>
-                            <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">useCommonScale</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">absmaxVal</span><span class="p">,</span><span class="o">+</span><span class="n">absmaxVal</span><span class="p">])</span>
+            
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># Plot horizontal lines to overlay values provided</span>
+            <span class="c1"># Only plot once in case of common plot</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">useCommonPlot</span> <span class="ow">and</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="n">y_overlay</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">y_val</span>  <span class="ow">in</span> <span class="n">y_overlay</span><span class="p">:</span>
+                        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">printProgress</span><span class="p">:</span>
             <span class="n">toc</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -1493,7 +1493,6 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                                           <span class="n">dofs2Plot</span><span class="o">=</span><span class="n">dofs2Plot</span><span class="p">))</span>
         
         <span class="n">figs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PlotResponseResults</span><span class="p">(</span><span class="n">printProgress</span><span class="o">=</span><span class="n">printProgress</span><span class="p">,</span>
-                                             <span class="n">raiseExceptions</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                              <span class="n">useCommonPlot</span><span class="o">=</span><span class="n">useCommonPlot</span><span class="p">))</span>
         
         <span class="k">return</span> <span class="n">figs</span>
@@ -1509,7 +1508,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting PSD estimates of responses using Welch&#39;s method...&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting PSD estimates of responses using periodograms...&quot;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No response time series data avaliable!&quot;</span><span class="p">)</span>
@@ -1540,11 +1539,11 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
         
         <span class="c1"># PSD plot</span>
-        <span class="n">f</span><span class="p">,</span> <span class="n">Pxx</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">,</span><span class="n">nperseg</span><span class="o">=</span><span class="n">nperseg</span><span class="p">)</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">Pxx</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">periodogram</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span><span class="n">fs</span><span class="p">)</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">Pxx</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">fs</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;PSDs of responses&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Periodograms of responses&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -1555,6 +1554,8 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
             
     <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unfinished - do not use!&quot;</span><span class="p">)</span>
         
         <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
         
@@ -1598,7 +1599,8 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         
     <span class="k">def</span> <span class="nf">CalcResponses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                       <span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                      <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;ts_results.csv&quot;</span><span class="p">):</span>
+                      <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;ts_results.csv&quot;</span><span class="p">,</span>
+                      <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Responses are obtained by pre-multiplying results by output matrices</span>
 <span class="sd">        </span>
@@ -1619,11 +1621,11 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             
         <span class="c1"># Calculate DOF statistics</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_dof_stats</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">CalcDOFStats</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CalcDOFStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
             
         <span class="c1"># Calculate response statistics</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_response_stats</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
             
         <span class="c1"># Write time series results to file</span>
         <span class="k">if</span> <span class="n">write_results_to_file</span><span class="p">:</span>
@@ -1631,25 +1633,25 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             
         <span class="c1"># Delete DOF time series data (to free-up memory)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">retainDOFTimeSeries</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing DOF time series data to save memory...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing DOF time series data to save memory...&quot;</span><span class="p">)</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">v2dot</span>
         
         <span class="c1"># Delete response time series data (to free up memory)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">retainResponseTimeSeries</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing response time series data to save memory...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing response time series data to save memory...&quot;</span><span class="p">)</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span>
         
-    <span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Obtain basic statistics to describe DOF time series</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_dof_stats</span><span class="p">:</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating DOF statistics...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating DOF statistics...&quot;</span><span class="p">)</span>
             
             <span class="n">stats</span><span class="o">=</span><span class="p">[]</span>
             
@@ -1673,22 +1675,21 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             <span class="bp">self</span><span class="o">.</span><span class="n">dof_stats</span><span class="o">=</span><span class="n">stats</span>
             
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. Response statistics &quot;</span><span class="o">+</span>
-                  <span class="s2">&quot;will not be computed.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. &quot;</span> <span class="o">+</span>
+                      <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">stats</span>
         
-    <span class="k">def</span> <span class="nf">CalcResponseStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcResponseStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Obtain basic statistics to describe response time series</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_response_stats</span><span class="p">:</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating response statistics...&quot;</span><span class="p">)</span>
-            
-            <span class="n">stats</span><span class="o">=</span><span class="p">[]</span>
-            
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating response statistics...&quot;</span><span class="p">)</span>
+                    
             <span class="c1"># Calculate stats for each response time series</span>
             <span class="n">maxVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
             <span class="n">minVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
@@ -1696,21 +1697,21 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             <span class="n">absmaxVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         
             <span class="c1"># Record stats within a dict</span>
-            <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">maxVals</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">minVals</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">stdVals</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;absmax&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">absmaxVals</span>
-            <span class="n">stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">stats_dict</span><span class="o">=</span><span class="p">{}</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">maxVals</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">minVals</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">stdVals</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;absmax&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">absmaxVals</span>
             
             <span class="c1"># Store within object</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">response_stats</span><span class="o">=</span><span class="n">stats</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">response_stats</span><span class="o">=</span><span class="n">stats_dict</span>
             
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. Response statistics &quot;</span><span class="o">+</span>
-                  <span class="s2">&quot;will not be computed.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set.&quot;</span> <span class="o">+</span> 
+                      <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="n">stats</span>
+        <span class="k">return</span> <span class="n">stats_dict</span>
     
     
     <span class="k">def</span> <span class="nf">WriteResults2File</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">output_fName</span><span class="o">=</span><span class="s2">&quot;timeseries_results.csv&quot;</span><span class="p">):</span>
@@ -2084,12 +2085,13 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="k">if</span> <span class="n">printProgress</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Preparing results plot...&quot;</span><span class="p">)</span>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+            
+        <span class="c1"># Retrieve results from object</span>
+        <span class="n">_responses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span>
+        <span class="n">_responseNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span>
     
         <span class="c1"># Determine total number of responses to plot</span>
-        <span class="n">nResponses</span><span class="o">=</span><span class="mi">0</span>
-        <span class="k">for</span> <span class="n">_responses</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">:</span>
-            <span class="n">nResponses</span><span class="o">+=</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            
+        <span class="n">nResponses</span> <span class="o">=</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;nResponses to plot: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nResponses</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="n">nResponses</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2109,43 +2111,42 @@ analysis as carried out by <code>TStep</code></p></div>
             <span class="n">minVal</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">)</span>
             <span class="n">absmaxVal</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">maxVal</span><span class="p">,</span><span class="n">minVal</span><span class="p">])</span>
         
-        <span class="c1"># Loop through all matrices in response list</span>
+        <span class="c1"># Loop through plotting all responses</span>
         <span class="n">tvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
         
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_responses</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResponses</span><span class="p">):</span>
             
-            <span class="n">_responseNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
             
-            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-                
-                <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
-                    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
-                
-                <span class="n">vals</span> <span class="o">=</span> <span class="n">_responses</span><span class="p">[:,</span><span class="n">r</span><span class="p">]</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-                <span class="n">label_str</span> <span class="o">=</span> <span class="n">_responseNames</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">label_str</span><span class="p">)</span>
-                
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tvals</span><span class="p">,</span><span class="n">vals</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
-                                
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">_responses</span><span class="p">[</span><span class="n">r</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">label_str</span> <span class="o">=</span> <span class="n">_responseNames</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tvals</span><span class="p">,</span><span class="n">vals</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
+                            
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+            
+            <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="n">nResponses</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [s]&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [s]&quot;</span><span class="p">)</span>
-                
-                <span class="k">if</span> <span class="n">useCommonScale</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">absmaxVal</span><span class="p">,</span><span class="o">+</span><span class="n">absmaxVal</span><span class="p">])</span>
-                
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
-                
-                <span class="c1"># Plot horizontal lines to overlay values provided</span>
-                <span class="c1"># Only plot once in case of common plot</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">useCommonPlot</span> <span class="ow">and</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">):</span>
-    
-                    <span class="k">if</span> <span class="n">y_overlay</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">y_val</span>  <span class="ow">in</span> <span class="n">y_overlay</span><span class="p">:</span>
-                            <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">useCommonScale</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">absmaxVal</span><span class="p">,</span><span class="o">+</span><span class="n">absmaxVal</span><span class="p">])</span>
+            
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># Plot horizontal lines to overlay values provided</span>
+            <span class="c1"># Only plot once in case of common plot</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">useCommonPlot</span> <span class="ow">and</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="n">y_overlay</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">y_val</span>  <span class="ow">in</span> <span class="n">y_overlay</span><span class="p">:</span>
+                        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">printProgress</span><span class="p">:</span>
             <span class="n">toc</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -2177,7 +2178,6 @@ analysis as carried out by <code>TStep</code></p></div>
                                           <span class="n">dofs2Plot</span><span class="o">=</span><span class="n">dofs2Plot</span><span class="p">))</span>
         
         <span class="n">figs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PlotResponseResults</span><span class="p">(</span><span class="n">printProgress</span><span class="o">=</span><span class="n">printProgress</span><span class="p">,</span>
-                                             <span class="n">raiseExceptions</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                              <span class="n">useCommonPlot</span><span class="o">=</span><span class="n">useCommonPlot</span><span class="p">))</span>
         
         <span class="k">return</span> <span class="n">figs</span>
@@ -2193,7 +2193,7 @@ analysis as carried out by <code>TStep</code></p></div>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting PSD estimates of responses using Welch&#39;s method...&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting PSD estimates of responses using periodograms...&quot;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No response time series data avaliable!&quot;</span><span class="p">)</span>
@@ -2224,11 +2224,11 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
         
         <span class="c1"># PSD plot</span>
-        <span class="n">f</span><span class="p">,</span> <span class="n">Pxx</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">,</span><span class="n">nperseg</span><span class="o">=</span><span class="n">nperseg</span><span class="p">)</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">Pxx</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">periodogram</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span><span class="n">fs</span><span class="p">)</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">Pxx</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">fs</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;PSDs of responses&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Periodograms of responses&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -2239,6 +2239,8 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
             
     <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unfinished - do not use!&quot;</span><span class="p">)</span>
         
         <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
         
@@ -2282,7 +2284,8 @@ analysis as carried out by <code>TStep</code></p></div>
         
     <span class="k">def</span> <span class="nf">CalcResponses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                       <span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                      <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;ts_results.csv&quot;</span><span class="p">):</span>
+                      <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;ts_results.csv&quot;</span><span class="p">,</span>
+                      <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Responses are obtained by pre-multiplying results by output matrices</span>
 <span class="sd">        </span>
@@ -2303,11 +2306,11 @@ analysis as carried out by <code>TStep</code></p></div>
             
         <span class="c1"># Calculate DOF statistics</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_dof_stats</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">CalcDOFStats</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CalcDOFStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
             
         <span class="c1"># Calculate response statistics</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_response_stats</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
             
         <span class="c1"># Write time series results to file</span>
         <span class="k">if</span> <span class="n">write_results_to_file</span><span class="p">:</span>
@@ -2315,25 +2318,25 @@ analysis as carried out by <code>TStep</code></p></div>
             
         <span class="c1"># Delete DOF time series data (to free-up memory)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">retainDOFTimeSeries</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing DOF time series data to save memory...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing DOF time series data to save memory...&quot;</span><span class="p">)</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">v2dot</span>
         
         <span class="c1"># Delete response time series data (to free up memory)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">retainResponseTimeSeries</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing response time series data to save memory...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing response time series data to save memory...&quot;</span><span class="p">)</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span>
         
-    <span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Obtain basic statistics to describe DOF time series</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_dof_stats</span><span class="p">:</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating DOF statistics...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating DOF statistics...&quot;</span><span class="p">)</span>
             
             <span class="n">stats</span><span class="o">=</span><span class="p">[]</span>
             
@@ -2357,22 +2360,21 @@ analysis as carried out by <code>TStep</code></p></div>
             <span class="bp">self</span><span class="o">.</span><span class="n">dof_stats</span><span class="o">=</span><span class="n">stats</span>
             
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. Response statistics &quot;</span><span class="o">+</span>
-                  <span class="s2">&quot;will not be computed.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. &quot;</span> <span class="o">+</span>
+                      <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">stats</span>
         
-    <span class="k">def</span> <span class="nf">CalcResponseStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcResponseStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Obtain basic statistics to describe response time series</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_response_stats</span><span class="p">:</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating response statistics...&quot;</span><span class="p">)</span>
-            
-            <span class="n">stats</span><span class="o">=</span><span class="p">[]</span>
-            
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating response statistics...&quot;</span><span class="p">)</span>
+                    
             <span class="c1"># Calculate stats for each response time series</span>
             <span class="n">maxVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
             <span class="n">minVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
@@ -2380,21 +2382,21 @@ analysis as carried out by <code>TStep</code></p></div>
             <span class="n">absmaxVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         
             <span class="c1"># Record stats within a dict</span>
-            <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">maxVals</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">minVals</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">stdVals</span>
-            <span class="n">d</span><span class="p">[</span><span class="s2">&quot;absmax&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">absmaxVals</span>
-            <span class="n">stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">stats_dict</span><span class="o">=</span><span class="p">{}</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">maxVals</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">minVals</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">stdVals</span>
+            <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;absmax&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">absmaxVals</span>
             
             <span class="c1"># Store within object</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">response_stats</span><span class="o">=</span><span class="n">stats</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">response_stats</span><span class="o">=</span><span class="n">stats_dict</span>
             
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. Response statistics &quot;</span><span class="o">+</span>
-                  <span class="s2">&quot;will not be computed.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set.&quot;</span> <span class="o">+</span> 
+                      <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="n">stats</span>
+        <span class="k">return</span> <span class="n">stats_dict</span>
     
     
     <span class="k">def</span> <span class="nf">WriteResults2File</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">output_fName</span><span class="o">=</span><span class="s2">&quot;timeseries_results.csv&quot;</span><span class="p">):</span>
@@ -2655,6 +2657,8 @@ recomputed using <code>CalcResponses()</code> function</p></div>
   <div id="source-tstep_results.TStep_Results.AnimateResults" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     
+    <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unfinished - do not use!&quot;</span><span class="p">)</span>
+    
     <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
     
     <span class="n">vmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
@@ -2704,7 +2708,7 @@ recomputed using <code>CalcResponses()</code> function</p></div>
             
   <div class="item">
     <div class="name def" id="tstep_results.TStep_Results.CalcDOFStats">
-    <p>def <span class="ident">CalcDOFStats</span>(</p><p>self)</p>
+    <p>def <span class="ident">CalcDOFStats</span>(</p><p>self, showMsgs=True)</p>
     </div>
     
 
@@ -2714,14 +2718,14 @@ recomputed using <code>CalcResponses()</code> function</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.CalcDOFStats', this);">Show source &equiv;</a></p>
   <div id="source-tstep_results.TStep_Results.CalcDOFStats" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Obtain basic statistics to describe DOF time series</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_dof_stats</span><span class="p">:</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating DOF statistics...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating DOF statistics...&quot;</span><span class="p">)</span>
         
         <span class="n">stats</span><span class="o">=</span><span class="p">[]</span>
         
@@ -2745,8 +2749,9 @@ recomputed using <code>CalcResponses()</code> function</p></div>
         <span class="bp">self</span><span class="o">.</span><span class="n">dof_stats</span><span class="o">=</span><span class="n">stats</span>
         
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. Response statistics &quot;</span><span class="o">+</span>
-              <span class="s2">&quot;will not be computed.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. &quot;</span> <span class="o">+</span>
+                  <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">stats</span>
 </pre></div>
@@ -2759,7 +2764,7 @@ recomputed using <code>CalcResponses()</code> function</p></div>
             
   <div class="item">
     <div class="name def" id="tstep_results.TStep_Results.CalcResponseStats">
-    <p>def <span class="ident">CalcResponseStats</span>(</p><p>self)</p>
+    <p>def <span class="ident">CalcResponseStats</span>(</p><p>self, showMsgs=True)</p>
     </div>
     
 
@@ -2769,17 +2774,15 @@ recomputed using <code>CalcResponses()</code> function</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.CalcResponseStats', this);">Show source &equiv;</a></p>
   <div id="source-tstep_results.TStep_Results.CalcResponseStats" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcResponseStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcResponseStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Obtain basic statistics to describe response time series</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_response_stats</span><span class="p">:</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating response statistics...&quot;</span><span class="p">)</span>
-        
-        <span class="n">stats</span><span class="o">=</span><span class="p">[]</span>
-        
+        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating response statistics...&quot;</span><span class="p">)</span>
+                
         <span class="c1"># Calculate stats for each response time series</span>
         <span class="n">maxVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         <span class="n">minVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
@@ -2787,21 +2790,21 @@ recomputed using <code>CalcResponses()</code> function</p></div>
         <span class="n">absmaxVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
     
         <span class="c1"># Record stats within a dict</span>
-        <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">maxVals</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">minVals</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">stdVals</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;absmax&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">absmaxVals</span>
-        <span class="n">stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">stats_dict</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">maxVals</span>
+        <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">minVals</span>
+        <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;std&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">stdVals</span>
+        <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;absmax&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">absmaxVals</span>
         
         <span class="c1"># Store within object</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">response_stats</span><span class="o">=</span><span class="n">stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response_stats</span><span class="o">=</span><span class="n">stats_dict</span>
         
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set. Response statistics &quot;</span><span class="o">+</span>
-              <span class="s2">&quot;will not be computed.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set.&quot;</span> <span class="o">+</span> 
+                  <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
     
-    <span class="k">return</span> <span class="n">stats</span>
+    <span class="k">return</span> <span class="n">stats_dict</span>
 </pre></div>
 
   </div>
@@ -2812,7 +2815,7 @@ recomputed using <code>CalcResponses()</code> function</p></div>
             
   <div class="item">
     <div class="name def" id="tstep_results.TStep_Results.CalcResponses">
-    <p>def <span class="ident">CalcResponses</span>(</p><p>self, write_results_to_file=False, results_fName=&#39;ts_results.csv&#39;)</p>
+    <p>def <span class="ident">CalcResponses</span>(</p><p>self, write_results_to_file=False, results_fName=&#39;ts_results.csv&#39;, showMsgs=True)</p>
     </div>
     
 
@@ -2827,7 +2830,8 @@ function.</p></div>
   <div id="source-tstep_results.TStep_Results.CalcResponses" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcResponses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                   <span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                  <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;ts_results.csv&quot;</span><span class="p">):</span>
+                  <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;ts_results.csv&quot;</span><span class="p">,</span>
+                  <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Responses are obtained by pre-multiplying results by output matrices</span>
 <span class="sd">    </span>
@@ -2848,11 +2852,11 @@ function.</p></div>
         
     <span class="c1"># Calculate DOF statistics</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_dof_stats</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">CalcDOFStats</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CalcDOFStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
         
     <span class="c1"># Calculate response statistics</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_response_stats</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
         
     <span class="c1"># Write time series results to file</span>
     <span class="k">if</span> <span class="n">write_results_to_file</span><span class="p">:</span>
@@ -2860,14 +2864,14 @@ function.</p></div>
         
     <span class="c1"># Delete DOF time series data (to free-up memory)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">retainDOFTimeSeries</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing DOF time series data to save memory...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing DOF time series data to save memory...&quot;</span><span class="p">)</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">v2dot</span>
     
     <span class="c1"># Delete response time series data (to free up memory)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">retainResponseTimeSeries</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing response time series data to save memory...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Clearing response time series data to save memory...&quot;</span><span class="p">)</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span>
 </pre></div>
@@ -2906,7 +2910,7 @@ function.</p></div>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting PSD estimates of responses using Welch&#39;s method...&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting PSD estimates of responses using periodograms...&quot;</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No response time series data avaliable!&quot;</span><span class="p">)</span>
@@ -2937,11 +2941,11 @@ function.</p></div>
     <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span><span class="p">,</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
     
     <span class="c1"># PSD plot</span>
-    <span class="n">f</span><span class="p">,</span> <span class="n">Pxx</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">welch</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">,</span><span class="n">nperseg</span><span class="o">=</span><span class="n">nperseg</span><span class="p">)</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">Pxx</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">periodogram</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span><span class="n">fs</span><span class="p">)</span>
     <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">Pxx</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">fs</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;PSDs of responses&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Periodograms of responses&quot;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -2984,12 +2988,13 @@ all responses/outputs</p></div>
     <span class="k">if</span> <span class="n">printProgress</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Preparing results plot...&quot;</span><span class="p">)</span>
         <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+        
+    <span class="c1"># Retrieve results from object</span>
+    <span class="n">_responses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span>
+    <span class="n">_responseNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span>
 
     <span class="c1"># Determine total number of responses to plot</span>
-    <span class="n">nResponses</span><span class="o">=</span><span class="mi">0</span>
-    <span class="k">for</span> <span class="n">_responses</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">:</span>
-        <span class="n">nResponses</span><span class="o">+=</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        
+    <span class="n">nResponses</span> <span class="o">=</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">print</span><span class="p">(</span><span class="s2">&quot;nResponses to plot: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nResponses</span><span class="p">))</span>
     
     <span class="k">if</span> <span class="n">nResponses</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -3009,43 +3014,41 @@ all responses/outputs</p></div>
         <span class="n">minVal</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">)</span>
         <span class="n">absmaxVal</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">maxVal</span><span class="p">,</span><span class="n">minVal</span><span class="p">])</span>
     
-    <span class="c1"># Loop through all matrices in response list</span>
+    <span class="c1"># Loop through plotting all responses</span>
     <span class="n">tvals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
     
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_responses</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responses</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResponses</span><span class="p">):</span>
         
-        <span class="n">_responseNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
         
-        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            
-            <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
-                <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
-            
-            <span class="n">vals</span> <span class="o">=</span> <span class="n">_responses</span><span class="p">[:,</span><span class="n">r</span><span class="p">]</span>
-            <span class="k">print</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-            <span class="n">label_str</span> <span class="o">=</span> <span class="n">_responseNames</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
-            <span class="k">print</span><span class="p">(</span><span class="n">label_str</span><span class="p">)</span>
-            
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tvals</span><span class="p">,</span><span class="n">vals</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
-                            
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">_responses</span><span class="p">[</span><span class="n">r</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">label_str</span> <span class="o">=</span> <span class="n">_responseNames</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tvals</span><span class="p">,</span><span class="n">vals</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
+                        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+        
+        <span class="k">if</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="n">nResponses</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [s]&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time [s]&quot;</span><span class="p">)</span>
-            
-            <span class="k">if</span> <span class="n">useCommonScale</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">absmaxVal</span><span class="p">,</span><span class="o">+</span><span class="n">absmaxVal</span><span class="p">])</span>
-            
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
-            
-            <span class="c1"># Plot horizontal lines to overlay values provided</span>
-            <span class="c1"># Only plot once in case of common plot</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">useCommonPlot</span> <span class="ow">and</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">):</span>
-
-                <span class="k">if</span> <span class="n">y_overlay</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">y_val</span>  <span class="ow">in</span> <span class="n">y_overlay</span><span class="p">:</span>
-                        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">useCommonScale</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">absmaxVal</span><span class="p">,</span><span class="o">+</span><span class="n">absmaxVal</span><span class="p">])</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseNames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Plot horizontal lines to overlay values provided</span>
+        <span class="c1"># Only plot once in case of common plot</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">useCommonPlot</span> <span class="ow">and</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">useCommonPlot</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">y_overlay</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">y_val</span>  <span class="ow">in</span> <span class="n">y_overlay</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="n">printProgress</span><span class="p">:</span>
         <span class="n">toc</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -3105,7 +3108,6 @@ time-stepping analysis:</p>
                                       <span class="n">dofs2Plot</span><span class="o">=</span><span class="n">dofs2Plot</span><span class="p">))</span>
     
     <span class="n">figs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PlotResponseResults</span><span class="p">(</span><span class="n">printProgress</span><span class="o">=</span><span class="n">printProgress</span><span class="p">,</span>
-                                         <span class="n">raiseExceptions</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                          <span class="n">useCommonPlot</span><span class="o">=</span><span class="n">useCommonPlot</span><span class="p">))</span>
     
     <span class="k">return</span> <span class="n">figs</span>

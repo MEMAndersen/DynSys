@@ -1054,6 +1054,7 @@ table {
     <li class="set"><h3><a href="#header-functions">Functions</a></h3>
       
   <ul>
+    <li class="mono"><a href="#dyn_analysis.ResponseSpectrum">ResponseSpectrum</a></li>
     <li class="mono"><a href="#dyn_analysis.load">load</a></li>
   </ul>
 
@@ -1133,6 +1134,7 @@ table {
 
 <span class="kn">import</span> <span class="nn">tstep</span>
 <span class="kn">import</span> <span class="nn">loading</span>
+<span class="kn">import</span> <span class="nn">msd_chain</span>
 
 <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">fName</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1713,23 +1715,17 @@ table {
         <span class="c1"># Collate ndarray of &#39;absmax&#39; stats</span>
         <span class="k">def</span> <span class="nf">collate_specified_stats</span><span class="p">(</span><span class="n">stats_name</span> <span class="o">=</span> <span class="s1">&#39;max&#39;</span><span class="p">):</span>
             
-            <span class="n">outer_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
+            
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">results_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results_list</span><span class="p">):</span>
                 
-                <span class="n">stats_list</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">response_stats</span>
-                
-                <span class="n">inner_list</span><span class="o">=</span><span class="p">[]</span>
-                
-                <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">_stats</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats_list</span><span class="p">):</span>
-                    
-                    <span class="n">vals</span> <span class="o">=</span> <span class="n">_stats</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
-                    <span class="n">inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
-                                            
-                <span class="n">outer_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_list</span><span class="p">)</span>
+                <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">response_stats</span>                    
+                <span class="n">stats_vals</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
+                <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
             
             <span class="c1"># Flatten nested list</span>
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">outer_list</span><span class="p">)</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">stats_list</span><span class="p">)</span>
             
             <span class="c1"># Reshape as ndarray</span>
             <span class="n">newshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals2permute_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">nResponses</span><span class="p">,)</span>
@@ -1740,7 +1736,7 @@ table {
             <span class="k">return</span> <span class="n">arr</span>
 
         <span class="c1"># Loop over all stats</span>
-        <span class="n">stats_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">stats_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">response_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="n">stats_dict</span><span class="o">=</span><span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">_key</span> <span class="ow">in</span> <span class="n">stats_keys</span><span class="p">:</span>
@@ -1752,18 +1748,158 @@ table {
         
         <span class="k">return</span> <span class="n">stats_dict</span>
     
+<span class="c1"># ********************** FUNCTIONS   ****************************************</span>
+    
+<span class="k">def</span> <span class="nf">ResponseSpectrum</span><span class="p">(</span><span class="n">accFunc</span><span class="p">,</span>
+                     <span class="n">T_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">tResponse</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+                     <span class="n">eta</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+                     <span class="n">makePlot</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to express ground acceleration time series as a seismic response </span>
+<span class="sd">    spectrum</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    A _seismic response spectum_ summarise the peak acceleration response of a </span>
+<span class="sd">    SDOF oscillator in response to ground acceleration time series. Seismic </span>
+<span class="sd">    response spectra therefore represent a useful way of quantifying and </span>
+<span class="sd">    graphically illustrating the severity of a given ground acceleration time </span>
+<span class="sd">    series</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">    </span>
+<span class="sd">    * `accFunc`, function a(t) defining the ground acceleration time series </span>
+<span class="sd">      (usually this is most convenient to supply via an interpolation function)</span>
+<span class="sd">      </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `tResponse`, time interval over which to carry out time-stepping</span>
+<span class="sd">      (set this to be at least the duration of the input acceleration time </span>
+<span class="sd">      series!)</span>
+<span class="sd">      </span>
+<span class="sd">    * `T_vals`, _list_, periods at which response spectrum to be evaluated</span>
+<span class="sd">    </span>
+<span class="sd">    * `eta`, damping ratio to which response spectrum obtained is applicable </span>
+<span class="sd">      (5% used by default as this is the default assumption in seismic design)</span>
+<span class="sd">      </span>
+<span class="sd">     `kwargs` may be used to pass additional arguments down to `TStep` object </span>
+<span class="sd">     that is used to implement time-stepping analysis. Refer `tstep` docs for </span>
+<span class="sd">     further details</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Handle optional inputs</span>
+    <span class="k">if</span> <span class="n">T_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">1.27</span><span class="p">,</span><span class="mf">0.05</span><span class="p">)</span>
+        
+    <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    
+    <span class="c1"># Print summary of key inputs</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">accFunc</span><span class="p">,</span><span class="s2">&quot;__name__&quot;</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Ground motion function supplied: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">accFunc</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time-stepping analysis interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">tResponse</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of SDOF oscillators to be analysed: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">T_vals</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio for SDOF oscillators: {:.2%}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eta</span><span class="p">))</span>
+    
+    <span class="c1"># Loop through all periods</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="c1"># unit mass for all oscillators</span>
+    <span class="n">results_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Obtaining SDOF responses to ground acceleration...&quot;</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">_T</span> <span class="ow">in</span> <span class="n">T_vals</span><span class="p">:</span>
+
+        <span class="n">period_str</span> <span class="o">=</span> <span class="s2">&quot;Period </span><span class="si">%.2f</span><span class="s2">s&quot;</span> <span class="o">%</span> <span class="n">_T</span>
+        
+        <span class="c1"># Define SDOF oscillator</span>
+        <span class="n">SDOF_sys</span> <span class="o">=</span> <span class="n">msd_chain</span><span class="o">.</span><span class="n">MSD_Chain</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">period_str</span><span class="p">,</span>
+                                       <span class="n">M_vals</span> <span class="o">=</span> <span class="n">M</span><span class="p">,</span>
+                                       <span class="n">f_vals</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">_T</span><span class="p">,</span>
+                                       <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">eta</span><span class="p">,</span>
+                                       <span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Add output matrix to extract results</span>
+        <span class="n">SDOF_sys</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Disp&quot;</span><span class="p">,</span><span class="s2">&quot;Vel&quot;</span><span class="p">,</span><span class="s2">&quot;Acc&quot;</span><span class="p">])</span>
+        
+        <span class="c1"># Define forcing function</span>
+        <span class="k">def</span> <span class="nf">forceFunc</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">M</span><span class="o">*</span><span class="n">accFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        
+        <span class="c1"># Define time-stepping analysis</span>
+        <span class="n">tstep_obj</span> <span class="o">=</span> <span class="n">tstep</span><span class="o">.</span><span class="n">TStep</span><span class="p">(</span><span class="n">SDOF_sys</span><span class="p">,</span>
+                                <span class="n">tStart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tEnd</span><span class="o">=</span><span class="n">tResponse</span><span class="p">,</span>
+                                <span class="n">force_func</span><span class="o">=</span><span class="n">forceFunc</span><span class="p">,</span>
+                                <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Run time-stepping analysis and append results</span>
+        <span class="n">results_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+        
+        <span class="c1"># Tidy up</span>
+        <span class="k">del</span> <span class="n">SDOF_sys</span>
+    
+    <span class="c1"># Collate absmax statistics</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Retrieving maximum response statistics...&quot;</span><span class="p">)</span>
+    <span class="n">S_D</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="s1">&#39;absmax&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results_list</span><span class="p">])</span>
+    <span class="n">S_V</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="s1">&#39;absmax&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results_list</span><span class="p">])</span>
+    <span class="n">S_A</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="s1">&#39;absmax&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results_list</span><span class="p">])</span>
+    
+    <span class="k">if</span> <span class="n">makePlot</span><span class="p">:</span>
+        
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Response spectra&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S_D</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$S_D$ (m)&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S_V</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$S_V$ (m/s)&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S_A</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$S_A$ (m/$s^2$)&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Oscillator natural period T (secs)&quot;</span><span class="p">)</span>
+        
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.90</span><span class="p">)</span>
+    
+    <span class="c1"># Return values as dict</span>
+    <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;T_vals&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">T_vals</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_D&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_D</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_V&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_V</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_A&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_A</span>
+    
+    <span class="k">if</span> <span class="n">makePlot</span><span class="p">:</span>
+        <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;fig&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">fig</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;fig&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">None</span>
+    
+    <span class="k">return</span> <span class="n">return_dict</span>
+    
+    
+    
+    
 <span class="c1"># ********************** TEST ROUTINE ****************************************</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
-    <span class="n">testRoutine</span><span class="o">=</span><span class="mi">2</span>
-    
-    <span class="kn">import</span> <span class="nn">modalsys</span>
-    
-    <span class="n">modal_sys</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">ModalSys</span><span class="p">(</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-    <span class="n">modal_sys</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="s2">&quot;outputs.csv&quot;</span><span class="p">)</span>
+    <span class="n">testRoutine</span><span class="o">=</span><span class="mi">4</span>
     
     <span class="k">if</span> <span class="n">testRoutine</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        
+        <span class="kn">import</span> <span class="nn">modalsys</span>
+    
+        <span class="n">modal_sys</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">ModalSys</span><span class="p">(</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">modal_sys</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="s2">&quot;outputs.csv&quot;</span><span class="p">)</span>
         
         <span class="k">def</span> <span class="nf">sine</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
@@ -1784,6 +1920,11 @@ table {
         
     <span class="k">elif</span> <span class="n">testRoutine</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
         
+        <span class="kn">import</span> <span class="nn">modalsys</span>
+    
+        <span class="n">modal_sys</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">ModalSys</span><span class="p">(</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">modal_sys</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="s2">&quot;outputs.csv&quot;</span><span class="p">)</span>
+        
         <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">loading</span><span class="o">.</span><span class="n">LoadTrain</span><span class="p">()</span>
         
         <span class="n">ML_analysis</span> <span class="o">=</span> <span class="n">MovingLoadAnalysis</span><span class="p">(</span><span class="n">modalsys_obj</span><span class="o">=</span><span class="n">modal_sys</span><span class="p">,</span>
@@ -1797,6 +1938,11 @@ table {
     
     <span class="k">elif</span> <span class="n">testRoutine</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
         
+        <span class="kn">import</span> <span class="nn">modalsys</span>
+    
+        <span class="n">modal_sys</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">ModalSys</span><span class="p">(</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">modal_sys</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="s2">&quot;outputs.csv&quot;</span><span class="p">)</span>
+        
         <span class="n">rslts</span> <span class="o">=</span> <span class="n">run_multiple</span><span class="p">(</span><span class="s2">&quot;MovingLoadAnalysis&quot;</span><span class="p">,</span>
                              <span class="n">dynsys_obj</span><span class="o">=</span><span class="n">modal_sys</span><span class="p">,</span>
                              <span class="n">loadVel</span><span class="o">=</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">380</span><span class="p">,</span><span class="mi">390</span><span class="p">,</span><span class="mi">400</span><span class="p">])</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span><span class="mi">3600</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
@@ -1805,8 +1951,18 @@ table {
         
         <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">PlotResults</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">rslts</span><span class="p">]</span>
         
+    
+    <span class="k">elif</span> <span class="n">testRoutine</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>    
+
+        <span class="k">def</span> <span class="nf">test_func</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.02</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+        
+        <span class="n">results</span> <span class="o">=</span> <span class="n">ResponseSpectrum</span><span class="p">(</span><span class="n">test_func</span><span class="p">,</span>
+                                   <span class="n">eta</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span>
+                                   <span class="n">T_vals</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">8.0</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">80</span><span class="p">))</span>
+            
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not implemented!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Test routine does not exist!&quot;</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -1825,6 +1981,192 @@ table {
       </div>
 
     <h2 class="section-title" id="header-functions">Functions</h2>
+      
+  <div class="item">
+    <div class="name def" id="dyn_analysis.ResponseSpectrum">
+    <p>def <span class="ident">ResponseSpectrum</span>(</p><p>accFunc, T_vals=None, tResponse=10.0, eta=0.05, makePlot=True, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function to express ground acceleration time series as a seismic response 
+spectrum</p>
+<hr />
+<p>A <em>seismic response spectum</em> summarise the peak acceleration response of a 
+SDOF oscillator in response to ground acceleration time series. Seismic 
+response spectra therefore represent a useful way of quantifying and 
+graphically illustrating the severity of a given ground acceleration time 
+series</p>
+<hr />
+<p>Required:</p>
+<ul>
+<li><code>accFunc</code>, function a(t) defining the ground acceleration time series 
+  (usually this is most convenient to supply via an interpolation function)</li>
+</ul>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>tResponse</code>, time interval over which to carry out time-stepping
+  (set this to be at least the duration of the input acceleration time 
+  series!)</p>
+</li>
+<li>
+<p><code>T_vals</code>, <em>list</em>, periods at which response spectrum to be evaluated</p>
+</li>
+<li>
+<p><code>eta</code>, damping ratio to which response spectrum obtained is applicable 
+  (5% used by default as this is the default assumption in seismic design)</p>
+</li>
+</ul>
+<p><code>kwargs</code> may be used to pass additional arguments down to <code>TStep</code> object 
+ that is used to implement time-stepping analysis. Refer <code>tstep</code> docs for 
+ further details</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.ResponseSpectrum', this);">Show source &equiv;</a></p>
+  <div id="source-dyn_analysis.ResponseSpectrum" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">ResponseSpectrum</span><span class="p">(</span><span class="n">accFunc</span><span class="p">,</span>
+                     <span class="n">T_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">tResponse</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+                     <span class="n">eta</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+                     <span class="n">makePlot</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to express ground acceleration time series as a seismic response </span>
+<span class="sd">    spectrum</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    A _seismic response spectum_ summarise the peak acceleration response of a </span>
+<span class="sd">    SDOF oscillator in response to ground acceleration time series. Seismic </span>
+<span class="sd">    response spectra therefore represent a useful way of quantifying and </span>
+<span class="sd">    graphically illustrating the severity of a given ground acceleration time </span>
+<span class="sd">    series</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">    </span>
+<span class="sd">    * `accFunc`, function a(t) defining the ground acceleration time series </span>
+<span class="sd">      (usually this is most convenient to supply via an interpolation function)</span>
+<span class="sd">      </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `tResponse`, time interval over which to carry out time-stepping</span>
+<span class="sd">      (set this to be at least the duration of the input acceleration time </span>
+<span class="sd">      series!)</span>
+<span class="sd">      </span>
+<span class="sd">    * `T_vals`, _list_, periods at which response spectrum to be evaluated</span>
+<span class="sd">    </span>
+<span class="sd">    * `eta`, damping ratio to which response spectrum obtained is applicable </span>
+<span class="sd">      (5% used by default as this is the default assumption in seismic design)</span>
+<span class="sd">      </span>
+<span class="sd">     `kwargs` may be used to pass additional arguments down to `TStep` object </span>
+<span class="sd">     that is used to implement time-stepping analysis. Refer `tstep` docs for </span>
+<span class="sd">     further details</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Handle optional inputs</span>
+    <span class="k">if</span> <span class="n">T_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">1.27</span><span class="p">,</span><span class="mf">0.05</span><span class="p">)</span>
+        
+    <span class="n">T_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    
+    <span class="c1"># Print summary of key inputs</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">accFunc</span><span class="p">,</span><span class="s2">&quot;__name__&quot;</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Ground motion function supplied: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">accFunc</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time-stepping analysis interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">tResponse</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of SDOF oscillators to be analysed: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">T_vals</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio for SDOF oscillators: {:.2%}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eta</span><span class="p">))</span>
+    
+    <span class="c1"># Loop through all periods</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="c1"># unit mass for all oscillators</span>
+    <span class="n">results_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Obtaining SDOF responses to ground acceleration...&quot;</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">_T</span> <span class="ow">in</span> <span class="n">T_vals</span><span class="p">:</span>
+
+        <span class="n">period_str</span> <span class="o">=</span> <span class="s2">&quot;Period </span><span class="si">%.2f</span><span class="s2">s&quot;</span> <span class="o">%</span> <span class="n">_T</span>
+        
+        <span class="c1"># Define SDOF oscillator</span>
+        <span class="n">SDOF_sys</span> <span class="o">=</span> <span class="n">msd_chain</span><span class="o">.</span><span class="n">MSD_Chain</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">period_str</span><span class="p">,</span>
+                                       <span class="n">M_vals</span> <span class="o">=</span> <span class="n">M</span><span class="p">,</span>
+                                       <span class="n">f_vals</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">_T</span><span class="p">,</span>
+                                       <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">eta</span><span class="p">,</span>
+                                       <span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Add output matrix to extract results</span>
+        <span class="n">SDOF_sys</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Disp&quot;</span><span class="p">,</span><span class="s2">&quot;Vel&quot;</span><span class="p">,</span><span class="s2">&quot;Acc&quot;</span><span class="p">])</span>
+        
+        <span class="c1"># Define forcing function</span>
+        <span class="k">def</span> <span class="nf">forceFunc</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">M</span><span class="o">*</span><span class="n">accFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        
+        <span class="c1"># Define time-stepping analysis</span>
+        <span class="n">tstep_obj</span> <span class="o">=</span> <span class="n">tstep</span><span class="o">.</span><span class="n">TStep</span><span class="p">(</span><span class="n">SDOF_sys</span><span class="p">,</span>
+                                <span class="n">tStart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tEnd</span><span class="o">=</span><span class="n">tResponse</span><span class="p">,</span>
+                                <span class="n">force_func</span><span class="o">=</span><span class="n">forceFunc</span><span class="p">,</span>
+                                <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Run time-stepping analysis and append results</span>
+        <span class="n">results_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+        
+        <span class="c1"># Tidy up</span>
+        <span class="k">del</span> <span class="n">SDOF_sys</span>
+    
+    <span class="c1"># Collate absmax statistics</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Retrieving maximum response statistics...&quot;</span><span class="p">)</span>
+    <span class="n">S_D</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="s1">&#39;absmax&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results_list</span><span class="p">])</span>
+    <span class="n">S_V</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="s1">&#39;absmax&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results_list</span><span class="p">])</span>
+    <span class="n">S_A</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="s1">&#39;absmax&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results_list</span><span class="p">])</span>
+    
+    <span class="k">if</span> <span class="n">makePlot</span><span class="p">:</span>
+        
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Response spectra&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S_D</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$S_D$ (m)&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S_V</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$S_V$ (m/s)&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S_A</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$S_A$ (m/$s^2$)&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Oscillator natural period T (secs)&quot;</span><span class="p">)</span>
+        
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.90</span><span class="p">)</span>
+    
+    <span class="c1"># Return values as dict</span>
+    <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;T_vals&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">T_vals</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_D&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_D</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_V&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_V</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;S_A&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">S_A</span>
+    
+    <span class="k">if</span> <span class="n">makePlot</span><span class="p">:</span>
+        <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;fig&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">fig</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">return_dict</span><span class="p">[</span><span class="s2">&quot;fig&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">None</span>
+    
+    <span class="k">return</span> <span class="n">return_dict</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
       
   <div class="item">
     <div class="name def" id="dyn_analysis.load">
@@ -2901,23 +3243,17 @@ systematic manner</p></div>
         <span class="c1"># Collate ndarray of &#39;absmax&#39; stats</span>
         <span class="k">def</span> <span class="nf">collate_specified_stats</span><span class="p">(</span><span class="n">stats_name</span> <span class="o">=</span> <span class="s1">&#39;max&#39;</span><span class="p">):</span>
             
-            <span class="n">outer_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
+            
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">results_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results_list</span><span class="p">):</span>
                 
-                <span class="n">stats_list</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">response_stats</span>
-                
-                <span class="n">inner_list</span><span class="o">=</span><span class="p">[]</span>
-                
-                <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">_stats</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats_list</span><span class="p">):</span>
-                    
-                    <span class="n">vals</span> <span class="o">=</span> <span class="n">_stats</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
-                    <span class="n">inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
-                                            
-                <span class="n">outer_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_list</span><span class="p">)</span>
+                <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">response_stats</span>                    
+                <span class="n">stats_vals</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
+                <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
             
             <span class="c1"># Flatten nested list</span>
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">outer_list</span><span class="p">)</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">stats_list</span><span class="p">)</span>
             
             <span class="c1"># Reshape as ndarray</span>
             <span class="n">newshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals2permute_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">nResponses</span><span class="p">,)</span>
@@ -2928,7 +3264,7 @@ systematic manner</p></div>
             <span class="k">return</span> <span class="n">arr</span>
 
         <span class="c1"># Loop over all stats</span>
-        <span class="n">stats_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">stats_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">response_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="n">stats_dict</span><span class="o">=</span><span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">_key</span> <span class="ow">in</span> <span class="n">stats_keys</span><span class="p">:</span>
@@ -3160,23 +3496,17 @@ efficient slicing operations, for example</p></div>
     <span class="c1"># Collate ndarray of &#39;absmax&#39; stats</span>
     <span class="k">def</span> <span class="nf">collate_specified_stats</span><span class="p">(</span><span class="n">stats_name</span> <span class="o">=</span> <span class="s1">&#39;max&#39;</span><span class="p">):</span>
         
-        <span class="n">outer_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">results_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results_list</span><span class="p">):</span>
             
-            <span class="n">stats_list</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">response_stats</span>
-            
-            <span class="n">inner_list</span><span class="o">=</span><span class="p">[]</span>
-            
-            <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">_stats</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats_list</span><span class="p">):</span>
-                
-                <span class="n">vals</span> <span class="o">=</span> <span class="n">_stats</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">r</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
-                <span class="n">inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
-                                        
-            <span class="n">outer_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_list</span><span class="p">)</span>
+            <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">response_stats</span>                    
+            <span class="n">stats_vals</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
+            <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
         
         <span class="c1"># Flatten nested list</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">outer_list</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">stats_list</span><span class="p">)</span>
         
         <span class="c1"># Reshape as ndarray</span>
         <span class="n">newshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals2permute_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">nResponses</span><span class="p">,)</span>
@@ -3186,7 +3516,7 @@ efficient slicing operations, for example</p></div>
         
         <span class="k">return</span> <span class="n">arr</span>
     <span class="c1"># Loop over all stats</span>
-    <span class="n">stats_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">response_stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">stats_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">response_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
     <span class="n">stats_dict</span><span class="o">=</span><span class="p">{}</span>
     <span class="k">for</span> <span class="n">_key</span> <span class="ow">in</span> <span class="n">stats_keys</span><span class="p">:</span>
         
