@@ -909,6 +909,7 @@ if __name__ == "__main__":
         
         T_vals, Se_vals = DesignResponseSpectrum_BSEN1998_1()
         plt.plot(T_vals,Se_vals)
+        
             
     else:
         raise ValueError("Test routine does not exist!")
