@@ -1054,6 +1054,7 @@ table {
     <li class="set"><h3><a href="#header-functions">Functions</a></h3>
       
   <ul>
+    <li class="mono"><a href="#dyn_analysis.DesignResponseSpectrum_BSEN1998_1">DesignResponseSpectrum_BSEN1998_1</a></li>
     <li class="mono"><a href="#dyn_analysis.ResponseSpectrum">ResponseSpectrum</a></li>
     <li class="mono"><a href="#dyn_analysis.load">load</a></li>
   </ul>
@@ -1885,8 +1886,15 @@ table {
     
     <span class="k">return</span> <span class="n">return_dict</span>
     
-    
-    
+<span class="k">def</span> <span class="nf">DesignResponseSpectrum_BSEN1998_1</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">nu</span><span class="p">,</span><span class="n">T_B</span><span class="p">,</span><span class="n">T_C</span><span class="p">,</span><span class="n">T_F</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns horizontal elastic design response spectrum as given by </span>
+<span class="sd">    Cl. 3.2.2.2 of BS EN 1998-1:2004</span>
+<span class="sd">    </span>
+<span class="sd">    ![figure_3_1](../dynsys/img/design_response_spectrum_BSEN1998-1.png)</span>
+<span class="sd">    ![equations](../dynsys/img/design_response_spectrum_BSEN1998-1_equations.png)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
     
 <span class="c1"># ********************** TEST ROUTINE ****************************************</span>
 
@@ -1981,6 +1989,38 @@ table {
       </div>
 
     <h2 class="section-title" id="header-functions">Functions</h2>
+      
+  <div class="item">
+    <div class="name def" id="dyn_analysis.DesignResponseSpectrum_BSEN1998_1">
+    <p>def <span class="ident">DesignResponseSpectrum_BSEN1998_1</span>(</p><p>T_vals, S, nu, T_B, T_C, T_F)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns horizontal elastic design response spectrum as given by 
+Cl. 3.2.2.2 of BS EN 1998-1:2004</p>
+<p><img alt="figure_3_1" src="../dynsys/img/design_response_spectrum_BSEN1998-1.png" />
+<img alt="equations" src="../dynsys/img/design_response_spectrum_BSEN1998-1_equations.png" /></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.DesignResponseSpectrum_BSEN1998_1', this);">Show source &equiv;</a></p>
+  <div id="source-dyn_analysis.DesignResponseSpectrum_BSEN1998_1" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">DesignResponseSpectrum_BSEN1998_1</span><span class="p">(</span><span class="n">T_vals</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">nu</span><span class="p">,</span><span class="n">T_B</span><span class="p">,</span><span class="n">T_C</span><span class="p">,</span><span class="n">T_F</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns horizontal elastic design response spectrum as given by </span>
+<span class="sd">    Cl. 3.2.2.2 of BS EN 1998-1:2004</span>
+<span class="sd">    </span>
+<span class="sd">    ![figure_3_1](../dynsys/img/design_response_spectrum_BSEN1998-1.png)</span>
+<span class="sd">    ![equations](../dynsys/img/design_response_spectrum_BSEN1998-1_equations.png)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
       
   <div class="item">
     <div class="name def" id="dyn_analysis.ResponseSpectrum">

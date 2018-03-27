@@ -766,14 +766,67 @@ def ResponseSpectrum(accFunc,
     
     return return_dict
     
+def DesignResponseSpectrum_BSEN1998_1(T_vals=None,
+                                      a_g=0.02,
+                                      S=1.00,
+                                      nu=1.00,
+                                      T_BCD=[0.05,0.25,1.20]):
+    """
+    Returns horizontal elastic design response spectrum as given by 
+    Cl. 3.2.2.2 of BS EN 1998-1:2004
     
+    ![figure_3_1](../dynsys/img/design_response_spectrum_BSEN1998-1.png)
+    ![equations](../dynsys/img/design_response_spectrum_BSEN1998-1_equations.png)
     
+    Note response spectrum has units as given by `a_g` (units of 'g' typically)
+    """
+    
+    if len(T_BCD)!=3:
+        raise ValueError("`T_BCD` expected to be list of length 3")
+        
+    # Unpack list items for salient periods
+    T_B = T_BCD[0]
+    T_C = T_BCD[1]
+    T_D = T_BCD[2]
+    
+    if T_vals is None:
+        
+        # Create default T_vals list to fully-illustrate key features
+        T_vals = numpy.concatenate((numpy.linspace(0,T_B,10,endpoint=False),
+                                    numpy.linspace(T_B,T_C,10,endpoint=False),
+                                    numpy.linspace(T_C,T_D,10,endpoint=False),
+                                    numpy.linspace(T_D,2*T_D,10,endpoint=True)))
+    
+    Se_vals = []
+    
+    for T in T_vals:
+        
+        if T < 0:
+            raise ValueError("T_vals to be >0!")
+        
+        elif T < T_B:
+            Se = 1 + (T / T_B)*(nu*2.5 - 1)
+        
+        elif T < T_C:
+            Se = nu * 2.5
+            
+        elif T < T_D:
+            Se = nu * 2.5 * (T_C / T)
+            
+        else:
+            Se = nu * 2.5 * (T_C*T_D)/(T**2)
+            
+        Se = a_g * S * Se
+        Se_vals.append(Se)
+        
+    return T_vals, Se_vals
+            
     
 # ********************** TEST ROUTINE ****************************************
 
 if __name__ == "__main__":
     
-    testRoutine=4
+    testRoutine=5
     
     if testRoutine==1:
         
@@ -841,6 +894,11 @@ if __name__ == "__main__":
         results = ResponseSpectrum(test_func,
                                    eta=0.005,
                                    T_vals=numpy.linspace(0.01,8.0,num=80))
+        
+    elif testRoutine==5:
+        
+        T_vals, Se_vals = DesignResponseSpectrum_BSEN1998_1()
+        plt.plot(T_vals,Se_vals)
             
     else:
         raise ValueError("Test routine does not exist!")
