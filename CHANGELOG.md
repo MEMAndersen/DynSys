@@ -15,6 +15,8 @@ system. However major release number will always correspond.
 ## Unreleased
 
 ### Changed
+* `warburton_TMD.py` validation script moved to subfolder. In future all validation
+  scripts should be kept in subfolders to avoid confusion / cross-over of inputs
 
 ### Added
 * Validation example added to verify accuracy or revised ResponseSpectrum()

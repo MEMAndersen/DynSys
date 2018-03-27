@@ -8,6 +8,27 @@ and this project adheres to:
 in general differ from version numbers maintained by Portal version control 
 system. However major release number will always correspond.</p>
 <hr />
+<h2>Unreleased</h2>
+<h3>Changed</h3>
+<ul>
+<li><code>warburton_TMD.py</code> validation script moved to subfolder. In future all validation
+  scripts should be kept in subfolders to avoid confusion / cross-over of inputs</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>Validation example added to verify accuracy or revised ResponseSpectrum()
+  function. Example computes response spectra for the classic El-Centro (1940)
+  earthquake and makes comparison against published plots. Excellent agreement 
+  found!</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Bug fix for ResponseSpectrum() function in <code>dyn_analysis</code>. 
+  Equation of motion corrected to be -M.a (minus sign previously omitted)
+  Acceleration spectrum now based on <em>absolute</em> acceleration, as is conventional
+  (previous versions omitted to add the input ground motion to the SDOF responses 
+  calculated)</li>
+</ul>
 <h2>[0.5.1] - 2018-03-19 - RIHY</h2>
 <h3>Changed</h3>
 <ul>
