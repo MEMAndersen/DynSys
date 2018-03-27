@@ -708,9 +708,9 @@ def ResponseSpectrum(accFunc,
                                        eta_vals = eta,
                                        showMsgs=False)
         
-        # Add output matrix to extract acceleration results
-        SDOF_sys.AddOutputMtrx(output_mtrx=numpy.asmatrix([0,0,1]),
-                               output_names=["Acc"])
+        # Add output matrix to extract results
+        SDOF_sys.AddOutputMtrx(output_mtrx=numpy.identity(3),
+                               output_names=["Disp","Vel","Acc"])
         
         # Define forcing function
         def forceFunc(t):
@@ -729,20 +729,48 @@ def ResponseSpectrum(accFunc,
         del SDOF_sys
     
     # Collate absmax statistics
-    print("Retrieving 'absmax' acceleration statistics...")
-    absmax_acc = [x.response_stats['absmax'][0] for x in results_list]
-    absmax_acc = numpy.asarray(absmax_acc)
+    print("Retrieving maximum response statistics...")
+    S_D = numpy.asarray([x.response_stats['absmax'][0] for x in results_list])
+    S_V = numpy.asarray([x.response_stats['absmax'][1] for x in results_list])
+    S_A = numpy.asarray([x.response_stats['absmax'][2] for x in results_list])
     
     if makePlot:
         
-        fig, ax = plt.subplots()
-        ax.plot(T_vals,absmax_acc)
-        ax.set_xlabel("Oscillator natural period T (secs)")
-        ax.set_ylabel("Peak acceleration response (m/$s^2$)")
-        ax.set_title("Response spectrum")
+        fig, axarr = plt.subplots(3, sharex=True)
+        
+        fig.suptitle("Response spectra")
+        
+        ax = axarr[0]
+        ax.plot(T_vals,S_D)
+        ax.set_ylabel("$S_D$ (m)")
+        
+        ax = axarr[1]
+        ax.plot(T_vals,S_V)
+        ax.set_ylabel("$S_V$ (m/s)")
+        
+        ax = axarr[2]
+        ax.plot(T_vals,S_A)
+        ax.set_ylabel("$S_A$ (m/$s^2$)")
+        
         ax.set_xlim([0,numpy.max(T_vals)])
+        ax.set_xlabel("Oscillator natural period T (secs)")
+        
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.90)
     
-    return T_vals, absmax_acc
+    # Return values as dict
+    return_dict = {}
+    return_dict["T_vals"]=T_vals
+    return_dict["S_D"]=S_D
+    return_dict["S_V"]=S_V
+    return_dict["S_A"]=S_A
+    
+    if makePlot:
+        return_dict["fig"]=fig
+    else:
+        return_dict["fig"]=None
+    
+    return return_dict
     
     
     
@@ -816,9 +844,9 @@ if __name__ == "__main__":
         def test_func(t):
             return 0.02*numpy.sin(2.0*t)
         
-        T, rs = ResponseSpectrum(test_func,
-                                 eta=0.005,
-                                 T_vals=numpy.linspace(0.01,8.0,num=80))
+        results = ResponseSpectrum(test_func,
+                                   eta=0.005,
+                                   T_vals=numpy.linspace(0.01,8.0,num=80))
             
     else:
         raise ValueError("Test routine does not exist!")
