@@ -11,6 +11,12 @@ in general differ from version numbers maintained by Portal version control
 system. However major release number will always correspond.
 
 ***
+
+## [0.5.1] - 2018-03-19 - RIHY
+
+### Changed
+* `docs` remade (forgot to do this before releasing v0.5.0)
+
 ## [0.5.0] - 2018-03-19 - RIHY
 
 ### Added
