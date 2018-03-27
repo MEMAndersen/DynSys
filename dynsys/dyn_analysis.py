@@ -691,7 +691,7 @@ def ResponseSpectrum(accFunc,
     
     print("Obtaining SDOF responses to ground acceleration...")
     
-    for _T in T_vals:
+    for i, _T in enumerate(T_vals):
 
         period_str = "Period %.2fs" % _T
         
@@ -704,11 +704,11 @@ def ResponseSpectrum(accFunc,
         
         # Add output matrix to extract results
         SDOF_sys.AddOutputMtrx(output_mtrx=numpy.identity(3),
-                               output_names=["Disp","Vel","Acc"])
+                               output_names=["RelDisp","RelVel","Acc"])
         
         # Define forcing function
         def forceFunc(t):
-            return M*accFunc(t)
+            return -M*accFunc(t)
         
         # Define time-stepping analysis
         tstep_obj = tstep.TStep(SDOF_sys,
@@ -735,26 +735,36 @@ def ResponseSpectrum(accFunc,
     S_V = numpy.asarray([x.response_stats['absmax'][1] for x in results_list])
     S_A = numpy.asarray([x.response_stats['absmax'][2] for x in results_list])
     
+    # Evaluate psuedo-specta
+    omega = numpy.divide(2*numpy.pi,T_vals)
+    PSV = omega * S_D
+    PSA = omega**2 * S_D
+    
     if makePlot:
         
         fig, axarr = plt.subplots(3, sharex=True)
         
-        fig.suptitle("Response spectra")
+        fig.suptitle("Response spectra: {:.0%} damping".format(eta))
         
         ax = axarr[0]
         ax.plot(T_vals,S_D)
         ax.set_ylabel("SD (m)")
-        ax.set_title("Relative displacement response spectrum")
+        ax.set_title("Relative displacement")
+        
         
         ax = axarr[1]
         ax.plot(T_vals,S_V)
+        ax.plot(T_vals,PSV)
+        ax.legend((ax.lines),("$S_V$","Psuedo $S_V$",),loc='upper right')
         ax.set_ylabel("SV (m/s)")
-        ax.set_title("Relative velocity response spectrum")
+        ax.set_title("Relative velocity")
         
         ax = axarr[2]
         ax.plot(T_vals,S_A)
+        ax.plot(T_vals,PSA)
+        ax.legend((ax.lines),("$S_A$","Psuedo $S_A$",),loc='upper right')
         ax.set_ylabel("SA (m/$s^2$)")
-        ax.set_title("Absolute acceleration response spectrum")
+        ax.set_title("Absolute acceleration")
         
         ax.set_xlim([0,numpy.max(T_vals)])
         ax.set_xlabel("Oscillator natural period T (secs)")
@@ -768,6 +778,8 @@ def ResponseSpectrum(accFunc,
     return_dict["S_D"]=S_D
     return_dict["S_V"]=S_V
     return_dict["S_A"]=S_A
+    return_dict["PSV"]=PSV
+    return_dict["PSA"]=PSA
     
     if makePlot:
         return_dict["fig"]=fig
