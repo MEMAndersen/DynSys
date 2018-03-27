@@ -596,23 +596,17 @@ class Multiple():
         # Collate ndarray of 'absmax' stats
         def collate_specified_stats(stats_name = 'max'):
             
-            outer_list = []
+            stats_list = []
+            
             for i, results_obj in enumerate(results_list):
                 
-                stats_list = results_obj.response_stats
-                
-                inner_list=[]
-                
-                for r, _stats in enumerate(stats_list):
-                    
-                    vals = _stats[stats_name].tolist()
-                    if r==0: nResponses = len(vals)
-                    inner_list.append(vals)
-                                            
-                outer_list.append(inner_list)
+                stats_dict = results_obj.response_stats                    
+                stats_vals = stats_dict[stats_name].tolist()
+                if i==0: nResponses = len(stats_vals)
+                stats_list.append(stats_vals)
             
             # Flatten nested list
-            arr = numpy.ravel(outer_list)
+            arr = numpy.ravel(stats_list)
             
             # Reshape as ndarray
             newshape = self.vals2permute_shape + (nResponses,)
@@ -623,7 +617,7 @@ class Multiple():
             return arr
 
         # Loop over all stats
-        stats_keys = list(results_list[0].response_stats[0].keys())
+        stats_keys = list(results_list[0].response_stats.keys())
         stats_dict={}
 
         for _key in stats_keys:
