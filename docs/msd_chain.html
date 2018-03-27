@@ -1859,7 +1859,7 @@ constraint equations are independent</p></div>
             
   <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.AddOutputMtrx">
-    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, fName=None)</p>
+    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, fName=&#39;outputs.csv&#39;)</p>
     </div>
     
 
@@ -1876,7 +1876,7 @@ constraint equations are independent</p></div>
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                   <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                   <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                  <span class="n">fName</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                  <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Appends `output_mtrx` to `outputsList`</span>
 <span class="sd">    ***</span>
@@ -1893,6 +1893,7 @@ constraint equations are independent</p></div>
         
         <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
         
+    <span class="c1"># Create default output names if none provided</span>
     <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Response {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
         
@@ -2634,6 +2635,7 @@ class attributes will be used.</em></p>
         <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
             
     <span class="c1"># Check list lengths agree</span>
+    
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span><span class="o">!=</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of lists `output_names` &quot;</span><span class="o">+</span>
                          <span class="s2">&quot;and rows of `output_mtrx` do not agree!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
@@ -2954,6 +2956,8 @@ all systems and subsystems</p></div>
     <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;C_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;K_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;J_mtrx&quot;</span><span class="p">,</span>
                  <span class="s2">&quot;M_inv&quot;</span><span class="p">,</span> <span class="s2">&quot;A_inv&quot;</span><span class="p">,</span>
                  <span class="s2">&quot;A_mtrx&quot;</span><span class="p">,</span><span class="s2">&quot;B_mtrx&quot;</span><span class="p">]</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;System matrices for `{0}`:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     
     <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_list</span><span class="p">:</span>
     
