@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 import deprecation # obtain this from pip
 import scipy.sparse as sparse
 
+from scipy.linalg import block_diag
+from scipy.sparse import bmat
+
 # Other imports
 
 
@@ -24,7 +27,7 @@ class DynSys:
     description="Generic dynamic system"
 
     def __init__(self,M,C,K,
-                 J=None,
+                 J_dict=None,
                  output_mtrx=None,
                  output_names=None,
                  isLinear=True,
@@ -54,7 +57,10 @@ class DynSys:
         
         * `isLinear` (True/False required)
             
-        * Constraint equations matrix, `J`. Shape must be _[mxn]_
+        * `J`, constraint equations matrix. Shape must be _[mxn]_
+        
+        * `J_key`, _string_ to use as key for `J`, which will be stored in a 
+          key-value Python dict
             
         """
         
@@ -64,10 +70,9 @@ class DynSys:
         K = npy.asmatrix(K)
         nDOF = M.shape[0]
         
-        if not J is None:
-            J = npy.asmatrix(J)
-        else:
-            J = npy.asmatrix(npy.zeros((0,nDOF)))
+        if not J_dict is None:
+            for J in J_dict.values():
+                J = npy.asmatrix(J)
                 
         if isSparse:
             
@@ -75,10 +80,13 @@ class DynSys:
             M = sparse.csc_matrix(M)
             C = sparse.csc_matrix(C)
             K = sparse.csc_matrix(K)
-            J = sparse.csc_matrix(J)
         
+            if not J_dict is None:
+                for J in J_dict.values():
+                    J = sparse.csc_matrix(J)
+            
         # Store as attributes
-        self.dynSys_list=[self]
+        self.DynSys_list=[self]
         """
         List of appended dynSys objects
         ***
@@ -88,13 +96,13 @@ class DynSys:
         Note by default `self` is always included in this list
         """
         
-        self.M_mtrx = M
+        self._M_mtrx = M
         """Mass matrix"""
         
-        self.C_mtrx = C
+        self._C_mtrx = C
         """Damping matrix"""
         
-        self.K_mtrx = K
+        self._K_mtrx = K
         """Stiffness matrix"""
         
         self.nDOF = nDOF
@@ -109,8 +117,13 @@ class DynSys:
         manipulated as sparse matrices
         """
         
-        self.J_mtrx = J
-        """Constraints matrix"""
+        self._J_dict = {}
+        """Dict of constraints matrices"""
+        
+        if J_dict is not None:
+            self._J_dict = J_dict
+        else:
+            self._J_dict[None] = npy.zeros((0,nDOF))
         
         if name is None:
             name = self.__class__.__name__
@@ -149,32 +162,35 @@ class DynSys:
         if isSparse:
             print("Note: sparse matrix functionality as provided by Scipy "
                   "will be used for system matrices")
+            
+            
+    def GetSystemNames(self):
+        """
+        Returns list of all systems and sub-systems
+        """
+        return [x.name for x in self.DynSys_list]
         
         
     def _CheckSystemMatrices(self,
+                             nDOF=None,
                              M_mtrx=None,
                              C_mtrx=None,
                              K_mtrx=None,
-                             J_mtrx=None,
-                             nDOF=None,
-                             ):
+                             J_dict=None):
         """
-        Function carries out shape checks on supplied system matrices
+        Function carries out shape checks on system matrices held as class 
+        attributes
         
-        All should be square and of same dimension
-        
-        
-        Unless optional arguments are specified, checks are carried out on 
-        system matrices held as class attributes
-        
+        Matrices held as object attributes will be used, unless optional 
+        arguments are provided
         """
 
-        # Process optional arguments
-        if M_mtrx is None: M_mtrx = self.M_mtrx
-        if C_mtrx is None: C_mtrx = self.C_mtrx
-        if K_mtrx is None: K_mtrx = self.K_mtrx
-        if J_mtrx is None: J_mtrx = self.J_mtrx
-        if nDOF is None: nDOF = self.nDOF
+        # Handle optional arguments
+        if nDOF is None:    nDOF = self.nDOF
+        if M_mtrx is None:  M_mtrx = self._M_mtrx
+        if C_mtrx is None:  C_mtrx = self._C_mtrx
+        if K_mtrx is None:  K_mtrx = self._K_mtrx
+        if J_dict is None:  J_dict = self._J_dict
 
         # Check shapes consistent with stated nDOF
         if C_mtrx.shape[0]!=nDOF:
@@ -195,9 +211,12 @@ class DynSys:
             raise ValueError("Error: K matrix not square!\n"
                              + "Shape: {0}".format(K_mtrx))
             
-        if J_mtrx.shape[1]!=nDOF:
-            raise ValueError("Error: J matrix column dimension inconsistent!\n"
-                             + "Shape: {0}".format(J_mtrx))
+        # Check shape of all constraints matrices
+        for key, J_mtrx in J_dict.items():
+            
+            if J_mtrx.shape[1]!=nDOF:    
+                raise ValueError("Error: J matrix column dimension inconsistent!\n"
+                                 + "Shape: {0}".format(J_mtrx))
             
         return True
     
@@ -296,9 +315,9 @@ class DynSys:
         Useful for documentation and debugging
         """
         
-        attr_list = ["M_mtrx", "C_mtrx", "K_mtrx", "J_mtrx",
-                     "M_inv", "A_inv",
-                     "A_mtrx","B_mtrx"]
+        attr_list = ["_M_mtrx", "_C_mtrx", "_K_mtrx", "_J_mtrx",
+                     "_M_inv", "_A_inv",
+                     "_A_mtrx","_B_mtrx"]
         
         print("System matrices for `{0}`:\n".format(self.name))
         
@@ -330,29 +349,116 @@ class DynSys:
         else:
             return v
         
-    @deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
-    def GetSystemMatrices(self):
+
+    def GetSystemMatrices(self,createNewSystem=False):
         """
-        Function is used to retrieve system matrices
+        Function is used to retrieve system matrices, which are not usually to 
+        be accessed directly, except by member functions
         
-        Matrices are returned via a dictionary (for flexible usage)
+        ***
+        A dict is used to return matrices
         """
         
         # Create empty dictionay
         d = {}
         
+        # Get list of systems
+        DynSys_list = self.DynSys_list
+        
+        # Determine properties of overall system
+        isLinear = all([x.isLinear for x in DynSys_list])
+        isSparse = all([x.isSparse for x in DynSys_list])
+        
+        # Retrieve system matrices from all listed systems
+        nDOF_list = []
+        M_list = []
+        C_list = []
+        K_list = []
+        J_key_list = []
+        
+        for x in DynSys_list:
+            
+            nDOF_list.append(x.nDOF)
+            
+            M_list.append(x._M_mtrx.tolist())
+            C_list.append(x._C_mtrx.tolist())
+            K_list.append(x._K_mtrx.tolist())
+
+            # Compile list of all J keys
+            J_key_list += list(x._J_dict.keys())
+            
+        J_key_list = list(set(J_key_list)) # remove duplicates
+            
+        # Assemble system matrices for full system 
+        # i.e. including all appended systems
+        nDOF_new = sum(nDOF_list)
+        M_mtrx = block_diag(*tuple(M_list))
+        C_mtrx = block_diag(*tuple(C_list))
+        K_mtrx = block_diag(*tuple(K_list))
+        
+        # Assemble constraints matrix for full system
+        J_dict = {}
+        
+        for key in J_key_list:
+            
+            J_list = []
+            
+            for x in DynSys_list:
+                
+                if key in list(x._J_dict.keys()):
+                    
+                    J_mtrx = x._J_dict[key]
+                    
+                    if not x.isSparse:
+                        J_mtrx = sparse.csc_matrix(J_mtrx)
+                    
+                    J_list.append(J_mtrx)
+                    
+                else:
+                    
+                    J_list.append(None)
+                
+            J_dict[key] = J_list
+                
+        # Construct matrix from blocks
+        J_mtrx_list = list(J_dict.values())
+        J_mtrx = bmat(J_mtrx_list).todense()
+        
+        # Check shapes of new matrices
+        self._CheckSystemMatrices(nDOF=nDOF_new,
+                                  M_mtrx=M_mtrx,
+                                  C_mtrx=C_mtrx,
+                                  K_mtrx=K_mtrx,
+                                  J_dict={None : J_mtrx})
+        
         # Populate dictionary
-        d["nDOF"]=self.nDOF
-        d["M_mtrx"]=self.M_mtrx
-        d["C_mtrx"]=self.C_mtrx
-        d["K_mtrx"]=self.K_mtrx
-        if hasattr(self,"J_mtrx"):
-            d["J_mtrx"]=self.J_mtrx
+        d["nDOF"] = nDOF_new
+        
+        d["M_mtrx"]=M_mtrx
+        d["C_mtrx"]=C_mtrx
+        d["K_mtrx"]=K_mtrx
+        
+        d["J_mtrx"]=J_mtrx
+        d["J_dict"]=J_dict        
+        
+        d["isLinear"]=isLinear
+        d["isSparse"]=isSparse
+        
+        # Create new system object, given system matrices
+        if createNewSystem:
+            DynSys_full = DynSys(M=M_mtrx,
+                                 C=C_mtrx,
+                                 K=K_mtrx,
+                                 J_dict=J_dict,
+                                 isLinear=isLinear,
+                                 isSparse=isSparse)
+            
+            d["DynSys_full"]=DynSys_full
         
         # Return dictionary
         return d
     
-    def AddConstraintEqns(self,Jnew,checkConstraints=True):
+    def AddConstraintEqns(self,Jnew,key,checkConstraints=True):
         """
         Function is used to append a constraint equation
         ***
@@ -385,14 +491,8 @@ class DynSys:
         if Jnew.shape[1]!=self.nDOF:
             raise ValueError("Error: constraint eqn dimensions inconsistent!")
                 
-        # Store constraint equation as attribute
-        if not self.hasConstraints():
-            self.J_mtrx = Jnew
-        else:
-            if self.isSparse:
-                self.J_mtrx = npy.append(self.J_mtrx,Jnew,axis=0)
-            else:
-                self.J_mtrx = npy.append(self.J_mtrx,Jnew,axis=0)
+        # Store constraint equation as new dict item
+        self._J_dict[key]=Jnew
             
         # Check constraints matrix is valid
         if checkConstraints:
@@ -450,10 +550,10 @@ class DynSys:
         """
         
         # Retrieve system matrices
-        if M is None: M = self.M_mtrx
-        if C is None: C = self.C_mtrx
-        if K is None: K = self.K_mtrx
-        if J is None: J = self.J_mtrx
+        if M is None: M = self._M_mtrx
+        if C is None: C = self._C_mtrx
+        if K is None: K = self._K_mtrx
+        if J is None: J = self._J_mtrx
         if nDOF is None: nDOF = self.nDOF
     
         # Check shape of system matrices
@@ -493,7 +593,7 @@ class DynSys:
 
         # Save as attribute
         if saveAsAttr:
-            self.A_mtrx = A
+            self._A_mtrx = A
 
         return A     
     
@@ -548,7 +648,7 @@ class DynSys:
         
         # Save as attribute
         if saveAsAttr:
-            self.B_mtrx = B
+            self._B_mtrx = B
             
         return B
     
@@ -574,12 +674,15 @@ class DynSys:
         """
         
         # Obtain inputs from object
-        M = self.M_mtrx
-        K = self.K_mtrx
-        C = self.C_mtrx
-        J = self.J_mtrx
-        nDOF = self.nDOF
-        isDense = not self.isSparse
+        d = self.GetSystemMatrices()
+        M = d["M_mtrx"]
+        K = d["K_mtrx"]
+        C = d["C_mtrx"]
+        J = d["J_mtrx"]
+        nDOF = d["nDOF"]
+        isSparse = d["isSparse"]
+        
+        isDense = not isSparse
         
         # Obtain inverse mass matrix
         attr = "_M_inv"
@@ -879,18 +982,19 @@ class DynSys:
         """
         Function is used to check is a certain requested DOF index is valid
         """
-        if not self.isModal or not hasattr(self,"isModal"):
-            # Non-modal systems, i.e. DOFs are real-world
-            
-            if DOF < 0 or DOF >= self.nDOF:
-                raise ValueError("Error: requested DOF invalid!")
-            
-        else:
+                
+        if hasattr(self,"isModal") and self.isModal:
             # Modal systems
             
             if DOF < 0 or DOF >= self.nDOF_realWorld:
                 raise ValueError("Error: requested real-world DOF invalid!")
-                
+        
+        else:
+            # Non-modal systems, i.e. DOFs are real-world
+            
+            if DOF < 0 or DOF >= self.nDOF:
+                raise ValueError("Error: requested DOF invalid!")
+        
         return True
     
     def hasConstraints(self)->bool:
@@ -933,7 +1037,7 @@ class DynSys:
                     
         return True
     
-    def AppendSystem(self,DOF1,DOF2,dynSys2):
+    def AppendSystem(self,DOF1,DOF2,dynSys2,key):
         """
         Function is used to join two dynamic systems by constraining
         two dofs to translate together
@@ -941,8 +1045,13 @@ class DynSys:
         Required arguments:
     
         * `DOF1`, DOF index in parent system 
+        
         * `DOF2`, DOF index in child system
+        
         * `dynSys2`, instance of child system
+        
+        * `key`, key for new set of constraint equations defined by invoking 
+          this function
         
         **Note**: only applies to *linear* systems with constant `M`, `C`, `K`
         system matrices. (This is checked: an exception will be raised if used 
@@ -963,70 +1072,33 @@ class DynSys:
             raise ValueError("Error: 'dynSys2' is not linear!")
     
         # Retrieve system matrices for systems to be joined
-        d1 = dynSys1.GetSystemMatrices()
-        n1 = d1.get("nDOF")
-        M1 = d1.get("M_mtrx")
-        C1 = d1.get("C_mtrx")
-        K1 = d1.get("K_mtrx")
-        J1 = d1.get("J_mtrx")
-        if J1 is None:
-            m1 = 0                      # no constraints
-            J1 = npy.zeros((0,n1))      # null array
-        else:
-            m1 = J1.shape[0]
+        n1 = dynSys1.nDOF
+        n2 = dynSys2.nDOF
         
-        d2 = dynSys2.GetSystemMatrices()
-        n2 = d2.get("nDOF")
-        M2 = d2.get("M_mtrx")
-        C2 = d2.get("C_mtrx")
-        K2 = d2.get("K_mtrx")
-        J2 = d2.get("J_mtrx")
-        if J2 is None:
-            m2 = 0                      # no constraints
-            J2 = npy.zeros((0,n2))      # null array
-        else:
-            m2 = J2.shape[0]
+        # Add system to systems list
+        self.DynSys_list.append(dynSys2)
             
-        # ---- Update system matrices to reflect freely appending dynSys2 -----    
-        
-        # Assemble new mass, damping and stiffness matrices
-        z1 = npy.asmatrix(npy.zeros((n2,n1)))
-        M_new = npy.bmat([[M1,z1.T],[z1,M2]])
-        C_new = npy.bmat([[C1,z1.T],[z1,C2]])
-        K_new = npy.bmat([[K1,z1.T],[z1,K2]])
-        
-        # Assemble new constraints matrix
-        J_new1 = npy.hstack((J1,npy.asmatrix(npy.zeros((m1,n2)))))
-        J_new2 = npy.hstack((npy.asmatrix(npy.zeros((m2,n1))),J2))
-        J_new = npy.vstack((J_new1,J_new2))
-        
-        # Update calling object attibutes
-        dynSys1.dynSysList.append(dynSys2)
-        dynSys1.M_mtrx = M_new
-        dynSys1.C_mtrx = C_new
-        dynSys1.K_mtrx = K_new
-        dynSys1.J_mtrx = J_new
-        dynSys1.nDOF = n1 + n2
-        
-        # ---- Define constraint equation to constrain DOF1 and DOF2 -----
+        # ---- Define new constraint equation to constrain DOF1 and DOF2 -----
         
         # Define dynSys1 part of constraint eqn.
-        if dynSys1.isModal:
+        attr = "isModal"
+        
+        if hasattr(dynSys1,attr) and getattr(dynSys1,attr):
             Jn1 = dynSys1.modeshapes[DOF1,:]
         else:
             Jn1 = npy.asmatrix(npy.zeros((n1,)))
             Jn1[0,DOF1]=+1
+            
+        dynSys1.AddConstraintEqns(Jn1,key,checkConstraints=False)
         
         # Define dynSys2 part of constraint eqn.
-        if dynSys2.isModal:
+        if hasattr(dynSys2,attr) and getattr(dynSys2,attr):
             Jn2 = dynSys2.modeshapes[DOF2,:] 
         else:
             Jn2 = npy.asmatrix(npy.zeros((n2,)))
             Jn2[0,DOF2]=-1
             
-        # Combine and assign
-        Jn = npy.hstack((Jn1,Jn2))
-        self.AddConstraintEqns(Jn,checkConstraints=False)  # note by definition new constraint is independent of other pre-defined constraints
+        dynSys2.AddConstraintEqns(Jn2,key,checkConstraints=False)
     
     
     def freqVals(self,f_salient=None,nf_pad:int=100,fmax=None):
@@ -1409,6 +1481,26 @@ def PlotFrequencyResponse(f,G_f,
 # (Only execute when running as a script / top level)
 if __name__ == "__main__":
     
-    pass
-        
+    M = npy.array([[20,0,0],[0,40,0],[0,0,400]])
+    C = npy.array([[0.1,-0.2,0],[-0.2,0.4,-0.7],[0,-0.7,1.0]])
+    K = npy.array([[300,-200,0],[-200,200,0],[0,0,100]])
+    sys1 = DynSys(M,C,K,name="sys1")
+
+    M = npy.array([[500]])
+    C = npy.array([[0.8]])
+    K = npy.array([[600]])
+    sys2 = DynSys(M,C,K,name="sys2")
+    
+    M = npy.array([[20,0],[0,40]])
+    C = npy.array([[0.1,-0.2],[-0.2,0.4]])
+    K = npy.array([[300,-200],[-200,200]])
+    sys3 = DynSys(M,C,K,name="sys3")
+    
+    sys1.AppendSystem(2,0,sys2,"sys1-2")
+    sys1.AppendSystem(0,1,sys3,"sys1-3")
+    
+    print(sys1.GetSystemNames())
+    d = sys1.GetSystemMatrices(createNewSystem=False)
+    #full_sys = d["full_DynSys"]
+    
     
