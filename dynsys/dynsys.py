@@ -57,10 +57,8 @@ class DynSys:
         
         * `isLinear` (True/False required)
             
-        * `J`, constraint equations matrix. Shape must be _[mxn]_
-        
-        * `J_key`, _string_ to use as key for `J`, which will be stored in a 
-          key-value Python dict
+        * `J_dict`, _dict_ of constraint equations matrices. Shape of each 
+        entry must be _[mxn]_
             
         """
         
