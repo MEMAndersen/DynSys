@@ -313,25 +313,49 @@ class DynSys:
         Useful for documentation and debugging
         """
         
-        attr_list = ["_M_mtrx", "_C_mtrx", "_K_mtrx", "_J_mtrx",
-                     "_M_inv", "_A_inv",
-                     "_A_mtrx","_B_mtrx"]
+        # Print names of all systems and sub-systems
+        names_list = [x.name for x in self.DynSys_list]
+        print("Systems list:")
+        print(names_list)
         
-        print("System matrices for `{0}`:\n".format(self.name))
-        
-        for attr in attr_list:
-        
-            if hasattr(self,attr):
+        # Loop through all systems and subsystems
+        for x in self.DynSys_list:
                 
-                val = getattr(self,attr)
+            print("System matrices for `{0}`:\n".format(x.name))
+            
+            # Print general system matrices
+            attr_list = ["_M_mtrx", "_C_mtrx", "_K_mtrx"]
+            
+            for attr in attr_list:
+            
+                if hasattr(self,attr):
+                    
+                    val = getattr(self,attr)
+                    
+                    print("{0} matrix:".format(attr))
+                    print(type(val))
+                    
+                    if printShapes: print(val.shape)
+                    if printValues: print(val)
+                    
+                    print("")
+                    
+            # Print constraints matrices
+            print("Constraint matrices for `{0}`:\n".format(x.name))
+            
+            for key, val in self._J_dict.items():
                 
-                print("{0} matrix:".format(attr))
+                print("key: {0}".format(key))
                 print(type(val))
                 
                 if printShapes: print(val.shape)
                 if printValues: print(val)
                 
                 print("")
+                
+            
+            
+            
             
             
     @deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
