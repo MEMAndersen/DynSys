@@ -83,18 +83,10 @@ class ModalSys(DynSys):
                          output_mtrx=output_mtrx,
                          output_names=output_names,
                          isLinear=True,
+                         isModal=True,
                          isSparse=isSparse,
                          name=name)
     
-        
-        # Set additional properties
-        self.isModal = True
-        """
-        Used to denote the fact that dofs are _modal_. Hence to obtain 
-        real-world results, need to pre-multiply by an appropriate _output 
-        matrix_
-        """
-        
         self.mode_IDs = mode_IDs
         """
         Labels to describe modal dofs
