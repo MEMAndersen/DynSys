@@ -69,12 +69,17 @@ class ModalSys(DynSys):
         """
         
         # Import data from input files
-        mode_IDs, M_mtrx, C_mtrx, K_mtrx, J_mtrx = self._DefineModalParams(fName=fname_modalParams,
-                                                                           fLimit=fLimit)
+        d = self._DefineModalParams(fName=fname_modalParams,fLimit=fLimit)
+        
+        mode_IDs = d["mode_IDs"]
+        M_mtrx = d["M_mtrx"]
+        C_mtrx = d["C_mtrx"]
+        K_mtrx = d["K_mtrx"]
+        J_dict = d["J_dict"]
         
         # Write details into object using parent init function
         super().__init__(M_mtrx,C_mtrx,K_mtrx,
-                         J=J_mtrx,
+                         J_dict=J_dict,
                          output_mtrx=output_mtrx,
                          output_names=output_names,
                          isLinear=True,
@@ -186,7 +191,14 @@ class ModalSys(DynSys):
         K_mtrx = npy.asmatrix(npy.diag(K_vals))
         J_mtrx = npy.asmatrix(npy.zeros((0,nDOF)))  # empty
         
-        return mode_IDs, M_mtrx, C_mtrx, K_mtrx, J_mtrx
+        # Return matrices and other properties using dict
+        d = {}
+        d["mode_IDs"]=mode_IDs
+        d["M_mtrx"]=M_mtrx
+        d["C_mtrx"]=C_mtrx
+        d["K_mtrx"]=K_mtrx
+        d["J_dict"]={None:J_mtrx}
+        return d
             
                 
     def _DefineModeshapes(self,fName='modeshapes.csv'):
