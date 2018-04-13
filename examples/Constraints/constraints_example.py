@@ -29,7 +29,11 @@ my_modal_sys.AppendSystem(child_sys=TMD1,Xpos_parent=30.0,DOF_child=0)
 my_modal_sys.AppendSystem(child_sys=TMD2,Xpos_parent=50.0,DOF_child=0)
 my_modal_sys.PrintSystemMatrices(printValues=True)
 
-# Merge to get full system
-d = my_modal_sys.GetSystemMatrices()
-full_sys = d["DynSys_full"]
-full_sys.PrintSystemMatrices(printValues=True)
+## Merge to get full system
+#d = my_modal_sys.GetSystemMatrices()
+#full_sys = d["DynSys_full"]
+#full_sys.PrintSystemMatrices(printValues=True)
+
+# Plot modeshapes
+my_modal_sys.PlotModeshapes()
+

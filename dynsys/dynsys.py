@@ -1202,6 +1202,18 @@ class DynSys:
                                          "does not have function " + 
                                          "attribute `%s'" % attr)    
                 
+                    # Save as attributes
+                    attr = "Xpos_attachedSystems"
+                    if hasattr(sys_obj,attr):
+                        getattr(sys_obj,attr).append(Xpos)
+                    else:
+                        setattr(sys_obj,attr,[Xpos])
+                        
+                    attr = "modeshapes_attachedSystems"
+                    if hasattr(sys_obj,attr):
+                        getattr(sys_obj,attr).append(modeshapes)
+                    else:
+                        setattr(sys_obj,attr,[modeshapes])
                 
                 elif modeshapes is None:
                     raise ValueError("{0} system is modal. ".format(sys_type) + 

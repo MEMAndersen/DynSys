@@ -12,6 +12,7 @@ import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
 import warnings
+import deprecation # not in anaconda distribution - obtain this from pip
 
 # Other imports
 from dynsys import DynSys
@@ -181,7 +182,6 @@ class ModalSys(DynSys):
         M_mtrx = npy.asmatrix(npy.diag(M_vals))
         C_mtrx = npy.asmatrix(npy.diag(C_vals))
         K_mtrx = npy.asmatrix(npy.diag(K_vals))
-        J_mtrx = npy.asmatrix(npy.zeros((0,nDOF)))  # empty
         
         # Return matrices and other properties using dict
         d = {}
@@ -189,7 +189,7 @@ class ModalSys(DynSys):
         d["M_mtrx"]=M_mtrx
         d["C_mtrx"]=C_mtrx
         d["K_mtrx"]=K_mtrx
-        d["J_dict"]={}
+        d["J_dict"]={} # no constraints
         return d
             
                 
@@ -247,7 +247,7 @@ class ModalSys(DynSys):
                        num:int = 50,
                        L:float = 100.0,
                        ax=None,
-                       plotTMDs=False):
+                       plotAttached=True):
         """
         Plot modeshapes vs chainage using 'modeshapeFunc'
         
@@ -262,12 +262,14 @@ class ModalSys(DynSys):
         
         * `num`: number of intermediate chainages to interpolate modeshapes at
         
-        * `plotTMDs`: if `modeshape_TMD` and `chainage_TMD` attributes 
-          exist, modeshape ordinates at TMD positions will be overlaid as red 
-          dots 
+        * `plotAttached`: if `modeshape_attachedSystems` and 
+          `Xpos_attachedSystems` attributes exist, modeshape ordinates at 
+          attachment positions will be overlaid as red dots (usually attached 
+          systems will represent damper systems)
         
         """
         
+        # Configure plot
         if ax is None:
             fig = plt.figure()
             fig.set_size_inches(16,4)
@@ -275,20 +277,22 @@ class ModalSys(DynSys):
         else:
             fig = ax.gcf()
             
-        x = npy.linspace(0,L,num,endpoint=True)
-        m= self.modeshapeFunc(x)
-        
-        if hasattr(self,"mode_IDs"):
-            modeNames = self.mode_IDs
-        else:
-            modeNames = npy.arange(1,m.shape[1],1)
-            
         # Use Ltrack instead of L passed, if attribute defined
         attr="Ltrack"
         obj=self
         if hasattr(obj,attr):
             L=getattr(obj,attr)
+            
+        # Use interpolation function to obtain modeshapes at
+        x = npy.linspace(0,L,num,endpoint=True)
+        m = self.modeshapeFunc(x)
         
+        # Get mode IDs to use as labels
+        if hasattr(self,"mode_IDs"):
+            modeNames = self.mode_IDs
+        else:
+            modeNames = npy.arange(1,m.shape[1],1)
+            
         # Plot modeshapes vs chainage
         ax.plot(x,m,label=modeNames)
         ax.set_xlim([0,L])
@@ -296,11 +300,11 @@ class ModalSys(DynSys):
         ax.set_ylabel("Modeshape ordinate")
         ax.set_title("Modeshapes along loading track")
         
-        # Overlaid modeshape ordinates at TMD positions, if defined
-        if plotTMDs:
+        # Overlaid modeshape ordinates at attachment positions, if defined
+        if plotAttached and len(self.DynSys_list)>1:
             
-            attr1 = "chainage_TMD"
-            attr2 = "modeshape_TMD"
+            attr1 = "Xpos_attachedSystems"
+            attr2 = "modeshapes_attachedSystems"
             makePlot = True
             
             if hasattr(self,attr1):
@@ -308,17 +312,19 @@ class ModalSys(DynSys):
             else:
                 makePlot = False
                 print("Warning: {0} attribute not defined\n".format(attr1) + 
-                      "Modeshape ordinates at TMD locations cannot be plotted")
+                      "Modeshape ordinates at attached system locations " + 
+                      "cannot be plotted")
                 
             if hasattr(self,attr2):
                 modeshape_TMD = getattr(self,attr2)
             else:
                 makePlot = False
                 print("Warning: {0} attribute not defined\n".format(attr2) + 
-                      "Modeshape ordinates at TMD locations cannot be plotted")
+                      "Modeshape ordinates at attached system locations " + 
+                      "cannot be plotted")
                     
             if makePlot:
-                ax.plot(X_TMD,modeshape_TMD,'xr',label="TMDs")
+                ax.plot(X_TMD,modeshape_TMD,'xr',label="Attached systems")
         
         # Prepare legend
         handles, labels = ax.get_legend_handles_labels()
@@ -392,7 +398,7 @@ class ModalSys(DynSys):
         
         return ModalForces
             
-    
+    @deprecation.deprecated(deprecated_in="1.0.0",current_version=currentVersion)
     def AppendTMDs(self,chainage_TMD,mass_TMD,freq_TMD,eta_TMD,
                    defineRelDispOutputs=True):
         """
