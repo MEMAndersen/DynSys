@@ -121,7 +121,7 @@ class DynSys:
         if J_dict is not None:
             self._J_dict = J_dict
         else:
-            self._J_dict[None] = npy.zeros((0,nDOF))
+            self._J_dict[None] = npy.asmatrix(npy.zeros((0,nDOF)))
         
         if name is None:
             name = self.__class__.__name__
@@ -313,15 +313,18 @@ class DynSys:
         Useful for documentation and debugging
         """
         
+        print("**** PrintSystemMatrices() : `{0}` ****\n".format(self.name))
+        
         # Print names of all systems and sub-systems
         names_list = [x.name for x in self.DynSys_list]
         print("Systems list:")
         print(names_list)
+        print("")
         
         # Loop through all systems and subsystems
         for x in self.DynSys_list:
                 
-            print("System matrices for `{0}`:\n".format(x.name))
+            print("---- System matrices for `{0}` ----\n".format(x.name))
             
             # Print general system matrices
             attr_list = ["_M_mtrx", "_C_mtrx", "_K_mtrx"]
@@ -341,7 +344,7 @@ class DynSys:
                     print("")
                     
             # Print constraints matrices
-            print("Constraint matrices for `{0}`:\n".format(x.name))
+            print("---- Constraint matrices for `{0}` ----\n".format(x.name))
             
             for key, val in self._J_dict.items():
                 
