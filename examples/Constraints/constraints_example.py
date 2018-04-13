@@ -26,6 +26,7 @@ TMD2 = msd_chain.MSD_Chain(name="TMD2",
 
 # Append TMDs to modal system
 my_modal_sys.AppendSystem(child_sys=TMD1,Xpos_parent=30.0,DOF_child=0)
+my_modal_sys.AppendSystem(child_sys=TMD2,Xpos_parent=50.0,DOF_child=0)
 my_modal_sys.PrintSystemMatrices(printValues=True)
 
 # Merge to get full system

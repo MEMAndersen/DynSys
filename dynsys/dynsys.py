@@ -218,7 +218,8 @@ class DynSys:
             
             if J_mtrx.shape[1]!=nDOF:    
                 raise ValueError("Error: J matrix column dimension inconsistent!\n"
-                                 + "Shape: {0}".format(J_mtrx))
+                                 + "Shape: {0}\n".format(J_mtrx.shape)  
+                                 + "J_mtrx: {0}".format(J_mtrx))
             
         return True
     
@@ -431,24 +432,27 @@ class DynSys:
         for key in J_key_list:
             
             J_list = []
+            m=0 # denotes number of constraint equations
             
             for x in DynSys_list:
                 
                 if key in list(x._J_dict.keys()):
                     
                     J_mtrx = x._J_dict[key]
+                    m = J_mtrx.shape[0]
                     
-                    if not x.isSparse:
+                    if x.isSparse:
                         J_mtrx = sparse.csc_matrix(J_mtrx)
                     
                     J_list.append(J_mtrx)
                     
                 else:
                     
-                    J_list.append(None)
+                    J_list.append(npy.asmatrix(npy.zeros((m,x.nDOF))))
                 
             # Assemble as full matrix by concatenating matrices
-            J_dict[key] = bmat([J_list]).todense()
+            full_J_mtrx = npy.hstack(tuple(J_list))            
+            J_dict[key] =full_J_mtrx
         
         # Check shapes of new matrices
         self._CheckSystemMatrices(nDOF=nDOF_new,
@@ -464,8 +468,8 @@ class DynSys:
         d["C_mtrx"]=C_mtrx
         d["K_mtrx"]=K_mtrx
         
-        d["J_mtrx"]=J_mtrx
         d["J_dict"]=J_dict        
+        d["J_mtrx"]=npy.vstack(list(J_dict.values()))
         
         d["isLinear"]=isLinear
         d["isSparse"]=isSparse
@@ -1611,11 +1615,11 @@ if __name__ == "__main__":
     K = npy.array([[300,-200],[-200,200]])
     sys3 = DynSys(M,C,K,name="sys3")
     
-    sys1.AppendSystem(2,0,sys2,"sys1-2")
-    sys1.AppendSystem(0,1,sys3,"sys1-3")
+    sys1.AppendSystem(child_sys=sys2,J_key="sys1-2",DOF_parent=2,DOF_child=0)
+    sys1.AppendSystem(child_sys=sys3,J_key="sys1-3",DOF_parent=0,DOF_child=1)
+    sys1.PrintSystemMatrices()
     
-    print(sys1.GetSystemNames())
-    d = sys1.GetSystemMatrices(createNewSystem=False)
-    #full_sys = d["full_DynSys"]
-    
+    d = sys1.GetSystemMatrices()
+    full_sys = d["DynSys_full"]
+    full_sys.PrintSystemMatrices(printValues=True)
     
