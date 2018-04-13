@@ -31,6 +31,7 @@ class DynSys:
                  output_mtrx=None,
                  output_names=None,
                  isLinear=True,
+                 isModal=False,
                  isSparse=False,
                  name=None,
                  showMsgs=True):
@@ -108,6 +109,11 @@ class DynSys:
         
         self.isLinear = isLinear
         """Boolean, describes whether system is linear or not"""
+        
+        self.isModal = isModal
+        """
+        Used to denote that dofs are _modal_, rather than real-world freedoms
+        """
         
         self.isSparse = isSparse
         """
@@ -331,9 +337,9 @@ class DynSys:
             
             for attr in attr_list:
             
-                if hasattr(self,attr):
+                if hasattr(x,attr):
                     
-                    val = getattr(self,attr)
+                    val = getattr(x,attr)
                     
                     print("{0} matrix:".format(attr))
                     print(type(val))
@@ -346,7 +352,7 @@ class DynSys:
             # Print constraints matrices
             print("---- Constraint matrices for `{0}` ----\n".format(x.name))
             
-            for key, val in self._J_dict.items():
+            for key, val in x._J_dict.items():
                 
                 print("key: {0}".format(key))
                 print(type(val))
@@ -375,7 +381,7 @@ class DynSys:
             return v
         
 
-    def GetSystemMatrices(self,createNewSystem=False):
+    def GetSystemMatrices(self,createNewSystem=True):
         """
         Function is used to retrieve system matrices, which are not usually to 
         be accessed directly, except by member functions
@@ -443,18 +449,15 @@ class DynSys:
                     
                     J_list.append(None)
                 
-            J_dict[key] = J_list
-                
-        # Construct matrix from blocks
-        J_mtrx_list = list(J_dict.values())
-        J_mtrx = bmat(J_mtrx_list).todense()
+            # Assemble as full matrix by concatenating matrices
+            J_dict[key] = bmat([J_list]).todense()
         
         # Check shapes of new matrices
         self._CheckSystemMatrices(nDOF=nDOF_new,
                                   M_mtrx=M_mtrx,
                                   C_mtrx=C_mtrx,
                                   K_mtrx=K_mtrx,
-                                  J_dict={None : J_mtrx})
+                                  J_dict=J_dict)
         
         # Populate dictionary
         d["nDOF"] = nDOF_new
@@ -476,7 +479,8 @@ class DynSys:
                                  K=K_mtrx,
                                  J_dict=J_dict,
                                  isLinear=isLinear,
-                                 isSparse=isSparse)
+                                 isSparse=isSparse,
+                                 name=[x.name for x in self.DynSys_list])
             
             d["DynSys_full"]=DynSys_full
         
@@ -1062,69 +1066,157 @@ class DynSys:
                     
         return True
     
-    def AppendSystem(self,DOF1,DOF2,dynSys2,key):
+    def AppendSystem(self,
+                     child_sys,
+                     J_key:str=None,
+                     
+                     Xpos_parent:float=None,
+                     modeshapes_parent=None,
+                     DOF_parent:int=None,
+                     
+                     Xpos_child:float=None,
+                     modeshapes_child=None,
+                     DOF_child:int=None,
+                     ):
         """
-        Function is used to join two dynamic systems by constraining
-        two dofs to translate together
+        Function is used to join two dynamic systems by establishing 
+        appropriate constraint equations
+        
         ***
         Required arguments:
-    
-        * `DOF1`, DOF index in parent system 
+            
+        * `child_sys`, _ DynSys_ instance describing child system, i.e. system 
+          to be appended
+          
+        ***
+        Optional arguments:
+            
+        * `J_key`, _string_ identifier used in constraints dict. If _None_ then 
+          default key will be established
+            
+        Usage of optional arguments depends on the properties of the parent 
+        and child systems, as follows:
+            
+        **Parent system:**
+            
+        * If _isModal_:
+            
+            * `Xpos_parent` can be used to define the point on the _parent 
+              system_ at which the child system is to be attached. 
+              Note: usage of this parameter requires the _parent system_ to 
+              have function attribute `modeshapeFunc`, i.e. a function 
+              describing how modeshapes vary with chainage.
+              
+            * Alternatively `modeshapes_parent` can be used to directly 
+              provide modeshape vector relevant to the point on the _parent 
+              system_ at which the child system is to be attached
+            
+        * Else:
+            
+            * `DOF_parent` should be used to specify the index of the DOF in 
+              the _parent system_ to which the child system is to be attached
+              
+        **Child system:**
         
-        * `DOF2`, DOF index in child system
+        Similar logic applies as per parent systems:
         
-        * `dynSys2`, instance of child system
+        * If _isModal_:
+            
+            * `Xpos_child` can be used to define the point on the _child 
+              system_ at which the parent system is to be attached. 
+              Note: usage of this parameter requires the _child system_ to have 
+              function attribute `modeshapeFunc`, i.e. a function describing 
+              how modeshapes vary with chainage.
+              
+            * Alternatively `modeshapes_child` can be used to directly 
+              provide modeshape vector relevant to the point on the _child 
+              system_ at which the parent system is to be attached
+            
+        * Else:
+            
+            * `DOF_child` should be used to specify the index of the DOF in 
+              the _child system_ to which the parent system is to be attached
         
-        * `key`, key for new set of constraint equations defined by invoking 
-          this function
-        
-        **Note**: only applies to *linear* systems with constant `M`, `C`, `K`
-        system matrices. (This is checked: an exception will be raised if used 
+        **Note**: this function can only be used with *linear* systems 
+        with constant `M`, `C`, `K` system matrices.
+        (This is checked: an exception will be raised if attempt is made to use 
         with nonlinear systems).
         
         """
         
-        dynSys1 = self   # for clarity in the following code
+        parent_sys = self   # for clarity in the following code
         
-        # Check selected DOF indices are valid
-        dynSys1.CheckDOF(DOF1)
-        dynSys2.CheckDOF(DOF2)
+        # Add child system to parent system's list
+        parent_sys.DynSys_list.append(child_sys)
         
-        # Check systems are linear
-        if not dynSys1.isLinear:
-            raise ValueError("Error: 'dynSys1' is not linear!")
-        if not dynSys2.isLinear:
-            raise ValueError("Error: 'dynSys2' is not linear!")
-    
-        # Retrieve system matrices for systems to be joined
-        n1 = dynSys1.nDOF
-        n2 = dynSys2.nDOF
+        # Define default key
+        if J_key is None:
+            J_key = "0_%d" % (len(parent_sys.DynSys_list)-1)
         
-        # Add system to systems list
-        self.DynSys_list.append(dynSys2)
+        def link_sys(sys_obj, sys_type:str, Xpos, modeshapes, DOF):
+            """
+            Function to carry out the necessary tasks to link either
+            parent or child system
+            """
             
-        # ---- Define new constraint equation to constrain DOF1 and DOF2 -----
+            # Check system is linear
+            if not sys_obj.isLinear:
+                raise ValueError("{0} system '{1}' is not linear!"
+                                 .format(sys_type,sys_obj.name))
         
-        # Define dynSys1 part of constraint eqn.
-        attr = "isModal"
+            # Factor to apply to give equal and opposite behaviour
+            if sys_type == "parent":
+                factor = +1
+            elif sys_type == "child":
+                factor = -1
+            else:
+                raise ValueError("Unexpected `sys_type`!")
         
-        if hasattr(dynSys1,attr) and getattr(dynSys1,attr):
-            Jn1 = dynSys1.modeshapes[DOF1,:]
-        else:
-            Jn1 = npy.asmatrix(npy.zeros((n1,)))
-            Jn1[0,DOF1]=+1
+            # Logic as per docstring
+            if sys_obj.isModal:
+                
+                if Xpos is not None:
+                    
+                    attr = "modeshapeFunc"
+                    
+                    if hasattr(sys_obj,attr):
+                        modeshapes = getattr(sys_obj,attr)(Xpos)
+                    
+                    else:
+                        raise ValueError("`Xpos` argument provided but " + 
+                                         "{0} system '{1}'"
+                                         .format(sys_type,sys_obj.name) + 
+                                         "does not have function " + 
+                                         "attribute `%s'" % attr)    
+                
+                
+                elif modeshapes is None:
+                    raise ValueError("{0} system is modal. ".format(sys_type) + 
+                                     "Either `Xpos_{0}` ".format(sys_type) + 
+                                     "or `modeshapes_{0}` ".format(sys_type) + 
+                                     "arguments are required")
+                    
+                # Define new constraint equation submatrix
+                J_new = factor * modeshapes
+                    
+            else: # for non-modal systems
+                
+                # Check DOF index is valid
+                sys_obj.CheckDOF(DOF)
+                
+                # Define new constraint equation submatrix
+                n = sys_obj.nDOF
+                J_new = npy.asmatrix(npy.zeros((n,)))
+                J_new[0,DOF] = factor * 1
+        
+            # Define new constraint equation to link systems 
+            sys_obj.AddConstraintEqns(J_new,J_key,checkConstraints=False)
             
-        dynSys1.AddConstraintEqns(Jn1,key,checkConstraints=False)
+        # Use function defined above to process optional arguments
+        link_sys(parent_sys,"parent",Xpos_parent,modeshapes_parent,DOF_parent)
+        link_sys(child_sys,"child",Xpos_child,modeshapes_child,DOF_child)
         
-        # Define dynSys2 part of constraint eqn.
-        if hasattr(dynSys2,attr) and getattr(dynSys2,attr):
-            Jn2 = dynSys2.modeshapes[DOF2,:] 
-        else:
-            Jn2 = npy.asmatrix(npy.zeros((n2,)))
-            Jn2[0,DOF2]=-1
-            
-        dynSys2.AddConstraintEqns(Jn2,key,checkConstraints=False)
-    
+        
     
     def freqVals(self,f_salient=None,nf_pad:int=100,fmax=None):
         """"
