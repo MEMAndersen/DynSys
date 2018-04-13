@@ -428,9 +428,12 @@ class DynSys:
                     
                     J_list.append(npy.asmatrix(npy.zeros((m,x.nDOF))))
                 
-            # Assemble as full matrix by concatenating matrices
+            # Assemble rows of full matrix
             full_J_mtrx = npy.hstack(tuple(J_list))            
             J_dict[key] =full_J_mtrx
+            
+        # Assemble full matrix
+        J_mtrx = npy.vstack(list(J_dict.values()))
         
         # Check shapes of new matrices
         self._CheckSystemMatrices(nDOF=nDOF_new,
@@ -438,6 +441,8 @@ class DynSys:
                                   C_mtrx=C_mtrx,
                                   K_mtrx=K_mtrx,
                                   J_dict=J_dict)
+        
+        self.CheckConstraints(J=J_mtrx,verbose=False)
         
         # Populate dictionary
         d["nDOF"] = nDOF_new
@@ -447,7 +452,7 @@ class DynSys:
         d["K_mtrx"]=K_mtrx
         
         d["J_dict"]=J_dict        
-        d["J_mtrx"]=npy.vstack(list(J_dict.values()))
+        d["J_mtrx"]=J_mtrx
         
         d["isLinear"]=isLinear
         d["isSparse"]=isSparse
@@ -460,7 +465,8 @@ class DynSys:
                                  J_dict=J_dict,
                                  isLinear=isLinear,
                                  isSparse=isSparse,
-                                 name=[x.name for x in self.DynSys_list])
+                                 name=[x.name for x in self.DynSys_list],
+                                 showMsgs=False)
             
             d["DynSys_full"]=DynSys_full
         
@@ -512,6 +518,7 @@ class DynSys:
         # Check constraints matrix is valid
         if checkConstraints:
             self.CheckConstraints()
+            
             
     def CalcStateMatrix(self,
                         applyConstraints:bool=False,
@@ -688,7 +695,7 @@ class DynSys:
             
         """
         
-        # Obtain inputs from object
+        # Get full system matrices
         d = self.GetSystemMatrices()
         M = d["M_mtrx"]
         K = d["K_mtrx"]
@@ -696,8 +703,13 @@ class DynSys:
         J = d["J_mtrx"]
         nDOF = d["nDOF"]
         isSparse = d["isSparse"]
+        isLinear = d["isLinear"]
         
         isDense = not isSparse
+        
+        # Check system is linear
+        if not isLinear:
+            raise ValueError("System `{0}` is not linear!".format(self.name))
         
         # Obtain inverse mass matrix
         attr = "_M_inv"
@@ -1022,35 +1034,50 @@ class DynSys:
         else:
             return self.J_mtrx.shape[0]!=0
     
-    def CheckConstraints(self,raiseException=True)->bool:
+    def CheckConstraints(self,J=None,verbose=True,raiseException=True)->bool:
         """
         Check contraint equations are independent
         ***
-        Practically this is done by checking that `J_mtrx` is full rank
+        Practically this is done by checking that the full `J_mtrx` of the 
+        system, including any sub-systems, is full rank
         """
-    
-        if not(self.J_mtrx is None):       
-            
-            J = self.J_mtrx
-            m = J.shape[0]
-            
-            if self.isSparse:
-                J = J.todense()
-            
-            r = npy.linalg.matrix_rank(J)
+
+        if J is None:
+            full_sys = self.GetSystemMatrices(createNewSystem=True)["DynSys_full"]
+            J = full_sys.GetSystemMatrices(createNewSystem=False)["J_mtrx"]
+        else:
+            full_sys = self
         
-            if m!=r:
+        if verbose:
+            print("Checking constraint equations for `%s` " % full_sys.name)
+        
+        m = J.shape[0]
+        if verbose:
+            print("Number of constraint equations: %d" % m)
+            
+        if self.isSparse:
+            J = J.todense()
+        
+        r = npy.linalg.matrix_rank(J)
+        if verbose:
+            print("Number of independent constraint equations: %d" % r)
+    
+        if m!=r:
+            
+            errorStr="Error: constraints matrix not full rank!\n"
+            errorStr+="J.shape: {0}\nComputed rank: {1}".format(J.shape,r)
+            
+            if raiseException:
+                raise ValueError(errorStr)
+            else:
+                print(errorStr) # do not raise exception - but print to console
                 
-                errorStr="Error: constraints matrix not full rank!\nJ.shape: {0}\nComputed rank: {1}".format(J.shape,r)
-                
-                if raiseException:
-                    raise ValueError(errorStr)
-                else:
-                    print(errorStr)
+            return False
+        
+        else:
+            if verbose: print("Constraints are independent, as required")
                     
-                return False
-                    
-        return True
+            return True
     
     def AppendSystem(self,
                      child_sys,
@@ -1604,6 +1631,7 @@ if __name__ == "__main__":
     sys1.PrintSystemMatrices()
     
     d = sys1.GetSystemMatrices()
+    
     full_sys = d["DynSys_full"]
     full_sys.PrintSystemMatrices(printValues=True)
-    
+    d = full_sys.GetSystemMatrices()
