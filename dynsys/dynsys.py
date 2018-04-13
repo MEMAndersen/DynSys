@@ -1029,10 +1029,10 @@ class DynSys:
         Tests whether constraint equations are defined
         """
         
-        if self.J_mtrx is None:
-            return False
+        if len(self._J_dict)>0:
+            return True
         else:
-            return self.J_mtrx.shape[0]!=0
+            return False
     
     def CheckConstraints(self,J=None,verbose=True,raiseException=True)->bool:
         """
