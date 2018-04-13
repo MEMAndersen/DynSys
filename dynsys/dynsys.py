@@ -1043,8 +1043,9 @@ class DynSys:
         """
 
         if J is None:
-            full_sys = self.GetSystemMatrices(createNewSystem=True)["DynSys_full"]
-            J = full_sys.GetSystemMatrices(createNewSystem=False)["J_mtrx"]
+            d = self.GetSystemMatrices(createNewSystem=True)
+            J = d["J_mtrx"]
+            full_sys = d["DynSys_full"]
         else:
             full_sys = self
         

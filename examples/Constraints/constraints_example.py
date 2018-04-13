@@ -6,6 +6,8 @@ Example to demonstrate (and test) use of constraints
 # dynsys library imports
 import modalsys
 import msd_chain
+import dyn_analysis
+import loading
 
 # Define a modal system
 my_modal_sys = modalsys.ModalSys(name="my_modal_sys")
@@ -36,4 +38,15 @@ my_modal_sys.PrintSystemMatrices(printValues=True)
 
 # Plot modeshapes
 my_modal_sys.PlotModeshapes()
+
+# Define basic moving load
+loading_obj = loading.LoadTrain(loadX=[0.0],loadVals=[100.0],name="test load")
+
+# Carry out moving load analysis
+analysis_obj = dyn_analysis.MovingLoadAnalysis(modalsys_obj=my_modal_sys,
+                                               name="test analysis",
+                                               loadtrain_obj=loading_obj,
+                                               dt=0.1
+                                               )
+analysis_obj.run()
 

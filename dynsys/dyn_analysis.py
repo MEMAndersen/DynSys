@@ -185,10 +185,11 @@ class MovingLoadAnalysis(Dyn_Analysis):
         tStart, tEnd = self._CalcSimDuration(loadVel=loadVel,
                                              tEpilogue=tEpilogue)
         
-        forceFunc = modalsys_obj.CalcModalForces(loading_obj=loadtrain_obj,
-                                                 loadVel=loadVel,
-                                                 dt=dt_loads)
-        
+        # Define force function for parent system and subsystems
+        modalForces_func = modalsys_obj.CalcModalForces(loading_obj=loadtrain_obj,
+                                                        loadVel=loadVel,
+                                                        dt=dt_loads)
+        force_func_dict = {modalsys_obj : modalForces_func}
         
         self.tstep_obj = tstep.TStep(modalsys_obj,
                                      name=name,
@@ -196,7 +197,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
                                      tEnd=tEnd,
                                      dt=dt,
                                      max_dt=max_dt,
-                                     force_func=forceFunc,
+                                     force_func_dict=force_func_dict,
                                      retainDOFTimeSeries=retainDOFTimeSeries,
                                      retainResponseTimeSeries=retainResponseTimeSeries,
                                      writeResults2File=writeResults2File,
@@ -206,7 +207,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
         Time-stepping solver object
         """
         
-        self.results_obj = self.tstep_obj.results_obj
+        self.results_obj = self.tstep_obj.results_obj_list
         """
         Results object
         """

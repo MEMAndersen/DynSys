@@ -334,8 +334,6 @@ class ModalSys(DynSys):
         return fig, ax
     
     
-            
-            
     def CalcModalForces(self,loading_obj,
                         loadVel=5.0,
                         Ltrack=None,
@@ -409,11 +407,10 @@ class ModalSys(DynSys):
         are not used, but rather system matrices are edited to reflect the
         attachment of TMD freedoms
         
-        
-        It is expected that this function will become deprecated once class
-        method `CalcEigenproperties` is updated to work for systems with
-        constraint equations defined
-        
+        ***This function is now marked as deprecated. Update still required to 
+        male class method `CalcEigenproperties()` usuable for systems with 
+        constraint equations. However functionality provided in updated 
+        `AppendSystem()` means that function should generally be use***
         
         For a full description of the method (and notation) adopted, refer
         *The Lateral Dynamic Stability of Stockton Infinity Footbridge
