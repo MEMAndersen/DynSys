@@ -9,7 +9,10 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import pandas as pd
 import matplotlib.pyplot as plt
-import deprecation # obtain this from pip
+
+import deprecation # not in anaconda distribution - obtain this from pip
+#@deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
+
 import scipy.sparse as sparse
 
 from scipy.linalg import block_diag
@@ -165,13 +168,6 @@ class DynSys:
             print("Note: sparse matrix functionality as provided by Scipy "
                   "will be used for system matrices")
             
-            
-    def GetSystemNames(self):
-        """
-        Returns list of all systems and sub-systems
-        """
-        return [x.name for x in self.DynSys_list]
-        
         
     def _CheckSystemMatrices(self,
                              nDOF=None,
@@ -360,25 +356,7 @@ class DynSys:
                 if printValues: print(val)
                 
                 print("")
-                
-            
-            
-            
-            
-            
-    @deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
-    def GetRealWorldDOFs(self,v):
-        """
-        Returns dofs in real-world coordinate system
-        
-        (useful for system defined via modal properties)
-        """
-        
-        if self.isModal:
-            return self.modeshapes * v
-        else:
-            return v
-        
+    
 
     def GetSystemMatrices(self,createNewSystem=True):
         """
@@ -489,27 +467,33 @@ class DynSys:
         # Return dictionary
         return d
     
-    def AddConstraintEqns(self,Jnew,key,checkConstraints=True):
+    def AddConstraintEqns(self,Jnew,Jkey,checkConstraints=True):
         """
         Function is used to append a constraint equation
         ***
         
-        Constraint equations must take the following form:
+        Constraint equations are assumed to take the following form:
         $$ J\ddot{y} = 0 $$
         
         ***
-        Practically this is done by adding a row to the `J_mtrx` of the system
+        Required:
         
-        `J_mtrx` has dimensions _[m,n]_ where:
-            
-        * _m_ denotes the number of constraint equations
-        * _n_ denotes the number of DOFS of the system
-            
-        **Important note**: `J_mtrx` must be *full rank*, i.e. have
-        independent constraints.
+        * `Jnew`, _matrix_ of dimensions _[m,n]_ where:    
         
-        `CheckConstraints()` can be used to test whether
-        constraint equations are independent
+            * _m_ denotes the number of constraint equations
+            
+            * _n_ denotes the number of DOFS of the system
+            
+        * `Jkey`, key used to denote Jnew within dict    
+            
+        ***
+            
+        **Important note**: `Jnew` must be *full rank*, i.e. must itself have
+        independent constraints. In addition `Jnew` must be independent of any 
+        constraints previously defined.
+        
+        `CheckConstraints()` should be used to test whether constraint 
+        equations are independent
         """
         
         # Convert Jnew to appropriate representation
@@ -523,7 +507,7 @@ class DynSys:
             raise ValueError("Error: constraint eqn dimensions inconsistent!")
                 
         # Store constraint equation as new dict item
-        self._J_dict[key]=Jnew
+        self._J_dict[Jkey]=Jnew
             
         # Check constraints matrix is valid
         if checkConstraints:
