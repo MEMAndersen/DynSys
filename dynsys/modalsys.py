@@ -189,7 +189,7 @@ class ModalSys(DynSys):
         d["M_mtrx"]=M_mtrx
         d["C_mtrx"]=C_mtrx
         d["K_mtrx"]=K_mtrx
-        d["J_dict"]={None:J_mtrx}
+        d["J_dict"]={}
         return d
             
                 

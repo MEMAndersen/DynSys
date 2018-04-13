@@ -126,8 +126,6 @@ class DynSys:
         
         if J_dict is not None:
             self._J_dict = J_dict
-        else:
-            self._J_dict[None] = npy.asmatrix(npy.zeros((0,nDOF)))
         
         if name is None:
             name = self.__class__.__name__
