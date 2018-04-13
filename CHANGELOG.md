@@ -17,6 +17,18 @@ system. However major release number will always correspond.
 ### Changed
 * `warburton_TMD.py` validation script moved to subfolder. In future all validation
   scripts should be kept in subfolders to avoid confusion / cross-over of inputs
+* System matrices (e.g. M_mtrx, K_mtrx etc) now intended to be held as private 
+  attributes; renames _M_mtrx, _C_mtrx to denote this change in intent. 
+  `GetSystemMatrices()` member function of `DynSys` class re-instated (this 
+  was previously marked as deprecated) and overhauled to act as the primary 
+  get() function for obtaining system matrices
+* Significant non backwards-compatible overhaul of how constraints are defined 
+  and handled internally within the `DynSys` class. Constraint matrices are 
+  now held within a dict and kept local to each dynamic system. This allows for 
+  straightforward addition/removal of constraints and improves modularity. 
+* Improved functionality for systems with sub-systems appended using 
+  `AppendSystem()` method
+   
 
 ### Added
 * Validation example added to verify accuracy or revised ResponseSpectrum()
@@ -30,6 +42,11 @@ system. However major release number will always correspond.
   Acceleration spectrum now based on _absolute_ acceleration, as is conventional
   (previous versions omitted to add the input ground motion to the SDOF responses 
   calculated)
+  
+### Removed
+
+* GetRealWorldDOFs() method removed from DynSys class (this had been marked as 
+  deprecated since v0.1.0)
 
 ## [0.5.1] - 2018-03-19 - RIHY
 
