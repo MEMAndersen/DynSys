@@ -433,7 +433,10 @@ class DynSys:
             J_dict[key] =full_J_mtrx
             
         # Assemble full matrix
-        J_mtrx = npy.vstack(list(J_dict.values()))
+        if J_dict:
+            J_mtrx = npy.vstack(list(J_dict.values()))
+        else:
+            J_mtrx = npy.zeros((0,nDOF_new))
         
         # Check shapes of new matrices
         self._CheckSystemMatrices(nDOF=nDOF_new,
@@ -1048,6 +1051,9 @@ class DynSys:
             full_sys = d["DynSys_full"]
         else:
             full_sys = self
+            
+        if J.shape[0]==0:
+            return True # no constraint equations defined
         
         if verbose:
             print("Checking constraint equations for `%s` " % full_sys.name)
