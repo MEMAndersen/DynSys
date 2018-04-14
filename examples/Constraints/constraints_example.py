@@ -49,5 +49,6 @@ analysis_obj = dyn_analysis.MovingLoadAnalysis(modalsys_obj=my_modal_sys,
                                                dt=0.1
                                                )
 results_obj = analysis_obj.run()
-results_obj.PlotStateResults()
+results_obj.PlotStateResults(dynsys_obj=my_modal_sys)
+results_obj.PlotStateResults(dynsys_obj=TMD1)
 

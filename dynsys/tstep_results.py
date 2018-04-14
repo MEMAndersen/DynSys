@@ -267,6 +267,7 @@ class TStep_Results:
         return lines
         
     def PlotStateResults(self,
+                         dynsys_obj=None,
                          printProgress:bool=True,
                          dofs2Plot=None):
         """
@@ -281,6 +282,19 @@ class TStep_Results:
         * Accelerations
         
         * Constraint forces (only if constraint equations defined)
+        
+        for the _analysis freedoms_.
+        
+        ***
+        Optional:
+            
+        * `dynsys_obj`, can be used to specify the subsystem for which results 
+          which should be plotted. If _None_ then results for all freedoms 
+          (i.e. all subsystems) will be plotted.
+          
+        * `dofs2plot`, _list_ or _array_ of indexs of freedoms for which 
+          results should be plotted. If _None_ then results for all freedoms 
+          will be plotted.
         
         """
         
@@ -299,10 +313,6 @@ class TStep_Results:
         fig, axarr = plt.subplots(nPltRows, sharex=True)
         fig.set_size_inches((18,9))
     
-        # Handle dofs2Plot in case of none
-        if dofs2Plot is None:
-            dofs2Plot = range(self.v.shape[1])
-        
         # Set xlim
         xlim = [self.tstep_obj.tStart,self.tstep_obj.tEnd]
         
@@ -313,27 +323,37 @@ class TStep_Results:
         if all([x.isModal for x in DynSys_list]):
             # All systems and subsystems are modal
             sysStr = "Modal "
+            
+        # Get data to plot
+        if dynsys_obj is None:
+            dynsys_obj = self.tstep_obj.dynsys_obj # parent system
+        
+        f, v, vdot, v2dot = self.GetResults(dynsys_obj,['f','v','vdot','v2dot'])
+        
+        # Handle dofs2Plot in case of none
+        if dofs2Plot is None:
+            dofs2Plot = range(v.shape[1])
         
         # Create time series plots
         self._TimePlot(ax=axarr[0],
                        t_vals=self.t,
-                       data_vals=self.f[:,dofs2Plot],
+                       data_vals=f[:,dofs2Plot],
                        xlim=xlim,
                        titleStr="Applied {0}Forces (N)".format(sysStr))
         
         self._TimePlot(ax=axarr[1],
                        t_vals=self.t,
-                       data_vals=self.v[:,dofs2Plot],
+                       data_vals=v[:,dofs2Plot],
                        titleStr="{0}Displacements (m)".format(sysStr))
         
         self._TimePlot(ax=axarr[2],
                        t_vals=self.t,
-                       data_vals=self.vdot[:,dofs2Plot],
+                       data_vals=vdot[:,dofs2Plot],
                        titleStr="{0}Velocities (m/s)".format(sysStr))
         
         self._TimePlot(ax=axarr[3],
                        t_vals=self.t,
-                       data_vals=self.v2dot[:,dofs2Plot],
+                       data_vals=v2dot[:,dofs2Plot],
                        titleStr="{0}Accelerations ($m/s^2$)".format(sysStr))
         
         if constraints:
