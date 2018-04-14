@@ -219,7 +219,7 @@ class TStep:
             expected_nDOF = x.nDOF
             
             # Handle case of no matching function key
-            if not x.name in force_func_dict:
+            if not x in force_func_dict:
                     
                 # Define null force function
                 def null_force(t):
@@ -393,7 +393,7 @@ class TStep:
                     f_vals = f(t)
                 else:
                     f_vals = npy.append(f_vals,f(t))
-                    
+            
             return f_vals
                 
         
