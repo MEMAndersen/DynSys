@@ -196,18 +196,13 @@ class TStep:
         """
         
         # Create object to write results to
-        results_obj_list = []
-        for x in self.dynsys_obj.DynSys_list:
-            
-            obj = tstep_results.TStep_Results(self,
-                                              retainDOFTimeSeries=retainDOFTimeSeries,
-                                              retainResponseTimeSeries=retainResponseTimeSeries)
-                    
-            results_obj_list.append(obj)
-            
-        self.results_obj_list=results_obj_list
+        results_obj=tstep_results.TStep_Results(self,
+                                                retainDOFTimeSeries=retainDOFTimeSeries,
+                                                retainResponseTimeSeries=retainResponseTimeSeries)
+        
+        self.results_obj=results_obj
         """
-        List of `tstep_results` objects used to store results and provide 
+        `tstep_results` objects used to store results and provide 
         useful functionality e.g. stats computation and plotting
         """
         
@@ -365,7 +360,7 @@ class TStep:
         tmin = self.tStart
         tmax = self.tEnd
         y0 = self.x0
-        results_obj_list = self.results_obj_list
+        results_obj = self.results_obj
         
         # Define keyword arguments for solve_ivp
         kwargs = {}
@@ -494,7 +489,7 @@ class TStep:
         if showMsgs: print("Overall solution time: %.3f seconds" % solve_time)
         if showMsgs: print("Overall post-processing time: %.3f seconds" % resultsproc_time)
         
-        return self.results_obj
+        return results_obj
     
         
         
