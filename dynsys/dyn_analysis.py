@@ -207,7 +207,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
         Time-stepping solver object
         """
         
-        self.results_obj = self.tstep_obj.results_obj_list
+        self.results_obj = self.tstep_obj.results_obj
         """
         Results object
         """
@@ -227,12 +227,16 @@ class MovingLoadAnalysis(Dyn_Analysis):
         print("Load pattern: {0}".format(self.loading_obj.name))
         print("Load velocity: %.1f" % self.loadVel)
         tic=timeit.default_timer()
-        self.tstep_obj.run()
+        
+        results_obj = self.tstep_obj.run()
+        
         toc=timeit.default_timer()
         print("***** Analysis complete after %.3f seconds." % (toc-tic))
                
         if saveResults:
             self.save(fName=save_fName)
+            
+        return results_obj
         
     def _CalcSimDuration(self,loadVel=10.0,tEpilogue=5.0):
         """
