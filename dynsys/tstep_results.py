@@ -365,6 +365,9 @@ class TStep_Results:
         axarr[-1].set_xlabel("Time (secs)")
         fig.subplots_adjust(hspace=0.3)
         
+        # Overall title for plot
+        fig.suptitle("State variable results for '{0}'".format(dynsys_obj.name))
+        
         if printProgress:
             toc=timeit.default_timer()
             print("Plot prepared after %.3f seconds." % (toc-tic))
