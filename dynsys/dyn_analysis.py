@@ -215,7 +215,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
         
         
     def run(self,
-            saveResults=True,
+            saveResults=False,
             save_fName=None):
         """
         Runs moving load analysis, using `tstep.run()`
