@@ -179,6 +179,63 @@ class TStep_Results:
         self.nResults+=1
         
         
+    def GetResults(self,dynsys_obj,attr_list:list):
+        """
+        Retrieves results for a given DynSys object, which is assumed to be a 
+        subsystem of the parent system (this is checked)
+        
+        ***
+        Required:
+            
+        * `dynsys_obj`, instance of DynSys class; must be a subsystem of the 
+          parent system
+          
+        * `attr_list`, list of strings, to denote the results attributes to be 
+          returned
+         
+        """
+        
+        # Convert to list if single argument provided
+        if not isinstance(attr_list,list):
+            attr_list = list(attr_list)
+        
+        # Check that dynsys_obj is part of the system that has been analysed
+        parent_sys = self.tstep_obj.dynsys_obj
+        DynSys_list = parent_sys.DynSys_list
+        
+        if not dynsys_obj in DynSys_list:
+            raise ValueError("`dynsys_obj` is not a subsystem " + 
+                             "of the parent system that has been analysed!")
+        
+        # Determine splice indices to use to get results relating to requested system 
+        sys_index = [i for i, j in enumerate(DynSys_list) if j == dynsys_obj][0]
+        
+        nDOF_list_cum = npy.cumsum([x.nDOF for x in DynSys_list]).tolist()
+        
+        if sys_index == 0:
+            startIndex = 0
+        else:
+            startIndex = nDOF_list_cum[sys_index-1]
+        
+        endIndex = nDOF_list_cum[sys_index] 
+        
+        # Loop through to return requested attributes
+        vals_list = []
+        
+        for attr in attr_list:
+            
+            if hasattr(self,attr):
+                
+                vals = getattr(self,attr)             # for full system
+                vals = vals[:,startIndex:endIndex]    # for subsystem requested
+                vals_list.append(vals)
+                
+            else:
+                raise ValueError("Could not retrieve requested attribute '%s'" % attr)
+        
+        return vals_list
+        
+    
     def _TimePlot(self,ax,t_vals,data_vals,
                   titleStr=None,
                   xlabelStr=None,
@@ -251,7 +308,10 @@ class TStep_Results:
         
         # Get system description string
         sysStr = ""
-        if self.tstep_obj.dynsys_obj.__class__.__name__ == "ModalSys":
+        DynSys_list = self.tstep_obj.dynsys_obj.DynSys_list
+        
+        if all([x.isModal for x in DynSys_list]):
+            # All systems and subsystems are modal
             sysStr = "Modal "
         
         # Create time series plots
@@ -259,7 +319,7 @@ class TStep_Results:
                        t_vals=self.t,
                        data_vals=self.f[:,dofs2Plot],
                        xlim=xlim,
-                       titleStr="Applied {0} Forces (N)".format(sysStr))
+                       titleStr="Applied {0}Forces (N)".format(sysStr))
         
         self._TimePlot(ax=axarr[1],
                        t_vals=self.t,
@@ -515,38 +575,47 @@ class TStep_Results:
         
         dynsys_obj=self.tstep_obj.dynsys_obj
         
-        output_mtrx = dynsys_obj.output_mtrx
-        output_names = dynsys_obj.output_names
+        # Loop over all systems and subsystems
+        for x in dynsys_obj.DynSys_list:
             
-        # Obtain new responses
-        state_vector = npy.hstack((self.v,self.vdot,self.v2dot))
-        self.responses = output_mtrx * state_vector.T
-        self.responseNames = output_names
+            # Get output matrix for subsystem
+            output_mtrx = x.output_mtrx
+            output_names = x.output_names
             
-        # Calculate DOF statistics
-        if self.calc_dof_stats:
-            self.CalcDOFStats(showMsgs=showMsgs)
+            # Retrieve state variables for subsystem
+            v, vdot, v2dot = self.GetResults(x,['v', 'vdot', 'v2dot'])
             
-        # Calculate response statistics
-        if self.calc_response_stats:
-            self.CalcResponseStats(showMsgs=showMsgs)
+            # Obtain new responses
+            state_vector = npy.hstack((v,vdot,v2dot))
+            print("state_vector.shape: {0}".format(state_vector.shape))
+            print("output_mtrx.shape: {0}".format(output_mtrx.shape))
+            self.responses = output_mtrx * state_vector.T
+            self.responseNames = output_names
+                
+            # Calculate DOF statistics
+            if self.calc_dof_stats:
+                self.CalcDOFStats(showMsgs=showMsgs)
+                
+            # Calculate response statistics
+            if self.calc_response_stats:
+                self.CalcResponseStats(showMsgs=showMsgs)
+                
+            # Write time series results to file
+            if write_results_to_file:
+                self.WriteResults2File(output_fName=results_fName)
+                
+            # Delete DOF time series data (to free-up memory)
+            if not self.retainDOFTimeSeries:
+                if showMsgs: print("Clearing DOF time series data to save memory...")
+                del self.v
+                del self.vdot
+                del self.v2dot
             
-        # Write time series results to file
-        if write_results_to_file:
-            self.WriteResults2File(output_fName=results_fName)
-            
-        # Delete DOF time series data (to free-up memory)
-        if not self.retainDOFTimeSeries:
-            if showMsgs: print("Clearing DOF time series data to save memory...")
-            del self.v
-            del self.vdot
-            del self.v2dot
-        
-        # Delete response time series data (to free up memory)
-        if not self.retainResponseTimeSeries:
-            if showMsgs: print("Clearing response time series data to save memory...")
-            del self.responses
-            del self.responseNames
+            # Delete response time series data (to free up memory)
+            if not self.retainResponseTimeSeries:
+                if showMsgs: print("Clearing response time series data to save memory...")
+                del self.responses
+                del self.responseNames
         
     def CalcDOFStats(self,showMsgs=True):
         """
