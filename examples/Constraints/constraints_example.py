@@ -46,10 +46,12 @@ loading_obj = loading.LoadTrain(loadX=[0.0],loadVals=[100.0],name="test load")
 analysis_obj = dyn_analysis.MovingLoadAnalysis(modalsys_obj=my_modal_sys,
                                                name="test analysis",
                                                loadtrain_obj=loading_obj,
-                                               dt=0.1
+                                               dt=0.01
                                                )
 results_obj = analysis_obj.run()
-results_obj.PlotStateResults(dynsys_obj=my_modal_sys)
-results_obj.PlotStateResults(dynsys_obj=TMD1)
-results_obj.PlotStateResults(dynsys_obj=TMD2)
+#results_obj.PlotStateResults(dynsys_obj=my_modal_sys)
+#results_obj.PlotStateResults(dynsys_obj=TMD1)
+#results_obj.PlotStateResults(dynsys_obj=TMD2)
+
+results_obj.PlotResults(dynsys_obj=my_modal_sys)
 

@@ -375,13 +375,23 @@ class TStep_Results:
         return fig
     
     def PlotResponseResults(self,
+                            dynsys_obj=None,
                             y_overlay:list=None,
+                            raiseErrors=True,
                             useCommonPlot:bool=False,
                             useCommonScale:bool=True,
                             printProgress:bool=True):
         """
         Produces a new figure with linked time series subplots for 
         all responses/outputs
+        
+        ***
+        Optional:
+            
+        * `dynsys_obj`, can be used to specify the subsystem for which results 
+          which should be plotted. If _None_ then results for all freedoms 
+          (i.e. all subsystems) will be plotted.
+          
         """
         
         if printProgress:
@@ -397,8 +407,13 @@ class TStep_Results:
         print("nResponses to plot: {0}".format(nResponses))
         
         if nResponses == 0:
-            raise ValueError("nResponses=0, nothing to plot!")
-    
+            errorstr = "nResponses=0, nothing to plot!"
+            if raiseErrors:
+                raise ValueError(errorstr)
+            else:
+                print(errorstr)
+                return None
+                
         # Initialise figure 
         if not useCommonPlot:
             fig, axarr = plt.subplots(nResponses, sharex=True)
@@ -457,6 +472,7 @@ class TStep_Results:
         return fig
         
     def PlotResults(self,
+                    dynsys_obj=None,
                     printProgress:bool=True,
                     dofs2Plot:bool=None,
                     useCommonPlot:bool=False):
@@ -469,17 +485,16 @@ class TStep_Results:
         * Response results plot: refer `PlotResponseResults()`
         
         """
-        
-        if dofs2Plot is None:
-            # Plot results for all DOFs
-            dofs2Plot=range(self.nDOF)
             
         figs=[]
         
-        figs.append(self.PlotStateResults(printProgress=printProgress,
+        figs.append(self.PlotStateResults(dynsys_obj=dynsys_obj,
+                                          printProgress=printProgress,
                                           dofs2Plot=dofs2Plot))
         
-        figs.append(self.PlotResponseResults(printProgress=printProgress,
+        figs.append(self.PlotResponseResults(dynsys_obj=dynsys_obj,
+                                             raiseErrors=False,
+                                             printProgress=printProgress,
                                              useCommonPlot=useCommonPlot))
         
         return figs
