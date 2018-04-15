@@ -28,6 +28,8 @@ system. However major release number will always correspond.
   straightforward addition/removal of constraints and improves modularity. 
 * Improved functionality for systems with sub-systems appended using 
   `AppendSystem()` method
+* Plotting methods and response / response stats calculation methods revised to 
+  be more structured and cater for systems with multiple subsystems
    
 
 ### Added
@@ -35,6 +37,8 @@ system. However major release number will always correspond.
   function. Example computes response spectra for the classic El-Centro (1940)
   earthquake and makes comparison against published plots. Excellent agreement 
   found!
+* New method `PrintResponseStats()` added to `tstep_results` class, to allow 
+  response statistics to be printed to text window in a nice manner
 
 ### Fixed
 * Bug fix for ResponseSpectrum() function in `dyn_analysis`. 
