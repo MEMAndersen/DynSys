@@ -1072,7 +1072,6 @@ table {
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckDOF">CheckDOF</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckOutputMtrx">CheckOutputMtrx</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.EqnOfMotion">EqnOfMotion</a></li>
-    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetRealWorldDOFs">GetRealWorldDOFs</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystem">PlotSystem</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystems_all">PlotSystems_all</a></li>
@@ -1444,7 +1443,7 @@ constrained to not displace.</p></div>
             
   <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.AddConstraintEqns">
-    <p>def <span class="ident">AddConstraintEqns</span>(</p><p>self, Jnew, checkConstraints=True)</p>
+    <p>def <span class="ident">AddConstraintEqns</span>(</p><p>self, Jnew, Jkey, checkConstraints=True)</p>
     </div>
     
 
@@ -1452,43 +1451,62 @@ constrained to not displace.</p></div>
   
     <div class="desc"><p>Function is used to append a constraint equation</p>
 <hr />
-<p>Constraint equations must take the following form:
+<p>Constraint equations are assumed to take the following form:
 $$ J\ddot{y} = 0 $$</p>
 <hr />
-<p>Practically this is done by adding a row to the <code>J_mtrx</code> of the system</p>
-<p><code>J_mtrx</code> has dimensions <em>[m,n]</em> where:</p>
+<p>Required:</p>
 <ul>
-<li><em>m</em> denotes the number of constraint equations</li>
-<li><em>n</em> denotes the number of DOFS of the system</li>
+<li>
+<p><code>Jnew</code>, <em>matrix</em> of dimensions <em>[m,n]</em> where:    </p>
+<ul>
+<li>
+<p><em>m</em> denotes the number of constraint equations</p>
+</li>
+<li>
+<p><em>n</em> denotes the number of DOFS of the system</p>
+</li>
 </ul>
-<p><strong>Important note</strong>: <code>J_mtrx</code> must be <em>full rank</em>, i.e. have
-independent constraints.</p>
-<p><code>CheckConstraints()</code> can be used to test whether
-constraint equations are independent</p></div>
+</li>
+<li>
+<p><code>Jkey</code>, key used to denote Jnew within dict    </p>
+</li>
+</ul>
+<hr />
+<p><strong>Important note</strong>: <code>Jnew</code> must be <em>full rank</em>, i.e. must itself have
+independent constraints. In addition <code>Jnew</code> must be independent of any 
+constraints previously defined.</p>
+<p><code>CheckConstraints()</code> should be used to test whether constraint 
+equations are independent</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.AddConstraintEqns', this);">Show source &equiv;</a></p>
   <div id="source-hanging_1d_chain.hanging1DChain.AddConstraintEqns" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddConstraintEqns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddConstraintEqns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">Jkey</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to append a constraint equation</span>
 <span class="sd">    ***</span>
 <span class="sd">    </span>
-<span class="sd">    Constraint equations must take the following form:</span>
+<span class="sd">    Constraint equations are assumed to take the following form:</span>
 <span class="sd">    $$ J\ddot{y} = 0 $$</span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
-<span class="sd">    Practically this is done by adding a row to the `J_mtrx` of the system</span>
+<span class="sd">    Required:</span>
 <span class="sd">    </span>
-<span class="sd">    `J_mtrx` has dimensions _[m,n]_ where:</span>
-<span class="sd">        </span>
-<span class="sd">    * _m_ denotes the number of constraint equations</span>
-<span class="sd">    * _n_ denotes the number of DOFS of the system</span>
-<span class="sd">        </span>
-<span class="sd">    **Important note**: `J_mtrx` must be *full rank*, i.e. have</span>
-<span class="sd">    independent constraints.</span>
+<span class="sd">    * `Jnew`, _matrix_ of dimensions _[m,n]_ where:    </span>
 <span class="sd">    </span>
-<span class="sd">    `CheckConstraints()` can be used to test whether</span>
-<span class="sd">    constraint equations are independent</span>
+<span class="sd">        * _m_ denotes the number of constraint equations</span>
+<span class="sd">        </span>
+<span class="sd">        * _n_ denotes the number of DOFS of the system</span>
+<span class="sd">        </span>
+<span class="sd">    * `Jkey`, key used to denote Jnew within dict    </span>
+<span class="sd">        </span>
+<span class="sd">    ***</span>
+<span class="sd">        </span>
+<span class="sd">    **Important note**: `Jnew` must be *full rank*, i.e. must itself have</span>
+<span class="sd">    independent constraints. In addition `Jnew` must be independent of any </span>
+<span class="sd">    constraints previously defined.</span>
+<span class="sd">    </span>
+<span class="sd">    `CheckConstraints()` should be used to test whether constraint </span>
+<span class="sd">    equations are independent</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Convert Jnew to appropriate representation</span>
@@ -1501,14 +1519,8 @@ constraint equations are independent</p></div>
     <span class="k">if</span> <span class="n">Jnew</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: constraint eqn dimensions inconsistent!&quot;</span><span class="p">)</span>
             
-    <span class="c1"># Store constraint equation as attribute</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">Jnew</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Store constraint equation as new dict item</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_J_dict</span><span class="p">[</span><span class="n">Jkey</span><span class="p">]</span><span class="o">=</span><span class="n">Jnew</span>
         
     <span class="c1"># Check constraints matrix is valid</span>
     <span class="k">if</span> <span class="n">checkConstraints</span><span class="p">:</span>
@@ -1554,8 +1566,9 @@ constraint equations are independent</p></div>
     
     <span class="c1"># Read from file if no output_mtrx provided</span>
     <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        
         <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">)</span>
         
     <span class="c1"># Create default output names if none provided</span>
     <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -1577,121 +1590,251 @@ constraint equations are independent</p></div>
             
   <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.AppendSystem">
-    <p>def <span class="ident">AppendSystem</span>(</p><p>self, DOF1, DOF2, dynSys2)</p>
+    <p>def <span class="ident">AppendSystem</span>(</p><p>self, child_sys, J_key=None, Xpos_parent=None, modeshapes_parent=None, DOF_parent=None, Xpos_child=None, modeshapes_child=None, DOF_child=None)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Function is used to join two dynamic systems by constraining
-two dofs to translate together</p>
+    <div class="desc"><p>Function is used to join two dynamic systems by establishing 
+appropriate constraint equations</p>
 <hr />
 <p>Required arguments:</p>
 <ul>
-<li><code>DOF1</code>, DOF index in parent system </li>
-<li><code>DOF2</code>, DOF index in child system</li>
-<li><code>dynSys2</code>, instance of child system</li>
+<li><code>child_sys</code>, _ DynSys_ instance describing child system, i.e. system 
+  to be appended</li>
 </ul>
-<p><strong>Note</strong>: only applies to <em>linear</em> systems with constant <code>M</code>, <code>C</code>, <code>K</code>
-system matrices. (This is checked: an exception will be raised if used 
+<hr />
+<p>Optional arguments:</p>
+<ul>
+<li><code>J_key</code>, <em>string</em> identifier used in constraints dict. If <em>None</em> then 
+  default key will be established</li>
+</ul>
+<p>Usage of optional arguments depends on the properties of the parent 
+and child systems, as follows:</p>
+<p><strong>Parent system:</strong></p>
+<ul>
+<li>
+<p>If <em>isModal</em>:</p>
+<ul>
+<li>
+<p><code>Xpos_parent</code> can be used to define the point on the <em>parent 
+  system</em> at which the child system is to be attached. 
+  Note: usage of this parameter requires the <em>parent system</em> to 
+  have function attribute <code>modeshapeFunc</code>, i.e. a function 
+  describing how modeshapes vary with chainage.</p>
+</li>
+<li>
+<p>Alternatively <code>modeshapes_parent</code> can be used to directly 
+  provide modeshape vector relevant to the point on the <em>parent 
+  system</em> at which the child system is to be attached</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Else:</p>
+<ul>
+<li><code>DOF_parent</code> should be used to specify the index of the DOF in 
+  the <em>parent system</em> to which the child system is to be attached</li>
+</ul>
+</li>
+</ul>
+<p><strong>Child system:</strong></p>
+<p>Similar logic applies as per parent systems:</p>
+<ul>
+<li>
+<p>If <em>isModal</em>:</p>
+<ul>
+<li>
+<p><code>Xpos_child</code> can be used to define the point on the <em>child 
+  system</em> at which the parent system is to be attached. 
+  Note: usage of this parameter requires the <em>child system</em> to have 
+  function attribute <code>modeshapeFunc</code>, i.e. a function describing 
+  how modeshapes vary with chainage.</p>
+</li>
+<li>
+<p>Alternatively <code>modeshapes_child</code> can be used to directly 
+  provide modeshape vector relevant to the point on the <em>child 
+  system</em> at which the parent system is to be attached</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Else:</p>
+<ul>
+<li><code>DOF_child</code> should be used to specify the index of the DOF in 
+  the <em>child system</em> to which the parent system is to be attached</li>
+</ul>
+</li>
+</ul>
+<p><strong>Note</strong>: this function can only be used with <em>linear</em> systems 
+with constant <code>M</code>, <code>C</code>, <code>K</code> system matrices.
+(This is checked: an exception will be raised if attempt is made to use 
 with nonlinear systems).</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.AppendSystem', this);">Show source &equiv;</a></p>
   <div id="source-hanging_1d_chain.hanging1DChain.AppendSystem" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">DOF1</span><span class="p">,</span><span class="n">DOF2</span><span class="p">,</span><span class="n">dynSys2</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">child_sys</span><span class="p">,</span>
+                 <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 
+                 <span class="n">Xpos_parent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">modeshapes_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">DOF_parent</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 
+                 <span class="n">Xpos_child</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">modeshapes_child</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">DOF_child</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function is used to join two dynamic systems by constraining</span>
-<span class="sd">    two dofs to translate together</span>
+<span class="sd">    Function is used to join two dynamic systems by establishing </span>
+<span class="sd">    appropriate constraint equations</span>
+<span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    Required arguments:</span>
-
-<span class="sd">    * `DOF1`, DOF index in parent system </span>
-<span class="sd">    * `DOF2`, DOF index in child system</span>
-<span class="sd">    * `dynSys2`, instance of child system</span>
+<span class="sd">        </span>
+<span class="sd">    * `child_sys`, _ DynSys_ instance describing child system, i.e. system </span>
+<span class="sd">      to be appended</span>
+<span class="sd">      </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional arguments:</span>
+<span class="sd">        </span>
+<span class="sd">    * `J_key`, _string_ identifier used in constraints dict. If _None_ then </span>
+<span class="sd">      default key will be established</span>
+<span class="sd">        </span>
+<span class="sd">    Usage of optional arguments depends on the properties of the parent </span>
+<span class="sd">    and child systems, as follows:</span>
+<span class="sd">        </span>
+<span class="sd">    **Parent system:**</span>
+<span class="sd">        </span>
+<span class="sd">    * If _isModal_:</span>
+<span class="sd">        </span>
+<span class="sd">        * `Xpos_parent` can be used to define the point on the _parent </span>
+<span class="sd">          system_ at which the child system is to be attached. </span>
+<span class="sd">          Note: usage of this parameter requires the _parent system_ to </span>
+<span class="sd">          have function attribute `modeshapeFunc`, i.e. a function </span>
+<span class="sd">          describing how modeshapes vary with chainage.</span>
+<span class="sd">          </span>
+<span class="sd">        * Alternatively `modeshapes_parent` can be used to directly </span>
+<span class="sd">          provide modeshape vector relevant to the point on the _parent </span>
+<span class="sd">          system_ at which the child system is to be attached</span>
+<span class="sd">        </span>
+<span class="sd">    * Else:</span>
+<span class="sd">        </span>
+<span class="sd">        * `DOF_parent` should be used to specify the index of the DOF in </span>
+<span class="sd">          the _parent system_ to which the child system is to be attached</span>
+<span class="sd">          </span>
+<span class="sd">    **Child system:**</span>
 <span class="sd">    </span>
-<span class="sd">    **Note**: only applies to *linear* systems with constant `M`, `C`, `K`</span>
-<span class="sd">    system matrices. (This is checked: an exception will be raised if used </span>
+<span class="sd">    Similar logic applies as per parent systems:</span>
+<span class="sd">    </span>
+<span class="sd">    * If _isModal_:</span>
+<span class="sd">        </span>
+<span class="sd">        * `Xpos_child` can be used to define the point on the _child </span>
+<span class="sd">          system_ at which the parent system is to be attached. </span>
+<span class="sd">          Note: usage of this parameter requires the _child system_ to have </span>
+<span class="sd">          function attribute `modeshapeFunc`, i.e. a function describing </span>
+<span class="sd">          how modeshapes vary with chainage.</span>
+<span class="sd">          </span>
+<span class="sd">        * Alternatively `modeshapes_child` can be used to directly </span>
+<span class="sd">          provide modeshape vector relevant to the point on the _child </span>
+<span class="sd">          system_ at which the parent system is to be attached</span>
+<span class="sd">        </span>
+<span class="sd">    * Else:</span>
+<span class="sd">        </span>
+<span class="sd">        * `DOF_child` should be used to specify the index of the DOF in </span>
+<span class="sd">          the _child system_ to which the parent system is to be attached</span>
+<span class="sd">    </span>
+<span class="sd">    **Note**: this function can only be used with *linear* systems </span>
+<span class="sd">    with constant `M`, `C`, `K` system matrices.</span>
+<span class="sd">    (This is checked: an exception will be raised if attempt is made to use </span>
 <span class="sd">    with nonlinear systems).</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="n">dynSys1</span> <span class="o">=</span> <span class="bp">self</span>   <span class="c1"># for clarity in the following code</span>
+    <span class="n">parent_sys</span> <span class="o">=</span> <span class="bp">self</span>   <span class="c1"># for clarity in the following code</span>
     
-    <span class="c1"># Check selected DOF indices are valid</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">CheckDOF</span><span class="p">(</span><span class="n">DOF1</span><span class="p">)</span>
-    <span class="n">dynSys2</span><span class="o">.</span><span class="n">CheckDOF</span><span class="p">(</span><span class="n">DOF2</span><span class="p">)</span>
+    <span class="c1"># Add child system to parent system&#39;s list</span>
+    <span class="n">parent_sys</span><span class="o">.</span><span class="n">DynSys_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_sys</span><span class="p">)</span>
     
-    <span class="c1"># Check systems are linear</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: &#39;dynSys1&#39; is not linear!&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: &#39;dynSys2&#39; is not linear!&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Retrieve system matrices for systems to be joined</span>
-    <span class="n">d1</span> <span class="o">=</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
-    <span class="n">n1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nDOF&quot;</span><span class="p">)</span>
-    <span class="n">M1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">)</span>
-    <span class="n">C1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">)</span>
-    <span class="n">K1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">)</span>
-    <span class="n">J1</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">J1</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">m1</span> <span class="o">=</span> <span class="mi">0</span>                      <span class="c1"># no constraints</span>
-        <span class="n">J1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="n">n1</span><span class="p">))</span>      <span class="c1"># null array</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">m1</span> <span class="o">=</span> <span class="n">J1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Define default key</span>
+    <span class="k">if</span> <span class="n">J_key</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">J_key</span> <span class="o">=</span> <span class="s2">&quot;0_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parent_sys</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     
-    <span class="n">d2</span> <span class="o">=</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
-    <span class="n">n2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nDOF&quot;</span><span class="p">)</span>
-    <span class="n">M2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">)</span>
-    <span class="n">C2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">)</span>
-    <span class="n">K2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">)</span>
-    <span class="n">J2</span> <span class="o">=</span> <span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">J2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">m2</span> <span class="o">=</span> <span class="mi">0</span>                      <span class="c1"># no constraints</span>
-        <span class="n">J2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="n">n2</span><span class="p">))</span>      <span class="c1"># null array</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">m2</span> <span class="o">=</span> <span class="n">J2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">link_sys</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span> <span class="n">sys_type</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">Xpos</span><span class="p">,</span> <span class="n">modeshapes</span><span class="p">,</span> <span class="n">DOF</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to carry out the necessary tasks to link either</span>
+<span class="sd">        parent or child system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
-    <span class="c1"># ---- Update system matrices to reflect freely appending dynSys2 -----    </span>
+        <span class="c1"># Check system is linear</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;{0} system &#39;{1}&#39; is not linear!&quot;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     
-    <span class="c1"># Assemble new mass, damping and stiffness matrices</span>
-    <span class="n">z1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n2</span><span class="p">,</span><span class="n">n1</span><span class="p">)))</span>
-    <span class="n">M_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">([[</span><span class="n">M1</span><span class="p">,</span><span class="n">z1</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">z1</span><span class="p">,</span><span class="n">M2</span><span class="p">]])</span>
-    <span class="n">C_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">([[</span><span class="n">C1</span><span class="p">,</span><span class="n">z1</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">z1</span><span class="p">,</span><span class="n">C2</span><span class="p">]])</span>
-    <span class="n">K_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">([[</span><span class="n">K1</span><span class="p">,</span><span class="n">z1</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">z1</span><span class="p">,</span><span class="n">K2</span><span class="p">]])</span>
+        <span class="c1"># Factor to apply to give equal and opposite behaviour</span>
+        <span class="k">if</span> <span class="n">sys_type</span> <span class="o">==</span> <span class="s2">&quot;parent&quot;</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="o">+</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">sys_type</span> <span class="o">==</span> <span class="s2">&quot;child&quot;</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected `sys_type`!&quot;</span><span class="p">)</span>
     
-    <span class="c1"># Assemble new constraints matrix</span>
-    <span class="n">J_new1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">J1</span><span class="p">,</span><span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m1</span><span class="p">,</span><span class="n">n2</span><span class="p">)))))</span>
-    <span class="n">J_new2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m2</span><span class="p">,</span><span class="n">n1</span><span class="p">))),</span><span class="n">J2</span><span class="p">))</span>
-    <span class="n">J_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">J_new1</span><span class="p">,</span><span class="n">J_new2</span><span class="p">))</span>
+        <span class="c1"># Logic as per docstring</span>
+        <span class="k">if</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
+            
+            <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                
+                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
+                
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                    <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
+                
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
+                                     <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
+                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
+                                     <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
+                                     <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
+            
+                <span class="c1"># Save as attributes</span>
+                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Xpos</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">,[</span><span class="n">Xpos</span><span class="p">])</span>
+                    
+                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapes_attachedSystems&quot;</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">modeshapes</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">,[</span><span class="n">modeshapes</span><span class="p">])</span>
+            
+            <span class="k">elif</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;{0} system is modal. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;Either `Xpos_{0}` &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;or `modeshapes_{0}` &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;arguments are required&quot;</span><span class="p">)</span>
+                
+            <span class="c1"># Define new constraint equation submatrix</span>
+            <span class="n">J_new</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">modeshapes</span>
+                
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># for non-modal systems</span>
+            
+            <span class="c1"># Check DOF index is valid</span>
+            <span class="n">sys_obj</span><span class="o">.</span><span class="n">CheckDOF</span><span class="p">(</span><span class="n">DOF</span><span class="p">)</span>
+            
+            <span class="c1"># Define new constraint equation submatrix</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">nDOF</span>
+            <span class="n">J_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,)))</span>
+            <span class="n">J_new</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="mi">1</span>
     
-    <span class="c1"># Update calling object attibutes</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">dynSysList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dynSys2</span><span class="p">)</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">M_new</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">C_new</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">K_new</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">J_new</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">nDOF</span> <span class="o">=</span> <span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span>
-    
-    <span class="c1"># ---- Define constraint equation to constrain DOF1 and DOF2 -----</span>
-    
-    <span class="c1"># Define dynSys1 part of constraint eqn.</span>
-    <span class="k">if</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
-        <span class="n">Jn1</span> <span class="o">=</span> <span class="n">dynSys1</span><span class="o">.</span><span class="n">modeshapes</span><span class="p">[</span><span class="n">DOF1</span><span class="p">,:]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">Jn1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n1</span><span class="p">,)))</span>
-        <span class="n">Jn1</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">DOF1</span><span class="p">]</span><span class="o">=+</span><span class="mi">1</span>
-    
-    <span class="c1"># Define dynSys2 part of constraint eqn.</span>
-    <span class="k">if</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
-        <span class="n">Jn2</span> <span class="o">=</span> <span class="n">dynSys2</span><span class="o">.</span><span class="n">modeshapes</span><span class="p">[</span><span class="n">DOF2</span><span class="p">,:]</span> 
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">Jn2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n2</span><span class="p">,)))</span>
-        <span class="n">Jn2</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">DOF2</span><span class="p">]</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="c1"># Define new constraint equation to link systems </span>
+        <span class="n">sys_obj</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">J_new</span><span class="p">,</span><span class="n">J_key</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
-    <span class="c1"># Combine and assign</span>
-    <span class="n">Jn</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Jn1</span><span class="p">,</span><span class="n">Jn2</span><span class="p">))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jn</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>  <span class="c1"># note by definition new constraint is independent of other pre-defined constraints</span>
+    <span class="c1"># Use function defined above to process optional arguments</span>
+    <span class="n">link_sys</span><span class="p">(</span><span class="n">parent_sys</span><span class="p">,</span><span class="s2">&quot;parent&quot;</span><span class="p">,</span><span class="n">Xpos_parent</span><span class="p">,</span><span class="n">modeshapes_parent</span><span class="p">,</span><span class="n">DOF_parent</span><span class="p">)</span>
+    <span class="n">link_sys</span><span class="p">(</span><span class="n">child_sys</span><span class="p">,</span><span class="s2">&quot;child&quot;</span><span class="p">,</span><span class="n">Xpos_child</span><span class="p">,</span><span class="n">modeshapes_child</span><span class="p">,</span><span class="n">DOF_child</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -2019,7 +2162,7 @@ class attributes will be used.</em></p>
     
     <span class="c1"># Save as attribute</span>
     <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">B_mtrx</span> <span class="o">=</span> <span class="n">B</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_B_mtrx</span> <span class="o">=</span> <span class="n">B</span>
         
     <span class="k">return</span> <span class="n">B</span>
 </pre></div>
@@ -2132,17 +2275,19 @@ class attributes will be used.</em></p>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Retrieve system matrices</span>
-    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
-    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx</span>
-    <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_mtrx</span>
-    <span class="k">if</span> <span class="n">J</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
-    <span class="k">if</span> <span class="n">nDOF</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    
+    <span class="c1"># Handle optional arguments</span>
+    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">J</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">nDOF</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">nDOF</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
 
     <span class="c1"># Check shape of system matrices</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">M_mtrx</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
                               <span class="n">C_mtrx</span><span class="o">=</span><span class="n">C</span><span class="p">,</span>
                               <span class="n">K_mtrx</span><span class="o">=</span><span class="n">K</span><span class="p">,</span>
-                              <span class="n">J_mtrx</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
                               <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">)</span>
     
     <span class="c1"># Assemble state matrix A=[[0,I],[-Minv*K,-Minv*C]]</span>
@@ -2174,7 +2319,7 @@ class attributes will be used.</em></p>
             <span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
     <span class="c1"># Save as attribute</span>
     <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">A_mtrx</span> <span class="o">=</span> <span class="n">A</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_A_mtrx</span> <span class="o">=</span> <span class="n">A</span>
     <span class="k">return</span> <span class="n">A</span>     
 </pre></div>
 
@@ -2186,7 +2331,7 @@ class attributes will be used.</em></p>
             
   <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.CheckConstraints">
-    <p>def <span class="ident">CheckConstraints</span>(</p><p>self, raiseException=True)</p>
+    <p>def <span class="ident">CheckConstraints</span>(</p><p>self, J=None, verbose=True, raiseException=True)</p>
     </div>
     
 
@@ -2194,39 +2339,58 @@ class attributes will be used.</em></p>
   
     <div class="desc"><p>Check contraint equations are independent</p>
 <hr />
-<p>Practically this is done by checking that <code>J_mtrx</code> is full rank</p></div>
+<p>Practically this is done by checking that the full <code>J_mtrx</code> of the 
+system, including any sub-systems, is full rank</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CheckConstraints', this);">Show source &equiv;</a></p>
   <div id="source-hanging_1d_chain.hanging1DChain.CheckConstraints" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">raiseException</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">raiseException</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check contraint equations are independent</span>
 <span class="sd">    ***</span>
-<span class="sd">    Practically this is done by checking that `J_mtrx` is full rank</span>
+<span class="sd">    Practically this is done by checking that the full `J_mtrx` of the </span>
+<span class="sd">    system, including any sub-systems, is full rank</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>       
+    <span class="k">if</span> <span class="n">J</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">createNewSystem</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">full_sys</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;DynSys_full&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">full_sys</span> <span class="o">=</span> <span class="bp">self</span>
         
-        <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-            <span class="n">J</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
-        
-        <span class="n">r</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span> <span class="c1"># no constraint equations defined</span>
     
-        <span class="k">if</span> <span class="n">m</span><span class="o">!=</span><span class="n">r</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Checking constraint equations for `</span><span class="si">%s</span><span class="s2">` &quot;</span> <span class="o">%</span> <span class="n">full_sys</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="n">m</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of constraint equations: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">m</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+    
+    <span class="n">r</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of independent constraint equations: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">r</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">m</span><span class="o">!=</span><span class="n">r</span><span class="p">:</span>
+        
+        <span class="n">errorStr</span><span class="o">=</span><span class="s2">&quot;Error: constraints matrix not full rank!</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">errorStr</span><span class="o">+=</span><span class="s2">&quot;J.shape: {0}</span><span class="se">\n</span><span class="s2">Computed rank: {1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">r</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">raiseException</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errorStr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">errorStr</span><span class="p">)</span> <span class="c1"># do not raise exception - but print to console</span>
             
-            <span class="n">errorStr</span><span class="o">=</span><span class="s2">&quot;Error: constraints matrix not full rank!</span><span class="se">\n</span><span class="s2">J.shape: {0}</span><span class="se">\n</span><span class="s2">Computed rank: {1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">r</span><span class="p">)</span>
-            
-            <span class="k">if</span> <span class="n">raiseException</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errorStr</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">errorStr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Constraints are independent, as required&quot;</span><span class="p">)</span>
                 
-            <span class="k">return</span> <span class="bp">False</span>
-                
-    <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">True</span>
 </pre></div>
 
   </div>
@@ -2251,18 +2415,19 @@ class attributes will be used.</em></p>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to check is a certain requested DOF index is valid</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isModal</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;isModal&quot;</span><span class="p">):</span>
-        <span class="c1"># Non-modal systems, i.e. DOFs are real-world</span>
-        
-        <span class="k">if</span> <span class="n">DOF</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">DOF</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: requested DOF invalid!&quot;</span><span class="p">)</span>
-        
-    <span class="k">else</span><span class="p">:</span>
+            
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;isModal&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
         <span class="c1"># Modal systems</span>
         
         <span class="k">if</span> <span class="n">DOF</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">DOF</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF_realWorld</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: requested real-world DOF invalid!&quot;</span><span class="p">)</span>
-            
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Non-modal systems, i.e. DOFs are real-world</span>
+        
+        <span class="k">if</span> <span class="n">DOF</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">DOF</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: requested DOF invalid!&quot;</span><span class="p">)</span>
+    
     <span class="k">return</span> <span class="bp">True</span>
 </pre></div>
 
@@ -2364,13 +2529,21 @@ following ODE:</p>
 <span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="c1"># Obtain inputs from object</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
-    <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_mtrx</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx</span>
-    <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
-    <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-    <span class="n">isDense</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span>
+    <span class="c1"># Get full system matrices</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">nDOF</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+    <span class="n">isSparse</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isSparse&quot;</span><span class="p">]</span>
+    <span class="n">isLinear</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isLinear&quot;</span><span class="p">]</span>
+    
+    <span class="n">isDense</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">isSparse</span>
+    
+    <span class="c1"># Check system is linear</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isLinear</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;System `{0}` is not linear!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     
     <span class="c1"># Obtain inverse mass matrix</span>
     <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;_M_inv&quot;</span>
@@ -2460,71 +2633,133 @@ following ODE:</p>
   
             
   <div class="item">
-    <div class="name def" id="hanging_1d_chain.hanging1DChain.GetRealWorldDOFs">
-    <p>def <span class="ident">GetRealWorldDOFs</span>(</p><p>*args, **kwargs)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Returns dofs in real-world coordinate system</p>
-<p>(useful for system defined via modal properties)</p>
-<p>.. deprecated:: 0.1.0</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.GetRealWorldDOFs', this);">Show source &equiv;</a></p>
-  <div id="source-hanging_1d_chain.hanging1DChain.GetRealWorldDOFs" class="source">
-    <div class="codehilite"><pre><span></span><span class="nd">@deprecation.deprecated</span><span class="p">(</span><span class="n">deprecated_in</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span><span class="n">current_version</span><span class="o">=</span><span class="n">currentVersion</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">GetRealWorldDOFs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns dofs in real-world coordinate system</span>
-<span class="sd">    </span>
-<span class="sd">    (useful for system defined via modal properties)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapes</span> <span class="o">*</span> <span class="n">v</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">v</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.GetSystemMatrices">
-    <p>def <span class="ident">GetSystemMatrices</span>(</p><p>*args, **kwargs)</p>
+    <p>def <span class="ident">GetSystemMatrices</span>(</p><p>self, createNewSystem=True)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Function is used to retrieve system matrices</p>
-<p>Matrices are returned via a dictionary (for flexible usage)</p>
-<p>.. deprecated:: 0.1.0</p></div>
+    <div class="desc"><p>Function is used to retrieve system matrices, which are not usually to 
+be accessed directly, except by member functions</p>
+<hr />
+<p>A dict is used to return matrices</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.GetSystemMatrices', this);">Show source &equiv;</a></p>
   <div id="source-hanging_1d_chain.hanging1DChain.GetSystemMatrices" class="source">
-    <div class="codehilite"><pre><span></span><span class="nd">@deprecation.deprecated</span><span class="p">(</span><span class="n">deprecated_in</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span><span class="n">current_version</span><span class="o">=</span><span class="n">currentVersion</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">createNewSystem</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function is used to retrieve system matrices</span>
+<span class="sd">    Function is used to retrieve system matrices, which are not usually to </span>
+<span class="sd">    be accessed directly, except by member functions</span>
 <span class="sd">    </span>
-<span class="sd">    Matrices are returned via a dictionary (for flexible usage)</span>
+<span class="sd">    ***</span>
+<span class="sd">    A dict is used to return matrices</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Create empty dictionay</span>
     <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
     
+    <span class="c1"># Get list of systems</span>
+    <span class="n">DynSys_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span>
+    
+    <span class="c1"># Determine properties of overall system</span>
+    <span class="n">isLinear</span> <span class="o">=</span> <span class="nb">all</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">isLinear</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">])</span>
+    <span class="n">isSparse</span> <span class="o">=</span> <span class="nb">all</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">isSparse</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">])</span>
+    
+    <span class="c1"># Retrieve system matrices from all listed systems</span>
+    <span class="n">nDOF_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">M_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">C_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">K_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">J_key_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
+        
+        <span class="n">nDOF_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span>
+        
+        <span class="n">M_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_M_mtrx</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">C_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_C_mtrx</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">K_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_K_mtrx</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="c1"># Compile list of all J keys</span>
+        <span class="n">J_key_list</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_J_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        
+    <span class="n">J_key_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">J_key_list</span><span class="p">))</span> <span class="c1"># remove duplicates</span>
+        
+    <span class="c1"># Assemble system matrices for full system </span>
+    <span class="c1"># i.e. including all appended systems</span>
+    <span class="n">nDOF_new</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nDOF_list</span><span class="p">)</span>
+    <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">M_list</span><span class="p">))</span>
+    <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">C_list</span><span class="p">))</span>
+    <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">K_list</span><span class="p">))</span>
+    
+    <span class="c1"># Assemble constraints matrix for full system</span>
+    <span class="n">J_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">J_key_list</span><span class="p">:</span>
+        
+        <span class="n">J_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">m</span><span class="o">=</span><span class="mi">0</span> <span class="c1"># denotes number of constraint equations</span>
+        
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
+            
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_J_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                
+                <span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">_J_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">J_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+                    <span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">J_mtrx</span><span class="p">)</span>
+                
+                <span class="n">J_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">J_mtrx</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                
+                <span class="n">J_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="o">.</span><span class="n">nDOF</span><span class="p">))))</span>
+            
+        <span class="c1"># Assemble rows of full matrix</span>
+        <span class="n">full_J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">J_list</span><span class="p">))</span>            
+        <span class="n">J_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span><span class="n">full_J_mtrx</span>
+        
+    <span class="c1"># Assemble full matrix</span>
+    <span class="k">if</span> <span class="n">J_dict</span><span class="p">:</span>
+        <span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">J_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="n">nDOF_new</span><span class="p">))</span>
+    
+    <span class="c1"># Check shapes of new matrices</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF_new</span><span class="p">,</span>
+                              <span class="n">M_mtrx</span><span class="o">=</span><span class="n">M_mtrx</span><span class="p">,</span>
+                              <span class="n">C_mtrx</span><span class="o">=</span><span class="n">C_mtrx</span><span class="p">,</span>
+                              <span class="n">K_mtrx</span><span class="o">=</span><span class="n">K_mtrx</span><span class="p">,</span>
+                              <span class="n">J_dict</span><span class="o">=</span><span class="n">J_dict</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">CheckConstraints</span><span class="p">(</span><span class="n">J</span><span class="o">=</span><span class="n">J_mtrx</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    
     <span class="c1"># Populate dictionary</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">K_mtrx</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">):</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nDOF_new</span>
+    
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">M_mtrx</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">C_mtrx</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">K_mtrx</span>
+    
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_dict&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">J_dict</span>        
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">J_mtrx</span>
+    
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isLinear&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">isLinear</span>
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isSparse&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">isSparse</span>
+    
+    <span class="c1"># Create new system object, given system matrices</span>
+    <span class="k">if</span> <span class="n">createNewSystem</span><span class="p">:</span>
+        <span class="n">DynSys_full</span> <span class="o">=</span> <span class="n">DynSys</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M_mtrx</span><span class="p">,</span>
+                             <span class="n">C</span><span class="o">=</span><span class="n">C_mtrx</span><span class="p">,</span>
+                             <span class="n">K</span><span class="o">=</span><span class="n">K_mtrx</span><span class="p">,</span>
+                             <span class="n">J_dict</span><span class="o">=</span><span class="n">J_dict</span><span class="p">,</span>
+                             <span class="n">isLinear</span><span class="o">=</span><span class="n">isLinear</span><span class="p">,</span>
+                             <span class="n">isSparse</span><span class="o">=</span><span class="n">isSparse</span><span class="p">,</span>
+                             <span class="n">name</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">],</span>
+                             <span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;DynSys_full&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">DynSys_full</span>
     
     <span class="c1"># Return dictionary</span>
     <span class="k">return</span> <span class="n">d</span>
@@ -2611,19 +2846,42 @@ all systems and subsystems</p></div>
 <span class="sd">    Useful for documentation and debugging</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;C_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;K_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;J_mtrx&quot;</span><span class="p">,</span>
-                 <span class="s2">&quot;M_inv&quot;</span><span class="p">,</span> <span class="s2">&quot;A_inv&quot;</span><span class="p">,</span>
-                 <span class="s2">&quot;A_mtrx&quot;</span><span class="p">,</span><span class="s2">&quot;B_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;**** PrintSystemMatrices() : `{0}` ****</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;System matrices for `{0}`:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="c1"># Print names of all systems and sub-systems</span>
+    <span class="n">names_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Systems list:&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">names_list</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     
-    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_list</span><span class="p">:</span>
-    
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+    <span class="c1"># Loop through all systems and subsystems</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">:</span>
             
-            <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;---- System matrices for `{0}` ----</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        
+        <span class="c1"># Print general system matrices</span>
+        <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;_M_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;_C_mtrx&quot;</span><span class="p">,</span> <span class="s2">&quot;_K_mtrx&quot;</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_list</span><span class="p">:</span>
+        
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+                
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;{0} matrix:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+                <span class="k">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+                
+                <span class="k">if</span> <span class="n">printShapes</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">printValues</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                
+        <span class="c1"># Print constraints matrices</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;---- Constraint matrices for `{0}` ----</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">_J_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;{0} matrix:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;key: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
             <span class="k">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
             
             <span class="k">if</span> <span class="n">printShapes</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -2776,10 +3034,10 @@ Define frequency values to evaluate frequency response G(f) at</p>
 <span class="sd">    Tests whether constraint equations are defined</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_J_dict</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="mi">0</span>
+        <span class="k">return</span> <span class="bp">False</span>
 </pre></div>
 
   </div>
