@@ -742,15 +742,11 @@ class TStep_Results:
         
         if self.calc_response_stats:
             
-            
-            
-            # Loop over all systems and subsystems
-            response_stats_list = []
-            
             # Get paired lists to loop over
             responses_list = self.responses_list
             dynsys_list = self.tstep_obj.dynsys_obj.DynSys_list
             
+            # Loop over all systems and subsystems
             for dynsys_obj, responses in zip(dynsys_list,responses_list):
                 
                 if showMsgs:
@@ -770,11 +766,8 @@ class TStep_Results:
                 stats_dict["std"]=stdVals
                 stats_dict["absmax"]=absmaxVals
                 
-                # Append to list of dicts
-                response_stats_list.append(stats_dict)
-            
                 # Store as new dict entry
-                self.response_stats_dict[dynsys_obj] = response_stats_list
+                self.response_stats_dict[dynsys_obj] = stats_dict
             
         else:
             if showMsgs:
