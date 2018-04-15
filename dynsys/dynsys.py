@@ -576,17 +576,19 @@ class DynSys:
         """
         
         # Retrieve system matrices
-        if M is None: M = self._M_mtrx
-        if C is None: C = self._C_mtrx
-        if K is None: K = self._K_mtrx
-        if J is None: J = self._J_mtrx
-        if nDOF is None: nDOF = self.nDOF
+        d = self.GetSystemMatrices()
+        
+        # Handle optional arguments
+        if M is None: M = d["M_mtrx"]
+        if C is None: C = d["C_mtrx"]
+        if K is None: K = d["K_mtrx"]
+        if J is None: J = d["J_mtrx"]
+        if nDOF is None: nDOF = d["nDOF"]
     
         # Check shape of system matrices
         self._CheckSystemMatrices(M_mtrx=M,
                                   C_mtrx=C,
                                   K_mtrx=K,
-                                  J_mtrx=J,
                                   nDOF=nDOF)
         
         # Assemble state matrix A=[[0,I],[-Minv*K,-Minv*C]]
