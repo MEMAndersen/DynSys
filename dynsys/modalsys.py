@@ -533,7 +533,7 @@ class ModalSys(DynSys):
         
 if __name__ == "__main__":
     
-    modal_sys = ModalSys()
+    pass
     
     
     
