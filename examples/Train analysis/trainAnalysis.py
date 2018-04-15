@@ -34,29 +34,30 @@ loading_obj = loading.LoadTrain(fName="train_defs/trainA6.csv",name="trainA6")
 
 ML_analysis = dyn_analysis.MovingLoadAnalysis(modalsys_obj=bridge_sys,
                                               dt=dt_reqd,
+                                              max_dt=dt_reqd,
                                               loadVel=speed_kmph*1000/3600,
                                               loadtrain_obj=loading_obj,
                                               tEpilogue=1.0,
                                               writeResults2File=True,
                                               results_fName="my_results.csv")
 
-ML_analysis.run()
+results_obj = ML_analysis.run()
 
 #%%
 # Plot both state and response results
-results_fig = ML_analysis.results_obj.PlotResults()
+results_fig = results_obj.PlotResults()
 
 #%%
 # Plot just state results (i.e. modal results)
-results_fig = ML_analysis.results_obj.PlotStateResults()
+results_fig = results_obj.PlotStateResults()
 
 #%%
 # Plot just response results
-results_fig = ML_analysis.results_obj.PlotResponseResults()
+results_fig = results_obj.PlotResponseResults()
 
 #%%
 # Plot periodogram (power spectral density estimate) of results
-ML_analysis.results_obj.PlotResponsePSDs()
+results_obj.PlotResponsePSDs()
 
 
 #%%
