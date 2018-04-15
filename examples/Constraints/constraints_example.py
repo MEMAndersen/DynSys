@@ -47,5 +47,5 @@ analysis_obj = dyn_analysis.MovingLoadAnalysis(modalsys_obj=my_modal_sys,
 results_obj = analysis_obj.run()
 
 results_obj.PlotResults(dynsys_obj=my_modal_sys)
-print(results_obj.response_stats_dict)
+results_obj.PrintResponseStats()
 

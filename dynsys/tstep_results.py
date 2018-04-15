@@ -777,6 +777,25 @@ class TStep_Results:
         return stats_dict
     
     
+    def PrintResponseStats(self):
+        """
+        Prints response stats to text window
+        """
+        
+        for dynsys_obj, stats_dict in self.response_stats_dict.items():
+            
+            print("System name: {0}".format(dynsys_obj.name))
+            print("Response names: {0}".format(dynsys_obj.output_names))
+            print("Response statistics :")
+            
+            for stats_str, stats_vals in stats_dict.items():
+                
+                print("'%s':" % stats_str)
+                print(stats_vals)
+            
+            print("")
+    
+    
     def WriteResults2File(self,output_fName="timeseries_results.csv"):
         """
         Writes time-series results to file
