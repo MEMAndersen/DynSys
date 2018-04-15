@@ -132,9 +132,22 @@ class TStep_Results:
         _Set using `CalcDOFStats()`_
         """
         
-        self.response_stats_list=[]
+        self.response_stats_dict={}
         """
-        Dict of statistics, evaluated over all time steps, for each response
+        Dict of dict of statistics:
+            
+        * Primary dict: 
+            
+            * One entry for each subsystem
+            
+            * `DynSys` subsystem object pointer is used as key
+        
+        * Secondary dicts:
+            
+            * One entry for each statistic, with appropriate key string
+            
+            * Each entry is in general an array, obtained by evaluating 
+              statistic over all time steps, for each defined response
         
         _Set using `CalcResponseStats()`_
         """
@@ -377,6 +390,7 @@ class TStep_Results:
     def PlotResponseResults(self,
                             dynsys_obj=None,
                             y_overlay:list=None,
+                            verbose=False,
                             raiseErrors=True,
                             useCommonPlot:bool=False,
                             useCommonScale:bool=True,
@@ -395,7 +409,7 @@ class TStep_Results:
         """
         
         if printProgress:
-            print("Preparing results plot...")
+            print("Preparing response results plots...")
             tic=timeit.default_timer()
             
         # Retrieve list from objects
@@ -410,11 +424,11 @@ class TStep_Results:
                                                            responses_list,
                                                            response_names_list):
             
-            print("Preparing plot for '{0}'...".format(dynsys_obj.name))
+            print("Plotting responses for '{0}'...".format(dynsys_obj.name))
         
             # Determine total number of responses to plot
             nResponses = _responses.shape[0]
-            print("# responses to plot: {0}".format(nResponses))
+            if verbose: print("# responses to plot: {0}".format(nResponses))
             
             if nResponses == 0:
                 errorstr = "nResponses=0, nothing to plot!"
@@ -467,10 +481,7 @@ class TStep_Results:
                 # Set axis limits and labels
                 ax.set_xlim(tInterval)
                 
-                if useCommonPlot:
-                    if r == nResponses-1:
-                        ax.set_xlabel("Time [s]")
-                else:
+                if r == nResponses-1:
                     ax.set_xlabel("Time [s]")
                 
                 if useCommonScale and not useCommonPlot:
@@ -488,9 +499,9 @@ class TStep_Results:
                         for y_val  in y_overlay:
                             ax.axhline(y_val,color='r')
             
-            if printProgress:
-                toc=timeit.default_timer()
-                print("Plot prepared after %.3f seconds." % (toc-tic))
+        if printProgress:
+            toc=timeit.default_timer()
+            print("Plots prepared after %.3f seconds." % (toc-tic))
             
             
         return fig_list
@@ -731,12 +742,20 @@ class TStep_Results:
         
         if self.calc_response_stats:
             
-            if showMsgs: print("Calculating response statistics...")
+            
             
             # Loop over all systems and subsystems
             response_stats_list = []
             
-            for responses in self.responses_list:
+            # Get paired lists to loop over
+            responses_list = self.responses_list
+            dynsys_list = self.tstep_obj.dynsys_obj.DynSys_list
+            
+            for dynsys_obj, responses in zip(dynsys_list,responses_list):
+                
+                if showMsgs:
+                    print("Calculating response statistics " + 
+                          "for '{0}'...".format(dynsys_obj.name))
                         
                 # Calculate stats for each response time series
                 maxVals = npy.ravel(npy.max(responses,axis=1))
@@ -754,8 +773,8 @@ class TStep_Results:
                 # Append to list of dicts
                 response_stats_list.append(stats_dict)
             
-            # Store within object
-            self.response_stats_list = response_stats_list
+                # Store as new dict entry
+                self.response_stats_dict[dynsys_obj] = response_stats_list
             
         else:
             if showMsgs:
