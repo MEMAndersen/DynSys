@@ -293,8 +293,9 @@ class DynSys:
         
         # Read from file if no output_mtrx provided
         if output_mtrx is None:
-            
             output_mtrx, output_names = self.ReadOutputMtrxFromFile(fName)
+        else:
+            output_mtrx = npy.asmatrix(output_mtrx)
             
         # Create default output names if none provided
         if output_names is None:

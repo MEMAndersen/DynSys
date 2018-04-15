@@ -102,13 +102,13 @@ class TStep_Results:
         Instance of `tstep` class, to which results relate
         """
         
-        self.responses=[]
+        self.responses_list=[]
         """
         List of matrices to which computed responses are recorded 
         for each time step
         """
         
-        self.responseNames=[]
+        self.response_names_list=[]
         """
         List of lists to described computed responses
         """
@@ -132,7 +132,7 @@ class TStep_Results:
         _Set using `CalcDOFStats()`_
         """
         
-        self.response_stats={}
+        self.response_stats_list=[]
         """
         Dict of statistics, evaluated over all time steps, for each response
         
@@ -398,78 +398,102 @@ class TStep_Results:
             print("Preparing results plot...")
             tic=timeit.default_timer()
             
-        # Retrieve results from object
-        _responses = self.responses
-        _responseNames = self.responseNames
+        # Retrieve list from objects
+        responses_list = self.responses_list
+        response_names_list = self.response_names_list
+        DynSys_list = self.tstep_obj.dynsys_obj.DynSys_list
     
-        # Determine total number of responses to plot
-        nResponses =_responses.shape[0]
-        print("nResponses to plot: {0}".format(nResponses))
+        # Iterate over all responses
+        fig_list = []
         
-        if nResponses == 0:
-            errorstr = "nResponses=0, nothing to plot!"
-            if raiseErrors:
-                raise ValueError(errorstr)
+        for dynsys_obj, _responses, _response_names in zip(DynSys_list,
+                                                           responses_list,
+                                                           response_names_list):
+            
+            print("Preparing plot for '{0}'...".format(dynsys_obj.name))
+        
+            # Determine total number of responses to plot
+            nResponses = _responses.shape[0]
+            print("# responses to plot: {0}".format(nResponses))
+            
+            if nResponses == 0:
+                errorstr = "nResponses=0, nothing to plot!"
+                if raiseErrors:
+                    raise ValueError(errorstr)
+                else:
+                    print(errorstr)
+                    return None
+                    
+            # Initialise figure 
+            if not useCommonPlot:
+                fig, axarr = plt.subplots(nResponses, sharex=True)
             else:
-                print(errorstr)
-                return None
+                fig, axarr = plt.subplots(1)
                 
-        # Initialise figure 
-        if not useCommonPlot:
-            fig, axarr = plt.subplots(nResponses, sharex=True)
-        else:
-            fig, axarr = plt.subplots(1)
+            fig.set_size_inches((14,8))
             
-        fig.set_size_inches((14,8))
-        
-        # Determine common scale to use for plots
-        if useCommonScale:    
-            maxVal = npy.max(self.responses)
-            minVal = npy.min(self.responses)
-            absmaxVal = npy.max([maxVal,minVal])
-        
-        # Loop through plotting all responses
-        tvals = self.t
-        
-        for r in range(nResponses):
-            
-            if useCommonPlot:
-                ax = axarr
-            else:
-                ax = axarr[r]
-            
-            vals = _responses[r,:].T
-            label_str = _responseNames[r]
-            
-            ax.plot(tvals,vals,label=label_str)
-                            
-            ax.set_xlim([self.tstep_obj.tStart,self.tstep_obj.tEnd])
-            
-            if useCommonPlot:
-                if r == nResponses-1:
-                    ax.set_xlabel("Time [s]")
-            else:
-                ax.set_xlabel("Time [s]")
-            
-            if useCommonScale and not useCommonPlot:
-                ax.set_ylim([-absmaxVal,+absmaxVal])
-            
-            if self.responseNames is not None:
-                ax.legend(loc='right')
-            
-            # Plot horizontal lines to overlay values provided
-            # Only plot once in case of common plot
-            if (useCommonPlot and r==0) or (not useCommonPlot):
+            fig.suptitle("Responses for '{0}'".format(dynsys_obj.name))
 
-                if y_overlay is not None:
-                    for y_val  in y_overlay:
-                        ax.axhline(y_val,color='r')
-        
-        if printProgress:
-            toc=timeit.default_timer()
-            print("Plot prepared after %.3f seconds." % (toc-tic))
-        
-        return fig
+            fig_list.append(fig)
+            
+            # Determine common scale to use for plots
+            if useCommonScale:    
+                maxVal = npy.max(_responses)
+                minVal = npy.min(_responses)
+                absmaxVal = npy.max([maxVal,minVal])
+            
+            # Loop through plotting all responses
+            tvals = self.t
+            tInterval= [self.tstep_obj.tStart,self.tstep_obj.tEnd]
+            
+            for r in range(nResponses):
+                
+                # Get axis object
+                if useCommonPlot:
+                    ax = axarr
+                else:
+                    if hasattr(axarr, "__len__"):
+                        ax = axarr[r]
+                    else:
+                        ax = axarr
+                
+                # Get values to plot
+                vals = _responses[r,:].T
+                label_str = _response_names[r]
+                
+                # Make plot
+                ax.plot(tvals,vals,label=label_str)
+                           
+                # Set axis limits and labels
+                ax.set_xlim(tInterval)
+                
+                if useCommonPlot:
+                    if r == nResponses-1:
+                        ax.set_xlabel("Time [s]")
+                else:
+                    ax.set_xlabel("Time [s]")
+                
+                if useCommonScale and not useCommonPlot:
+                    ax.set_ylim([-absmaxVal,+absmaxVal])
+                
+                # Create legend
+                if _response_names is not None:
+                    ax.legend(loc='right')
+                
+                # Plot horizontal lines to overlay values provided
+                # Only plot once in case of common plot
+                if (useCommonPlot and r==0) or (not useCommonPlot):
+    
+                    if y_overlay is not None:
+                        for y_val  in y_overlay:
+                            ax.axhline(y_val,color='r')
+            
+            if printProgress:
+                toc=timeit.default_timer()
+                print("Plot prepared after %.3f seconds." % (toc-tic))
+            
+            
+        return fig_list
         
     def PlotResults(self,
                     dynsys_obj=None,
@@ -609,11 +633,16 @@ class TStep_Results:
         Output matrices, together with their names, must be pre-defined via 
         `DynSys` member function `AddOutputMtrx()` prior to running this 
         function.
+        
+        Where a system consists of multiple subsystems, it should be note that 
+        output matrices relate to a given subsystem.
         """
         
         dynsys_obj=self.tstep_obj.dynsys_obj
+        responses_list = []
+        response_names_list = []
         
-        # Loop over all systems and subsystems
+        # Calculate responses for all systems and subsystems
         for x in dynsys_obj.DynSys_list:
             
             # Get output matrix for subsystem
@@ -625,35 +654,38 @@ class TStep_Results:
             
             # Obtain new responses
             state_vector = npy.hstack((v,vdot,v2dot))
-            print("state_vector.shape: {0}".format(state_vector.shape))
-            print("output_mtrx.shape: {0}".format(output_mtrx.shape))
-            self.responses = output_mtrx * state_vector.T
-            self.responseNames = output_names
-                
-            # Calculate DOF statistics
-            if self.calc_dof_stats:
-                self.CalcDOFStats(showMsgs=showMsgs)
-                
-            # Calculate response statistics
-            if self.calc_response_stats:
-                self.CalcResponseStats(showMsgs=showMsgs)
-                
-            # Write time series results to file
-            if write_results_to_file:
-                self.WriteResults2File(output_fName=results_fName)
-                
-            # Delete DOF time series data (to free-up memory)
-            if not self.retainDOFTimeSeries:
-                if showMsgs: print("Clearing DOF time series data to save memory...")
-                del self.v
-                del self.vdot
-                del self.v2dot
             
-            # Delete response time series data (to free up memory)
-            if not self.retainResponseTimeSeries:
-                if showMsgs: print("Clearing response time series data to save memory...")
-                del self.responses
-                del self.responseNames
+            responses_list.append(output_mtrx * state_vector.T)
+            response_names_list.append(output_names)
+            
+        # Store as attributes
+        self.responses_list = responses_list
+        self.response_names_list = response_names_list
+                
+        # Calculate DOF statistics
+        if self.calc_dof_stats:
+            self.CalcDOFStats(showMsgs=showMsgs)
+            
+        # Calculate response statistics
+        if self.calc_response_stats:
+            self.CalcResponseStats(showMsgs=showMsgs)
+            
+        # Write time series results to file
+        if write_results_to_file:
+            self.WriteResults2File(output_fName=results_fName)
+                
+        # Delete DOF time series data (to free-up memory)
+        if not self.retainDOFTimeSeries:
+            if showMsgs: print("Clearing DOF time series data to save memory...")
+            del self.v
+            del self.vdot
+            del self.v2dot
+        
+        # Delete response time series data (to free up memory)
+        if not self.retainResponseTimeSeries:
+            if showMsgs: print("Clearing response time series data to save memory...")
+            del self.responses
+            del self.responseNames
         
     def CalcDOFStats(self,showMsgs=True):
         """
@@ -700,22 +732,30 @@ class TStep_Results:
         if self.calc_response_stats:
             
             if showMsgs: print("Calculating response statistics...")
-                    
-            # Calculate stats for each response time series
-            maxVals = npy.ravel(npy.max(self.responses,axis=1))
-            minVals = npy.ravel(npy.min(self.responses,axis=1))
-            stdVals = npy.ravel(npy.std(self.responses,axis=1))
-            absmaxVals = npy.ravel(npy.max(npy.abs(self.responses),axis=1))
-        
-            # Record stats within a dict
-            stats_dict={}
-            stats_dict["max"]=maxVals
-            stats_dict["min"]=minVals
-            stats_dict["std"]=stdVals
-            stats_dict["absmax"]=absmaxVals
+            
+            # Loop over all systems and subsystems
+            response_stats_list = []
+            
+            for responses in self.responses_list:
+                        
+                # Calculate stats for each response time series
+                maxVals = npy.ravel(npy.max(responses,axis=1))
+                minVals = npy.ravel(npy.min(responses,axis=1))
+                stdVals = npy.ravel(npy.std(responses,axis=1))
+                absmaxVals = npy.ravel(npy.max(npy.abs(responses),axis=1))
+            
+                # Record stats within a dict
+                stats_dict={}
+                stats_dict["max"]=maxVals
+                stats_dict["min"]=minVals
+                stats_dict["std"]=stdVals
+                stats_dict["absmax"]=absmaxVals
+                
+                # Append to list of dicts
+                response_stats_list.append(stats_dict)
             
             # Store within object
-            self.response_stats=stats_dict
+            self.response_stats_list = response_stats_list
             
         else:
             if showMsgs:
