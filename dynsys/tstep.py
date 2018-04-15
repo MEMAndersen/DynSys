@@ -391,9 +391,10 @@ class TStep:
                 
                 if i==0:
                     f_vals = f(t)
+            
                 else:
                     f_vals = npy.append(f_vals,f(t))
-            
+                    
             return f_vals
                 
         
@@ -424,7 +425,9 @@ class TStep:
             tic=timeit.default_timer()
             
             # Run solution
+            print("Solving using Scipy's `solve_ivp()` function:")
             sol = solve_ivp(fun=ODE_func, t_span=[tmin,tmax], y0=y0, **kwargs)
+            print("Solution complete!")
             sol_list.append(sol)
             solvecount += 1
             
@@ -511,8 +514,14 @@ if __name__ == "__main__":
                                 [0.03,0.02,0.01,0.1],
                                 isSparse=False)
     
-    mySys.AddConstraintEqns(Jnew=[[1,-1,0,0],[0,0,1,-1]])
+    mySys.AddConstraintEqns(Jnew=[[1,-1,0,0],[0,0,1,-1]],Jkey="test")
     mySys.PrintSystemMatrices(printShapes=True,printValues=True)
+
+    # Define output matrix to return relative displacements
+    outputMtrx = npy.asmatrix([[1,-1,0,0,0,0,0,0,0,0,0,0],[0,1,-1,0,0,0,0,0,0,0,0,0]])
+    outputNames = ["Rel disp 12","Rel disp 23"]
+    mySys.AddOutputMtrx(output_mtrx = outputMtrx,
+                        output_names = outputNames)
     
     # Define applied forces
     def sine_force(t,F0,f):
@@ -526,15 +535,17 @@ if __name__ == "__main__":
     f_vals=[1.0,0,0,0]
 
     # Run time-stepping and plot results
+    force_func_dict = {}
+    force_func_dict[mySys] = lambda t: sine_force(t,F0_vals,f_vals)
+    
     myTStep = TStep(mySys,
-                    force_func=lambda t: sine_force(t,F0_vals,f_vals),
+                    force_func_dict=force_func_dict,
                     tEnd=10.0,
                     max_dt=0.01)
     myTStep.run()
     res = myTStep.results_obj
     res.PlotStateResults()
     
-    # Define output matrix to return relative displacements
-    outputMtrx = npy.asmatrix([[1,-1,0,0,0,0,0,0,0,0,0,0],[0,1,-1,0,0,0,0,0,0,0,0,0]])
-    res.CalcResponses(outputMtrx,["Rel disp 12","Rel disp 23"])
+
+    
     res.PlotResponseResults()
