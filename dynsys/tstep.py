@@ -387,6 +387,8 @@ class TStep:
             of system with multiple subsystems
             """
             
+            #print("t = %.3f secs" % t)
+            
             for i, f in enumerate(list(self.force_func_dict.values())):
                 
                 if i==0:
