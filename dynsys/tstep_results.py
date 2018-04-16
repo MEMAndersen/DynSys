@@ -547,11 +547,9 @@ class TStep_Results:
         
         print("Plotting PSD estimates of responses using periodograms...")
         
-        if self.responses is None:
+        if len(self.responses_list) == 0:
             raise ValueError("No response time series data avaliable!")
-        else:
-            responses = self.responses
-            
+        
         # Get sampling frequency
         if self.tstep_obj.dt is None:
             raise ValueError("`dt` is None: cannot calculate PSDs from "
@@ -560,36 +558,46 @@ class TStep_Results:
             fs = 1 / self.tstep_obj.dt
             print("Sampling frequency: fs = %.2f" % fs)
         
-        # Create figure
-        fig, axarr = plt.subplots(2,)
-        fig.set_size_inches((14,8))
+        # Loop through all responses
+        fig_list = []
         
-        # Time series plot
-        ax = axarr[0]
-        handles = ax.plot(self.t,responses.T)
-        maxVal = npy.max(npy.abs(responses.T))
-        ax.set_ylim([-maxVal,maxVal])
-        ax.set_xlim(0,npy.max(self.t))
-        ax.set_title("Response time series")
-        ax.set_xlabel("Time (secs)")
+        for dynsys_obj, responses, response_names in zip(self.tstep_obj.dynsys_obj.DynSys_list,
+                                                         self.responses_list,
+                                                         self.response_names_list):
         
-        fig.legend(handles,self.responseNames,loc='upper right')
-        
-        # PSD plot
-        f, Pxx = scipy.signal.periodogram(responses,fs)
-        ax = axarr[1]
-        ax.plot(f,Pxx.T)
-        ax.set_xlim([0,fs/2])
-        ax.set_title("Periodograms of responses")
-        ax.set_xlabel("Frequency (Hz)")
-        
-        if self.tstep_obj.name is not None:
-            fig.suptitle("{0}".format(self.tstep_obj.name))
-            fig.subplots_adjust(top=0.9)
-        
-        fig.tight_layout()
-        fig.subplots_adjust(right=0.7)      # create space for figlegend
+            # Create figure
+            fig, axarr = plt.subplots(2,)
+            fig.set_size_inches((14,8))
             
+            # Time series plot
+            ax = axarr[0]
+            handles = ax.plot(self.t,responses.T)
+            maxVal = npy.max(npy.abs(responses.T))
+            ax.set_ylim([-maxVal,maxVal])
+            ax.set_xlim(0,npy.max(self.t))
+            ax.set_title("Response time series")
+            ax.set_xlabel("Time (secs)")
+            
+            fig.legend(handles,response_names,loc='upper right')
+            
+            # PSD plot
+            f, Pxx = scipy.signal.periodogram(responses,fs)
+            ax = axarr[1]
+            ax.plot(f,Pxx.T)
+            ax.set_xlim([0,fs/2])
+            ax.set_title("Periodograms of responses")
+            ax.set_xlabel("Frequency (Hz)")
+            
+            fig.suptitle("System: '{0}'".format(dynsys_obj.name))
+            fig.subplots_adjust(top=0.8)
+            
+            fig.tight_layout()
+            fig.subplots_adjust(right=0.7)      # create space for figlegend
+            fig_list.append(fig)
+        
+        return fig_list
+    
+        
     def AnimateResults(self):
         
         ValueError("Unfinished - do not use!")
