@@ -1119,7 +1119,7 @@ systems</p>
                  <span class="n">plotResponseResults</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">responsePlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">x0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">force_func</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">force_func_dict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">event_funcs</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">post_event_funcs</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="p">):</span>
@@ -1144,10 +1144,11 @@ systems</p>
 <span class="sd">        </span>
 <span class="sd">        * `max_dt`, maximum time-step to use. Only applies if `dt=None`.</span>
 <span class="sd">        </span>
-<span class="sd">        * `x0`, _array-like_ defining initial conditions of freedoms. If `None` </span>
-<span class="sd">          then zeros will be assumed.</span>
+<span class="sd">        * `x0`, _array-like_ defining initial conditions of freedoms. Dict keys </span>
+<span class="sd">          are the names of the dynamic systems to which load functions relate. </span>
+<span class="sd">          If empty then zeros will be assumed.</span>
 <span class="sd">          </span>
-<span class="sd">        * `force_func`, _callable_, used to define applied external forces. </span>
+<span class="sd">        * `force_func_dict`, dict of functions, used to define applied external forces. </span>
 <span class="sd">          If `None` then zero external forces will be assumed.</span>
 <span class="sd">        </span>
 <span class="sd">        * `event_funcs`, _callable_ or _list of callables_, </span>
@@ -1201,15 +1202,17 @@ systems</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Check either initial conditions set or force - otherwise nothing will happen!</span>
-        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">force_func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `x0` or `force_func` required, &quot;</span> <span class="o">+</span> 
+        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_func_dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `x0` or `force_func_dict` required, &quot;</span> <span class="o">+</span> 
                              <span class="s2">&quot;otherwise nothing will happen!&quot;</span><span class="p">)</span>
         
         <span class="c1"># Set initial conditions</span>
+        <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">nDOF</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">])</span>
+        
         <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="c1"># By default set initial conditions to be zeros</span>
-            <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">,))</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF_expected</span><span class="p">,))</span>
             
         <span class="k">else</span><span class="p">:</span>
             
@@ -1217,7 +1220,7 @@ systems</p>
             <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
         
             <span class="c1"># Check shape of initial conditions vector is consistent with dynsys</span>
-            <span class="k">if</span> <span class="n">x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="o">*</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="o">*</span><span class="n">nDOF_expected</span><span class="p">:</span>
             
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: `x0` of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
                                  <span class="s2">&quot;dynsys_obj.nDOF: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span> <span class="o">+</span> 
@@ -1229,7 +1232,7 @@ systems</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Set applied forces</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">force_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_force_func</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_force_func</span><span class="p">(</span><span class="n">force_func_dict</span><span class="p">)</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to define external loading vector at time t</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1273,55 +1276,62 @@ systems</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Create object to write results to</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                                     <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
-                                                     <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                                <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
+                                                <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">results_obj</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Results (displacements, velocities, constraint forces etc.) are stored </span>
-<span class="sd">        in this object, which provides useful functionality for computing </span>
-<span class="sd">        statistics, plotting etc.</span>
+<span class="sd">        `tstep_results` objects used to store results and provide </span>
+<span class="sd">        useful functionality e.g. stats computation and plotting</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
     
-    <span class="k">def</span> <span class="nf">_check_force_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">force_func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_check_force_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">force_func_dict</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function checks that `force_func` as supplied in TStep __init__() function </span>
-<span class="sd">        is appropriate</span>
+<span class="sd">        Function checks that `force_func_dict` as supplied in TStep __init__() </span>
+<span class="sd">        function is appropriate</span>
 <span class="sd">        &quot;&quot;&quot;</span>
     
-        <span class="c1"># Handle `None` case</span>
-        <span class="k">if</span> <span class="n">force_func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Loop through all systems and subsystems</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">:</span>
+        
+            <span class="n">expected_nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
+            
+            <span class="c1"># Handle case of no matching function key</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">force_func_dict</span><span class="p">:</span>
+                    
+                <span class="c1"># Define null force function</span>
+                <span class="k">def</span> <span class="nf">null_force</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">expected_nDOF</span><span class="p">,))</span>
                 
-            <span class="c1"># Define null force function</span>
-            <span class="k">def</span> <span class="nf">null_force</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">expected_nDOF</span><span class="p">,))</span>
+                <span class="n">force_func_dict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_force</span>
             
-            <span class="n">force_func</span> <span class="o">=</span> <span class="n">null_force</span>
-        
-        <span class="c1"># Check force_func is a function</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` is not a function!&quot;</span><span class="p">)</span>
+            <span class="c1"># Get force_func appropriate to current system</span>
+            <span class="n">force_func</span> <span class="o">=</span> <span class="n">force_func_dict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
             
-        <span class="c1"># Check force_func has `t` as first argument</span>
-        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;t&#39;</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;1st argument of `force_func` must be `t`</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                             <span class="s2">&quot;i.e. `force_func` must take the form &quot;</span> <span class="o">+</span>
-                             <span class="s2">&quot;force_func(t,*args,**kwargs)&quot;</span><span class="p">)</span>
+            <span class="c1"># Check force_func is a function</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` is not a function!&quot;</span><span class="p">)</span>
+                
+            <span class="c1"># Check force_func has `t` as first argument</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;t&#39;</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;1st argument of `force_func` must be `t`</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;i.e. `force_func` must take the form &quot;</span> <span class="o">+</span>
+                                 <span class="s2">&quot;force_func(t,*args,**kwargs)&quot;</span><span class="p">)</span>
+                
+            <span class="c1"># Check dimension of vector returned by force_func is of the correct shape</span>
+            <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tStart</span>
+            <span class="n">force0</span> <span class="o">=</span> <span class="n">force_func</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
             
-        <span class="c1"># Check dimension of vector returned by force_func is of the correct shape</span>
-        <span class="n">expected_nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span>
-        
-        <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tStart</span>
-        <span class="n">force0</span> <span class="o">=</span> <span class="n">force_func</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">force0</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">expected_nDOF</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` returns vector of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;Shape expected: ({0},)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected_nDOF</span><span class="p">)</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;Shape received: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">force0</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">expected_nDOF</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` returns vector of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                                     <span class="s2">&quot;Shape expected: ({0},)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected_nDOF</span><span class="p">)</span> <span class="o">+</span> 
+                                     <span class="s2">&quot;Shape received: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             
-        <span class="k">return</span> <span class="n">force_func</span>
+        <span class="k">return</span> <span class="n">force_func_dict</span>
     
         
     <span class="k">def</span> <span class="nf">_check_event_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">event_funcs</span><span class="p">):</span>
@@ -1451,9 +1461,27 @@ systems</p>
         <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
         <span class="n">eqnOfMotion_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">EqnOfMotion</span>
         
-        <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">forceFunc_fullsys</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Function to collate forces on full system, to support case</span>
+<span class="sd">            of system with multiple subsystems</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             
-            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
+                
+                <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">f_vals</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_vals</span><span class="p">,</span><span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+                    
+            <span class="k">return</span> <span class="n">f_vals</span>
+                
+        
+        <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+            <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
+            
+            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
             
             <span class="c1"># Return xdot as flattened array</span>
             <span class="n">ydot</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;ydot&quot;</span><span class="p">]</span>
@@ -1477,7 +1505,9 @@ systems</p>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
             
             <span class="c1"># Run solution</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
             <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
             <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
             <span class="n">solvecount</span> <span class="o">+=</span> <span class="mi">1</span>
             
@@ -1490,7 +1520,7 @@ systems</p>
                 <span class="c1"># Solve equation of motion</span>
                 <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
                                            <span class="n">x</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span><span class="n">n</span><span class="p">],</span>
-                                           <span class="n">forceFunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func</span><span class="p">)</span>
+                                           <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
             
                 <span class="c1"># Record results</span>
                 <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -1542,7 +1572,7 @@ systems</p>
         <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span>
+        <span class="k">return</span> <span class="n">results_obj</span>
     
         
         
@@ -1564,8 +1594,14 @@ systems</p>
                                 <span class="p">[</span><span class="mf">0.03</span><span class="p">,</span><span class="mf">0.02</span><span class="p">,</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.1</span><span class="p">],</span>
                                 <span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     
-    <span class="n">mySys</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jnew</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="n">mySys</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jnew</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span><span class="n">Jkey</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
     <span class="n">mySys</span><span class="o">.</span><span class="n">PrintSystemMatrices</span><span class="p">(</span><span class="n">printShapes</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">printValues</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c1"># Define output matrix to return relative displacements</span>
+    <span class="n">outputMtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">outputNames</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Rel disp 12&quot;</span><span class="p">,</span><span class="s2">&quot;Rel disp 23&quot;</span><span class="p">]</span>
+    <span class="n">mySys</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">outputMtrx</span><span class="p">,</span>
+                        <span class="n">output_names</span> <span class="o">=</span> <span class="n">outputNames</span><span class="p">)</span>
     
     <span class="c1"># Define applied forces</span>
     <span class="k">def</span> <span class="nf">sine_force</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">F0</span><span class="p">,</span><span class="n">f</span><span class="p">):</span>
@@ -1579,17 +1615,19 @@ systems</p>
     <span class="n">f_vals</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># Run time-stepping and plot results</span>
+    <span class="n">force_func_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">force_func_dict</span><span class="p">[</span><span class="n">mySys</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">sine_force</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">F0_vals</span><span class="p">,</span><span class="n">f_vals</span><span class="p">)</span>
+    
     <span class="n">myTStep</span> <span class="o">=</span> <span class="n">TStep</span><span class="p">(</span><span class="n">mySys</span><span class="p">,</span>
-                    <span class="n">force_func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">sine_force</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">F0_vals</span><span class="p">,</span><span class="n">f_vals</span><span class="p">),</span>
+                    <span class="n">force_func_dict</span><span class="o">=</span><span class="n">force_func_dict</span><span class="p">,</span>
                     <span class="n">tEnd</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
                     <span class="n">max_dt</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
     <span class="n">myTStep</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">myTStep</span><span class="o">.</span><span class="n">results_obj</span>
     <span class="n">res</span><span class="o">.</span><span class="n">PlotStateResults</span><span class="p">()</span>
     
-    <span class="c1"># Define output matrix to return relative displacements</span>
-    <span class="n">outputMtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
-    <span class="n">res</span><span class="o">.</span><span class="n">CalcResponses</span><span class="p">(</span><span class="n">outputMtrx</span><span class="p">,[</span><span class="s2">&quot;Rel disp 12&quot;</span><span class="p">,</span><span class="s2">&quot;Rel disp 23&quot;</span><span class="p">])</span>
+
+    
     <span class="n">res</span><span class="o">.</span><span class="n">PlotResponseResults</span><span class="p">()</span>
 </pre></div>
 
@@ -1641,7 +1679,7 @@ for further details:</p></div>
                  <span class="n">plotResponseResults</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">responsePlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">x0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">force_func</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">force_func_dict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">event_funcs</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">post_event_funcs</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="p">):</span>
@@ -1666,10 +1704,11 @@ for further details:</p></div>
 <span class="sd">        </span>
 <span class="sd">        * `max_dt`, maximum time-step to use. Only applies if `dt=None`.</span>
 <span class="sd">        </span>
-<span class="sd">        * `x0`, _array-like_ defining initial conditions of freedoms. If `None` </span>
-<span class="sd">          then zeros will be assumed.</span>
+<span class="sd">        * `x0`, _array-like_ defining initial conditions of freedoms. Dict keys </span>
+<span class="sd">          are the names of the dynamic systems to which load functions relate. </span>
+<span class="sd">          If empty then zeros will be assumed.</span>
 <span class="sd">          </span>
-<span class="sd">        * `force_func`, _callable_, used to define applied external forces. </span>
+<span class="sd">        * `force_func_dict`, dict of functions, used to define applied external forces. </span>
 <span class="sd">          If `None` then zero external forces will be assumed.</span>
 <span class="sd">        </span>
 <span class="sd">        * `event_funcs`, _callable_ or _list of callables_, </span>
@@ -1723,15 +1762,17 @@ for further details:</p></div>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Check either initial conditions set or force - otherwise nothing will happen!</span>
-        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">force_func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `x0` or `force_func` required, &quot;</span> <span class="o">+</span> 
+        <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_func_dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `x0` or `force_func_dict` required, &quot;</span> <span class="o">+</span> 
                              <span class="s2">&quot;otherwise nothing will happen!&quot;</span><span class="p">)</span>
         
         <span class="c1"># Set initial conditions</span>
+        <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">nDOF</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">])</span>
+        
         <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="c1"># By default set initial conditions to be zeros</span>
-            <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">,))</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF_expected</span><span class="p">,))</span>
             
         <span class="k">else</span><span class="p">:</span>
             
@@ -1739,7 +1780,7 @@ for further details:</p></div>
             <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
         
             <span class="c1"># Check shape of initial conditions vector is consistent with dynsys</span>
-            <span class="k">if</span> <span class="n">x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="o">*</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="o">*</span><span class="n">nDOF_expected</span><span class="p">:</span>
             
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: `x0` of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
                                  <span class="s2">&quot;dynsys_obj.nDOF: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span> <span class="o">+</span> 
@@ -1751,7 +1792,7 @@ for further details:</p></div>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Set applied forces</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">force_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_force_func</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_force_func</span><span class="p">(</span><span class="n">force_func_dict</span><span class="p">)</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to define external loading vector at time t</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1795,55 +1836,62 @@ for further details:</p></div>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Create object to write results to</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                                     <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
-                                                     <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                                <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
+                                                <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">results_obj</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Results (displacements, velocities, constraint forces etc.) are stored </span>
-<span class="sd">        in this object, which provides useful functionality for computing </span>
-<span class="sd">        statistics, plotting etc.</span>
+<span class="sd">        `tstep_results` objects used to store results and provide </span>
+<span class="sd">        useful functionality e.g. stats computation and plotting</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
     
-    <span class="k">def</span> <span class="nf">_check_force_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">force_func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_check_force_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">force_func_dict</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function checks that `force_func` as supplied in TStep __init__() function </span>
-<span class="sd">        is appropriate</span>
+<span class="sd">        Function checks that `force_func_dict` as supplied in TStep __init__() </span>
+<span class="sd">        function is appropriate</span>
 <span class="sd">        &quot;&quot;&quot;</span>
     
-        <span class="c1"># Handle `None` case</span>
-        <span class="k">if</span> <span class="n">force_func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Loop through all systems and subsystems</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">:</span>
+        
+            <span class="n">expected_nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
+            
+            <span class="c1"># Handle case of no matching function key</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">force_func_dict</span><span class="p">:</span>
+                    
+                <span class="c1"># Define null force function</span>
+                <span class="k">def</span> <span class="nf">null_force</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">expected_nDOF</span><span class="p">,))</span>
                 
-            <span class="c1"># Define null force function</span>
-            <span class="k">def</span> <span class="nf">null_force</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">expected_nDOF</span><span class="p">,))</span>
+                <span class="n">force_func_dict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">null_force</span>
             
-            <span class="n">force_func</span> <span class="o">=</span> <span class="n">null_force</span>
-        
-        <span class="c1"># Check force_func is a function</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` is not a function!&quot;</span><span class="p">)</span>
+            <span class="c1"># Get force_func appropriate to current system</span>
+            <span class="n">force_func</span> <span class="o">=</span> <span class="n">force_func_dict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
             
-        <span class="c1"># Check force_func has `t` as first argument</span>
-        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;t&#39;</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;1st argument of `force_func` must be `t`</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                             <span class="s2">&quot;i.e. `force_func` must take the form &quot;</span> <span class="o">+</span>
-                             <span class="s2">&quot;force_func(t,*args,**kwargs)&quot;</span><span class="p">)</span>
+            <span class="c1"># Check force_func is a function</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` is not a function!&quot;</span><span class="p">)</span>
+                
+            <span class="c1"># Check force_func has `t` as first argument</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;t&#39;</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;1st argument of `force_func` must be `t`</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;i.e. `force_func` must take the form &quot;</span> <span class="o">+</span>
+                                 <span class="s2">&quot;force_func(t,*args,**kwargs)&quot;</span><span class="p">)</span>
+                
+            <span class="c1"># Check dimension of vector returned by force_func is of the correct shape</span>
+            <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tStart</span>
+            <span class="n">force0</span> <span class="o">=</span> <span class="n">force_func</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
             
-        <span class="c1"># Check dimension of vector returned by force_func is of the correct shape</span>
-        <span class="n">expected_nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span>
-        
-        <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tStart</span>
-        <span class="n">force0</span> <span class="o">=</span> <span class="n">force_func</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">force0</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">expected_nDOF</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` returns vector of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;Shape expected: ({0},)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected_nDOF</span><span class="p">)</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;Shape received: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">force0</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">expected_nDOF</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` returns vector of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                                     <span class="s2">&quot;Shape expected: ({0},)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected_nDOF</span><span class="p">)</span> <span class="o">+</span> 
+                                     <span class="s2">&quot;Shape received: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">force0</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             
-        <span class="k">return</span> <span class="n">force_func</span>
+        <span class="k">return</span> <span class="n">force_func_dict</span>
     
         
     <span class="k">def</span> <span class="nf">_check_event_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">event_funcs</span><span class="p">):</span>
@@ -1973,9 +2021,27 @@ for further details:</p></div>
         <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
         <span class="n">eqnOfMotion_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">EqnOfMotion</span>
         
-        <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">forceFunc_fullsys</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Function to collate forces on full system, to support case</span>
+<span class="sd">            of system with multiple subsystems</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             
-            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
+                
+                <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">f_vals</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_vals</span><span class="p">,</span><span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+                    
+            <span class="k">return</span> <span class="n">f_vals</span>
+                
+        
+        <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+            <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
+            
+            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
             
             <span class="c1"># Return xdot as flattened array</span>
             <span class="n">ydot</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;ydot&quot;</span><span class="p">]</span>
@@ -1999,7 +2065,9 @@ for further details:</p></div>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
             
             <span class="c1"># Run solution</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
             <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
             <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
             <span class="n">solvecount</span> <span class="o">+=</span> <span class="mi">1</span>
             
@@ -2012,7 +2080,7 @@ for further details:</p></div>
                 <span class="c1"># Solve equation of motion</span>
                 <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
                                            <span class="n">x</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span><span class="n">n</span><span class="p">],</span>
-                                           <span class="n">forceFunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func</span><span class="p">)</span>
+                                           <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
             
                 <span class="c1"># Record results</span>
                 <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -2064,7 +2132,7 @@ for further details:</p></div>
         <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span>
+        <span class="k">return</span> <span class="n">results_obj</span>
 </pre></div>
 
   </div>
@@ -2081,7 +2149,7 @@ for further details:</p></div>
             
   <div class="item">
     <div class="name def" id="tstep.TStep.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, dynsys_obj, name=None, tStart=0, tEnd=30.0, dt=None, max_dt=0.1, retainDOFTimeSeries=True, retainResponseTimeSeries=True, writeResults2File=False, results_fName=&#39;results.csv&#39;, plotResponseResults=True, responsePlot_kwargs={}, x0=None, force_func=None, event_funcs=None, post_event_funcs=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, dynsys_obj, name=None, tStart=0, tEnd=30.0, dt=None, max_dt=0.1, retainDOFTimeSeries=True, retainResponseTimeSeries=True, writeResults2File=False, results_fName=&#39;results.csv&#39;, plotResponseResults=True, responsePlot_kwargs={}, x0=None, force_func_dict={}, event_funcs=None, post_event_funcs=None)</p>
     </div>
     
 
@@ -2111,11 +2179,12 @@ for further details:</p></div>
 <p><code>max_dt</code>, maximum time-step to use. Only applies if <code>dt=None</code>.</p>
 </li>
 <li>
-<p><code>x0</code>, <em>array-like</em> defining initial conditions of freedoms. If <code>None</code> 
-  then zeros will be assumed.</p>
+<p><code>x0</code>, <em>array-like</em> defining initial conditions of freedoms. Dict keys 
+  are the names of the dynamic systems to which load functions relate. 
+  If empty then zeros will be assumed.</p>
 </li>
 <li>
-<p><code>force_func</code>, <em>callable</em>, used to define applied external forces. 
+<p><code>force_func_dict</code>, dict of functions, used to define applied external forces. 
   If <code>None</code> then zero external forces will be assumed.</p>
 </li>
 <li>
@@ -2148,7 +2217,7 @@ otherwise the dynamic system in question will not do anything!</p></div>
              <span class="n">plotResponseResults</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
              <span class="n">responsePlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
              <span class="n">x0</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">force_func</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">force_func_dict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
              <span class="n">event_funcs</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">post_event_funcs</span><span class="p">:</span><span class="nb">callable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="p">):</span>
@@ -2173,10 +2242,11 @@ otherwise the dynamic system in question will not do anything!</p></div>
 <span class="sd">    </span>
 <span class="sd">    * `max_dt`, maximum time-step to use. Only applies if `dt=None`.</span>
 <span class="sd">    </span>
-<span class="sd">    * `x0`, _array-like_ defining initial conditions of freedoms. If `None` </span>
-<span class="sd">      then zeros will be assumed.</span>
+<span class="sd">    * `x0`, _array-like_ defining initial conditions of freedoms. Dict keys </span>
+<span class="sd">      are the names of the dynamic systems to which load functions relate. </span>
+<span class="sd">      If empty then zeros will be assumed.</span>
 <span class="sd">      </span>
-<span class="sd">    * `force_func`, _callable_, used to define applied external forces. </span>
+<span class="sd">    * `force_func_dict`, dict of functions, used to define applied external forces. </span>
 <span class="sd">      If `None` then zero external forces will be assumed.</span>
 <span class="sd">    </span>
 <span class="sd">    * `event_funcs`, _callable_ or _list of callables_, </span>
@@ -2229,15 +2299,17 @@ otherwise the dynamic system in question will not do anything!</p></div>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Check either initial conditions set or force - otherwise nothing will happen!</span>
-    <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">force_func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `x0` or `force_func` required, &quot;</span> <span class="o">+</span> 
+    <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_func_dict</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `x0` or `force_func_dict` required, &quot;</span> <span class="o">+</span> 
                          <span class="s2">&quot;otherwise nothing will happen!&quot;</span><span class="p">)</span>
     
     <span class="c1"># Set initial conditions</span>
+    <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">nDOF</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">])</span>
+    
     <span class="k">if</span> <span class="n">x0</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
         <span class="c1"># By default set initial conditions to be zeros</span>
-        <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">,))</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF_expected</span><span class="p">,))</span>
         
     <span class="k">else</span><span class="p">:</span>
         
@@ -2245,7 +2317,7 @@ otherwise the dynamic system in question will not do anything!</p></div>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
     
         <span class="c1"># Check shape of initial conditions vector is consistent with dynsys</span>
-        <span class="k">if</span> <span class="n">x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="o">*</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="o">*</span><span class="n">nDOF_expected</span><span class="p">:</span>
         
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: `x0` of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
                              <span class="s2">&quot;dynsys_obj.nDOF: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span> <span class="o">+</span> 
@@ -2257,7 +2329,7 @@ otherwise the dynamic system in question will not do anything!</p></div>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Set applied forces</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">force_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_force_func</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_force_func</span><span class="p">(</span><span class="n">force_func_dict</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to define external loading vector at time t</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2300,13 +2372,14 @@ otherwise the dynamic system in question will not do anything!</p></div>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Create object to write results to</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                                 <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
-                                                 <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+    <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                            <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
+                                            <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">results_obj</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Results (displacements, velocities, constraint forces etc.) are stored </span>
-<span class="sd">    in this object, which provides useful functionality for computing </span>
-<span class="sd">    statistics, plotting etc.</span>
+<span class="sd">    `tstep_results` objects used to store results and provide </span>
+<span class="sd">    useful functionality e.g. stats computation and plotting</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 </pre></div>
 
@@ -2387,9 +2460,27 @@ This should be appropriate for most applications.</p></div>
     <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
     <span class="n">eqnOfMotion_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">EqnOfMotion</span>
     
-    <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forceFunc_fullsys</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to collate forces on full system, to support case</span>
+<span class="sd">        of system with multiple subsystems</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
+            
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">f_vals</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_vals</span><span class="p">,</span><span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+                
+        <span class="k">return</span> <span class="n">f_vals</span>
+            
+    
+    <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
+        
+        <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
         
         <span class="c1"># Return xdot as flattened array</span>
         <span class="n">ydot</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;ydot&quot;</span><span class="p">]</span>
@@ -2412,7 +2503,9 @@ This should be appropriate for most applications.</p></div>
         <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
         
         <span class="c1"># Run solution</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
         <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
         <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
         <span class="n">solvecount</span> <span class="o">+=</span> <span class="mi">1</span>
         
@@ -2425,7 +2518,7 @@ This should be appropriate for most applications.</p></div>
             <span class="c1"># Solve equation of motion</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
                                        <span class="n">x</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span><span class="n">n</span><span class="p">],</span>
-                                       <span class="n">forceFunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func</span><span class="p">)</span>
+                                       <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
         
             <span class="c1"># Record results</span>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -2477,7 +2570,7 @@ This should be appropriate for most applications.</p></div>
     <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
     
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span>
+    <span class="k">return</span> <span class="n">results_obj</span>
 </pre></div>
 
   </div>
@@ -2523,7 +2616,7 @@ functions should be defined.</p></div>
 
             </div>
             <div class="item">
-            <p id="tstep.TStep.force_func" class="name">var <span class="ident">force_func</span></p>
+            <p id="tstep.TStep.force_func_dict" class="name">var <span class="ident">force_func_dict</span></p>
             
 
             
@@ -2606,9 +2699,8 @@ at the end of time-stepping analysis</p></div>
 
             
   
-    <div class="desc"><p>Results (displacements, velocities, constraint forces etc.) are stored 
-in this object, which provides useful functionality for computing 
-statistics, plotting etc.</p></div>
+    <div class="desc"><p><code>tstep_results</code> objects used to store results and provide 
+useful functionality e.g. stats computation and plotting</p></div>
   <div class="source_cont">
 </div>
 

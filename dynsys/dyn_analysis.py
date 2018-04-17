@@ -185,10 +185,11 @@ class MovingLoadAnalysis(Dyn_Analysis):
         tStart, tEnd = self._CalcSimDuration(loadVel=loadVel,
                                              tEpilogue=tEpilogue)
         
-        forceFunc = modalsys_obj.CalcModalForces(loading_obj=loadtrain_obj,
-                                                 loadVel=loadVel,
-                                                 dt=dt_loads)
-        
+        # Define force function for parent system and subsystems
+        modalForces_func = modalsys_obj.CalcModalForces(loading_obj=loadtrain_obj,
+                                                        loadVel=loadVel,
+                                                        dt=dt_loads)
+        force_func_dict = {modalsys_obj : modalForces_func}
         
         self.tstep_obj = tstep.TStep(modalsys_obj,
                                      name=name,
@@ -196,7 +197,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
                                      tEnd=tEnd,
                                      dt=dt,
                                      max_dt=max_dt,
-                                     force_func=forceFunc,
+                                     force_func_dict=force_func_dict,
                                      retainDOFTimeSeries=retainDOFTimeSeries,
                                      retainResponseTimeSeries=retainResponseTimeSeries,
                                      writeResults2File=writeResults2File,
@@ -214,7 +215,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
         
         
     def run(self,
-            saveResults=True,
+            saveResults=False,
             save_fName=None):
         """
         Runs moving load analysis, using `tstep.run()`
@@ -226,12 +227,16 @@ class MovingLoadAnalysis(Dyn_Analysis):
         print("Load pattern: {0}".format(self.loading_obj.name))
         print("Load velocity: %.1f" % self.loadVel)
         tic=timeit.default_timer()
-        self.tstep_obj.run()
+        
+        results_obj = self.tstep_obj.run()
+        
         toc=timeit.default_timer()
         print("***** Analysis complete after %.3f seconds." % (toc-tic))
                
         if saveResults:
             self.save(fName=save_fName)
+            
+        return results_obj
         
     def _CalcSimDuration(self,loadVel=10.0,tEpilogue=5.0):
         """
@@ -632,21 +637,23 @@ class Multiple():
 # ********************** FUNCTIONS   ****************************************
     
 def ResponseSpectrum(accFunc,
+                     tResponse,
                      T_vals=None,
-                     tResponse=10.0,
-                     eta = 0.05,
-                     makePlot = True,
+                     eta=0.05,
+                     makePlot=True,
                      **kwargs):
     """
     Function to express ground acceleration time series as a seismic response 
     spectrum
     ***
     
-    A _seismic response spectum_ summarise the peak acceleration response of a 
-    SDOF oscillator in response to ground acceleration time series. Seismic 
-    response spectra therefore represent a useful way of quantifying and 
-    graphically illustrating the severity of a given ground acceleration time 
-    series
+    _Seismic response spectra_ are used to summarises the vibration response 
+    of a SDOF oscillator in response to a transient ground acceleration 
+    time series. Seismic response spectra therefore represent a useful way of 
+    quantifying and graphically illustrating the severity of a given 
+    ground acceleration time series.
+    
+    
     
     ***
     Required:
@@ -654,27 +661,57 @@ def ResponseSpectrum(accFunc,
     * `accFunc`, function a(t) defining the ground acceleration time series 
       (usually this is most convenient to supply via an interpolation function)
       
+    * `tResponse`, time interval over which to carry out time-stepping analysis.
+      Set this to be at least the duration of the input acceleration time 
+      series!
+      
+    **Important note**:
+        
+    This routine expects a(t) to have units of m/s<sup>2</sup>. 
+    It is common (at least in the field of seismic analysis) to quote ground 
+    accelerations in terms of 'g'.
+    
+    Any such time series must be pre-processed by multiplying by 
+    g=9.81m/s<sup>2</sup>) prior to using this function, such that the 
+    supplied `accFunc` returns ground acceleration in m/s<sup>2</sup>.
+      
     ***
     Optional:
         
-    * `tResponse`, time interval over which to carry out time-stepping
-      (set this to be at least the duration of the input acceleration time 
-      series!)
+    * `T_vals`, _list_, periods (in seconds) at which response spectra
+      are to be evaluated. If _None_ will be set to logarithmically span the range 
+      [0.01,10.0] seconds, which is suitable for most applications.
+        
+    * `eta`, damping ratio to which response spectrum obtained is applicable. 
+      5% is used by default, as this a common default in seismic design.
       
-    * `T_vals`, _list_, periods at which response spectrum to be evaluated
-    
-    * `eta`, damping ratio to which response spectrum obtained is applicable 
-      (5% used by default as this is the default assumption in seismic design)
+     * `makePlot`, _boolean_, controls whether results are plotted
       
      `kwargs` may be used to pass additional arguments down to `TStep` object 
      that is used to implement time-stepping analysis. Refer `tstep` docs for 
      further details
+     
+    ***
+    Returns:
+        
+    Values are returned as a dictionary, containing the following entries:
+        
+    * `T_vals`, periods at which spectra are evaluated.
+    * `S_D`, relative displacement spectrum (in m)
+    * `S_V`, relative velocity spectrum (in m/s)
+    * `S_A`, absolute acceleration spectrum (in m/s<sup>2</sup>)
+    * `PSV`, psuedo-velocity spectrum (in m/s)
+    * `PSA`, psuedo-acceleration spectrum (in m/s<sup>2</sup>)
+    
+    In addition, if `makePlot=True`:
+        
+    * `fig`, figure object for plot
     
     """
     
     # Handle optional inputs
     if T_vals is None:
-        T_vals = numpy.arange(0.01,1.27,0.05)
+        T_vals = numpy.logspace(-2,1,100)
         
     T_vals = numpy.ravel(T_vals).tolist()
     
@@ -691,7 +728,7 @@ def ResponseSpectrum(accFunc,
     
     print("Obtaining SDOF responses to ground acceleration...")
     
-    for _T in T_vals:
+    for i, _T in enumerate(T_vals):
 
         period_str = "Period %.2fs" % _T
         
@@ -704,20 +741,27 @@ def ResponseSpectrum(accFunc,
         
         # Add output matrix to extract results
         SDOF_sys.AddOutputMtrx(output_mtrx=numpy.identity(3),
-                               output_names=["Disp","Vel","Acc"])
+                               output_names=["RelDisp","RelVel","Acc"])
         
         # Define forcing function
         def forceFunc(t):
-            return M*accFunc(t)
+            return -M*accFunc(t)
         
         # Define time-stepping analysis
         tstep_obj = tstep.TStep(SDOF_sys,
                                 tStart=0, tEnd=tResponse,
                                 force_func=forceFunc,
-                                retainDOFTimeSeries=False)
+                                retainResponseTimeSeries=True)
         
         # Run time-stepping analysis and append results
         results_list.append(tstep_obj.run(showMsgs=False))
+        
+        # Obtain absolute acceleration by adding back in ground motion
+        results_obj = tstep_obj.results_obj
+        results_obj.responses[2,:] += accFunc(results_obj.t.T)
+        
+        # Recalculate statistics
+        results_obj.CalcResponseStats(showMsgs=False)
         
         # Tidy up
         del SDOF_sys
@@ -728,23 +772,36 @@ def ResponseSpectrum(accFunc,
     S_V = numpy.asarray([x.response_stats['absmax'][1] for x in results_list])
     S_A = numpy.asarray([x.response_stats['absmax'][2] for x in results_list])
     
+    # Evaluate psuedo-specta
+    omega = numpy.divide(2*numpy.pi,T_vals)
+    PSV = omega * S_D
+    PSA = omega**2 * S_D
+    
     if makePlot:
         
         fig, axarr = plt.subplots(3, sharex=True)
         
-        fig.suptitle("Response spectra")
+        fig.suptitle("Response spectra: {:.0%} damping".format(eta))
         
         ax = axarr[0]
         ax.plot(T_vals,S_D)
-        ax.set_ylabel("$S_D$ (m)")
+        ax.set_ylabel("SD (m)")
+        ax.set_title("Relative displacement")
+        
         
         ax = axarr[1]
         ax.plot(T_vals,S_V)
-        ax.set_ylabel("$S_V$ (m/s)")
+        ax.plot(T_vals,PSV)
+        ax.legend((ax.lines),("$S_V$","Psuedo $S_V$",),loc='upper right')
+        ax.set_ylabel("SV (m/s)")
+        ax.set_title("Relative velocity")
         
         ax = axarr[2]
         ax.plot(T_vals,S_A)
-        ax.set_ylabel("$S_A$ (m/$s^2$)")
+        ax.plot(T_vals,PSA)
+        ax.legend((ax.lines),("$S_A$","Psuedo $S_A$",),loc='upper right')
+        ax.set_ylabel("SA (m/$s^2$)")
+        ax.set_title("Absolute acceleration")
         
         ax.set_xlim([0,numpy.max(T_vals)])
         ax.set_xlabel("Oscillator natural period T (secs)")
@@ -755,9 +812,13 @@ def ResponseSpectrum(accFunc,
     # Return values as dict
     return_dict = {}
     return_dict["T_vals"]=T_vals
+    
     return_dict["S_D"]=S_D
     return_dict["S_V"]=S_V
     return_dict["S_A"]=S_A
+    
+    return_dict["PSV"]=PSV
+    return_dict["PSA"]=PSA
     
     if makePlot:
         return_dict["fig"]=fig
@@ -766,8 +827,61 @@ def ResponseSpectrum(accFunc,
     
     return return_dict
     
+def DesignResponseSpectrum_BSEN1998_1(T_vals=None,
+                                      a_g=0.02,
+                                      S=1.00,
+                                      nu=1.00,
+                                      T_BCD=[0.05,0.25,1.20]):
+    """
+    Returns horizontal elastic design response spectrum as given by 
+    Cl. 3.2.2.2 of BS EN 1998-1:2004
     
+    ![figure_3_1](../dynsys/img/design_response_spectrum_BSEN1998-1.png)
+    ![equations](../dynsys/img/design_response_spectrum_BSEN1998-1_equations.png)
     
+    Note response spectrum has units as given by `a_g` (units of 'g' typically)
+    """
+    
+    if len(T_BCD)!=3:
+        raise ValueError("`T_BCD` expected to be list of length 3")
+        
+    # Unpack list items for salient periods
+    T_B = T_BCD[0]
+    T_C = T_BCD[1]
+    T_D = T_BCD[2]
+    
+    if T_vals is None:
+        
+        # Create default T_vals list to fully-illustrate key features
+        T_vals = numpy.concatenate((numpy.linspace(0,T_B,10,endpoint=False),
+                                    numpy.linspace(T_B,T_C,10,endpoint=False),
+                                    numpy.linspace(T_C,T_D,10,endpoint=False),
+                                    numpy.linspace(T_D,2*T_D,10,endpoint=True)))
+    
+    Se_vals = []
+    
+    for T in T_vals:
+        
+        if T < 0:
+            raise ValueError("T_vals to be >0!")
+        
+        elif T < T_B:
+            Se = 1 + (T / T_B)*(nu*2.5 - 1)
+        
+        elif T < T_C:
+            Se = nu * 2.5
+            
+        elif T < T_D:
+            Se = nu * 2.5 * (T_C / T)
+            
+        else:
+            Se = nu * 2.5 * (T_C*T_D)/(T**2)
+            
+        Se = a_g * S * Se
+        Se_vals.append(Se)
+        
+    return T_vals, Se_vals
+            
     
 # ********************** TEST ROUTINE ****************************************
 
@@ -841,6 +955,12 @@ if __name__ == "__main__":
         results = ResponseSpectrum(test_func,
                                    eta=0.005,
                                    T_vals=numpy.linspace(0.01,8.0,num=80))
+        
+    elif testRoutine==5:
+        
+        T_vals, Se_vals = DesignResponseSpectrum_BSEN1998_1()
+        plt.plot(T_vals,Se_vals)
+        
             
     else:
         raise ValueError("Test routine does not exist!")

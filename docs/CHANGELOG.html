@@ -8,6 +8,47 @@ and this project adheres to:
 in general differ from version numbers maintained by Portal version control 
 system. However major release number will always correspond.</p>
 <hr />
+<h2>Unreleased</h2>
+<h3>Changed</h3>
+<ul>
+<li><code>warburton_TMD.py</code> validation script moved to subfolder. In future all validation
+  scripts should be kept in subfolders to avoid confusion / cross-over of inputs</li>
+<li>System matrices (e.g. M_mtrx, K_mtrx etc) now intended to be held as private 
+  attributes; renames _M_mtrx, _C_mtrx to denote this change in intent. 
+  <code>GetSystemMatrices()</code> member function of <code>DynSys</code> class re-instated (this 
+  was previously marked as deprecated) and overhauled to act as the primary 
+  get() function for obtaining system matrices</li>
+<li>Significant non backwards-compatible overhaul of how constraints are defined 
+  and handled internally within the <code>DynSys</code> class. Constraint matrices are 
+  now held within a dict and kept local to each dynamic system. This allows for 
+  straightforward addition/removal of constraints and improves modularity. </li>
+<li>Improved functionality for systems with sub-systems appended using 
+  <code>AppendSystem()</code> method</li>
+<li>Plotting methods and response / response stats calculation methods revised to 
+  be more structured and cater for systems with multiple subsystems</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>Validation example added to verify accuracy or revised ResponseSpectrum()
+  function. Example computes response spectra for the classic El-Centro (1940)
+  earthquake and makes comparison against published plots. Excellent agreement 
+  found!</li>
+<li>New method <code>PrintResponseStats()</code> added to <code>tstep_results</code> class, to allow 
+  response statistics to be printed to text window in a nice manner</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Bug fix for ResponseSpectrum() function in <code>dyn_analysis</code>. 
+  Equation of motion corrected to be -M.a (minus sign previously omitted)
+  Acceleration spectrum now based on <em>absolute</em> acceleration, as is conventional
+  (previous versions omitted to add the input ground motion to the SDOF responses 
+  calculated)</li>
+</ul>
+<h3>Removed</h3>
+<ul>
+<li>GetRealWorldDOFs() method removed from DynSys class (this had been marked as 
+  deprecated since v0.1.0)</li>
+</ul>
 <h2>[0.5.1] - 2018-03-19 - RIHY</h2>
 <h3>Changed</h3>
 <ul>
