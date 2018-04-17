@@ -30,6 +30,11 @@ system. However major release number will always correspond.
   `AppendSystem()` method
 * Plotting methods and response / response stats calculation methods revised to 
   be more structured and cater for systems with multiple subsystems
+* `Graphviz` package used to produce call graphs for train analysis example script.
+  This type of testing was found to be very assistive in diagnosing slow steps in 
+  the analysis and allowed overall runtime to be dramatically improved. Tests like 
+  this should be carried out periodically in the future. Dedicted subfolder made in 
+  /tests folder for this purpose.
    
 
 ### Added
