@@ -102,13 +102,13 @@ class TStep_Results:
         Instance of `tstep` class, to which results relate
         """
         
-        self.responses=[]
+        self.responses_list=[]
         """
         List of matrices to which computed responses are recorded 
         for each time step
         """
         
-        self.responseNames=[]
+        self.response_names_list=[]
         """
         List of lists to described computed responses
         """
@@ -132,9 +132,22 @@ class TStep_Results:
         _Set using `CalcDOFStats()`_
         """
         
-        self.response_stats={}
+        self.response_stats_dict={}
         """
-        Dict of statistics, evaluated over all time steps, for each response
+        Dict of dict of statistics:
+            
+        * Primary dict: 
+            
+            * One entry for each subsystem
+            
+            * `DynSys` subsystem object pointer is used as key
+        
+        * Secondary dicts:
+            
+            * One entry for each statistic, with appropriate key string
+            
+            * Each entry is in general an array, obtained by evaluating 
+              statistic over all time steps, for each defined response
         
         _Set using `CalcResponseStats()`_
         """
@@ -179,6 +192,63 @@ class TStep_Results:
         self.nResults+=1
         
         
+    def GetResults(self,dynsys_obj,attr_list:list):
+        """
+        Retrieves results for a given DynSys object, which is assumed to be a 
+        subsystem of the parent system (this is checked)
+        
+        ***
+        Required:
+            
+        * `dynsys_obj`, instance of DynSys class; must be a subsystem of the 
+          parent system
+          
+        * `attr_list`, list of strings, to denote the results attributes to be 
+          returned
+         
+        """
+        
+        # Convert to list if single argument provided
+        if not isinstance(attr_list,list):
+            attr_list = list(attr_list)
+        
+        # Check that dynsys_obj is part of the system that has been analysed
+        parent_sys = self.tstep_obj.dynsys_obj
+        DynSys_list = parent_sys.DynSys_list
+        
+        if not dynsys_obj in DynSys_list:
+            raise ValueError("`dynsys_obj` is not a subsystem " + 
+                             "of the parent system that has been analysed!")
+        
+        # Determine splice indices to use to get results relating to requested system 
+        sys_index = [i for i, j in enumerate(DynSys_list) if j == dynsys_obj][0]
+        
+        nDOF_list_cum = npy.cumsum([x.nDOF for x in DynSys_list]).tolist()
+        
+        if sys_index == 0:
+            startIndex = 0
+        else:
+            startIndex = nDOF_list_cum[sys_index-1]
+        
+        endIndex = nDOF_list_cum[sys_index] 
+        
+        # Loop through to return requested attributes
+        vals_list = []
+        
+        for attr in attr_list:
+            
+            if hasattr(self,attr):
+                
+                vals = getattr(self,attr)             # for full system
+                vals = vals[:,startIndex:endIndex]    # for subsystem requested
+                vals_list.append(vals)
+                
+            else:
+                raise ValueError("Could not retrieve requested attribute '%s'" % attr)
+        
+        return vals_list
+        
+    
     def _TimePlot(self,ax,t_vals,data_vals,
                   titleStr=None,
                   xlabelStr=None,
@@ -210,6 +280,7 @@ class TStep_Results:
         return lines
         
     def PlotStateResults(self,
+                         dynsys_obj=None,
                          printProgress:bool=True,
                          dofs2Plot=None):
         """
@@ -224,6 +295,19 @@ class TStep_Results:
         * Accelerations
         
         * Constraint forces (only if constraint equations defined)
+        
+        for the _analysis freedoms_.
+        
+        ***
+        Optional:
+            
+        * `dynsys_obj`, can be used to specify the subsystem for which results 
+          which should be plotted. If _None_ then results for all freedoms 
+          (i.e. all subsystems) will be plotted.
+          
+        * `dofs2plot`, _list_ or _array_ of indexs of freedoms for which 
+          results should be plotted. If _None_ then results for all freedoms 
+          will be plotted.
         
         """
         
@@ -242,38 +326,47 @@ class TStep_Results:
         fig, axarr = plt.subplots(nPltRows, sharex=True)
         fig.set_size_inches((18,9))
     
-        # Handle dofs2Plot in case of none
-        if dofs2Plot is None:
-            dofs2Plot = range(self.v.shape[1])
-        
         # Set xlim
         xlim = [self.tstep_obj.tStart,self.tstep_obj.tEnd]
         
         # Get system description string
         sysStr = ""
-        if self.tstep_obj.dynsys_obj.__class__.__name__ == "ModalSys":
+        DynSys_list = self.tstep_obj.dynsys_obj.DynSys_list
+        
+        if all([x.isModal for x in DynSys_list]):
+            # All systems and subsystems are modal
             sysStr = "Modal "
+            
+        # Get data to plot
+        if dynsys_obj is None:
+            dynsys_obj = self.tstep_obj.dynsys_obj # parent system
+        
+        f, v, vdot, v2dot = self.GetResults(dynsys_obj,['f','v','vdot','v2dot'])
+        
+        # Handle dofs2Plot in case of none
+        if dofs2Plot is None:
+            dofs2Plot = range(v.shape[1])
         
         # Create time series plots
         self._TimePlot(ax=axarr[0],
                        t_vals=self.t,
-                       data_vals=self.f[:,dofs2Plot],
+                       data_vals=f[:,dofs2Plot],
                        xlim=xlim,
-                       titleStr="Applied {0} Forces (N)".format(sysStr))
+                       titleStr="Applied {0}Forces (N)".format(sysStr))
         
         self._TimePlot(ax=axarr[1],
                        t_vals=self.t,
-                       data_vals=self.v[:,dofs2Plot],
+                       data_vals=v[:,dofs2Plot],
                        titleStr="{0}Displacements (m)".format(sysStr))
         
         self._TimePlot(ax=axarr[2],
                        t_vals=self.t,
-                       data_vals=self.vdot[:,dofs2Plot],
+                       data_vals=vdot[:,dofs2Plot],
                        titleStr="{0}Velocities (m/s)".format(sysStr))
         
         self._TimePlot(ax=axarr[3],
                        t_vals=self.t,
-                       data_vals=self.v2dot[:,dofs2Plot],
+                       data_vals=v2dot[:,dofs2Plot],
                        titleStr="{0}Accelerations ($m/s^2$)".format(sysStr))
         
         if constraints:
@@ -285,6 +378,9 @@ class TStep_Results:
         axarr[-1].set_xlabel("Time (secs)")
         fig.subplots_adjust(hspace=0.3)
         
+        # Overall title for plot
+        fig.suptitle("State variable results for '{0}'".format(dynsys_obj.name))
+        
         if printProgress:
             toc=timeit.default_timer()
             print("Plot prepared after %.3f seconds." % (toc-tic))
@@ -292,88 +388,126 @@ class TStep_Results:
         return fig
     
     def PlotResponseResults(self,
+                            dynsys_obj=None,
                             y_overlay:list=None,
+                            verbose=False,
+                            raiseErrors=True,
                             useCommonPlot:bool=False,
                             useCommonScale:bool=True,
                             printProgress:bool=True):
         """
         Produces a new figure with linked time series subplots for 
         all responses/outputs
+        
+        ***
+        Optional:
+            
+        * `dynsys_obj`, can be used to specify the subsystem for which results 
+          which should be plotted. If _None_ then results for all freedoms 
+          (i.e. all subsystems) will be plotted.
+          
         """
         
         if printProgress:
-            print("Preparing results plot...")
+            print("Preparing response results plots...")
             tic=timeit.default_timer()
             
-        # Retrieve results from object
-        _responses = self.responses
-        _responseNames = self.responseNames
+        # Retrieve list from objects
+        responses_list = self.responses_list
+        response_names_list = self.response_names_list
+        DynSys_list = self.tstep_obj.dynsys_obj.DynSys_list
     
-        # Determine total number of responses to plot
-        nResponses =_responses.shape[0]
-        print("nResponses to plot: {0}".format(nResponses))
+        # Iterate over all responses
+        fig_list = []
         
-        if nResponses == 0:
-            raise ValueError("nResponses=0, nothing to plot!")
-    
-        # Initialise figure 
-        if not useCommonPlot:
-            fig, axarr = plt.subplots(nResponses, sharex=True)
-        else:
-            fig, axarr = plt.subplots(1)
+        for dynsys_obj, _responses, _response_names in zip(DynSys_list,
+                                                           responses_list,
+                                                           response_names_list):
             
-        fig.set_size_inches((14,8))
+            print("Plotting responses for '{0}'...".format(dynsys_obj.name))
         
-        # Determine common scale to use for plots
-        if useCommonScale:    
-            maxVal = npy.max(self.responses)
-            minVal = npy.min(self.responses)
-            absmaxVal = npy.max([maxVal,minVal])
-        
-        # Loop through plotting all responses
-        tvals = self.t
-        
-        for r in range(nResponses):
+            # Determine total number of responses to plot
+            nResponses = _responses.shape[0]
+            if verbose: print("# responses to plot: {0}".format(nResponses))
             
-            if useCommonPlot:
-                ax = axarr
+            if nResponses == 0:
+                errorstr = "nResponses=0, nothing to plot!"
+                if raiseErrors:
+                    raise ValueError(errorstr)
+                else:
+                    print(errorstr)
+                    return None
+                    
+            # Initialise figure 
+            if not useCommonPlot:
+                fig, axarr = plt.subplots(nResponses, sharex=True)
             else:
-                ax = axarr[r]
+                fig, axarr = plt.subplots(1)
+                
+            fig.set_size_inches((14,8))
             
-            vals = _responses[r,:].T
-            label_str = _responseNames[r]
+            fig.suptitle("Responses for '{0}'".format(dynsys_obj.name))
+
+            fig_list.append(fig)
             
-            ax.plot(tvals,vals,label=label_str)
-                            
-            ax.set_xlim([self.tstep_obj.tStart,self.tstep_obj.tEnd])
+            # Determine common scale to use for plots
+            if useCommonScale:    
+                maxVal = npy.max(_responses)
+                minVal = npy.min(_responses)
+                absmaxVal = npy.max([maxVal,minVal])
             
-            if useCommonPlot:
+            # Loop through plotting all responses
+            tvals = self.t
+            tInterval= [self.tstep_obj.tStart,self.tstep_obj.tEnd]
+            
+            for r in range(nResponses):
+                
+                # Get axis object
+                if useCommonPlot:
+                    ax = axarr
+                else:
+                    if hasattr(axarr, "__len__"):
+                        ax = axarr[r]
+                    else:
+                        ax = axarr
+                
+                # Get values to plot
+                vals = _responses[r,:].T
+                label_str = _response_names[r]
+                
+                # Make plot
+                ax.plot(tvals,vals,label=label_str)
+                           
+                # Set axis limits and labels
+                ax.set_xlim(tInterval)
+                
                 if r == nResponses-1:
                     ax.set_xlabel("Time [s]")
-            else:
-                ax.set_xlabel("Time [s]")
+                
+                if useCommonScale and not useCommonPlot:
+                    ax.set_ylim([-absmaxVal,+absmaxVal])
+                
+                # Create legend
+                if _response_names is not None:
+                    ax.legend(loc='right')
+                
+                # Plot horizontal lines to overlay values provided
+                # Only plot once in case of common plot
+                if (useCommonPlot and r==0) or (not useCommonPlot):
+    
+                    if y_overlay is not None:
+                        for y_val  in y_overlay:
+                            ax.axhline(y_val,color='r')
             
-            if useCommonScale and not useCommonPlot:
-                ax.set_ylim([-absmaxVal,+absmaxVal])
-            
-            if self.responseNames is not None:
-                ax.legend(loc='right')
-            
-            # Plot horizontal lines to overlay values provided
-            # Only plot once in case of common plot
-            if (useCommonPlot and r==0) or (not useCommonPlot):
-
-                if y_overlay is not None:
-                    for y_val  in y_overlay:
-                        ax.axhline(y_val,color='r')
-        
         if printProgress:
             toc=timeit.default_timer()
-            print("Plot prepared after %.3f seconds." % (toc-tic))
-        
-        return fig
+            print("Plots prepared after %.3f seconds." % (toc-tic))
+            
+            
+        return fig_list
         
     def PlotResults(self,
+                    dynsys_obj=None,
                     printProgress:bool=True,
                     dofs2Plot:bool=None,
                     useCommonPlot:bool=False):
@@ -386,17 +520,16 @@ class TStep_Results:
         * Response results plot: refer `PlotResponseResults()`
         
         """
-        
-        if dofs2Plot is None:
-            # Plot results for all DOFs
-            dofs2Plot=range(self.nDOF)
             
         figs=[]
         
-        figs.append(self.PlotStateResults(printProgress=printProgress,
+        figs.append(self.PlotStateResults(dynsys_obj=dynsys_obj,
+                                          printProgress=printProgress,
                                           dofs2Plot=dofs2Plot))
         
-        figs.append(self.PlotResponseResults(printProgress=printProgress,
+        figs.append(self.PlotResponseResults(dynsys_obj=dynsys_obj,
+                                             raiseErrors=False,
+                                             printProgress=printProgress,
                                              useCommonPlot=useCommonPlot))
         
         return figs
@@ -414,11 +547,9 @@ class TStep_Results:
         
         print("Plotting PSD estimates of responses using periodograms...")
         
-        if self.responses is None:
+        if len(self.responses_list) == 0:
             raise ValueError("No response time series data avaliable!")
-        else:
-            responses = self.responses
-            
+        
         # Get sampling frequency
         if self.tstep_obj.dt is None:
             raise ValueError("`dt` is None: cannot calculate PSDs from "
@@ -427,36 +558,46 @@ class TStep_Results:
             fs = 1 / self.tstep_obj.dt
             print("Sampling frequency: fs = %.2f" % fs)
         
-        # Create figure
-        fig, axarr = plt.subplots(2,)
-        fig.set_size_inches((14,8))
+        # Loop through all responses
+        fig_list = []
         
-        # Time series plot
-        ax = axarr[0]
-        handles = ax.plot(self.t,responses.T)
-        maxVal = npy.max(npy.abs(responses.T))
-        ax.set_ylim([-maxVal,maxVal])
-        ax.set_xlim(0,npy.max(self.t))
-        ax.set_title("Response time series")
-        ax.set_xlabel("Time (secs)")
+        for dynsys_obj, responses, response_names in zip(self.tstep_obj.dynsys_obj.DynSys_list,
+                                                         self.responses_list,
+                                                         self.response_names_list):
         
-        fig.legend(handles,self.responseNames,loc='upper right')
-        
-        # PSD plot
-        f, Pxx = scipy.signal.periodogram(responses,fs)
-        ax = axarr[1]
-        ax.plot(f,Pxx.T)
-        ax.set_xlim([0,fs/2])
-        ax.set_title("Periodograms of responses")
-        ax.set_xlabel("Frequency (Hz)")
-        
-        if self.tstep_obj.name is not None:
-            fig.suptitle("{0}".format(self.tstep_obj.name))
-            fig.subplots_adjust(top=0.9)
-        
-        fig.tight_layout()
-        fig.subplots_adjust(right=0.7)      # create space for figlegend
+            # Create figure
+            fig, axarr = plt.subplots(2,)
+            fig.set_size_inches((14,8))
             
+            # Time series plot
+            ax = axarr[0]
+            handles = ax.plot(self.t,responses.T)
+            maxVal = npy.max(npy.abs(responses.T))
+            ax.set_ylim([-maxVal,maxVal])
+            ax.set_xlim(0,npy.max(self.t))
+            ax.set_title("Response time series")
+            ax.set_xlabel("Time (secs)")
+            
+            fig.legend(handles,response_names,loc='upper right')
+            
+            # PSD plot
+            f, Pxx = scipy.signal.periodogram(responses,fs)
+            ax = axarr[1]
+            ax.plot(f,Pxx.T)
+            ax.set_xlim([0,fs/2])
+            ax.set_title("Periodograms of responses")
+            ax.set_xlabel("Frequency (Hz)")
+            
+            fig.suptitle("System: '{0}'".format(dynsys_obj.name))
+            fig.subplots_adjust(top=0.8)
+            
+            fig.tight_layout()
+            fig.subplots_adjust(right=0.7)      # create space for figlegend
+            fig_list.append(fig)
+        
+        return fig_list
+    
+        
     def AnimateResults(self):
         
         ValueError("Unfinished - do not use!")
@@ -511,18 +652,35 @@ class TStep_Results:
         Output matrices, together with their names, must be pre-defined via 
         `DynSys` member function `AddOutputMtrx()` prior to running this 
         function.
+        
+        Where a system consists of multiple subsystems, it should be note that 
+        output matrices relate to a given subsystem.
         """
         
         dynsys_obj=self.tstep_obj.dynsys_obj
+        responses_list = []
+        response_names_list = []
         
-        output_mtrx = dynsys_obj.output_mtrx
-        output_names = dynsys_obj.output_names
+        # Calculate responses for all systems and subsystems
+        for x in dynsys_obj.DynSys_list:
             
-        # Obtain new responses
-        state_vector = npy.hstack((self.v,self.vdot,self.v2dot))
-        self.responses = output_mtrx * state_vector.T
-        self.responseNames = output_names
+            # Get output matrix for subsystem
+            output_mtrx = x.output_mtrx
+            output_names = x.output_names
             
+            # Retrieve state variables for subsystem
+            v, vdot, v2dot = self.GetResults(x,['v', 'vdot', 'v2dot'])
+            
+            # Obtain new responses
+            state_vector = npy.hstack((v,vdot,v2dot))
+            
+            responses_list.append(output_mtrx * state_vector.T)
+            response_names_list.append(output_names)
+            
+        # Store as attributes
+        self.responses_list = responses_list
+        self.response_names_list = response_names_list
+                
         # Calculate DOF statistics
         if self.calc_dof_stats:
             self.CalcDOFStats(showMsgs=showMsgs)
@@ -534,7 +692,7 @@ class TStep_Results:
         # Write time series results to file
         if write_results_to_file:
             self.WriteResults2File(output_fName=results_fName)
-            
+                
         # Delete DOF time series data (to free-up memory)
         if not self.retainDOFTimeSeries:
             if showMsgs: print("Clearing DOF time series data to save memory...")
@@ -592,23 +750,32 @@ class TStep_Results:
         
         if self.calc_response_stats:
             
-            if showMsgs: print("Calculating response statistics...")
-                    
-            # Calculate stats for each response time series
-            maxVals = npy.ravel(npy.max(self.responses,axis=1))
-            minVals = npy.ravel(npy.min(self.responses,axis=1))
-            stdVals = npy.ravel(npy.std(self.responses,axis=1))
-            absmaxVals = npy.ravel(npy.max(npy.abs(self.responses),axis=1))
-        
-            # Record stats within a dict
-            stats_dict={}
-            stats_dict["max"]=maxVals
-            stats_dict["min"]=minVals
-            stats_dict["std"]=stdVals
-            stats_dict["absmax"]=absmaxVals
+            # Get paired lists to loop over
+            responses_list = self.responses_list
+            dynsys_list = self.tstep_obj.dynsys_obj.DynSys_list
             
-            # Store within object
-            self.response_stats=stats_dict
+            # Loop over all systems and subsystems
+            for dynsys_obj, responses in zip(dynsys_list,responses_list):
+                
+                if showMsgs:
+                    print("Calculating response statistics " + 
+                          "for '{0}'...".format(dynsys_obj.name))
+                        
+                # Calculate stats for each response time series
+                maxVals = npy.ravel(npy.max(responses,axis=1))
+                minVals = npy.ravel(npy.min(responses,axis=1))
+                stdVals = npy.ravel(npy.std(responses,axis=1))
+                absmaxVals = npy.ravel(npy.max(npy.abs(responses),axis=1))
+            
+                # Record stats within a dict
+                stats_dict={}
+                stats_dict["max"]=maxVals
+                stats_dict["min"]=minVals
+                stats_dict["std"]=stdVals
+                stats_dict["absmax"]=absmaxVals
+                
+                # Store as new dict entry
+                self.response_stats_dict[dynsys_obj] = stats_dict
             
         else:
             if showMsgs:
@@ -616,6 +783,25 @@ class TStep_Results:
                       "Response statistics will not be computed.")
         
         return stats_dict
+    
+    
+    def PrintResponseStats(self):
+        """
+        Prints response stats to text window
+        """
+        
+        for dynsys_obj, stats_dict in self.response_stats_dict.items():
+            
+            print("System name: {0}".format(dynsys_obj.name))
+            print("Response names: {0}".format(dynsys_obj.output_names))
+            print("Response statistics :")
+            
+            for stats_str, stats_vals in stats_dict.items():
+                
+                print("'%s':" % stats_str)
+                print(stats_vals)
+            
+            print("")
     
     
     def WriteResults2File(self,output_fName="timeseries_results.csv"):

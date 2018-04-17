@@ -39,7 +39,7 @@ class TStep:
                  plotResponseResults=True,
                  responsePlot_kwargs={},
                  x0=None,
-                 force_func:callable=None,
+                 force_func_dict:dict={},
                  event_funcs:callable=None,
                  post_event_funcs:callable=None,
                  ):
@@ -64,10 +64,11 @@ class TStep:
         
         * `max_dt`, maximum time-step to use. Only applies if `dt=None`.
         
-        * `x0`, _array-like_ defining initial conditions of freedoms. If `None` 
-          then zeros will be assumed.
+        * `x0`, _array-like_ defining initial conditions of freedoms. Dict keys 
+          are the names of the dynamic systems to which load functions relate. 
+          If empty then zeros will be assumed.
           
-        * `force_func`, _callable_, used to define applied external forces. 
+        * `force_func_dict`, dict of functions, used to define applied external forces. 
           If `None` then zero external forces will be assumed.
         
         * `event_funcs`, _callable_ or _list of callables_, 
@@ -121,15 +122,17 @@ class TStep:
         """
         
         # Check either initial conditions set or force - otherwise nothing will happen!
-        if x0 is None and force_func is None:
-            raise ValueError("Either `x0` or `force_func` required, " + 
+        if x0 is None and not force_func_dict:
+            raise ValueError("Either `x0` or `force_func_dict` required, " + 
                              "otherwise nothing will happen!")
         
         # Set initial conditions
+        nDOF_expected = sum([x.nDOF for x in self.dynsys_obj.DynSys_list])
+        
         if x0 is None:
             
             # By default set initial conditions to be zeros
-            x0 = npy.zeros((2*dynsys_obj.nDOF,))
+            x0 = npy.zeros((2*nDOF_expected,))
             
         else:
             
@@ -137,7 +140,7 @@ class TStep:
             x0 = npy.ravel(npy.asarray(x0))
         
             # Check shape of initial conditions vector is consistent with dynsys
-            if x0.shape[0] != 2*dynsys_obj.nDOF:
+            if x0.shape[0] != 2*nDOF_expected:
             
                 raise ValueError("Error: `x0` of unexpected shape!\n" + 
                                  "dynsys_obj.nDOF: {0}".format(dynsys_obj.nDOF) + 
@@ -149,7 +152,7 @@ class TStep:
         """
         
         # Set applied forces
-        self.force_func = self._check_force_func(force_func)
+        self.force_func_dict = self._check_force_func(force_func_dict)
         """
         Function to define external loading vector at time t
         """
@@ -193,55 +196,62 @@ class TStep:
         """
         
         # Create object to write results to
-        self.results_obj=tstep_results.TStep_Results(self,
-                                                     retainDOFTimeSeries=retainDOFTimeSeries,
-                                                     retainResponseTimeSeries=retainResponseTimeSeries)
+        results_obj=tstep_results.TStep_Results(self,
+                                                retainDOFTimeSeries=retainDOFTimeSeries,
+                                                retainResponseTimeSeries=retainResponseTimeSeries)
+        
+        self.results_obj=results_obj
         """
-        Results (displacements, velocities, constraint forces etc.) are stored 
-        in this object, which provides useful functionality for computing 
-        statistics, plotting etc.
+        `tstep_results` objects used to store results and provide 
+        useful functionality e.g. stats computation and plotting
         """
         
     
-    def _check_force_func(self,force_func):
+    def _check_force_func(self,force_func_dict):
         """
-        Function checks that `force_func` as supplied in TStep __init__() function 
-        is appropriate
+        Function checks that `force_func_dict` as supplied in TStep __init__() 
+        function is appropriate
         """
     
-        # Handle `None` case
-        if force_func is None:
+        # Loop through all systems and subsystems
+        for x in self.dynsys_obj.DynSys_list:
+        
+            expected_nDOF = x.nDOF
+            
+            # Handle case of no matching function key
+            if not x in force_func_dict:
+                    
+                # Define null force function
+                def null_force(t):
+                    return npy.zeros((expected_nDOF,))
                 
-            # Define null force function
-            def null_force(t):
-                return npy.zeros((expected_nDOF,))
+                force_func_dict[x] = null_force
             
-            force_func = null_force
-        
-        # Check force_func is a function
-        if not inspect.isfunction(force_func):
-            raise ValueError("`force_func` is not a function!")
+            # Get force_func appropriate to current system
+            force_func = force_func_dict[x]
             
-        # Check force_func has `t` as first argument
-        sig = inspect.signature(force_func)
-        if not 't' in sig.parameters:
-            raise ValueError("1st argument of `force_func` must be `t`\n" + 
-                             "i.e. `force_func` must take the form " +
-                             "force_func(t,*args,**kwargs)")
+            # Check force_func is a function
+            if not inspect.isfunction(force_func):
+                raise ValueError("`force_func` is not a function!")
+                
+            # Check force_func has `t` as first argument
+            sig = inspect.signature(force_func)
+            if not 't' in sig.parameters:
+                raise ValueError("1st argument of `force_func` must be `t`\n" + 
+                                 "i.e. `force_func` must take the form " +
+                                 "force_func(t,*args,**kwargs)")
+                
+            # Check dimension of vector returned by force_func is of the correct shape
+            t0 = self.tStart
+            force0 = force_func(t0)
             
-        # Check dimension of vector returned by force_func is of the correct shape
-        expected_nDOF = self.dynsys_obj.nDOF
-        
-        t0 = self.tStart
-        force0 = force_func(t0)
-        
-        if isinstance(force0,list):
-            if force0.shape[0]!=expected_nDOF:
-                raise ValueError("`force_func` returns vector of unexpected shape!\n" + 
-                                 "Shape expected: ({0},)\n".format(expected_nDOF) + 
-                                 "Shape received: {0}".format(force0.shape))
+            if isinstance(force0,list):
+                if force0.shape[0]!=expected_nDOF:
+                    raise ValueError("`force_func` returns vector of unexpected shape!\n" + 
+                                     "Shape expected: ({0},)\n".format(expected_nDOF) + 
+                                     "Shape received: {0}".format(force0.shape))
             
-        return force_func
+        return force_func_dict
     
         
     def _check_event_funcs(self,event_funcs):
@@ -371,9 +381,46 @@ class TStep:
         # Define ODE function in the expected form dy/dt = f(t,y)
         eqnOfMotion_func = self.dynsys_obj.EqnOfMotion
         
+        def forceFunc_fullsys(t):
+            """
+            Function to collate forces on full system, to support case
+            of system with multiple subsystems
+            """
+            
+            #print("t = %.3f secs" % t)
+            
+            for i, f in enumerate(list(self.force_func_dict.values())):
+                
+                if i==0:
+                    f_vals = f(t)
+            
+                else:
+                    f_vals = npy.append(f_vals,f(t))
+                    
+            return f_vals
+                
+        # Get full system matrices
+        dynsys_obj = self.dynsys_obj
+        d = dynsys_obj.GetSystemMatrices()
+        M = d["M_mtrx"]
+        K = d["K_mtrx"]
+        C = d["C_mtrx"]
+        J = d["J_mtrx"]
+        nDOF = d["nDOF"]
+        isSparse = d["isSparse"]
+        isLinear = d["isLinear"]
+        hasConstraints = dynsys_obj.hasConstraints()
+        
         def ODE_func(t,y):
             
-            results = eqnOfMotion_func(t=t,x=y,forceFunc=self.force_func)
+            # Function to use in conjunction with solve_ivp - see below
+            results = eqnOfMotion_func(t=t,x=y,
+                                       forceFunc=forceFunc_fullsys,
+                                       M=M,C=C,K=K,J=J,
+                                       nDOF=nDOF,
+                                       isSparse=isSparse,
+                                       isLinear=isLinear,
+                                       hasConstraints=hasConstraints)
             
             # Return xdot as flattened array
             ydot = results["ydot"]
@@ -397,7 +444,9 @@ class TStep:
             tic=timeit.default_timer()
             
             # Run solution
+            print("Solving using Scipy's `solve_ivp()` function:")
             sol = solve_ivp(fun=ODE_func, t_span=[tmin,tmax], y0=y0, **kwargs)
+            print("Solution complete!")
             sol_list.append(sol)
             solvecount += 1
             
@@ -410,7 +459,12 @@ class TStep:
                 # Solve equation of motion
                 results = eqnOfMotion_func(t=sol.t[n],
                                            x=sol.y[:,n],
-                                           forceFunc=self.force_func)
+                                           forceFunc=forceFunc_fullsys,
+                                           M=M,C=C,K=K,J=J,
+                                           nDOF=nDOF,
+                                           isSparse=isSparse,
+                                           isLinear=isLinear,
+                                           hasConstraints=hasConstraints)
             
                 # Record results
                 tic=timeit.default_timer()
@@ -462,7 +516,7 @@ class TStep:
         if showMsgs: print("Overall solution time: %.3f seconds" % solve_time)
         if showMsgs: print("Overall post-processing time: %.3f seconds" % resultsproc_time)
         
-        return self.results_obj
+        return results_obj
     
         
         
@@ -484,8 +538,14 @@ if __name__ == "__main__":
                                 [0.03,0.02,0.01,0.1],
                                 isSparse=False)
     
-    mySys.AddConstraintEqns(Jnew=[[1,-1,0,0],[0,0,1,-1]])
+    mySys.AddConstraintEqns(Jnew=[[1,-1,0,0],[0,0,1,-1]],Jkey="test")
     mySys.PrintSystemMatrices(printShapes=True,printValues=True)
+
+    # Define output matrix to return relative displacements
+    outputMtrx = npy.asmatrix([[1,-1,0,0,0,0,0,0,0,0,0,0],[0,1,-1,0,0,0,0,0,0,0,0,0]])
+    outputNames = ["Rel disp 12","Rel disp 23"]
+    mySys.AddOutputMtrx(output_mtrx = outputMtrx,
+                        output_names = outputNames)
     
     # Define applied forces
     def sine_force(t,F0,f):
@@ -499,15 +559,17 @@ if __name__ == "__main__":
     f_vals=[1.0,0,0,0]
 
     # Run time-stepping and plot results
+    force_func_dict = {}
+    force_func_dict[mySys] = lambda t: sine_force(t,F0_vals,f_vals)
+    
     myTStep = TStep(mySys,
-                    force_func=lambda t: sine_force(t,F0_vals,f_vals),
+                    force_func_dict=force_func_dict,
                     tEnd=10.0,
                     max_dt=0.01)
     myTStep.run()
     res = myTStep.results_obj
     res.PlotStateResults()
     
-    # Define output matrix to return relative displacements
-    outputMtrx = npy.asmatrix([[1,-1,0,0,0,0,0,0,0,0,0,0],[0,1,-1,0,0,0,0,0,0,0,0,0]])
-    res.CalcResponses(outputMtrx,["Rel disp 12","Rel disp 23"])
+
+    
     res.PlotResponseResults()

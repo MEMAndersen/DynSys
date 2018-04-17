@@ -185,10 +185,11 @@ class MovingLoadAnalysis(Dyn_Analysis):
         tStart, tEnd = self._CalcSimDuration(loadVel=loadVel,
                                              tEpilogue=tEpilogue)
         
-        forceFunc = modalsys_obj.CalcModalForces(loading_obj=loadtrain_obj,
-                                                 loadVel=loadVel,
-                                                 dt=dt_loads)
-        
+        # Define force function for parent system and subsystems
+        modalForces_func = modalsys_obj.CalcModalForces(loading_obj=loadtrain_obj,
+                                                        loadVel=loadVel,
+                                                        dt=dt_loads)
+        force_func_dict = {modalsys_obj : modalForces_func}
         
         self.tstep_obj = tstep.TStep(modalsys_obj,
                                      name=name,
@@ -196,7 +197,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
                                      tEnd=tEnd,
                                      dt=dt,
                                      max_dt=max_dt,
-                                     force_func=forceFunc,
+                                     force_func_dict=force_func_dict,
                                      retainDOFTimeSeries=retainDOFTimeSeries,
                                      retainResponseTimeSeries=retainResponseTimeSeries,
                                      writeResults2File=writeResults2File,
@@ -214,7 +215,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
         
         
     def run(self,
-            saveResults=True,
+            saveResults=False,
             save_fName=None):
         """
         Runs moving load analysis, using `tstep.run()`
@@ -226,12 +227,16 @@ class MovingLoadAnalysis(Dyn_Analysis):
         print("Load pattern: {0}".format(self.loading_obj.name))
         print("Load velocity: %.1f" % self.loadVel)
         tic=timeit.default_timer()
-        self.tstep_obj.run()
+        
+        results_obj = self.tstep_obj.run()
+        
         toc=timeit.default_timer()
         print("***** Analysis complete after %.3f seconds." % (toc-tic))
                
         if saveResults:
             self.save(fName=save_fName)
+            
+        return results_obj
         
     def _CalcSimDuration(self,loadVel=10.0,tEpilogue=5.0):
         """

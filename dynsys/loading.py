@@ -143,5 +143,4 @@ class LoadTrain(Loading):
 
 if __name__ == "__main__":
     
-    loads_obj = LoadTrain()
-    loads_obj.PrintDetails()
+    pass
