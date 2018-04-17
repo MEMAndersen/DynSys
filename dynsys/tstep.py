@@ -399,11 +399,28 @@ class TStep:
                     
             return f_vals
                 
+        # Get full system matrices
+        dynsys_obj = self.dynsys_obj
+        d = dynsys_obj.GetSystemMatrices()
+        M = d["M_mtrx"]
+        K = d["K_mtrx"]
+        C = d["C_mtrx"]
+        J = d["J_mtrx"]
+        nDOF = d["nDOF"]
+        isSparse = d["isSparse"]
+        isLinear = d["isLinear"]
+        hasConstraints = dynsys_obj.hasConstraints()
         
         def ODE_func(t,y):
-            # Function to use in conjunction with solve_ivp - see below
             
-            results = eqnOfMotion_func(t=t,x=y,forceFunc=forceFunc_fullsys)
+            # Function to use in conjunction with solve_ivp - see below
+            results = eqnOfMotion_func(t=t,x=y,
+                                       forceFunc=forceFunc_fullsys,
+                                       M=M,C=C,K=K,J=J,
+                                       nDOF=nDOF,
+                                       isSparse=isSparse,
+                                       isLinear=isLinear,
+                                       hasConstraints=hasConstraints)
             
             # Return xdot as flattened array
             ydot = results["ydot"]
@@ -442,7 +459,12 @@ class TStep:
                 # Solve equation of motion
                 results = eqnOfMotion_func(t=sol.t[n],
                                            x=sol.y[:,n],
-                                           forceFunc=forceFunc_fullsys)
+                                           forceFunc=forceFunc_fullsys,
+                                           M=M,C=C,K=K,J=J,
+                                           nDOF=nDOF,
+                                           isSparse=isSparse,
+                                           isLinear=isLinear,
+                                           hasConstraints=hasConstraints)
             
                 # Record results
                 tic=timeit.default_timer()

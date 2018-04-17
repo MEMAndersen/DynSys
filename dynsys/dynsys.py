@@ -681,7 +681,13 @@ class DynSys:
         return B
     
     
-    def EqnOfMotion(self,x, t, forceFunc):
+    def EqnOfMotion(self,x, t,
+                    forceFunc,
+                    M,C,K,J,
+                    nDOF,
+                    isSparse,
+                    isLinear,
+                    hasConstraints):
         """
         Function defines equation of motion for dynamic system
         ***
@@ -700,16 +706,6 @@ class DynSys:
         $$ J\ddot{y} = 0 $$
             
         """
-        
-        # Get full system matrices
-        d = self.GetSystemMatrices()
-        M = d["M_mtrx"]
-        K = d["K_mtrx"]
-        C = d["C_mtrx"]
-        J = d["J_mtrx"]
-        nDOF = d["nDOF"]
-        isSparse = d["isSparse"]
-        isLinear = d["isLinear"]
         
         isDense = not isSparse
         
@@ -734,7 +730,7 @@ class DynSys:
             
             setattr(self,attr,Minv)
         
-        if self.hasConstraints():
+        if hasConstraints:
                 
             # Obtain inverse of J.Minv.J.T
             attr1 = "_A_inv"
@@ -769,7 +765,7 @@ class DynSys:
         f_net = f - K.dot(y) - C.dot(ydot)
         
         # Solve for accelerations
-        if self.hasConstraints():
+        if hasConstraints:
             
             # Calculate lagrange multipliers (to satify constraint eqns)
             lagrange = Ainv * (- J * Minv * f_net)
