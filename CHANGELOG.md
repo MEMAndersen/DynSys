@@ -12,7 +12,7 @@ system. However major release number will always correspond.
 
 ***
 
-## Unreleased
+## [1.0.0] - 2018-04-17 - RIHY
 
 ### Changed
 * `warburton_TMD.py` validation script moved to subfolder. In future all validation
