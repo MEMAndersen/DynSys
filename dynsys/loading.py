@@ -8,6 +8,10 @@ from __init__ import __version__ as currentVersion
 import numpy
 import pandas as pd
 import inspect
+import scipy
+import matplotlib.pyplot as plt
+
+from numpy import sin, pi
 
 class Loading():
     """
@@ -139,8 +143,148 @@ class LoadTrain(Loading):
         print("Load intensities:\n{0}".format(self.loadVals))
         
         
+class UKNA_BSEN1991_2_walkers_joggers(LoadTrain):
+    """
+    Defines moving point load to represent the action of walkers / joggers
+    per NA.2.44.4 of BS EN 1991-2
+    
+    ![NA.2.44.4](../dynsys/img/UKNA_BSEN1991_2_NA2_44_4.PNG)
+    """
+    
+    def __init__(self,k,fv,gamma,N,
+                 analysis_type="walkers"):
+        
+        # Determine F0 from Table NA.8
+        if name=="walkers":
+            F0 = 280
+        elif name=="joggers":
+            F0 = 910
+        else:
+            raise ValueError("Invalid name argument '%s'!" % name + 
+                             "'walkers' or 'joggers' expected")
+            
+             
+            
+            
+        # Calculate amplitude of sinusoidal forcing function per NA.2.44.4(1)
+        F_amplitude = F0 * k * (1 + gamma*(N-1))**0.5
+        
+        # Define sinusoidal function of unit amplitude
+        def sine_func(t):
+            return sin(2*pi*fv*t)
+        
+        # Run init for parent 'LoadTrain' class
+        super().__init__(loadX=[0.0],
+                         loadVals=[F_amplitude],
+                         intensityFunc=sine_func,
+                         name=analysis_type)
+        
+# ********************** FUNCTIONS ****************************************
+        
+def UKNA_BSEN1991_2_Figure_NA_8(fv,
+                                analysis_type="walkers",
+                                kind='cubic',
+                                makePlot=True):
+    """
+    Returns $k_{v}(f)$ from Figure NA.8 in BS EN 1992-1:2003
+    
+    ***
+    Required:
+        
+    * `fv`, mode frequency in Hz to evaluate kv at
+    
+    ***
+    Optional:
+    
+    * `analysis_type`, _string_, either 'walkers' or 'joggers'
+    
+    * `kind`, keyword argument used by scipy.interpolate.interp1d function. 
+      Defines method of interpolation, e.g. 'linear' or 'cubic'
+      
+    * `makePlot`, _boolean_, if True plot will be made akin to Figure NA.8
+    
+    """
+    
+    # Arrays to digitise Figure NA.8
+    walkersData = [[0.000,0.000], [0.200,0.000], [0.400,0.010], [0.600,0.030],
+                   [0.800,0.080], [1.000,0.240], [1.200,0.440], [1.400,0.720],
+                   [1.600,0.930], [1.700,0.980], [1.800,1.000], [2.000,0.997],
+                   [2.100,0.970], [2.200,0.900], [2.400,0.650], [2.600,0.400],
+                   [2.800,0.250], [3.000,0.280], [3.200,0.320], [3.400,0.340],
+                   [3.600,0.360], [3.800,0.360], [4.000,0.350], [4.500,0.280],
+                   [5.000,0.180], [5.500,0.130], [6.000,0.115], [6.500,0.098],
+                   [7.000,0.080], [8.000,0.020], [9.000,0.000]]
+    
+    walkersData = numpy.array(walkersData)
+    
+    walkersFunc = scipy.interpolate.interp1d(x=walkersData[:,0],
+                                             y=walkersData[:,1],
+                                             kind=kind,
+                                             bounds_error=False,
+                                             fill_value=0.0)
+    
+    joggersData = [[0.000,0.000], [0.200,0.000], [0.400,0.000], [0.600,0.000],
+                   [0.800,0.000], [1.000,0.010], [1.200,0.040], [1.400,0.150],
+                   [1.600,0.300], [1.700,0.450], [1.800,0.550], [2.000,0.870],
+                   [2.100,1.010], [2.200,1.110], [2.400,1.160], [2.600,1.120],
+                   [2.800,0.930], [3.000,0.640], [3.200,0.360], [3.400,0.160],
+                   [3.600,0.100], [3.800,0.130], [4.000,0.160], [4.500,0.210],
+                   [5.000,0.220], [5.500,0.180], [6.000,0.110], [6.500,0.040],
+                   [7.000,0.030], [8.000,0.020], [9.000,0.000]]
+    
+    joggersData = numpy.array(joggersData)
+    
+    joggersFunc = scipy.interpolate.interp1d(x=joggersData[:,0],
+                                             y=joggersData[:,1],
+                                             kind=kind,
+                                             bounds_error=False,
+                                             fill_value=0.0)
+    
+    # Get applicable array to use
+    if analysis_type=="walkers":
+        k_fv_func = walkersFunc
+    elif analysis_type=="joggers":
+        k_fv_func = joggersFunc
+    else:
+        raise ValueError("Invalid 'analysis_type' specified!")
+    
+    # Use interpolation function to read off value at fv
+    k_fv = k_fv_func(fv)
+    
+    # Make plot (to show digitised curves)
+    if makePlot:
+        
+        fVals = numpy.arange(0.0,8.2,0.05)
+        caseA = walkersFunc(fVals)
+        caseB = joggersFunc(fVals)
+        
+        fig, ax = plt.subplots()
+        
+        ax.plot(fVals,caseA,label='A')
+        ax.plot(fVals,caseB,label='B')
+        
+        ax.axvline(fv,color='r',alpha=0.3)
+        ax.axhline(k_fv,color='r',alpha=0.3)
+        
+        ax.legend()
+        
+        ax.set_xlim([0,8.0]) # per Fig.NA.8
+        ax.set_ylim([0,1.4]) # per Fig.NA.8
+        
+        ax.set_title("Combined population and harmonic factor k($f_{v}$)\n" + 
+                     "per Figure NA.8, UK NA to BS EN 1992-1:2003")
+        ax.set_xlabel("Mode frequency $f_{v}$, Hz")
+        ax.set_ylabel("k($f_{v}$)")
+    
+    return k_fv
+        
+        
 # ********************** TEST ROUTINE ****************************************
 
 if __name__ == "__main__":
     
-    pass
+    testRoutine = 1
+    
+    if testRoutine ==1:
+        
+        kv = UKNA_BSEN1991_2_Figure_NA_8(2.5)
