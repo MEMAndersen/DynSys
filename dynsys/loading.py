@@ -77,7 +77,9 @@ class LoadTrain(Loading):
             loadVals = numpy.array(loadVals)
             
             if loadX.shape != loadVals.shape:
-                raise ValueError("Shapes of `loadX` and `loadVals` differ!")
+                raise ValueError("Shapes of `loadX` and `loadVals` differ!\n"+
+                                 "loadX:\t {0}\n".format(loadX.shape) +
+                                 "loadVals:\t {0}\n".format(loadVals.shape))
         
         # Get length of load pattern
         loadLength = numpy.max(loadX) - numpy.min(loadX)
@@ -147,7 +149,7 @@ class LoadTrain(Loading):
         print("Intensity function:\t {0}".format(self.intensityFunc))
         
         
-class UKNA_BSEN1991_2_walkers_joggers(LoadTrain):
+class UKNA_BSEN1991_2_walkers_joggers_loading(LoadTrain):
     """
     Defines moving point load to represent the action of walkers / joggers
     per NA.2.44.4 of BS EN 1991-2
@@ -182,7 +184,7 @@ class UKNA_BSEN1991_2_walkers_joggers(LoadTrain):
         
         # Run init for parent 'LoadTrain' class
         super().__init__(loadX=[0.0],
-                         loadVals=[F_amplitude],
+                         loadVals=F_amplitude,
                          intensityFunc=sine_func,
                          name=analysis_type)
         
@@ -300,6 +302,22 @@ if __name__ == "__main__":
         
     if testRoutine ==2:
         
-        loading_obj = UKNA_BSEN1991_2_walkers_joggers(fv=2.3,
+        fn = 2.3
+        Tn = 1/fn
+        
+        loading_obj = UKNA_BSEN1991_2_walkers_joggers_loading(fv=fn,
                                                       analysis_type="joggers")
         loading_obj.PrintDetails()
+        
+        tVals = numpy.arange(0,5,0.01)
+        loadVals=[]
+        for t in tVals:
+            loadVals.append(loading_obj.loadVals(t))
+            
+        fig,ax = plt.subplots()
+        
+        ax.plot(tVals,loadVals)
+        
+        for T in [Tn,2*Tn,3*Tn,10*Tn]:
+            ax.axvline(T,color='r',alpha=0.3)
+        

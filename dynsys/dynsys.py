@@ -348,15 +348,20 @@ class DynSys:
             # Print constraints matrices
             print("---- Constraint matrices for `{0}` ----\n".format(x.name))
             
-            for key, val in x._J_dict.items():
+            if not x._J_dict:
+                print("(No constraints matrices defined)\n")
                 
-                print("key: {0}".format(key))
-                print(type(val))
+            else:
                 
-                if printShapes: print(val.shape)
-                if printValues: print(val)
-                
-                print("")
+                for key, val in x._J_dict.items():
+                    
+                    print("key: {0}".format(key))
+                    print(type(val))
+                    
+                    if printShapes: print(val.shape)
+                    if printValues: print(val)
+                    
+                    print("")
     
 
     def GetSystemMatrices(self,createNewSystem=True):

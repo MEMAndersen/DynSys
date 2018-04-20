@@ -703,8 +703,8 @@ class TStep_Results:
         # Delete response time series data (to free up memory)
         if not self.retainResponseTimeSeries:
             if showMsgs: print("Clearing response time series data to save memory...")
-            del self.responses
-            del self.responseNames
+            del self.responses_list
+            del self.response_names_list
         
     def CalcDOFStats(self,showMsgs=True):
         """
