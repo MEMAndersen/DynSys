@@ -371,11 +371,11 @@ class TStep:
         if showMsgs: print("Analysis time interval: [%.2f, %.2f] seconds" % (tmin,tmax))
         
         if self.dt is not None:
-            if showMsgs: print("Fixed time step specified: %.2e seconds" % self.dt)
+            if showMsgs: print("Fixed 't_eval' time step specified: dt = %.2e seconds" % self.dt)
             kwargs["t_eval"]=npy.arange(tmin,tmax,self.dt)
         else:
             if self.max_dt is not None:
-                if showMsgs: print("Maximum time step specified: %.3f seconds" % self.max_dt)
+                if showMsgs: print("Maximum time step specified: max_dt = %.3f seconds" % self.max_dt)
                 kwargs["max_step"]=self.max_dt
         
         # Define ODE function in the expected form dy/dt = f(t,y)

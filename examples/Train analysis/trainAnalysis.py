@@ -60,34 +60,34 @@ results_fig = results_obj.PlotResponseResults()
 results_obj.PlotResponsePSDs()
 
 
-##%%
-## Run multiple analyses for various trains and speeds
-#
-## Define speeds to consider
-#speeds_kmph = numpy.arange(300,451,50)
-#kmph_to_mps = 1000/3600 # conversion factor
-#
-## Define loading patterns
-#train_defs_path = 'train_defs/'
-#trains2analyse = [train_defs_path + x for x in os.listdir(train_defs_path)]
-#trains2analyse = trains2analyse[:1] # use to select certain trains
-#
-#loading_obj_list = []
-#for train_fName in trains2analyse:
-#    loading_obj_list.append(loading.LoadTrain(fName=train_fName))
-#    
-## Run multiple moving load analyses
-#multipleAnalyses = dyn_analysis.Multiple("MovingLoadAnalysis",
-#                                         dynsys_obj=bridge_sys,
-#                                         loadVel=(speeds_kmph*kmph_to_mps).tolist(),
-#                                         loadtrain_obj=loading_obj_list,
-#                                         dt=dt_reqd,
-#                                         tEpilogue=1.0,
-#                                         retainResponseTimeSeries=False,
-#                                         writeResults2File=False)
-#multipleAnalyses.run(save=True)
-#
-##%%
+#%%
+# Run multiple analyses for various trains and speeds
+
+# Define speeds to consider
+speeds_kmph = numpy.arange(300,451,50)
+kmph_to_mps = 1000/3600 # conversion factor
+
+# Define loading patterns
+train_defs_path = 'train_defs/'
+trains2analyse = [train_defs_path + x for x in os.listdir(train_defs_path)]
+trains2analyse = trains2analyse[:1] # use to select certain trains
+
+loading_obj_list = []
+for train_fName in trains2analyse:
+    loading_obj_list.append(loading.LoadTrain(fName=train_fName))
+    
+# Run multiple moving load analyses
+multipleAnalyses = dyn_analysis.Multiple("MovingLoadAnalysis",
+                                         dynsys_obj=bridge_sys,
+                                         loadVel=(speeds_kmph*kmph_to_mps).tolist(),
+                                         loadtrain_obj=loading_obj_list,
+                                         dt=dt_reqd,
+                                         tEpilogue=1.0,
+                                         retainResponseTimeSeries=False,
+                                         writeResults2File=False)
+multipleAnalyses.run(save=True)
+
+#%%
 #def PlotStats(trainSpeeds_kmph,
 #              trainCodes,
 #              statsData,
