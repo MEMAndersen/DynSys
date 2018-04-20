@@ -184,7 +184,7 @@ class UKNA_BSEN1991_2_walkers_joggers(LoadTrain):
 def UKNA_BSEN1991_2_Figure_NA_8(fv,
                                 analysis_type="walkers",
                                 kind='cubic',
-                                makePlot=True):
+                                makePlot=False):
     """
     Returns $k_{v}(f)$ from Figure NA.8 in BS EN 1992-1:2003
     
@@ -287,4 +287,6 @@ if __name__ == "__main__":
     
     if testRoutine ==1:
         
-        kv = UKNA_BSEN1991_2_Figure_NA_8(2.5)
+        kv = UKNA_BSEN1991_2_Figure_NA_8(fv=2.5,
+                                         analysis_type="joggers",
+                                         makePlot=True)
