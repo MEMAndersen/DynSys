@@ -31,11 +31,12 @@ class Loading():
         """
         Prints details of loading definition to std output
         """
-        print("Loading type: {0}".format(self.__class__.__name__))
+        print("Loading type: \t\t'{0}'".format(self.__class__.__name__))
+        print("Loading object name: \t'%s'" % self.name)
     
 
 class LoadTrain(Loading):
-    """
+    """s
     Defines a series of point loads at fixed relative positions
     """
     
@@ -67,6 +68,8 @@ class LoadTrain(Loading):
             # Get load position and value from txt file
             loadX = loadData[:,0]
             loadVals = loadData[:,1]
+            
+            print("Load train defined via definitions from '{0}'".format(fName))
         
         else:
             
@@ -119,7 +122,7 @@ class LoadTrain(Loading):
         otherwise constant point loads defined by this class
         """
         
-        print("Load train defined via definitions from '{0}'".format(fName))
+        
         
         
     def loadVals(self,t):
@@ -138,9 +141,10 @@ class LoadTrain(Loading):
         super().PrintDetails()
         
         # Assemble pandas dataframe
-        print("Load pattern length: {0}".format(self.loadLength))
-        print("X positions of loads:\n{0}".format(self.loadX))
-        print("Load intensities:\n{0}".format(self.loadVals))
+        print("Load pattern length: \t {0}".format(self.loadLength))
+        print("X positions of loads:\t {0}".format(self.loadX))
+        print("Load intensities:\t {0}".format(self._loadVals))
+        print("Intensity function:\t {0}".format(self.intensityFunc))
         
         
 class UKNA_BSEN1991_2_walkers_joggers(LoadTrain):
@@ -151,20 +155,23 @@ class UKNA_BSEN1991_2_walkers_joggers(LoadTrain):
     ![NA.2.44.4](../dynsys/img/UKNA_BSEN1991_2_NA2_44_4.PNG)
     """
     
-    def __init__(self,k,fv,gamma,N,
-                 analysis_type="walkers"):
+    def __init__(self,
+                 fv:float,
+                 gamma:float=1.0,
+                 N:int=2,
+                 analysis_type:str="walkers"):
         
         # Determine F0 from Table NA.8
-        if name=="walkers":
+        if analysis_type=="walkers":
             F0 = 280
-        elif name=="joggers":
+        elif analysis_type=="joggers":
             F0 = 910
         else:
-            raise ValueError("Invalid name argument '%s'!" % name + 
+            raise ValueError("Invalid 'analysis_type'!" + 
                              "'walkers' or 'joggers' expected")
             
-             
-            
+        # Get k(fv) factor
+        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,analysis_type=analysis_type)
             
         # Calculate amplitude of sinusoidal forcing function per NA.2.44.4(1)
         F_amplitude = F0 * k * (1 + gamma*(N-1))**0.5
@@ -283,10 +290,16 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
 
 if __name__ == "__main__":
     
-    testRoutine = 1
+    testRoutine = 2
     
     if testRoutine ==1:
         
         kv = UKNA_BSEN1991_2_Figure_NA_8(fv=2.5,
                                          analysis_type="joggers",
                                          makePlot=True)
+        
+    if testRoutine ==2:
+        
+        loading_obj = UKNA_BSEN1991_2_walkers_joggers(fv=2.3,
+                                                      analysis_type="joggers")
+        loading_obj.PrintDetails()
