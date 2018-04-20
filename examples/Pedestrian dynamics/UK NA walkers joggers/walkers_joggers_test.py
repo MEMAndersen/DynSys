@@ -20,17 +20,19 @@ my_sys = modalsys.ModalSys(name="Bridge example")
 my_sys.AddOutputMtrx()
 
 #%%
-#
-## Define single walkers/joggers analysis
-#my_analysis = walkers_joggers_analysis(modalsys_obj=my_sys,
-#                                       mode_index=0,
-#                                       analysis_type="joggers",
-#                                       bridgeClass=bridgeClass)
-#                                       
-#results_obj = my_analysis.run()
-#tstep_obj = results_obj.tstep_obj
-#
-##results_obj.PlotResults()
+
+# Define single walkers/joggers analysis
+my_analysis = walkers_joggers_analysis(modalsys_obj=my_sys,
+                                       mode_index=4,
+                                       analysis_type="joggers",
+                                       bridgeClass=bridgeClass)
+                                       
+results_obj = my_analysis.run()
+tstep_obj = results_obj.tstep_obj
+
+results_obj.PlotStateResults()
+results_obj.PlotResponseResults(responses2plot=[0,1])
+results_obj.PlotResponseResults(responses2plot=[2,3])
 
 #%%
 
@@ -40,4 +42,11 @@ all_analyses = PedestrianDynamics_transientAnalyses(modalsys_obj=my_sys,
 all_analyses.run(save=False)
 
 #%%
-all_analyses.plot_stats()
+all_analyses.plot_response_stats()
+
+all_analyses.plot_response_stats(dynsys2plot=my_sys,
+                                 responses2plot=[2,3],
+                                 sharey=True)
+
+#%%
+all_analyses.plot_modal_params()

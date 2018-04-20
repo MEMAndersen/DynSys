@@ -389,6 +389,7 @@ class TStep_Results:
     
     def PlotResponseResults(self,
                             dynsys_obj=None,
+                            responses2plot=None,
                             y_overlay:list=None,
                             verbose=False,
                             raiseErrors=True,
@@ -406,18 +407,29 @@ class TStep_Results:
           which should be plotted. If _None_ then results for all freedoms 
           (i.e. all subsystems) will be plotted.
           
+        * `responses2plot`, can be used to specify the indexs of responses to 
+          plot, with the specified `dynsys_obj`.
+          
         """
         
         if printProgress:
             print("Preparing response results plots...")
             tic=timeit.default_timer()
             
-        # Retrieve list from objects
+        # Get subsystems to iterate over
+        DynSys_list = self.tstep_obj.dynsys_obj.DynSys_list
+        if dynsys_obj is not None:
+            
+            if not (dynsys_obj in DynSys_list):
+                raise ValueError("`dynsys_obj` not in DynSys_list!")
+                
+            DynSys_list = [dynsys_obj]
+    
+        # Iterate over all responses for all specified subsystems
+        
         responses_list = self.responses_list
         response_names_list = self.response_names_list
-        DynSys_list = self.tstep_obj.dynsys_obj.DynSys_list
-    
-        # Iterate over all responses
+        
         fig_list = []
         
         for dynsys_obj, _responses, _response_names in zip(DynSys_list,
@@ -425,6 +437,11 @@ class TStep_Results:
                                                            response_names_list):
             
             print("Plotting responses for '{0}'...".format(dynsys_obj.name))
+            
+            # Get responses to plot
+            if responses2plot is not None:
+                _responses = _responses[[r for r in responses2plot]]
+                _response_names = [_response_names[r] for r in responses2plot]
         
             # Determine total number of responses to plot
             nResponses = _responses.shape[0]

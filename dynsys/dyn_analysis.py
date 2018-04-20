@@ -9,6 +9,7 @@ import numpy
 import timeit
 import itertools
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import dill
 import os
 import scipy
@@ -319,6 +320,7 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
                      bridgeClass='A',
                      analysis_type="walkers",
                      dt=None,
+                     verbose=True,
                      **kwargs):
             """
             Initialisation function
@@ -384,6 +386,7 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
             logdec = 2*numpy.pi*eta
             
             self.fv = f_d
+            self.eta = eta
             self.logdec = logdec
             
             # Analyse modeshape to determine effective span
@@ -415,14 +418,15 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
                              dt=dt,
                              **kwargs)
             
-            print("***** Transient moving load analysis initialised *****")
-            print("Modal system:\t\t'%s'" % modalsys_obj.name)
-            print("Bridge class:\t\t'%s'" % bridgeClass)
-            print("Mode index:\t\t%d" % mode_index)
-            print("Mode frequency:\t\t%.2f Hz" % f_d)
-            print("Loading object:\t\t'%s'" % loading_obj.name)
-            print("Load velocity:\t\t%.1f m/s" % load_velocity)
-            print("")
+            if verbose:
+                print("***** Transient moving load analysis initialised *****")
+                print("Modal system:\t\t'%s'" % modalsys_obj.name)
+                print("Bridge class:\t\t'%s'" % bridgeClass)
+                print("Mode index:\t\t%d" % (mode_index+1))
+                print("Mode frequency:\t\t%.2f Hz" % f_d)
+                print("Loading object:\t\t'%s'" % loading_obj.name)
+                print("Load velocity:\t\t%.1f m/s" % load_velocity)
+                print("")
             
      
 class Multiple():
@@ -581,7 +585,7 @@ class Multiple():
         associated with using `multiprocessing` module from within Spyder_
         """
         
-        print("Running multiple `{0}`".format(self.analysisType))
+        print("Running multiple `{0}`\n".format(self.analysisType))
         tic=timeit.default_timer()
             
         # Run analyses using parallel processing (if possible)
@@ -594,12 +598,13 @@ class Multiple():
         # Run all pre-defined analyses
         for i, x in enumerate(self.analysis_list):
             
-            print("Analysis #%04d of #%04d" % (i, len(self.analysis_list)))
+            print("Analysis #%04d of #%04d" % (i+1, len(self.analysis_list)))
             x.run(saveResults=False)
             print("")#clear line for emphasis
         
         toc=timeit.default_timer()
-        print("Multiple `%s` complete after %.3f seconds!\n" % (self.analysisType,(toc-tic)))
+        print("Multiple `%s` analysis complete after %.3f seconds!\n" 
+              % (self.analysisType,(toc-tic)))
             
         # Reshape results objects in ndarray
         results_obj_list = [x.tstep_obj.results_obj for x in self.analysis_list]
@@ -825,13 +830,175 @@ class PedestrianDynamics_transientAnalyses(Multiple):
                          bridgeClass=bridgeClass,
                          mode_index=mode_index_list,
                          analysis_type=["walkers","joggers"],
+                         verbose=False,
                          **kwargs)
         
-    def plot_stats(self):
-        print("Warning: plot_stats() not yet implemented!")
-        pass
+        # Save key variables as attributes
+        self.bridgeClass = bridgeClass
         
+        
+    def plot_modal_params(self):
+        
+        fig, axarr = plt.subplots(2)
+        fig.set_size_inches((6,8))
+        
+        fig.subplots_adjust(hspace=0.4,right=0.8)
+        
+        # Get modal properties as used in analyses
+        nModes = int(len(self.analysis_list)/2)
+        mode_index = numpy.arange(0,nModes,1)+1
+        fv = [x.fv for x in self.analysis_list][:nModes]
+        eta = [x.eta for x in self.analysis_list][:nModes]
+        
+        # Plot details of system
+        ax = axarr[0]
+        ax.bar(mode_index,fv)
+        ax.set_xlabel("Mode index")
+        ax.set_xticks(mode_index)
+        ax.set_ylabel("$f_{d}$ (Hz)",fontsize=8.0)
+        ax.set_title("Damped natural frequencies")
+        
+        ax = axarr[1]
+        ax.bar(mode_index,eta)
+        ax.set_xlabel("Mode index")
+        ax.set_xticks(mode_index)
+        ax.set_ylim([0,ax.get_ylim()[1]])
+        ax.set_ylabel("Damping ratio",fontsize=8.0)
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda y, _: '{:.1%}'.format(y))) 
+        ax.set_title("Modal damping")
+        
+        # Add equivilent axis for log dec
+        ax2 = ax.twinx()
+        
+        def logdec(eta):
+            return 2*numpy.pi*eta
+        
+        delta_incr = 0.01
+        new_yticks=numpy.arange(0,ax.get_ylim()[1],delta_incr/(2*numpy.pi))
+        
+        ax2.set_ylim(ax.get_ylim())
+        ax2.set_yticks(new_yticks)
+        ax2.set_yticklabels(["%.2f" % d for d in logdec(new_yticks)])
+        ax2.set_ylabel("Log decrement $\delta$")
+        
+        return fig
     
+    
+    def plot_response_stats(self,
+                            dynsys2plot=None,
+                            responses2plot=None,
+                            sharey='row',
+                            verbose=True):
+        """
+        Plots statistics of responses computed, across all analyses
+        
+        ***
+        Optional:
+            
+        * `dynsys2plot`, list of subsystem objects to plot responses 
+          for. If None (default) responses will be plotted for all 
+          subsystems
+            
+        * `responses2plot`, list of indices specifying responses to be
+          plotted. If None (default) all responses will be plotted, for
+          each sub-system
+          
+        * `sharey`, passed to pyplot.subplots() method. Controls whether 
+          subplots should share common y scale.
+          
+        """
+        
+        print("Plotting response statistics...")
+        
+        nModes = int(len(self.analysis_list)/2)
+        mode_index = numpy.arange(0,nModes,1)+1
+        
+        fig_list = []
+        
+        if dynsys2plot is None:
+            dynsys2plot = self.dynsys_obj.DynSys_list
+        else:
+            if not (dynsys2plot in self.dynsys_obj.DynSys_list):
+                raise ValueError("'dynsys2plot' does not belong " + 
+                                 "to system analysed!")
+                
+            if not isinstance(dynsys2plot,list):
+                dynsys2plot = [dynsys2plot]
+            
+        # Loop over all systems and subsystems
+        for dynsys_obj in dynsys2plot:
+            
+            # Get stats dict relating to this system
+            stats_dict = self.stats_dict[dynsys_obj]
+            
+            # Get indices of responses to plot
+            response_names = dynsys_obj.output_names
+            
+            if responses2plot is None:
+                nResponses = len(response_names)
+                responses2plot = list(range(nResponses))
+            else:
+                nResponses = len(responses2plot)
+            
+            # Create new figure
+            fig, axarr = plt.subplots(nResponses,2,
+                                      sharex=True,
+                                      sharey=sharey)
+            fig.set_size_inches((14,8))
+            fig_list.append(fig)
+            
+            # Loop to plot all responses requested
+            for row, r in enumerate(responses2plot):
+                
+                response_name = response_names[r]
+                
+                # Get stats for this response
+                stats_dict_r = {}
+                
+                for stats_name, stats_vals in stats_dict.items():
+                    
+                    stats_dict_r[stats_name]=stats_vals[:,:,r]
+            
+                if verbose:
+                    print("Plotting stats for response '%s':" % response_name)
+                
+                # Plot response stats for walkers and joggers responses
+                
+                for col, case in zip([0,1],['walkers','joggers']):
+                    
+                    ax = axarr[row,col]
+                    
+                    for i, stats_name in enumerate(['absmax','max','min']):
+                    
+                        stats_vals = stats_dict_r[stats_name][col,:]
+                        
+                        w=0.1
+                        ax.bar(mode_index+(i-1)*w,
+                               stats_vals,
+                               width=w,
+                               label=stats_name
+                               )
+    
+                    ax.legend(loc='lower right',fontsize=6.0)
+                    
+                    if col==0:
+                        ax.set_ylabel(response_name,size=8.0)
+                        
+                    if row==0:
+                        ax.set_title("Responses to %s" % case)
+                        
+                    if row==nResponses-1:
+                        ax.set_xlabel("Mode index")
+                        ax.set_xticks(mode_index)
+                        
+                
+            
+            fig.suptitle("Statistics of computed responses to pedestrian loading\n" + 
+                         "UK NA to BS EN 1991-2, NA.2.44.4\n" + 
+                         "Subsystem: '%s'\n" % dynsys_obj.name,
+                         fontsize=10.0)
+    
+        return fig_list
         
     
     
