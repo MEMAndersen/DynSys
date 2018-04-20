@@ -391,6 +391,9 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
             
             # Analyse modeshape to determine effective span
             Seff = 40.0#ASSUMED
+            print("*************")
+            print("WARNING! Seff=40.0 assumed currently! Still to implement!")
+            print("*************")
             self.Seff = Seff
             
             # Obtain gamma from Figure NA.9

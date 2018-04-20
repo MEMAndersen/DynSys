@@ -10,6 +10,31 @@ system. However major release number will always correspond.</p>
 <hr />
 <h2>Unreleased</h2>
 <h3>Changed</h3>
+<h3>Added</h3>
+<ul>
+<li>New functionality to implement UK NA to BS EN 1992-1 footbridge dynamics:<ul>
+<li>New class in <code>loading.py</code>, <code>UKNA_BSEN1991_2_walkers_joggers_loading</code>.
+  Defines moving load group for walkers/joggers. Inherits most of the 
+  functionality from existing <code>LoadTrain</code> class.</li>
+<li>Figure functions, to return parameters given by code figures:<ul>
+<li><code>UKNA_BSEN1991_2_Figure_NA_8</code> in <code>loading.py</code></li>
+<li><code>UKNA_BSEN1991_2_Figure_NA_9</code> in <code>dyn_analysis.py</code></li>
+</ul>
+</li>
+<li>New class in <code>dyn_analysis.py</code>, <code>UKNA_BSEN1991_2_walkers_joggers</code> (this 
+  inherits functionality from existing <code>MovingLoadAnalysis</code> class)</li>
+<li>New class in <code>dyn_analysis.py</code>, <code>PedestrianDynamics_transientAnalyses</code>.
+  Inherits functionality from existing <code>Multiple</code> class. This can be used 
+  to carry out all the necessary walking/jogging analyses for all modes.</li>
+<li>Example added to <code>examples\Pedestrian dynamics\UK NA walkers joggers</code> to 
+  test and illustrate the use of these number classes and functions   </li>
+</ul>
+</li>
+</ul>
+<h3>Fixed</h3>
+<h3>Removed</h3>
+<h2>[1.0.0] - 2018-04-17 - RIHY</h2>
+<h3>Changed</h3>
 <ul>
 <li><code>warburton_TMD.py</code> validation script moved to subfolder. In future all validation
   scripts should be kept in subfolders to avoid confusion / cross-over of inputs</li>
@@ -26,6 +51,11 @@ system. However major release number will always correspond.</p>
   <code>AppendSystem()</code> method</li>
 <li>Plotting methods and response / response stats calculation methods revised to 
   be more structured and cater for systems with multiple subsystems</li>
+<li><code>Graphviz</code> package used to produce call graphs for train analysis example script.
+  This type of testing was found to be very assistive in diagnosing slow steps in 
+  the analysis and allowed overall runtime to be dramatically improved. Tests like 
+  this should be carried out periodically in the future. Dedicted subfolder made in 
+  /tests folder for this purpose.</li>
 </ul>
 <h3>Added</h3>
 <ul>

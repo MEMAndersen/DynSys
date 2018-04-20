@@ -12,6 +12,31 @@ system. However major release number will always correspond.
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+* New functionality to implement UK NA to BS EN 1992-1 footbridge dynamics:
+    * New class in `loading.py`, `UKNA_BSEN1991_2_walkers_joggers_loading`.
+      Defines moving load group for walkers/joggers. Inherits most of the 
+      functionality from existing `LoadTrain` class.
+    * Figure functions, to return parameters given by code figures:
+        * `UKNA_BSEN1991_2_Figure_NA_8` in `loading.py`
+        * `UKNA_BSEN1991_2_Figure_NA_9` in `dyn_analysis.py`
+    * New class in `dyn_analysis.py`, `UKNA_BSEN1991_2_walkers_joggers` (this 
+      inherits functionality from existing `MovingLoadAnalysis` class)
+    * New class in `dyn_analysis.py`, `PedestrianDynamics_transientAnalyses`.
+      Inherits functionality from existing `Multiple` class. This can be used 
+      to carry out all the necessary walking/jogging analyses for all modes.
+    * Example added to `examples\Pedestrian dynamics\UK NA walkers joggers` to 
+      test and illustrate the use of these number classes and functions   
+
+### Fixed
+
+### Removed
+
+
 ## [1.0.0] - 2018-04-17 - RIHY
 
 ### Changed
