@@ -335,10 +335,10 @@ class ModalSys(DynSys):
     
     
     def CalcModalForces(self,loading_obj,
-                        loadVel=5.0,
-                        Ltrack=None,
-                        dt=0.01,
-                        use_abs_modeshape=False):
+                        loadVel:float=5.0,
+                        Ltrack:float=None,
+                        dt:float=0.01,
+                        use_abs_modeshape:bool=False):
         """
         Calculates the mode-generalised forces due to series of point loads
         ***
