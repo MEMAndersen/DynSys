@@ -242,7 +242,7 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(LoadTrain):
         * Relative weighting of pedestrian sensitivity to response
         """
         
-        self.F_amplitude
+        self.F_amplitude = F_amplitude
         """
         Amplitude of sinusoidal moving load (N)
         calculated according to NA.2.44.4(1)
