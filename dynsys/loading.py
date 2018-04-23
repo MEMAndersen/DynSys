@@ -214,7 +214,7 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(LoadTrain):
         # Save other attributes
         self.F0 = F0
         """
-        Reference amplitude of applied fluctuating force
+        Reference amplitude of applied fluctuating force (N)
         """
         
         self.N = N
@@ -224,7 +224,7 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(LoadTrain):
         
         self.gamma = gamma
         """
-        Reduction factor in the range [0,1.0], to allow for unsynchronised 
+        Reduction factor, in the range [0,1.0], to allow for unsynchronised 
         actions in a pedestrian group
         """
         
@@ -236,14 +236,15 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(LoadTrain):
         self.k = k
         """
         Factor to account for:
-            a) The effects of a more realistic pedestrian population
-            b) Harmonic responses
-            c) Relative weighting of pedestrian sensitivity to response
+            
+        * The effects of a more realistic pedestrian population
+        * Harmonic responses
+        * Relative weighting of pedestrian sensitivity to response
         """
         
         self.F_amplitude
         """
-        Amplitude of sinusoidal moving load
+        Amplitude of sinusoidal moving load (N)
         calculated according to NA.2.44.4(1)
         """
         
