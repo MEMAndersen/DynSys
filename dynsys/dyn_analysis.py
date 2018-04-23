@@ -321,6 +321,7 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
                      analysis_type="walkers",
                      dt=None,
                      verbose=True,
+                     calc_Seff=True,
                      **kwargs):
             """
             Initialisation function
@@ -329,7 +330,17 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
             Required:
                
             * `modalsys_obj`, object defining modal system to be analysed
+        
+            ***
+            Optional:
+                
+            * `dt`, time step to be used for results evaluation. If _None_ then 
+              a reasonable time step to use will be determined, based on the 
+              frequency of the forcing function
             
+            * calc_Seff`, _boolean_, dictates whether effective span will be 
+              computed according to Figure NA.7. If False, overall span will be 
+              used (conservative).
             
             Additional keyword arguments can be defined. These should relate 
             the `__init__()` function of the `MovingLoadAnalysis` class 
@@ -390,10 +401,32 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
             self.logdec = logdec
             
             # Analyse modeshape to determine effective span
-            Seff = 40.0#ASSUMED
-            print("*************")
-            print("WARNING! Seff=40.0 assumed currently! Still to implement!")
-            print("*************")
+            S = modalsys_obj.Ltrack
+            
+            if calc_Seff:
+                
+                attrName = "Seff"
+                
+                if hasattr(modalsys_obj,attrName):
+                    Seff = getattr(modalsys_obj,attrName)
+                
+                else:
+                    
+                    Seff, lambda_vals = Calc_Seff(modalsys_obj.modeshapeFunc,S=S,
+                                                  verbose=True,
+                                                  makePlot=False)
+                    
+                    # save to avoid recalculating
+                    setattr(modalsys_obj,attrName,Seff) 
+                    modalsys_obj.lambda_vals = lambda_vals
+                    
+                # Get Seff for mode being considered
+                Seff = Seff[int(mode_index/2)]
+                
+            else:
+                # "In all cases it is conservative to use Seff = S"
+                Seff = S
+            
             self.Seff = Seff
             
             # Obtain gamma from Figure NA.9
@@ -429,6 +462,8 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
                 print("Mode frequency:\t\t%.2f Hz" % f_d)
                 print("Loading object:\t\t'%s'" % loading_obj.name)
                 print("Load velocity:\t\t%.1f m/s" % load_velocity)
+                print("Seff (m):\t\t%.1f" % Seff)
+                print("gamma:\t\t\t%.2f" % gamma)
                 print("")
             
      
@@ -1006,6 +1041,101 @@ class PedestrianDynamics_transientAnalyses(Multiple):
     
     
 # ********************** FUNCTIONS   ****************************************
+        
+def Calc_Seff(modeshapeFunc,S,
+              dx=2.0,
+              makePlot=True,
+              verbose=True):
+    """
+    Calculates effective span, as defined by NA.2.44.4 and Figure NA.7 in 
+    BS EN 1991-2
+    
+    ![Figure_NA_7](../dynsys/img/UKNA_BSEN1991_2_FigNA7.PNG)
+    
+    ***
+    Required:
+        
+    * `modeshapeFunc`, _function_ defining variation of modeshapes with 
+      chainage. In general, for systems with multiple modes, `modeshapeFunc` to 
+      return _array_.
+      
+    * `S`, length of structure. Integration of modeshapes to compute 
+      _effective span_ is carried out in the interval _[0, S]_.
+      
+    ***
+    Optional:
+      
+    * `dx`, distance increment used by `scipy.integrate.cumtrapz()`
+      
+    
+    """
+    
+    # Note absolute value integral to be computed
+    def abs_modeshapeFunc(x):
+        return numpy.abs(modeshapeFunc(x))
+    
+    # Evaluate modeshapes at specified chainages
+    x_vals = numpy.arange(0,S+0.5*dx,dx)
+    y_vals = modeshapeFunc(x_vals)
+    y_abs_vals = abs_modeshapeFunc(x_vals)
+    
+    # Integrate using Scipy routine
+    y_integral_vals = scipy.integrate.cumtrapz(y_abs_vals,x_vals,
+                                               axis=0,initial=0.0)
+    y_integral = y_integral_vals[-1,:]
+    
+    # Get maxima
+    y_absmax = numpy.max(y_abs_vals,axis=0)
+    y_absmax_overall = numpy.max(y_absmax)
+    
+    # Compute Seff
+    Seff = numpy.divide(y_integral, 0.634*y_absmax)
+    
+    # Compute lambda per eqn in Figure NA.7
+    lambda_vals = 0.634 * Seff / S
+    
+    if verbose:
+        print("Analysing modeshape functions to determine Seff...")
+        print("S (m):\t\t{0}".format(S))
+        print("Seff (m):\t{0}".format(Seff))
+        print("Max modeshapes:\t{0}".format(y_absmax))
+        print("")
+    
+    if makePlot:
+        
+        fig, axarr = plt.subplots(3,sharex=True)
+        
+        fig.suptitle("Calculation of $S_{eff}$ (m)")
+        
+        ax1 = axarr[0]
+        ax2 = axarr[1]
+        ax3 = axarr[2]
+        
+        handles = ax1.plot(x_vals,y_vals)
+        ax1.set_ylabel("Modeshapes, $\phi(x)$")
+        ax1.set_ylim([-y_absmax_overall,y_absmax_overall])
+        
+        ax2.plot(x_vals,y_abs_vals)
+        ax2.set_ylabel("$|\phi|(x)$")
+        ax2.set_ylim([0,y_absmax_overall])
+        
+        ax3.plot(x_vals,y_integral_vals)
+        ax3.set_xlim([0,S])
+        ax3.set_xlabel("Chainage (m)")
+        ax3.set_ylabel("$\int_{0}^{x}|\phi|(x).dx$")
+        ax3.set_ylim([0,ax3.get_ylim()[1]])
+        
+        for val, handle in zip(y_integral,handles):
+        
+            ax2.axhline(val/S,
+                        color=handle.get_color(),
+                        linestyle='--',
+                        alpha=0.5)
+            
+            ax3.text(S,val," %.1f"%val,fontsize=6.0)
+        
+    return Seff, lambda_vals
+        
     
 def ResponseSpectrum(accFunc,
                      tResponse,
@@ -1317,7 +1447,7 @@ def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff,
 
 if __name__ == "__main__":
     
-    testRoutine=6
+    testRoutine=7
     
     if testRoutine==1:
         
@@ -1395,6 +1525,16 @@ if __name__ == "__main__":
         gamma_val = UKNA_BSEN1991_2_Figure_NA_9(0.045,35.0,makePlot=True)
         gamma_val = UKNA_BSEN1991_2_Figure_NA_9(0.100,200.,makePlot=True)
         gamma_val = UKNA_BSEN1991_2_Figure_NA_9(0.080,400.,makePlot=True) # out of bounds error expected
-            
+           
+    elif testRoutine==7:
+        
+        L = 50.0
+        
+        def testFunc(x):
+            return numpy.array([numpy.sin(numpy.pi*x/L),
+                                numpy.sin(1.2*numpy.pi*x/L)]).T
+        
+        Seff = Calc_Seff(testFunc,L,makePlot=True)
+        
     else:
         raise ValueError("Test routine does not exist!")

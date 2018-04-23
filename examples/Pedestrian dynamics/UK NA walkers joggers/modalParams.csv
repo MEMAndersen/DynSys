@@ -1,4 +1,4 @@
 ,Frequency,Mass,Damping ratio
 Mode 1,1.8,362000,0.007
 Mode 2,2.3,410000,0.007
-Mode 3,3.0,200000,0.004
+Mode 3,3.0,200000,0.015
