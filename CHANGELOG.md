@@ -21,7 +21,6 @@ system. However major release number will always correspond.
 ### Fixed
 
 ### Removed
-test
 
 
 ## [1.1.0] - 2018-04-23 - RIHY
