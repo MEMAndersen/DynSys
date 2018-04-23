@@ -1330,9 +1330,39 @@ table {
         
         <span class="c1"># Save other attributes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">F0</span> <span class="o">=</span> <span class="n">F0</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reference amplitude of applied fluctuating force</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of pedestrians in the group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reduction factor in the range [0,1.0], to allow for unsynchronised </span>
+<span class="sd">        actions in a pedestrian group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">fv</span> <span class="o">=</span> <span class="n">fv</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Natural frequency (Hz) of the mode for which loading has been derived</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Factor to account for:</span>
+<span class="sd">            a) The effects of a more realistic pedestrian population</span>
+<span class="sd">            b) Harmonic responses</span>
+<span class="sd">            c) Relative weighting of pedestrian sensitivity to response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">F_amplitude</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Amplitude of sinusoidal moving load</span>
+<span class="sd">        calculated according to NA.2.44.4(1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
         
 <span class="c1"># ********************** FUNCTIONS ****************************************</span>
@@ -2160,9 +2190,39 @@ per NA.2.44.4 of BS EN 1991-2</p>
         
         <span class="c1"># Save other attributes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">F0</span> <span class="o">=</span> <span class="n">F0</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reference amplitude of applied fluctuating force</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of pedestrians in the group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reduction factor in the range [0,1.0], to allow for unsynchronised </span>
+<span class="sd">        actions in a pedestrian group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">fv</span> <span class="o">=</span> <span class="n">fv</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Natural frequency (Hz) of the mode for which loading has been derived</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Factor to account for:</span>
+<span class="sd">            a) The effects of a more realistic pedestrian population</span>
+<span class="sd">            b) Harmonic responses</span>
+<span class="sd">            c) Relative weighting of pedestrian sensitivity to response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">F_amplitude</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Amplitude of sinusoidal moving load</span>
+<span class="sd">        calculated according to NA.2.44.4(1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 </pre></div>
 
   </div>
@@ -2270,9 +2330,39 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
     
     <span class="c1"># Save other attributes</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">F0</span> <span class="o">=</span> <span class="n">F0</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reference amplitude of applied fluctuating force</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Number of pedestrians in the group</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reduction factor in the range [0,1.0], to allow for unsynchronised </span>
+<span class="sd">    actions in a pedestrian group</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="bp">self</span><span class="o">.</span><span class="n">fv</span> <span class="o">=</span> <span class="n">fv</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Natural frequency (Hz) of the mode for which loading has been derived</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factor to account for:</span>
+<span class="sd">        a) The effects of a more realistic pedestrian population</span>
+<span class="sd">        b) Harmonic responses</span>
+<span class="sd">        c) Relative weighting of pedestrian sensitivity to response</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">F_amplitude</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Amplitude of sinusoidal moving load</span>
+<span class="sd">    calculated according to NA.2.44.4(1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 </pre></div>
 
   </div>
@@ -2344,6 +2434,7 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
 
             
   
+    <div class="desc"><p>Reference amplitude of applied fluctuating force</p></div>
   <div class="source_cont">
 </div>
 
@@ -2354,6 +2445,7 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
 
             
   
+    <div class="desc"><p>Number of pedestrians in the group</p></div>
   <div class="source_cont">
 </div>
 
@@ -2364,6 +2456,7 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
 
             
   
+    <div class="desc"><p>Natural frequency (Hz) of the mode for which loading has been derived</p></div>
   <div class="source_cont">
 </div>
 
@@ -2374,6 +2467,22 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
 
             
   
+    <div class="desc"><p>Reduction factor in the range [0,1.0], to allow for unsynchronised 
+actions in a pedestrian group</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="loading.UKNA_BSEN1991_2_walkers_joggers_loading.k" class="name">var <span class="ident">k</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Factor to account for:
+    a) The effects of a more realistic pedestrian population
+    b) Harmonic responses
+    c) Relative weighting of pedestrian sensitivity to response</p></div>
   <div class="source_cont">
 </div>
 
