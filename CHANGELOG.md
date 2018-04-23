@@ -12,9 +12,22 @@ system. However major release number will always correspond.
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+
+### Fixed
+
+### Removed
+
+
+
 ## [1.1.0] - 2018-04-23 - RIHY
 
 ### Changed
+* Version number now included in html docs
 
 ### Added
 * New functionality to implement UK NA to BS EN 1992-1 footbridge dynamics:
