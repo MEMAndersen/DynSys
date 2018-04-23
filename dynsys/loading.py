@@ -162,6 +162,29 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(LoadTrain):
                  gamma:float=1.0,
                  N:int=2,
                  analysis_type:str="walkers"):
+        """
+        Defines fluctuating point load to represent either walkers or joggers 
+        according to NA.2.44.4, UK NA to BS EN 1991-2
+        
+        ***
+        Required:
+        
+        * `fv`, natural frequency (Hz) of the mode under consideration
+        
+        ***
+        Optional:
+        
+        * `gamma`, reduction factor to allow for unsynchronised actions in a 
+          pedestrian group. Value of 1.0 used by default (conservative)
+          
+        * `N`, _integer_ number of pedestrians in group. Default value 
+          corresponds to bridge class A; but actual value should generally be 
+          provided
+          
+        * `analysis_type`, _string_, either 'walkers' or 'joggers' required, 
+          to denote the case under consideration
+        
+        """
         
         # Determine F0 from Table NA.8
         if analysis_type=="walkers":
@@ -187,6 +210,13 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(LoadTrain):
                          loadVals=F_amplitude,
                          intensityFunc=sine_func,
                          name=analysis_type)
+        
+        # Save other attributes
+        self.F0 = F0
+        self.N = N
+        self.gamma = gamma
+        self.fv = fv
+        
         
 # ********************** FUNCTIONS ****************************************
         

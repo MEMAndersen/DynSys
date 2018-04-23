@@ -1279,6 +1279,29 @@ table {
                  <span class="n">gamma</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                  <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines fluctuating point load to represent either walkers or joggers </span>
+<span class="sd">        according to NA.2.44.4, UK NA to BS EN 1991-2</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">        </span>
+<span class="sd">        * `fv`, natural frequency (Hz) of the mode under consideration</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">        </span>
+<span class="sd">        * `gamma`, reduction factor to allow for unsynchronised actions in a </span>
+<span class="sd">          pedestrian group. Value of 1.0 used by default (conservative)</span>
+<span class="sd">          </span>
+<span class="sd">        * `N`, _integer_ number of pedestrians in group. Default value </span>
+<span class="sd">          corresponds to bridge class A; but actual value should generally be </span>
+<span class="sd">          provided</span>
+<span class="sd">          </span>
+<span class="sd">        * `analysis_type`, _string_, either &#39;walkers&#39; or &#39;joggers&#39; required, </span>
+<span class="sd">          to denote the case under consideration</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Determine F0 from Table NA.8</span>
         <span class="k">if</span> <span class="n">analysis_type</span><span class="o">==</span><span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
@@ -1304,6 +1327,13 @@ table {
                          <span class="n">loadVals</span><span class="o">=</span><span class="n">F_amplitude</span><span class="p">,</span>
                          <span class="n">intensityFunc</span><span class="o">=</span><span class="n">sine_func</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+        
+        <span class="c1"># Save other attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0</span> <span class="o">=</span> <span class="n">F0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fv</span> <span class="o">=</span> <span class="n">fv</span>
+        
         
 <span class="c1"># ********************** FUNCTIONS ****************************************</span>
         
@@ -2079,6 +2109,29 @@ per NA.2.44.4 of BS EN 1991-2</p>
                  <span class="n">gamma</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                  <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines fluctuating point load to represent either walkers or joggers </span>
+<span class="sd">        according to NA.2.44.4, UK NA to BS EN 1991-2</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">        </span>
+<span class="sd">        * `fv`, natural frequency (Hz) of the mode under consideration</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">        </span>
+<span class="sd">        * `gamma`, reduction factor to allow for unsynchronised actions in a </span>
+<span class="sd">          pedestrian group. Value of 1.0 used by default (conservative)</span>
+<span class="sd">          </span>
+<span class="sd">        * `N`, _integer_ number of pedestrians in group. Default value </span>
+<span class="sd">          corresponds to bridge class A; but actual value should generally be </span>
+<span class="sd">          provided</span>
+<span class="sd">          </span>
+<span class="sd">        * `analysis_type`, _string_, either &#39;walkers&#39; or &#39;joggers&#39; required, </span>
+<span class="sd">          to denote the case under consideration</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Determine F0 from Table NA.8</span>
         <span class="k">if</span> <span class="n">analysis_type</span><span class="o">==</span><span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
@@ -2104,6 +2157,12 @@ per NA.2.44.4 of BS EN 1991-2</p>
                          <span class="n">loadVals</span><span class="o">=</span><span class="n">F_amplitude</span><span class="p">,</span>
                          <span class="n">intensityFunc</span><span class="o">=</span><span class="n">sine_func</span><span class="p">,</span>
                          <span class="n">name</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+        
+        <span class="c1"># Save other attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0</span> <span class="o">=</span> <span class="n">F0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fv</span> <span class="o">=</span> <span class="n">fv</span>
 </pre></div>
 
   </div>
@@ -2125,19 +2184,33 @@ per NA.2.44.4 of BS EN 1991-2</p>
     <p>def <span class="ident">__init__</span>(</p><p>self, fv, gamma=1.0, N=2, analysis_type=&#39;walkers&#39;)</p>
     </div>
     
-    <p class="inheritance">
-     <strong>Inheritance:</strong>
-       <code><a href="#loading.Loading">Loading</a></code>.<code><a href="#loading.Loading.__init__">__init__</a></code>
-    </p>
 
     
   
-    <div class="desc"><p>Define a pattern of point loads at fixed relative positions</p>
+    <div class="desc"><p>Defines fluctuating point load to represent either walkers or joggers 
+according to NA.2.44.4, UK NA to BS EN 1991-2</p>
 <hr />
-<p>Input may be defined by either <code>loadX</code> and <code>loadVals</code> or by providing 
-filename of a tabular comma-delimited file format with columns | Xpos | Load |.</p>
-<p>Details read-in from file are written to object as instance variables 
-(refer descriptions below)</p></div>
+<p>Required:</p>
+<ul>
+<li><code>fv</code>, natural frequency (Hz) of the mode under consideration</li>
+</ul>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>gamma</code>, reduction factor to allow for unsynchronised actions in a 
+  pedestrian group. Value of 1.0 used by default (conservative)</p>
+</li>
+<li>
+<p><code>N</code>, <em>integer</em> number of pedestrians in group. Default value 
+  corresponds to bridge class A; but actual value should generally be 
+  provided</p>
+</li>
+<li>
+<p><code>analysis_type</code>, <em>string</em>, either 'walkers' or 'joggers' required, 
+  to denote the case under consideration</p>
+</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.UKNA_BSEN1991_2_walkers_joggers_loading.__init__', this);">Show source &equiv;</a></p>
   <div id="source-loading.UKNA_BSEN1991_2_walkers_joggers_loading.__init__" class="source">
@@ -2146,6 +2219,29 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
              <span class="n">gamma</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
              <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
              <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines fluctuating point load to represent either walkers or joggers </span>
+<span class="sd">    according to NA.2.44.4, UK NA to BS EN 1991-2</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">    </span>
+<span class="sd">    * `fv`, natural frequency (Hz) of the mode under consideration</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">    </span>
+<span class="sd">    * `gamma`, reduction factor to allow for unsynchronised actions in a </span>
+<span class="sd">      pedestrian group. Value of 1.0 used by default (conservative)</span>
+<span class="sd">      </span>
+<span class="sd">    * `N`, _integer_ number of pedestrians in group. Default value </span>
+<span class="sd">      corresponds to bridge class A; but actual value should generally be </span>
+<span class="sd">      provided</span>
+<span class="sd">      </span>
+<span class="sd">    * `analysis_type`, _string_, either &#39;walkers&#39; or &#39;joggers&#39; required, </span>
+<span class="sd">      to denote the case under consideration</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Determine F0 from Table NA.8</span>
     <span class="k">if</span> <span class="n">analysis_type</span><span class="o">==</span><span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
@@ -2171,6 +2267,12 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
                      <span class="n">loadVals</span><span class="o">=</span><span class="n">F_amplitude</span><span class="p">,</span>
                      <span class="n">intensityFunc</span><span class="o">=</span><span class="n">sine_func</span><span class="p">,</span>
                      <span class="n">name</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+    
+    <span class="c1"># Save other attributes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">F0</span> <span class="o">=</span> <span class="n">F0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">fv</span> <span class="o">=</span> <span class="n">fv</span>
 </pre></div>
 
   </div>
@@ -2184,14 +2286,10 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
     <p>def <span class="ident">PrintDetails</span>(</p><p>self)</p>
     </div>
     
-    <p class="inheritance">
-     <strong>Inheritance:</strong>
-       <code><a href="#loading.LoadTrain">LoadTrain</a></code>.<code><a href="#loading.LoadTrain.PrintDetails">PrintDetails</a></code>
-    </p>
 
     
   
-    <div class="desc inherited"><p>Prints details of loading definition to std output</p></div>
+    <div class="desc"><p>Prints details of loading definition to std output</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.UKNA_BSEN1991_2_walkers_joggers_loading.PrintDetails', this);">Show source &equiv;</a></p>
   <div id="source-loading.UKNA_BSEN1991_2_walkers_joggers_loading.PrintDetails" class="source">
@@ -2239,6 +2337,47 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
 
   </div>
   
+          <h3>Instance variables</h3>
+            <div class="item">
+            <p id="loading.UKNA_BSEN1991_2_walkers_joggers_loading.F0" class="name">var <span class="ident">F0</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="loading.UKNA_BSEN1991_2_walkers_joggers_loading.N" class="name">var <span class="ident">N</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="loading.UKNA_BSEN1991_2_walkers_joggers_loading.fv" class="name">var <span class="ident">fv</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="loading.UKNA_BSEN1991_2_walkers_joggers_loading.gamma" class="name">var <span class="ident">gamma</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
       </div>
       </div>
 
