@@ -12,7 +12,7 @@ system. However major release number will always correspond.
 
 ***
 
-## Unreleased
+## [1.1.0] - 2018-04-23 - RIHY
 
 ### Changed
 
