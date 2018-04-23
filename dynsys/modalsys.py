@@ -335,9 +335,10 @@ class ModalSys(DynSys):
     
     
     def CalcModalForces(self,loading_obj,
-                        loadVel=5.0,
-                        Ltrack=None,
-                        dt=0.01):
+                        loadVel:float=5.0,
+                        Ltrack:float=None,
+                        dt:float=0.01,
+                        use_abs_modeshape:bool=False):
         """
         Calculates the mode-generalised forces due to series of point loads
         ***
@@ -361,6 +362,10 @@ class ModalSys(DynSys):
             
         * `dt`, _float_, time increment at which to evaluate mode-generalised 
           forces at
+          
+        * `use_abs_modeshape`, _boolean_: if True then absolute values of 
+          modeshape vector will be used; required for some forms of analysis e.g. 
+          pedestrian moving load analysis. Default is 'False'.
         
         ***
         Returns:
@@ -390,7 +395,13 @@ class ModalSys(DynSys):
             
             leadX = loadVel*t
             xPos = leadX + loadX
-            QVals = npy.asmatrix(modeshapeFunc(xPos).T) @ loading_obj.loadVals(t=t)
+            
+            modeshapeVals = modeshapeFunc(xPos)
+            
+            if use_abs_modeshape:
+                modeshapeVals = npy.abs(modeshapeVals)
+            
+            QVals = npy.asmatrix(modeshapeVals.T) @ loading_obj.loadVals(t=t)
             QVals = npy.ravel(QVals)
             return QVals
         

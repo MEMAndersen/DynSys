@@ -13,6 +13,7 @@ def make_html(moduleName_full):
     print("Creating docs for `{0}` module".format(moduleName_full))
     
     h = pdoc.html(moduleName_full)
+    h = "Version: {0}".format(currentVersion) + "\n" + h
     
     moduleName = moduleName_full.split('.')[-1]
     
@@ -26,7 +27,7 @@ def markdown_to_html(fName_input):
     print("Rendering markdown text from {0}".format(fName_input))
     
     fName_output = "../docs/{0}.html".format(os.path.splitext(fName_input)[0])
-    
+
     markdown.markdownFromFile(input=("../" + fName_input),
                               output=fName_output)
     

@@ -1,3 +1,4 @@
+Version: 1.1.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1451,11 +1452,11 @@ systems</p>
         <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed time step specified: </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;t_eval&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_step&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span>
         
         <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
@@ -1467,6 +1468,8 @@ systems</p>
 <span class="sd">            of system with multiple subsystems</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             
+            <span class="c1">#print(&quot;t = %.3f secs&quot; % t)</span>
+            
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
                 
                 <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -1477,11 +1480,28 @@ systems</p>
                     
             <span class="k">return</span> <span class="n">f_vals</span>
                 
+        <span class="c1"># Get full system matrices</span>
+        <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+        <span class="n">isSparse</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isSparse&quot;</span><span class="p">]</span>
+        <span class="n">isLinear</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isLinear&quot;</span><span class="p">]</span>
+        <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
         
         <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
-            <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
             
-            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
+            <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+                                       <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">,</span>
+                                       <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                       <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">,</span>
+                                       <span class="n">isSparse</span><span class="o">=</span><span class="n">isSparse</span><span class="p">,</span>
+                                       <span class="n">isLinear</span><span class="o">=</span><span class="n">isLinear</span><span class="p">,</span>
+                                       <span class="n">hasConstraints</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">)</span>
             
             <span class="c1"># Return xdot as flattened array</span>
             <span class="n">ydot</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;ydot&quot;</span><span class="p">]</span>
@@ -1520,7 +1540,12 @@ systems</p>
                 <span class="c1"># Solve equation of motion</span>
                 <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
                                            <span class="n">x</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span><span class="n">n</span><span class="p">],</span>
-                                           <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
+                                           <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">,</span>
+                                           <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                           <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">,</span>
+                                           <span class="n">isSparse</span><span class="o">=</span><span class="n">isSparse</span><span class="p">,</span>
+                                           <span class="n">isLinear</span><span class="o">=</span><span class="n">isLinear</span><span class="p">,</span>
+                                           <span class="n">hasConstraints</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">)</span>
             
                 <span class="c1"># Record results</span>
                 <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -2011,11 +2036,11 @@ for further details:</p></div>
         <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed time step specified: </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;t_eval&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_step&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span>
         
         <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
@@ -2027,6 +2052,8 @@ for further details:</p></div>
 <span class="sd">            of system with multiple subsystems</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             
+            <span class="c1">#print(&quot;t = %.3f secs&quot; % t)</span>
+            
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
                 
                 <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -2037,11 +2064,28 @@ for further details:</p></div>
                     
             <span class="k">return</span> <span class="n">f_vals</span>
                 
+        <span class="c1"># Get full system matrices</span>
+        <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+        <span class="n">isSparse</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isSparse&quot;</span><span class="p">]</span>
+        <span class="n">isLinear</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isLinear&quot;</span><span class="p">]</span>
+        <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
         
         <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
-            <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
             
-            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
+            <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+                                       <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">,</span>
+                                       <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                       <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">,</span>
+                                       <span class="n">isSparse</span><span class="o">=</span><span class="n">isSparse</span><span class="p">,</span>
+                                       <span class="n">isLinear</span><span class="o">=</span><span class="n">isLinear</span><span class="p">,</span>
+                                       <span class="n">hasConstraints</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">)</span>
             
             <span class="c1"># Return xdot as flattened array</span>
             <span class="n">ydot</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;ydot&quot;</span><span class="p">]</span>
@@ -2080,7 +2124,12 @@ for further details:</p></div>
                 <span class="c1"># Solve equation of motion</span>
                 <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
                                            <span class="n">x</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span><span class="n">n</span><span class="p">],</span>
-                                           <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
+                                           <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">,</span>
+                                           <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                           <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">,</span>
+                                           <span class="n">isSparse</span><span class="o">=</span><span class="n">isSparse</span><span class="p">,</span>
+                                           <span class="n">isLinear</span><span class="o">=</span><span class="n">isLinear</span><span class="p">,</span>
+                                           <span class="n">hasConstraints</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">)</span>
             
                 <span class="c1"># Record results</span>
                 <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
@@ -2450,11 +2499,11 @@ This should be appropriate for most applications.</p></div>
     <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
     
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed time step specified: </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;t_eval&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_step&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span>
     
     <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
@@ -2466,6 +2515,8 @@ This should be appropriate for most applications.</p></div>
 <span class="sd">        of system with multiple subsystems</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="c1">#print(&quot;t = %.3f secs&quot; % t)</span>
+        
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">force_func_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())):</span>
             
             <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -2476,11 +2527,28 @@ This should be appropriate for most applications.</p></div>
                 
         <span class="k">return</span> <span class="n">f_vals</span>
             
+    <span class="c1"># Get full system matrices</span>
+    <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">nDOF</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+    <span class="n">isSparse</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isSparse&quot;</span><span class="p">]</span>
+    <span class="n">isLinear</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isLinear&quot;</span><span class="p">]</span>
+    <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
     
     <span class="k">def</span> <span class="nf">ODE_func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
-        <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
         
-        <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
+        <span class="c1"># Function to use in conjunction with solve_ivp - see below</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+                                   <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">,</span>
+                                   <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                   <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">,</span>
+                                   <span class="n">isSparse</span><span class="o">=</span><span class="n">isSparse</span><span class="p">,</span>
+                                   <span class="n">isLinear</span><span class="o">=</span><span class="n">isLinear</span><span class="p">,</span>
+                                   <span class="n">hasConstraints</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">)</span>
         
         <span class="c1"># Return xdot as flattened array</span>
         <span class="n">ydot</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;ydot&quot;</span><span class="p">]</span>
@@ -2518,7 +2586,12 @@ This should be appropriate for most applications.</p></div>
             <span class="c1"># Solve equation of motion</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">eqnOfMotion_func</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
                                        <span class="n">x</span><span class="o">=</span><span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span><span class="n">n</span><span class="p">],</span>
-                                       <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">)</span>
+                                       <span class="n">forceFunc</span><span class="o">=</span><span class="n">forceFunc_fullsys</span><span class="p">,</span>
+                                       <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                       <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">,</span>
+                                       <span class="n">isSparse</span><span class="o">=</span><span class="n">isSparse</span><span class="p">,</span>
+                                       <span class="n">isLinear</span><span class="o">=</span><span class="n">isLinear</span><span class="p">,</span>
+                                       <span class="n">hasConstraints</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">)</span>
         
             <span class="c1"># Record results</span>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
