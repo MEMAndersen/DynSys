@@ -13,6 +13,7 @@ from matplotlib.ticker import FuncFormatter
 import dill
 import os
 import scipy
+from inspect import isfunction
 #import multiprocessing   # does not work with Spyder!
 
 import tstep
@@ -330,6 +331,9 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
             Required:
                
             * `modalsys_obj`, object defining modal system to be analysed
+            
+            * `mode_index`, _integer_ to denote mode at which resonance should 
+              to targeted
         
             ***
             Optional:
@@ -349,7 +353,8 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
             
             # Create default name for analysis object
             if name is None:
-                name = modalsys_obj.name + " - Mode %d" % mode_index
+                name = modalsys_obj.name + " - Mode %d - %s" % (mode_index,
+                                                                analysis_type)
             
             # Get applicable parameters per Table NA.7 according to bridgeClass
             bridgeClass = bridgeClass.upper()
@@ -466,6 +471,126 @@ class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
                 print("gamma:\t\t\t%.2f" % gamma)
                 print("")
             
+            
+class UKNA_BSEN1991_2_crowd():
+    """
+    Class to implement crowd loading analysis to UK NA to BS EN1991-2
+    """
+    
+    def __init__(self,
+                 modalsys_obj,
+                 mode_index:int,
+                 deck_width_func_list=[lambda x: 3.0],
+                 modeshapes_fname_list=["modeshapes_edge1.csv",
+                                        "modeshapes_edge2.csv"],
+                 name=None,
+                 bridgeClass='A',
+                 verbose=True,
+                 calc_Seff=True):
+        """
+        Initialisation function
+        
+        ***
+        Required:
+               
+        * `modalsys_obj`, object defining modal system to be analysed
+            
+        * `mode_index`, _integer_ to denote mode at which resonance should 
+          to targeted
+          
+        * `modeshapes_fname_list`, list of strings denoting files containing 
+          modeshape data along minimum of 2 deck lines:
+              
+              * List length = nDeckLines
+              
+              * Minimum nDeckLines = 2
+          
+        * `deck_width_func_list`, list of functions to denote how width (m) of 
+          each deck strip (between lines relating to `modeshapes_fname_list`)
+          varies with chainage:
+              
+              * List length = (nDeckLines-1) required (this is checked)
+              
+              * Default function establishes single deck strip of width = 3.0m.
+    
+        ***
+        Optional:
+        
+        * calc_Seff`, _boolean_, dictates whether effective span will be 
+          computed according to Figure NA.7. If False, overall span will be 
+          used (conservative).
+        
+        """
+        
+        # Create default name for analysis object
+        if name is None:
+            name = modalsys_obj.name + " - Mode %d - Crowd" % mode_index
+            
+        # Check `modeshapes_fname_list` input
+        if not isinstance(modeshapes_fname_list,list):
+            raise ValueError("`modeshapes_fname_list`: list expected")
+            
+        nDeckLines = len(modeshapes_fname_list)
+        
+        if nDeckLines < 2:
+            raise ValueError("Minimum of 2 deck lines must be defined " + 
+                             "via `modeshapes_fname_list`")
+            
+        for i, file_str in enumerate(modeshapes_fname_list):
+            if not os.path.isfile(file_str):
+                raise ValueError("`modeshapes_fname_list[%d]`" % i +
+                                 " does not exist!")
+        
+        # Check `deck_width_func_list` input
+        if not isinstance(deck_width_func_list,list):
+            raise ValueError("`deck_width_func_list`: list expected")
+            
+        nDeckStrips = len(deck_width_func_list)
+        
+        if nDeckStrips != nDeckLines - 1:
+            raise ValueError("nDeckStrips = nDeckLines - 1 expected")
+            
+        for i, width_func in enumerate(deck_width_func_list):
+            if not isfunction(width_func):
+                raise ValueError("`deck_width_func_list[%d]`" % i + 
+                                 " is not a function")
+                
+            
+        # Get applicable parameters per Table NA.7 according to bridgeClass
+        bridgeClass = bridgeClass.upper()
+        print("CHECK DENSITIES!")
+        
+        if bridgeClass == 'A':
+            density=0 # persons/m2
+            
+        elif bridgeClass == 'B':
+            density=0.4
+            
+        elif bridgeClass == 'C':
+            density=0.8
+            
+        elif bridgeClass == 'D':
+            density=1.4
+            
+        else:
+            raise ValueError("Invalid 'bridgeClass'!")
+        
+        # Read modeshape data from file, determine interpolation functions
+        Ltrack_list = []
+        modeshapeFunc_list = []
+        
+        for fName in modeshapes_fname_list:
+            
+            mfunc, Ltrack = modalsys_obj.DefineModeshapes(fName=fName,
+                                                          saveAsAttr=False)
+            Ltrack_list.append(Ltrack)
+            modeshapeFunc_list.append(mfunc)
+            
+        
+        
+    
+    
+    
      
 class Multiple():
     """

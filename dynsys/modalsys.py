@@ -95,7 +95,7 @@ class ModalSys(DynSys):
         
         # Read modeshape data
         if fname_modeshapes is not None:
-            self._DefineModeshapes(fname_modeshapes)
+            self.DefineModeshapes(fname_modeshapes)
         
         
     def _DefineModalParams(self,fName='modalParams.csv', fLimit=None):
@@ -193,7 +193,7 @@ class ModalSys(DynSys):
         return d
             
                 
-    def _DefineModeshapes(self,fName='modeshapes.csv'):
+    def DefineModeshapes(self,fName='modeshapes.csv',saveAsAttr=True):
         """
         Function to allow 1-dimensional line-like modeshapes to be defined
         e.g. for use in calculating mode-generalised forces
@@ -238,10 +238,11 @@ class ModalSys(DynSys):
                           "self.mode_IDs: {0}\n".format(self.mode_IDs))
         
         # Define class properties
-        self.modeshapeFunc = modeshapeFunc
-        self.Ltrack = Ltrack
+        if saveAsAttr:
+            self.modeshapeFunc = modeshapeFunc
+            self.Ltrack = Ltrack
     
-        return modeshapeFunc
+        return modeshapeFunc, Ltrack
     
     def PlotModeshapes(self,
                        num:int = 50,

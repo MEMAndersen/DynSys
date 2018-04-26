@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Script to illustrate pedestrian dynamics analyses to UK NA to BS EN 1991-2
+Script to illustrate walkers/joggers pedestrian dynamics analyses 
+to UK NA to BS EN 1991-2
 """
 
 # DynSys package imports
