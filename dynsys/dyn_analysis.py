@@ -174,9 +174,12 @@ class MovingLoadAnalysis(Dyn_Analysis):
             raise ValueError("`modalsys_obj`: instance of `ModalSys` class expected!")
             
         # Check class name of base class of loadtrain_obj
-        if loadtrain_obj.__class__.__bases__[0].__name__ != "LoadTrain":
-            raise ValueError("`loadtrain_obj`: instance of `LoadTrain` class "+
-                             "(or dervied classes) expected!")
+        if loadtrain_obj.__class__.__name__ != "LoadTrain":
+        
+            if loadtrain_obj.__class__.__bases__[0].__name__ != "LoadTrain":
+                
+                raise ValueError("`loadtrain_obj`: instance of `LoadTrain` "+
+                                 "class (or derived classes) expected!")
         
         # Run parent init
         super().__init__(name,modalsys_obj,loadtrain_obj)
