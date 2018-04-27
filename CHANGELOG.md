@@ -17,6 +17,9 @@ system. However major release number will always correspond.
 ### Changed
 
 ### Added
+* New function `CalcTransverseAreaIntegral()` defined within `dyn_analysis` 
+  module. This function can be used generally, but is specifically used within 
+  crowd loading analysis
 
 ### Fixed
 
