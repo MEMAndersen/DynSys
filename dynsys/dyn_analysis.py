@@ -480,13 +480,15 @@ class UKNA_BSEN1991_2_crowd():
     def __init__(self,
                  modalsys_obj,
                  mode_index:int,
-                 deck_width_func_list=[lambda x: 3.0],
-                 modeshapes_fname_list=["modeshapes_edge1.csv",
+                 width_func_list=[3.0],
+                 modeshapes_fname_arr=["modeshapes_edge1.csv",
                                         "modeshapes_edge2.csv"],
                  name=None,
                  bridgeClass='A',
                  verbose=True,
-                 calc_Seff=True):
+                 calc_Seff=True,
+                 nTcuts=100,
+                 makePlot=True):
         """
         Initialisation function
         
@@ -498,63 +500,39 @@ class UKNA_BSEN1991_2_crowd():
         * `mode_index`, _integer_ to denote mode at which resonance should 
           to targeted
           
-        * `modeshapes_fname_list`, list of strings denoting files containing 
-          modeshape data along minimum of 2 deck lines:
+        * `modeshapes_fname_arr`, array of strings, of shape (nRegions,2) 
+          denoting files containing modeshape variation along the edges of 
+          each deck region:
               
-              * List length = nDeckLines
+              * Axis 1 to be of shape = 2 (1 file for each edge)
               
-              * Minimum nDeckLines = 2
+              * Axis 0 length corresponds to number of deck regions, nRegions
           
-        * `deck_width_func_list`, list of functions to denote how width (m) of 
-          each deck strip (between lines relating to `modeshapes_fname_list`)
-          varies with chainage:
+        * `width_func_list`, list of functions to denote how width (m) of 
+          each deck region varies with chainage _along the centreline of the 
+          region_:
               
-              * List length = (nDeckLines-1) required (this is checked)
+              * List length = nRegions required (this is checked)
               
-              * Default function establishes single deck strip of width = 3.0m.
+              * List of floats may be provided if deck width is constant within 
+                each regions. But list length requirement above still applies
     
         ***
         Optional:
         
         * calc_Seff`, _boolean_, dictates whether effective span will be 
           computed according to Figure NA.7. If False, overall span will be 
-          used (conservative).
+          used (conservative)
+          
+        * `nLcuts`, _integer_, denotes number of transverse cuts to make when 
+          evaluating area integrals. Increasing number will increase accuracy,  
+          at the cost of longer computation time
         
         """
         
         # Create default name for analysis object
         if name is None:
             name = modalsys_obj.name + " - Mode %d - Crowd" % mode_index
-            
-        # Check `modeshapes_fname_list` input
-        if not isinstance(modeshapes_fname_list,list):
-            raise ValueError("`modeshapes_fname_list`: list expected")
-            
-        nDeckLines = len(modeshapes_fname_list)
-        
-        if nDeckLines < 2:
-            raise ValueError("Minimum of 2 deck lines must be defined " + 
-                             "via `modeshapes_fname_list`")
-            
-        for i, file_str in enumerate(modeshapes_fname_list):
-            if not os.path.isfile(file_str):
-                raise ValueError("`modeshapes_fname_list[%d]`" % i +
-                                 " does not exist!")
-        
-        # Check `deck_width_func_list` input
-        if not isinstance(deck_width_func_list,list):
-            raise ValueError("`deck_width_func_list`: list expected")
-            
-        nDeckStrips = len(deck_width_func_list)
-        
-        if nDeckStrips != nDeckLines - 1:
-            raise ValueError("nDeckStrips = nDeckLines - 1 expected")
-            
-        for i, width_func in enumerate(deck_width_func_list):
-            if not isfunction(width_func):
-                raise ValueError("`deck_width_func_list[%d]`" % i + 
-                                 " is not a function")
-                
             
         # Get crowd density from Table NA.7 according to bridgeClass
         bridgeClass = bridgeClass.upper()
@@ -573,17 +551,122 @@ class UKNA_BSEN1991_2_crowd():
             
         else:
             raise ValueError("Invalid 'bridgeClass'!")
+            
+        if verbose:
+            print("Bridge class: '%s'" % bridgeClass)
+            print("Crowd density (persons/m2): %.1f" % crowd_density)
+            
+        if crowd_density==0:
+            raise ValueError("Crowd density = 0; no analysis required!")
         
+        # Check `deck_width_func_list` input
+        if not isinstance(width_func_list,list):
+            
+            # Handle case of single float supplied by converting to list
+            if isinstance(width_func_list,float):
+                width_func_list = [width_func_list]
+        
+            else:    
+                raise ValueError("`width_func_list`: list expected")
+            
+        nRegions = len(width_func_list)
+            
+        for i, width_func in enumerate(width_func_list):
+            
+            if not isfunction(width_func):
+                
+                # Handle case of float by converting to function format
+                if isinstance(width_func,float):
+                    
+                    # Constant width value supplied (float)
+                    width_val = width_func
+                    
+                    # Return array of dimension corresponding to calling array
+                    # Replace item in list with this function
+                    width_func_list[i] = lambda x: width_val*numpy.ones(len(x))
+                    
+                else:    
+                    raise ValueError("`width_func_list[%d]`" % i + 
+                                     " is not a function, as required")
+                
+        # Check `modeshapes_fname_list` input
+        nRegions_new, nEdges = modeshapes_fname_arr.shape
+        
+        if nRegions_new != nRegions:
+            raise ValueError("`nRegions` conflicts with nRegions inferred " + 
+                             "from `width_func_list` input")
+        
+        if nEdges != 2:
+            raise ValueError("nEdges = 2 required, i.e. modeshapes at edges " + 
+                             "of each regions must be provided via " + 
+                             "`modeshapes_fname_arr` input")
+            
+        for index, file_str in numpy.ndenumerate(modeshapes_fname_arr):
+            
+            if not os.path.isfile(file_str):
+                raise ValueError("`modeshapes_fname_list[{0}]`" % index +
+                                 " does not exist!")
+            
         # Read modeshape data from file, determine interpolation functions
         Ltrack_list = []
         modeshapeFunc_list = []
         
-        for fName in modeshapes_fname_list:
+        for fname_list in modeshapes_fname_arr:
             
-            mfunc, Ltrack = modalsys_obj.DefineModeshapes(fName=fName,
-                                                          saveAsAttr=False)
-            Ltrack_list.append(Ltrack)
-            modeshapeFunc_list.append(mfunc)
+            Ltrack_list_inner = [] 
+            modeshapeFunc_list_inner = []
+            
+            for fName in fname_list:
+            
+                mfunc, Ltrack = modalsys_obj.DefineModeshapes(fName=fName,
+                                                              saveAsAttr=False)
+            
+                # Append to inner lists
+                Ltrack_list_inner.append(Ltrack)
+                modeshapeFunc_list_inner.append(mfunc)
+                
+            # Append to create list of lists
+            Ltrack_list.append(Ltrack_list_inner)
+            modeshapeFunc_list.append(modeshapeFunc_list_inner)
+            
+        # Convert lists to arrays
+        Ltrack_list = numpy.array(Ltrack_list)
+        modeshapeFunc_list = numpy.array(modeshapeFunc_list)
+            
+        if verbose:
+        
+            print("Summary of regions as defined by edge lines:")
+            print("nRegions: %d" % nRegions)
+            
+            print("Length of edge lines for regions:")
+            for r, length_list in enumerate(Ltrack_list):
+                print("Region %d" % r)
+                print("[" + ", ".join("%.2f" % f for f in length_list) + "]")
+                
+            print("Width of regions:")
+            for r, width_func in enumerate(width_func_list):
+                print("Region %d" % r)
+                print(width_func)
+                
+        # Compute area and modal area integrals for deck regions            
+        for r in range(nRegions):
+            
+            # Evaluate modeshapes at edges of deck using 
+            x1 = numpy.linspace(0,Ltrack_list[r,0])
+            x2 = numpy.linspace(0,Ltrack_list[r,1])
+            x_CL = 0.5*(x1+x2)
+            
+            phi1 = modeshapeFunc_list[r,0](x1)[:,mode_index]
+            phi2 = modeshapeFunc_list[r,1](x2)[:,mode_index]
+            width = width_func_list[r](x_CL)
+            print(width)
+            
+            
+            # Determine area integrals on transverse sections
+            #area_transverse = CalcSignCorrectedAreaIntegral(width,phi1,phi2)
+            #print(area_transverse)
+            
+        
             
             
     
@@ -1264,7 +1347,7 @@ def Calc_Seff(modeshapeFunc,S,
     return Seff, lambda_vals
 
 
-def CalcTransverseAreaIntegral(b,phi1,phi2):
+def CalcSignCorrectedAreaIntegral(b,phi1,phi2):
     """
     Computes sign-corrected integral across domain of width `b`, given (signed) 
     edge ordinates `phi1` and phi2`.
@@ -1708,7 +1791,7 @@ if __name__ == "__main__":
         b = numpy.array([2.0,2.0,2.0,4.0,4.0])
         phi1 = numpy.array([1.0,1.0,1.0,1.0,1.0])
         phi2 = numpy.array([1.0,0.0,-1.0,1.0,-1.0])
-        integral_area = CalcTransverseAreaIntegral(b,phi1,phi2)
+        integral_area = CalcSignCorrectedAreaIntegral(b,phi1,phi2)
         print(integral_area)
         
     else:
