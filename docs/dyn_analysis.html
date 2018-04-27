@@ -1,4 +1,4 @@
-Version: 1.1.0
+Version: 1.1.0_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1055,6 +1055,7 @@ table {
     <li class="set"><h3><a href="#header-functions">Functions</a></h3>
       
   <ul>
+    <li class="mono"><a href="#dyn_analysis.CalcTransverseAreaIntegral">CalcTransverseAreaIntegral</a></li>
     <li class="mono"><a href="#dyn_analysis.Calc_Seff">Calc_Seff</a></li>
     <li class="mono"><a href="#dyn_analysis.DesignResponseSpectrum_BSEN1998_1">DesignResponseSpectrum_BSEN1998_1</a></li>
     <li class="mono"><a href="#dyn_analysis.ResponseSpectrum">ResponseSpectrum</a></li>
@@ -1118,6 +1119,15 @@ table {
 
         </li>
         <li class="mono">
+        <span class="class_name"><a href="#dyn_analysis.UKNA_BSEN1991_2_crowd">UKNA_BSEN1991_2_crowd</a></span>
+        
+          
+  <ul>
+    <li class="mono"><a href="#dyn_analysis.UKNA_BSEN1991_2_crowd.__init__">__init__</a></li>
+  </ul>
+
+        </li>
+        <li class="mono">
         <span class="class_name"><a href="#dyn_analysis.UKNA_BSEN1991_2_walkers_joggers">UKNA_BSEN1991_2_walkers_joggers</a></span>
         
           
@@ -1163,6 +1173,7 @@ table {
 <span class="kn">import</span> <span class="nn">dill</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">isfunction</span>
 <span class="c1">#import multiprocessing   # does not work with Spyder!</span>
 
 <span class="kn">import</span> <span class="nn">tstep</span>
@@ -1480,6 +1491,9 @@ table {
 <span class="sd">            Required:</span>
 <span class="sd">               </span>
 <span class="sd">            * `modalsys_obj`, object defining modal system to be analysed</span>
+<span class="sd">            </span>
+<span class="sd">            * `mode_index`, _integer_ to denote mode at which resonance should </span>
+<span class="sd">              to targeted</span>
 <span class="sd">        </span>
 <span class="sd">            ***</span>
 <span class="sd">            Optional:</span>
@@ -1499,7 +1513,8 @@ table {
             
             <span class="c1"># Create default name for analysis object</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode_index</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode_index</span><span class="p">,</span>
+                                                                <span class="n">analysis_type</span><span class="p">)</span>
             
             <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
             <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
@@ -1616,6 +1631,129 @@ table {
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;gamma:</span><span class="se">\t\t\t</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">gamma</span><span class="p">)</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
             
+            
+<span class="k">class</span> <span class="nc">UKNA_BSEN1991_2_crowd</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to implement crowd loading analysis to UK NA to BS EN1991-2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">modalsys_obj</span><span class="p">,</span>
+                 <span class="n">mode_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+                 <span class="n">deck_width_func_list</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">],</span>
+                 <span class="n">modeshapes_fname_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;modeshapes_edge1.csv&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;modeshapes_edge2.csv&quot;</span><span class="p">],</span>
+                 <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">bridgeClass</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation function</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">               </span>
+<span class="sd">        * `modalsys_obj`, object defining modal system to be analysed</span>
+<span class="sd">            </span>
+<span class="sd">        * `mode_index`, _integer_ to denote mode at which resonance should </span>
+<span class="sd">          to targeted</span>
+<span class="sd">          </span>
+<span class="sd">        * `modeshapes_fname_list`, list of strings denoting files containing </span>
+<span class="sd">          modeshape data along minimum of 2 deck lines:</span>
+<span class="sd">              </span>
+<span class="sd">              * List length = nDeckLines</span>
+<span class="sd">              </span>
+<span class="sd">              * Minimum nDeckLines = 2</span>
+<span class="sd">          </span>
+<span class="sd">        * `deck_width_func_list`, list of functions to denote how width (m) of </span>
+<span class="sd">          each deck strip (between lines relating to `modeshapes_fname_list`)</span>
+<span class="sd">          varies with chainage:</span>
+<span class="sd">              </span>
+<span class="sd">              * List length = (nDeckLines-1) required (this is checked)</span>
+<span class="sd">              </span>
+<span class="sd">              * Default function establishes single deck strip of width = 3.0m.</span>
+<span class="sd">    </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">        </span>
+<span class="sd">        * calc_Seff`, _boolean_, dictates whether effective span will be </span>
+<span class="sd">          computed according to Figure NA.7. If False, overall span will be </span>
+<span class="sd">          used (conservative).</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Create default name for analysis object</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - Crowd&quot;</span> <span class="o">%</span> <span class="n">mode_index</span>
+            
+        <span class="c1"># Check `modeshapes_fname_list` input</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modeshapes_fname_list`: list expected&quot;</span><span class="p">)</span>
+            
+        <span class="n">nDeckLines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">nDeckLines</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minimum of 2 deck lines must be defined &quot;</span> <span class="o">+</span> 
+                             <span class="s2">&quot;via `modeshapes_fname_list`&quot;</span><span class="p">)</span>
+            
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">file_str</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modeshapes_fname_list[</span><span class="si">%d</span><span class="s2">]`&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="o">+</span>
+                                 <span class="s2">&quot; does not exist!&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Check `deck_width_func_list` input</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`deck_width_func_list`: list expected&quot;</span><span class="p">)</span>
+            
+        <span class="n">nDeckStrips</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">nDeckStrips</span> <span class="o">!=</span> <span class="n">nDeckLines</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nDeckStrips = nDeckLines - 1 expected&quot;</span><span class="p">)</span>
+            
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">width_func</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">isfunction</span><span class="p">(</span><span class="n">width_func</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`deck_width_func_list[</span><span class="si">%d</span><span class="s2">]`&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="o">+</span> 
+                                 <span class="s2">&quot; is not a function&quot;</span><span class="p">)</span>
+                
+            
+        <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
+        <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;CHECK DENSITIES!&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mi">0</span> <span class="c1"># persons/m2</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mf">0.4</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mf">0.8</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mf">1.5</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Read modeshape data from file, determine interpolation functions</span>
+        <span class="n">Ltrack_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">modeshapeFunc_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">fName</span> <span class="ow">in</span> <span class="n">modeshapes_fname_list</span><span class="p">:</span>
+            
+            <span class="n">mfunc</span><span class="p">,</span> <span class="n">Ltrack</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">DefineModeshapes</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="n">fName</span><span class="p">,</span>
+                                                          <span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">Ltrack_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Ltrack</span><span class="p">)</span>
+            <span class="n">modeshapeFunc_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mfunc</span><span class="p">)</span>
+            
+            
+    
+        
+        
+        
+    
+    
+    
      
 <span class="k">class</span> <span class="nc">Multiple</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -2285,7 +2423,47 @@ table {
             <span class="n">ax3</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="n">val</span><span class="p">,</span><span class="s2">&quot; </span><span class="si">%.1f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">val</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mf">6.0</span><span class="p">)</span>
         
     <span class="k">return</span> <span class="n">Seff</span><span class="p">,</span> <span class="n">lambda_vals</span>
+
+
+<span class="k">def</span> <span class="nf">CalcTransverseAreaIntegral</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">phi1</span><span class="p">,</span><span class="n">phi2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes sign-corrected integral across domain of width `b`, given (signed) </span>
+<span class="sd">    edge ordinates `phi1` and phi2`.</span>
+<span class="sd">    </span>
+<span class="sd">    Linear variation of integrand within integration domain is assumed </span>
+<span class="sd">    </span>
+<span class="sd">    ![derivation](../dynsys/img/sign_corrected_integral_derivation.PNG)</span>
+<span class="sd">        </span>
+<span class="sd">    Arrays of equal length can be supplied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Change shapes agree</span>
+    <span class="k">if</span> <span class="n">phi1</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">phi2</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shapes of `phi1` and `phi2` do not agree!&quot;</span><span class="p">)</span>
         
+    <span class="k">if</span> <span class="n">phi1</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shapes of `phi1` and `b` do not agree!&quot;</span><span class="p">)</span>        
+    
+    <span class="c1"># Test to see if same signs</span>
+    <span class="n">same_sign</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">phi1</span><span class="p">),</span><span class="n">numpy</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">phi2</span><span class="p">))</span>
+    
+    <span class="c1"># Obtain absolute values</span>
+    <span class="n">phi1_abs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phi1</span><span class="p">)</span>
+    <span class="n">phi2_abs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phi2</span><span class="p">)</span>
+    
+    <span class="c1"># Compute area integral on assumption of same sign</span>
+    <span class="n">area_same_sign</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">b</span><span class="o">*</span><span class="p">(</span><span class="n">phi1_abs</span><span class="o">+</span><span class="n">phi2_abs</span><span class="p">)</span>
+    
+    <span class="c1"># Compute area integral where different sign</span>
+    <span class="n">area_different_sign</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">b</span><span class="o">*</span><span class="p">(</span><span class="n">phi1_abs</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">phi2_abs</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">phi1_abs</span><span class="o">+</span><span class="n">phi2_abs</span><span class="p">)</span>
+    
+    <span class="c1"># Select appropriate case</span>
+    <span class="n">area_to_use</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">same_sign</span><span class="p">,</span><span class="n">area_same_sign</span><span class="p">,</span><span class="n">area_different_sign</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">area_to_use</span>
+
+
+    
     
 <span class="k">def</span> <span class="nf">ResponseSpectrum</span><span class="p">(</span><span class="n">accFunc</span><span class="p">,</span>
                      <span class="n">tResponse</span><span class="p">,</span>
@@ -2597,7 +2775,7 @@ table {
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
-    <span class="n">testRoutine</span><span class="o">=</span><span class="mi">7</span>
+    <span class="n">testRoutine</span><span class="o">=</span><span class="mi">8</span>
     
     <span class="k">if</span> <span class="n">testRoutine</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
         
@@ -2686,6 +2864,14 @@ table {
         
         <span class="n">Seff</span> <span class="o">=</span> <span class="n">Calc_Seff</span><span class="p">(</span><span class="n">testFunc</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
+    <span class="k">elif</span> <span class="n">testRoutine</span><span class="o">==</span><span class="mi">8</span><span class="p">:</span>
+        
+        <span class="n">b</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">,</span><span class="mf">2.0</span><span class="p">,</span><span class="mf">4.0</span><span class="p">,</span><span class="mf">4.0</span><span class="p">])</span>
+        <span class="n">phi1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">])</span>
+        <span class="n">phi2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="o">-</span><span class="mf">1.0</span><span class="p">])</span>
+        <span class="n">integral_area</span> <span class="o">=</span> <span class="n">CalcTransverseAreaIntegral</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">phi1</span><span class="p">,</span><span class="n">phi2</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">integral_area</span><span class="p">)</span>
+        
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Test routine does not exist!&quot;</span><span class="p">)</span>
 </pre></div>
@@ -2706,6 +2892,66 @@ table {
       </div>
 
     <h2 class="section-title" id="header-functions">Functions</h2>
+      
+  <div class="item">
+    <div class="name def" id="dyn_analysis.CalcTransverseAreaIntegral">
+    <p>def <span class="ident">CalcTransverseAreaIntegral</span>(</p><p>b, phi1, phi2)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Computes sign-corrected integral across domain of width <code>b</code>, given (signed) 
+edge ordinates <code>phi1</code> and phi2`.</p>
+<p>Linear variation of integrand within integration domain is assumed </p>
+<p><img alt="derivation" src="../dynsys/img/sign_corrected_integral_derivation.PNG" /></p>
+<p>Arrays of equal length can be supplied.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.CalcTransverseAreaIntegral', this);">Show source &equiv;</a></p>
+  <div id="source-dyn_analysis.CalcTransverseAreaIntegral" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcTransverseAreaIntegral</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">phi1</span><span class="p">,</span><span class="n">phi2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes sign-corrected integral across domain of width `b`, given (signed) </span>
+<span class="sd">    edge ordinates `phi1` and phi2`.</span>
+<span class="sd">    </span>
+<span class="sd">    Linear variation of integrand within integration domain is assumed </span>
+<span class="sd">    </span>
+<span class="sd">    ![derivation](../dynsys/img/sign_corrected_integral_derivation.PNG)</span>
+<span class="sd">        </span>
+<span class="sd">    Arrays of equal length can be supplied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Change shapes agree</span>
+    <span class="k">if</span> <span class="n">phi1</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">phi2</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shapes of `phi1` and `phi2` do not agree!&quot;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">phi1</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shapes of `phi1` and `b` do not agree!&quot;</span><span class="p">)</span>        
+    
+    <span class="c1"># Test to see if same signs</span>
+    <span class="n">same_sign</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">phi1</span><span class="p">),</span><span class="n">numpy</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">phi2</span><span class="p">))</span>
+    
+    <span class="c1"># Obtain absolute values</span>
+    <span class="n">phi1_abs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phi1</span><span class="p">)</span>
+    <span class="n">phi2_abs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">phi2</span><span class="p">)</span>
+    
+    <span class="c1"># Compute area integral on assumption of same sign</span>
+    <span class="n">area_same_sign</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">b</span><span class="o">*</span><span class="p">(</span><span class="n">phi1_abs</span><span class="o">+</span><span class="n">phi2_abs</span><span class="p">)</span>
+    
+    <span class="c1"># Compute area integral where different sign</span>
+    <span class="n">area_different_sign</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">b</span><span class="o">*</span><span class="p">(</span><span class="n">phi1_abs</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">phi2_abs</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">phi1_abs</span><span class="o">+</span><span class="n">phi2_abs</span><span class="p">)</span>
+    
+    <span class="c1"># Select appropriate case</span>
+    <span class="n">area_to_use</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">same_sign</span><span class="p">,</span><span class="n">area_same_sign</span><span class="p">,</span><span class="n">area_different_sign</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">area_to_use</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
       
   <div class="item">
     <div class="name def" id="dyn_analysis.Calc_Seff">
@@ -5797,6 +6043,314 @@ associated with using <code>multiprocessing</code> module from within Spyder</em
       </div>
       
       <div class="item">
+      <p id="dyn_analysis.UKNA_BSEN1991_2_crowd" class="name">class <span class="ident">UKNA_BSEN1991_2_crowd</span></p>
+      
+  
+    <div class="desc"><p>Class to implement crowd loading analysis to UK NA to BS EN1991-2</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.UKNA_BSEN1991_2_crowd', this);">Show source &equiv;</a></p>
+  <div id="source-dyn_analysis.UKNA_BSEN1991_2_crowd" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">UKNA_BSEN1991_2_crowd</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to implement crowd loading analysis to UK NA to BS EN1991-2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">modalsys_obj</span><span class="p">,</span>
+                 <span class="n">mode_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+                 <span class="n">deck_width_func_list</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">],</span>
+                 <span class="n">modeshapes_fname_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;modeshapes_edge1.csv&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;modeshapes_edge2.csv&quot;</span><span class="p">],</span>
+                 <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">bridgeClass</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation function</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">               </span>
+<span class="sd">        * `modalsys_obj`, object defining modal system to be analysed</span>
+<span class="sd">            </span>
+<span class="sd">        * `mode_index`, _integer_ to denote mode at which resonance should </span>
+<span class="sd">          to targeted</span>
+<span class="sd">          </span>
+<span class="sd">        * `modeshapes_fname_list`, list of strings denoting files containing </span>
+<span class="sd">          modeshape data along minimum of 2 deck lines:</span>
+<span class="sd">              </span>
+<span class="sd">              * List length = nDeckLines</span>
+<span class="sd">              </span>
+<span class="sd">              * Minimum nDeckLines = 2</span>
+<span class="sd">          </span>
+<span class="sd">        * `deck_width_func_list`, list of functions to denote how width (m) of </span>
+<span class="sd">          each deck strip (between lines relating to `modeshapes_fname_list`)</span>
+<span class="sd">          varies with chainage:</span>
+<span class="sd">              </span>
+<span class="sd">              * List length = (nDeckLines-1) required (this is checked)</span>
+<span class="sd">              </span>
+<span class="sd">              * Default function establishes single deck strip of width = 3.0m.</span>
+<span class="sd">    </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">        </span>
+<span class="sd">        * calc_Seff`, _boolean_, dictates whether effective span will be </span>
+<span class="sd">          computed according to Figure NA.7. If False, overall span will be </span>
+<span class="sd">          used (conservative).</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Create default name for analysis object</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - Crowd&quot;</span> <span class="o">%</span> <span class="n">mode_index</span>
+            
+        <span class="c1"># Check `modeshapes_fname_list` input</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modeshapes_fname_list`: list expected&quot;</span><span class="p">)</span>
+            
+        <span class="n">nDeckLines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">nDeckLines</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minimum of 2 deck lines must be defined &quot;</span> <span class="o">+</span> 
+                             <span class="s2">&quot;via `modeshapes_fname_list`&quot;</span><span class="p">)</span>
+            
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">file_str</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modeshapes_fname_list[</span><span class="si">%d</span><span class="s2">]`&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="o">+</span>
+                                 <span class="s2">&quot; does not exist!&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Check `deck_width_func_list` input</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`deck_width_func_list`: list expected&quot;</span><span class="p">)</span>
+            
+        <span class="n">nDeckStrips</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">nDeckStrips</span> <span class="o">!=</span> <span class="n">nDeckLines</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nDeckStrips = nDeckLines - 1 expected&quot;</span><span class="p">)</span>
+            
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">width_func</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">isfunction</span><span class="p">(</span><span class="n">width_func</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`deck_width_func_list[</span><span class="si">%d</span><span class="s2">]`&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="o">+</span> 
+                                 <span class="s2">&quot; is not a function&quot;</span><span class="p">)</span>
+                
+            
+        <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
+        <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;CHECK DENSITIES!&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mi">0</span> <span class="c1"># persons/m2</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mf">0.4</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mf">0.8</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+            <span class="n">crowd_density</span><span class="o">=</span><span class="mf">1.5</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Read modeshape data from file, determine interpolation functions</span>
+        <span class="n">Ltrack_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">modeshapeFunc_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">fName</span> <span class="ow">in</span> <span class="n">modeshapes_fname_list</span><span class="p">:</span>
+            
+            <span class="n">mfunc</span><span class="p">,</span> <span class="n">Ltrack</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">DefineModeshapes</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="n">fName</span><span class="p">,</span>
+                                                          <span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">Ltrack_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Ltrack</span><span class="p">)</span>
+            <span class="n">modeshapeFunc_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mfunc</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+
+      <div class="class">
+          <h3>Ancestors (in MRO)</h3>
+          <ul class="class_list">
+          <li><a href="#dyn_analysis.UKNA_BSEN1991_2_crowd">UKNA_BSEN1991_2_crowd</a></li>
+          <li>builtins.object</li>
+          </ul>
+          <h3>Static methods</h3>
+            
+  <div class="item">
+    <div class="name def" id="dyn_analysis.UKNA_BSEN1991_2_crowd.__init__">
+    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, deck_width_func_list=[&lt;function UKNA_BSEN1991_2_crowd.&lt;lambda&gt; at 0x000000000E1A9D90&gt;], modeshapes_fname_list=[&#39;modeshapes_edge1.csv&#39;, &#39;modeshapes_edge2.csv&#39;], name=None, bridgeClass=&#39;A&#39;, verbose=True, calc_Seff=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Initialisation function</p>
+<hr />
+<p>Required:</p>
+<ul>
+<li>
+<p><code>modalsys_obj</code>, object defining modal system to be analysed</p>
+</li>
+<li>
+<p><code>mode_index</code>, <em>integer</em> to denote mode at which resonance should 
+  to targeted</p>
+</li>
+<li>
+<p><code>modeshapes_fname_list</code>, list of strings denoting files containing 
+  modeshape data along minimum of 2 deck lines:</p>
+<ul>
+<li>
+<p>List length = nDeckLines</p>
+</li>
+<li>
+<p>Minimum nDeckLines = 2</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>deck_width_func_list</code>, list of functions to denote how width (m) of 
+  each deck strip (between lines relating to <code>modeshapes_fname_list</code>)
+  varies with chainage:</p>
+<ul>
+<li>
+<p>List length = (nDeckLines-1) required (this is checked)</p>
+</li>
+<li>
+<p>Default function establishes single deck strip of width = 3.0m.</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>calc_Seff`, <em>boolean</em>, dictates whether effective span will be 
+  computed according to Figure NA.7. If False, overall span will be 
+  used (conservative).</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.UKNA_BSEN1991_2_crowd.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-dyn_analysis.UKNA_BSEN1991_2_crowd.__init__" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">modalsys_obj</span><span class="p">,</span>
+             <span class="n">mode_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+             <span class="n">deck_width_func_list</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">],</span>
+             <span class="n">modeshapes_fname_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;modeshapes_edge1.csv&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;modeshapes_edge2.csv&quot;</span><span class="p">],</span>
+             <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">bridgeClass</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
+             <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialisation function</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">           </span>
+<span class="sd">    * `modalsys_obj`, object defining modal system to be analysed</span>
+<span class="sd">        </span>
+<span class="sd">    * `mode_index`, _integer_ to denote mode at which resonance should </span>
+<span class="sd">      to targeted</span>
+<span class="sd">      </span>
+<span class="sd">    * `modeshapes_fname_list`, list of strings denoting files containing </span>
+<span class="sd">      modeshape data along minimum of 2 deck lines:</span>
+<span class="sd">          </span>
+<span class="sd">          * List length = nDeckLines</span>
+<span class="sd">          </span>
+<span class="sd">          * Minimum nDeckLines = 2</span>
+<span class="sd">      </span>
+<span class="sd">    * `deck_width_func_list`, list of functions to denote how width (m) of </span>
+<span class="sd">      each deck strip (between lines relating to `modeshapes_fname_list`)</span>
+<span class="sd">      varies with chainage:</span>
+<span class="sd">          </span>
+<span class="sd">          * List length = (nDeckLines-1) required (this is checked)</span>
+<span class="sd">          </span>
+<span class="sd">          * Default function establishes single deck strip of width = 3.0m.</span>
+
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">    </span>
+<span class="sd">    * calc_Seff`, _boolean_, dictates whether effective span will be </span>
+<span class="sd">      computed according to Figure NA.7. If False, overall span will be </span>
+<span class="sd">      used (conservative).</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Create default name for analysis object</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - Crowd&quot;</span> <span class="o">%</span> <span class="n">mode_index</span>
+        
+    <span class="c1"># Check `modeshapes_fname_list` input</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modeshapes_fname_list`: list expected&quot;</span><span class="p">)</span>
+        
+    <span class="n">nDeckLines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">nDeckLines</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minimum of 2 deck lines must be defined &quot;</span> <span class="o">+</span> 
+                         <span class="s2">&quot;via `modeshapes_fname_list`&quot;</span><span class="p">)</span>
+        
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">file_str</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">modeshapes_fname_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modeshapes_fname_list[</span><span class="si">%d</span><span class="s2">]`&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="o">+</span>
+                             <span class="s2">&quot; does not exist!&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Check `deck_width_func_list` input</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`deck_width_func_list`: list expected&quot;</span><span class="p">)</span>
+        
+    <span class="n">nDeckStrips</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">nDeckStrips</span> <span class="o">!=</span> <span class="n">nDeckLines</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nDeckStrips = nDeckLines - 1 expected&quot;</span><span class="p">)</span>
+        
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">width_func</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">deck_width_func_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isfunction</span><span class="p">(</span><span class="n">width_func</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`deck_width_func_list[</span><span class="si">%d</span><span class="s2">]`&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="o">+</span> 
+                             <span class="s2">&quot; is not a function&quot;</span><span class="p">)</span>
+            
+        
+    <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
+    <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;CHECK DENSITIES!&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
+        <span class="n">crowd_density</span><span class="o">=</span><span class="mi">0</span> <span class="c1"># persons/m2</span>
+        
+    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
+        <span class="n">crowd_density</span><span class="o">=</span><span class="mf">0.4</span>
+        
+    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+        <span class="n">crowd_density</span><span class="o">=</span><span class="mf">0.8</span>
+        
+    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+        <span class="n">crowd_density</span><span class="o">=</span><span class="mf">1.5</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Read modeshape data from file, determine interpolation functions</span>
+    <span class="n">Ltrack_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">modeshapeFunc_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">fName</span> <span class="ow">in</span> <span class="n">modeshapes_fname_list</span><span class="p">:</span>
+        
+        <span class="n">mfunc</span><span class="p">,</span> <span class="n">Ltrack</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">DefineModeshapes</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="n">fName</span><span class="p">,</span>
+                                                      <span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">Ltrack_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Ltrack</span><span class="p">)</span>
+        <span class="n">modeshapeFunc_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mfunc</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+      </div>
+      </div>
+      
+      <div class="item">
       <p id="dyn_analysis.UKNA_BSEN1991_2_walkers_joggers" class="name">class <span class="ident">UKNA_BSEN1991_2_walkers_joggers</span></p>
       
   
@@ -5828,6 +6382,9 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
 <span class="sd">            Required:</span>
 <span class="sd">               </span>
 <span class="sd">            * `modalsys_obj`, object defining modal system to be analysed</span>
+<span class="sd">            </span>
+<span class="sd">            * `mode_index`, _integer_ to denote mode at which resonance should </span>
+<span class="sd">              to targeted</span>
 <span class="sd">        </span>
 <span class="sd">            ***</span>
 <span class="sd">            Optional:</span>
@@ -5847,7 +6404,8 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
             
             <span class="c1"># Create default name for analysis object</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode_index</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode_index</span><span class="p">,</span>
+                                                                <span class="n">analysis_type</span><span class="p">)</span>
             
             <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
             <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
@@ -5991,7 +6549,13 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
 <hr />
 <p>Required:</p>
 <ul>
-<li><code>modalsys_obj</code>, object defining modal system to be analysed</li>
+<li>
+<p><code>modalsys_obj</code>, object defining modal system to be analysed</p>
+</li>
+<li>
+<p><code>mode_index</code>, <em>integer</em> to denote mode at which resonance should 
+  to targeted</p>
+</li>
 </ul>
 <hr />
 <p>Optional:</p>
@@ -6029,6 +6593,9 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
 <span class="sd">    Required:</span>
 <span class="sd">       </span>
 <span class="sd">    * `modalsys_obj`, object defining modal system to be analysed</span>
+<span class="sd">    </span>
+<span class="sd">    * `mode_index`, _integer_ to denote mode at which resonance should </span>
+<span class="sd">      to targeted</span>
 
 <span class="sd">    ***</span>
 <span class="sd">    Optional:</span>
@@ -6048,7 +6615,8 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
     
     <span class="c1"># Create default name for analysis object</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode_index</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode_index</span><span class="p">,</span>
+                                                        <span class="n">analysis_type</span><span class="p">)</span>
     
     <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
     <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>

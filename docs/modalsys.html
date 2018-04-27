@@ -1,4 +1,4 @@
-Version: 1.1.0
+Version: 1.1.0_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1074,6 +1074,7 @@ table {
     <li class="mono"><a href="#modalsys.ModalSys.CheckConstraints">CheckConstraints</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.CheckDOF">CheckDOF</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.CheckOutputMtrx">CheckOutputMtrx</a></li>
+    <li class="mono"><a href="#modalsys.ModalSys.DefineModeshapes">DefineModeshapes</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.EqnOfMotion">EqnOfMotion</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.PlotModeshapes">PlotModeshapes</a></li>
@@ -1203,7 +1204,7 @@ a second order dynamic system via its (usually truncated) modal properties</p>
         
         <span class="c1"># Read modeshape data</span>
         <span class="k">if</span> <span class="n">fname_modeshapes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_DefineModeshapes</span><span class="p">(</span><span class="n">fname_modeshapes</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">DefineModeshapes</span><span class="p">(</span><span class="n">fname_modeshapes</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">_DefineModalParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="o">=</span><span class="s1">&#39;modalParams.csv&#39;</span><span class="p">,</span> <span class="n">fLimit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -1301,7 +1302,7 @@ a second order dynamic system via its (usually truncated) modal properties</p>
         <span class="k">return</span> <span class="n">d</span>
             
                 
-    <span class="k">def</span> <span class="nf">_DefineModeshapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="o">=</span><span class="s1">&#39;modeshapes.csv&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">DefineModeshapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="o">=</span><span class="s1">&#39;modeshapes.csv&#39;</span><span class="p">,</span><span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to allow 1-dimensional line-like modeshapes to be defined</span>
 <span class="sd">        e.g. for use in calculating mode-generalised forces</span>
@@ -1346,10 +1347,11 @@ a second order dynamic system via its (usually truncated) modal properties</p>
                           <span class="s2">&quot;self.mode_IDs: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_IDs</span><span class="p">))</span>
         
         <span class="c1"># Define class properties</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span> <span class="o">=</span> <span class="n">modeshapeFunc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span> <span class="o">=</span> <span class="n">Ltrack</span>
+        <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span> <span class="o">=</span> <span class="n">modeshapeFunc</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span> <span class="o">=</span> <span class="n">Ltrack</span>
     
-        <span class="k">return</span> <span class="n">modeshapeFunc</span>
+        <span class="k">return</span> <span class="n">modeshapeFunc</span><span class="p">,</span> <span class="n">Ltrack</span>
     
     <span class="k">def</span> <span class="nf">PlotModeshapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                        <span class="n">num</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
@@ -1760,7 +1762,7 @@ a second order dynamic system via its (usually truncated) modal properties</p>
         
         <span class="c1"># Read modeshape data</span>
         <span class="k">if</span> <span class="n">fname_modeshapes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_DefineModeshapes</span><span class="p">(</span><span class="n">fname_modeshapes</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">DefineModeshapes</span><span class="p">(</span><span class="n">fname_modeshapes</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">_DefineModalParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="o">=</span><span class="s1">&#39;modalParams.csv&#39;</span><span class="p">,</span> <span class="n">fLimit</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -1858,7 +1860,7 @@ a second order dynamic system via its (usually truncated) modal properties</p>
         <span class="k">return</span> <span class="n">d</span>
             
                 
-    <span class="k">def</span> <span class="nf">_DefineModeshapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="o">=</span><span class="s1">&#39;modeshapes.csv&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">DefineModeshapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="o">=</span><span class="s1">&#39;modeshapes.csv&#39;</span><span class="p">,</span><span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to allow 1-dimensional line-like modeshapes to be defined</span>
 <span class="sd">        e.g. for use in calculating mode-generalised forces</span>
@@ -1903,10 +1905,11 @@ a second order dynamic system via its (usually truncated) modal properties</p>
                           <span class="s2">&quot;self.mode_IDs: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_IDs</span><span class="p">))</span>
         
         <span class="c1"># Define class properties</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span> <span class="o">=</span> <span class="n">modeshapeFunc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span> <span class="o">=</span> <span class="n">Ltrack</span>
+        <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span> <span class="o">=</span> <span class="n">modeshapeFunc</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span> <span class="o">=</span> <span class="n">Ltrack</span>
     
-        <span class="k">return</span> <span class="n">modeshapeFunc</span>
+        <span class="k">return</span> <span class="n">modeshapeFunc</span><span class="p">,</span> <span class="n">Ltrack</span>
     
     <span class="k">def</span> <span class="nf">PlotModeshapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                        <span class="n">num</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
@@ -2334,7 +2337,7 @@ modal displacements, velocities and accelerations respectively.</p></div>
     
     <span class="c1"># Read modeshape data</span>
     <span class="k">if</span> <span class="n">fname_modeshapes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_DefineModeshapes</span><span class="p">(</span><span class="n">fname_modeshapes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DefineModeshapes</span><span class="p">(</span><span class="n">fname_modeshapes</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -3677,6 +3680,87 @@ system, including any sub-systems, is full rank</p></div>
                              <span class="s2">&quot;Cols expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nDOF_expected</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="modalsys.ModalSys.DefineModeshapes">
+    <p>def <span class="ident">DefineModeshapes</span>(</p><p>self, fName=&#39;modeshapes.csv&#39;, saveAsAttr=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function to allow 1-dimensional line-like modeshapes to be defined
+e.g. for use in calculating mode-generalised forces</p>
+<p>It is generally most convenient to define such systems by reading
+data in from .csv file. Comma-delimited data in the following table
+format is expected:</p>
+<div class="codehilite"><pre><span></span>| Chainage | Mode_1 | Mode_2 | Mode_3 | ... | Mode_N |
+| ---      | ---    | ---    | ---    | --- | ---    |
+| ...      | ...    | ...    | ...    | --- | ...    |
+
+Chainage:   Column defining common chainage for modeshape ordinates
+Mode_i:     Modeshape ordinates for given ModeID
+</pre></div></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.DefineModeshapes', this);">Show source &equiv;</a></p>
+  <div id="source-modalsys.ModalSys.DefineModeshapes" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">DefineModeshapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="o">=</span><span class="s1">&#39;modeshapes.csv&#39;</span><span class="p">,</span><span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to allow 1-dimensional line-like modeshapes to be defined</span>
+<span class="sd">    e.g. for use in calculating mode-generalised forces</span>
+<span class="sd">    </span>
+<span class="sd">    It is generally most convenient to define such systems by reading</span>
+<span class="sd">    data in from .csv file. Comma-delimited data in the following table</span>
+<span class="sd">    format is expected:</span>
+<span class="sd">        </span>
+<span class="sd">        | Chainage | Mode_1 | Mode_2 | Mode_3 | ... | Mode_N |</span>
+<span class="sd">        | ---      | ---    | ---    | ---    | --- | ---    |</span>
+<span class="sd">        | ...      | ...    | ...    | ...    | --- | ...    |</span>
+<span class="sd">        </span>
+<span class="sd">        Chainage:   Column defining common chainage for modeshape ordinates</span>
+<span class="sd">        Mode_i:     Modeshape ordinates for given ModeID</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read in data from .csv file</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fName</span><span class="p">,</span><span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">chainageVals</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">modeshapeVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="n">mode_IDs</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    
+    <span class="c1"># Adjust chainage values to start from zero</span>
+    <span class="n">chainageVals</span> <span class="o">=</span> <span class="n">chainageVals</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">chainageVals</span><span class="p">)</span>
+    
+    <span class="c1"># Get length of track along dynamic system as defined by modeshapes</span>
+    <span class="n">Ltrack</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">chainageVals</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">chainageVals</span><span class="p">)</span>
+        
+    <span class="c1"># Set up interpolation function: linear interpolation between modeshape ordinates provided</span>
+    <span class="n">modeshapeFunc</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">interpolate</span><span class="o">.</span><span class="n">interp1d</span><span class="p">(</span><span class="n">chainageVals</span><span class="p">,</span>
+                                               <span class="n">modeshapeVals</span><span class="p">,</span>
+                                               <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                               <span class="n">bounds_error</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                               <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="c1"># Check modeNames agree with modalParams input</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">npy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">mode_IDs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode_IDs</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Unexpected mode_IDs in {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span> <span class="o">+</span> 
+                      <span class="s2">&quot;mode_IDs: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mode_IDs</span><span class="p">)</span> <span class="o">+</span> 
+                      <span class="s2">&quot;self.mode_IDs: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_IDs</span><span class="p">))</span>
+    
+    <span class="c1"># Define class properties</span>
+    <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span> <span class="o">=</span> <span class="n">modeshapeFunc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span> <span class="o">=</span> <span class="n">Ltrack</span>
+
+    <span class="k">return</span> <span class="n">modeshapeFunc</span><span class="p">,</span> <span class="n">Ltrack</span>
 </pre></div>
 
   </div>
