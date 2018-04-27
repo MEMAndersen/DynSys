@@ -556,12 +556,11 @@ class UKNA_BSEN1991_2_crowd():
                                  " is not a function")
                 
             
-        # Get applicable parameters per Table NA.7 according to bridgeClass
+        # Get crowd density from Table NA.7 according to bridgeClass
         bridgeClass = bridgeClass.upper()
-        print("CHECK DENSITIES!")
         
         if bridgeClass == 'A':
-            crowd_density=0 # persons/m2
+            crowd_density=0.0 # persons/m2
             
         elif bridgeClass == 'B':
             crowd_density=0.4
