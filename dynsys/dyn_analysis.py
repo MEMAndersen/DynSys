@@ -561,16 +561,16 @@ class UKNA_BSEN1991_2_crowd():
         print("CHECK DENSITIES!")
         
         if bridgeClass == 'A':
-            density=0 # persons/m2
+            crowd_density=0 # persons/m2
             
         elif bridgeClass == 'B':
-            density=0.4
+            crowd_density=0.4
             
         elif bridgeClass == 'C':
-            density=0.8
+            crowd_density=0.8
             
         elif bridgeClass == 'D':
-            density=1.4
+            crowd_density=1.5
             
         else:
             raise ValueError("Invalid 'bridgeClass'!")
@@ -586,6 +586,9 @@ class UKNA_BSEN1991_2_crowd():
             Ltrack_list.append(Ltrack)
             modeshapeFunc_list.append(mfunc)
             
+            
+    
+        
         
         
     
@@ -1260,7 +1263,47 @@ def Calc_Seff(modeshapeFunc,S,
             ax3.text(S,val," %.1f"%val,fontsize=6.0)
         
     return Seff, lambda_vals
+
+
+def CalcTransverseAreaIntegral(b,phi1,phi2):
+    """
+    Computes sign-corrected integral across domain of width `b`, given (signed) 
+    edge ordinates `phi1` and phi2`.
+    
+    Linear variation of integrand within integration domain is assumed 
+    
+    ![derivation](../dynsys/img/sign_corrected_integral_derivation.PNG)
         
+    Arrays of equal length can be supplied.
+    """
+    
+    # Change shapes agree
+    if phi1.shape != phi2.shape:
+        raise ValueError("Shapes of `phi1` and `phi2` do not agree!")
+        
+    if phi1.shape != b.shape:
+        raise ValueError("Shapes of `phi1` and `b` do not agree!")        
+    
+    # Test to see if same signs
+    same_sign = numpy.equal(numpy.sign(phi1),numpy.sign(phi2))
+    
+    # Obtain absolute values
+    phi1_abs = numpy.abs(phi1)
+    phi2_abs = numpy.abs(phi2)
+    
+    # Compute area integral on assumption of same sign
+    area_same_sign = 0.5*b*(phi1_abs+phi2_abs)
+    
+    # Compute area integral where different sign
+    area_different_sign = 0.5*b*(phi1_abs**2+phi2_abs**2)/(phi1_abs+phi2_abs)
+    
+    # Select appropriate case
+    area_to_use = numpy.where(same_sign,area_same_sign,area_different_sign)
+        
+    return area_to_use
+
+
+    
     
 def ResponseSpectrum(accFunc,
                      tResponse,
@@ -1572,7 +1615,7 @@ def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff,
 
 if __name__ == "__main__":
     
-    testRoutine=7
+    testRoutine=8
     
     if testRoutine==1:
         
@@ -1660,6 +1703,14 @@ if __name__ == "__main__":
                                 numpy.sin(1.2*numpy.pi*x/L)]).T
         
         Seff = Calc_Seff(testFunc,L,makePlot=True)
+        
+    elif testRoutine==8:
+        
+        b = numpy.array([2.0,2.0,2.0,4.0,4.0])
+        phi1 = numpy.array([1.0,1.0,1.0,1.0,1.0])
+        phi2 = numpy.array([1.0,0.0,-1.0,1.0,-1.0])
+        integral_area = CalcTransverseAreaIntegral(b,phi1,phi2)
+        print(integral_area)
         
     else:
         raise ValueError("Test routine does not exist!")
