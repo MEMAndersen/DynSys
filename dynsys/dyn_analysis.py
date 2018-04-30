@@ -534,105 +534,41 @@ class UKNA_BSEN1991_2_crowd():
         if name is None:
             name = modalsys_obj.name + " - Mode %d - Crowd" % mode_index
             
-        # Get crowd density from Table NA.7 according to bridgeClass
-        bridgeClass = bridgeClass.upper()
+        self.name = name
+        """
+        Name assigned to class instance
+        """
+            
+        # Get crowd density according to bridgeClass
+        crowd_density = self.get_crowd_density(bridgeClass,verbose=verbose)
         
-        if bridgeClass == 'A':
-            crowd_density=0.0 # persons/m2
-            
-        elif bridgeClass == 'B':
-            crowd_density=0.4
-            
-        elif bridgeClass == 'C':
-            crowd_density=0.8
-            
-        elif bridgeClass == 'D':
-            crowd_density=1.5
-            
-        else:
-            raise ValueError("Invalid 'bridgeClass'!")
-            
-        if verbose:
-            print("Bridge class: '%s'" % bridgeClass)
-            print("Crowd density (persons/m2): %.1f" % crowd_density)
-            
-        if crowd_density==0:
-            raise ValueError("Crowd density = 0; no analysis required!")
-        
-        # Check `deck_width_func_list` input
-        if not isinstance(width_func_list,list):
-            
-            # Handle case of single float supplied by converting to list
-            if isinstance(width_func_list,float):
-                width_func_list = [width_func_list]
-        
-            else:    
-                raise ValueError("`width_func_list`: list expected")
-            
+        self.crowd_density = crowd_density
+        """
+        Crowd density, expressed in persons/m2
+        """
+                
+        # Check `width_func_list` input
+        width_func_list = self._check_width_func_list(width_func_list)
         nRegions = len(width_func_list)
-            
-        for i, width_func in enumerate(width_func_list):
-            
-            if not isfunction(width_func):
-                
-                # Handle case of float by converting to function format
-                if isinstance(width_func,float):
-                    
-                    # Constant width value supplied (float)
-                    width_val = width_func
-                    
-                    # Return array of dimension corresponding to calling array
-                    # Replace item in list with this function
-                    width_func_list[i] = lambda x: width_val*numpy.ones(len(x))
-                    
-                else:    
-                    raise ValueError("`width_func_list[%d]`" % i + 
-                                     " is not a function, as required")
-                
-        # Check `modeshapes_fname_list` input
-        nRegions_new, nEdges = modeshapes_fname_arr.shape
         
-        if nRegions_new != nRegions:
-            raise ValueError("`nRegions` conflicts with nRegions inferred " + 
-                             "from `width_func_list` input")
-        
-        if nEdges != 2:
-            raise ValueError("nEdges = 2 required, i.e. modeshapes at edges " + 
-                             "of each regions must be provided via " + 
-                             "`modeshapes_fname_arr` input")
+        self.nRegions = nRegions
+        """
+        Integer, denotes number deck regions
+        """
             
-        for index, file_str in numpy.ndenumerate(modeshapes_fname_arr):
-            
-            if not os.path.isfile(file_str):
-                raise ValueError("`modeshapes_fname_list[{0}]`" % index +
-                                 " does not exist!")
+        # Check `modeshapes_fname_arr` input
+        self._check_modeshapes_fname_arr(modeshapes_fname_arr,nRegions)
             
         # Read modeshape data from file, determine interpolation functions
-        Ltrack_list = []
-        modeshapeFunc_list = []
+        modeshapeFunc_list, Ltrack_list = self._read_modeshapes(modeshapes_fname_arr)
+            
+        # Define deck regions
+        deckRegions = []
         
-        for fname_list in modeshapes_fname_arr:
+        for r in range(nRegions):
             
-            Ltrack_list_inner = [] 
-            modeshapeFunc_list_inner = []
-            
-            for fName in fname_list:
-            
-                mfunc, Ltrack = modalsys_obj.DefineModeshapes(fName=fName,
-                                                              saveAsAttr=False)
-            
-                # Append to inner lists
-                Ltrack_list_inner.append(Ltrack)
-                modeshapeFunc_list_inner.append(mfunc)
-                
-            # Append to create list of lists
-            Ltrack_list.append(Ltrack_list_inner)
-            modeshapeFunc_list.append(modeshapeFunc_list_inner)
-            
-        # Convert lists to arrays
-        Ltrack_list = numpy.array(Ltrack_list)
-        modeshapeFunc_list = numpy.array(modeshapeFunc_list)
-            
+            deckRegions.append(_DeckRegion(ID=r))
+        
         if verbose:
         
             print("Summary of regions as defined by edge lines:")
@@ -648,29 +584,156 @@ class UKNA_BSEN1991_2_crowd():
                 print("Region %d" % r)
                 print(width_func)
                 
-        # Compute area and modal area integrals for deck regions            
-        for r in range(nRegions):
-            
-            # Evaluate modeshapes at edges of deck using 
-            x1 = numpy.linspace(0,Ltrack_list[r,0])
-            x2 = numpy.linspace(0,Ltrack_list[r,1])
-            x_CL = 0.5*(x1+x2)
-            
-            phi1 = modeshapeFunc_list[r,0](x1)[:,mode_index]
-            phi2 = modeshapeFunc_list[r,1](x2)[:,mode_index]
-            width = width_func_list[r](x_CL)
-            print(width)
-            
-            
-            # Determine area integrals on transverse sections
-            #area_transverse = CalcSignCorrectedAreaIntegral(width,phi1,phi2)
-            #print(area_transverse)
-            
-        
+#        # Compute area and modal area integrals for deck regions            
+#        for r in range(nRegions):
+#            
+#            # Evaluate modeshapes at edges of deck using 
+#            x1 = numpy.linspace(0,Ltrack_list[r,0])
+#            x2 = numpy.linspace(0,Ltrack_list[r,1])
+#            x_CL = 0.5*(x1+x2)
+#            
+#            phi1 = modeshapeFunc_list[r,0](x1)[:,mode_index]
+#            phi2 = modeshapeFunc_list[r,1](x2)[:,mode_index]
+#            width = width_func_list[r](x_CL)
+#            print(width)
+#            
+#            
+#            # Determine area integrals on transverse sections
+#            #area_transverse = CalcSignCorrectedAreaIntegral(width,phi1,phi2)
+#            #print(area_transverse)
             
             
+        def get_crowd_density(bridgeClass:str,
+                              verbose=True,
+                              saveAsAttr=True):
+            """
+            Get crowd density according from Table NA.7, UK NA to BS EN 
+            1991-2, according to `bridgeClass`
+            
+            Returns density expressed as persons/m2
+            """
     
+            bridgeClass = bridgeClass.upper()
+            
+            if bridgeClass == 'A':
+                density=0.0
+                
+            elif bridgeClass == 'B':
+                density=0.4
+                
+            elif bridgeClass == 'C':
+                density=0.8
+                
+            elif bridgeClass == 'D':
+                density=1.5
+                
+            else:
+                raise ValueError("Invalid 'bridgeClass'!")
+                
+            if verbose:
+                print("Bridge class: '%s'" % bridgeClass)
+                print("Crowd density (persons/m2): %.1f" % crowd_density)
+                
+            if density==0:
+                raise ValueError("Crowd density = 0; no analysis required!")
+                            
+            return density
+                
         
+        def _check_width_func_list(self,
+                                   width_func_list):
+            """
+            Performs checks on input `width_func_list` 
+            as supplied to `__init__()`
+            """
+            
+            # Check that list type
+            if not isinstance(width_func_list,list):
+            
+                # Handle case of single float supplied by converting to list
+                if isinstance(width_func_list,float):
+                    width_func_list = [width_func_list]
+            
+                else:    
+                    raise ValueError("`width_func_list`: list expected")
+                    
+            # Check all list items are functions or floats
+            for i, width_func in enumerate(width_func_list):
+            
+                if not isfunction(width_func):
+                    
+                    if not isinstance(width_func,float):
+                        
+                        raise ValueError("`width_func_list[%d]`" % i + 
+                                         " is not a function, as required")
+                    
+            return width_func_list
+        
+        
+        def _check_modeshapes_fname_arr(self,
+                                        modeshapes_fname_arr,
+                                        nRegions_expected):
+            
+            # Check shapes
+            nRegions, nEdges = modeshapes_fname_arr.shape
+            
+            if nRegions_expected != nRegions:
+                raise ValueError("Unexpected `nRegions`\n: " +
+                                 "Conflicts with nRegions inferred " + 
+                                 "from `width_func_list` input")
+            
+            if nEdges != 2:
+                raise ValueError("nEdges = 2 required\n " + 
+                                 "Modeshapes at edges " + 
+                                 "of each regions must be provided via " + 
+                                 "`modeshapes_fname_arr` input")
+                
+            # Check all files exist
+            for index, file_str in numpy.ndenumerate(modeshapes_fname_arr):
+                
+                if not os.path.isfile(file_str):
+                    raise ValueError("`modeshapes_fname_list[{0}]`" % index +
+                                     " does not exist!")
+                    
+                    
+        def _read_modeshapes(self,modeshapes_fname_arr):
+            """
+            Reads modeshapes from file
+            
+            ***
+            Required:
+               
+            * `modeshapes_fname_arr`, array of strings, denoting file paths
+            
+            """
+            
+            Ltrack_list = []
+            modeshapeFunc_list = []
+            
+            # Loop through array containing modeshape filenames
+            for fname_list in modeshapes_fname_arr:
+                
+                Ltrack_list_inner = [] 
+                modeshapeFunc_list_inner = []
+                
+                for fName in fname_list:
+                
+                    mfunc, L = modalsys_obj.DefineModeshapes(fName=fName,
+                                                             saveAsAttr=False)
+                
+                    # Append to inner lists
+                    Ltrack_list_inner.append(L)
+                    modeshapeFunc_list_inner.append(mfunc)
+                    
+                # Append to create list of lists
+                Ltrack_list.append(Ltrack_list_inner)
+                modeshapeFunc_list.append(modeshapeFunc_list_inner)
+                
+            # Convert lists to arrays
+            Ltrack_list = numpy.array(Ltrack_list)
+            modeshapeFunc_list = numpy.array(modeshapeFunc_list)
+        
+            return modeshapeFunc_list, Ltrack_list
         
         
     
@@ -1248,6 +1311,12 @@ class PedestrianDynamics_transientAnalyses(Multiple):
     
         return fig_list
         
+# ************* PRIVATE CLASSES (only to be used within module) *************    
+        
+class _DeckRegion():
+    
+    def __init__(self,ID:int):
+        print(ID)
     
     
 # ********************** FUNCTIONS   ****************************************
