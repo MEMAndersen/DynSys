@@ -560,29 +560,31 @@ class UKNA_BSEN1991_2_crowd():
         self._check_modeshapes_fname_arr(modeshapes_fname_arr,nRegions)
             
         # Read modeshape data from file, determine interpolation functions
-        modeshapeFunc_list, Ltrack_list = self._read_modeshapes(modeshapes_fname_arr)
+        mFunc_list, Ltrack_list = self._read_modeshapes(modalsys_obj,
+                                                        modeshapes_fname_arr)
             
         # Define deck regions
-        deckRegions = []
+        deck_regions_list = []
         
         for r in range(nRegions):
             
-            deckRegions.append(_DeckRegion(ID=r))
-        
-        if verbose:
-        
-            print("Summary of regions as defined by edge lines:")
+            deckregion_obj = _DeckRegion(ID="Region %d" % r,
+                                         L=Ltrack_list[r],
+                                         width_func=width_func_list[r],
+                                         modeshape_func_edge1=mFunc_list[r,0],
+                                         modeshape_func_edge2=mFunc_list[r,1])
+
+            deck_regions_list.append(deckregion_obj)
+                
+        if verbose: 
+            
+            print("Details of deck regions:")
             print("nRegions: %d" % nRegions)
             
-            print("Length of edge lines for regions:")
-            for r, length_list in enumerate(Ltrack_list):
-                print("Region %d" % r)
-                print("[" + ", ".join("%.2f" % f for f in length_list) + "]")
-                
-            print("Width of regions:")
-            for r, width_func in enumerate(width_func_list):
-                print("Region %d" % r)
-                print(width_func)
+            for deckregion_obj in deck_regions_list:
+                deckregion_obj.print_details()
+        
+            
                 
 #        # Compute area and modal area integrals for deck regions            
 #        for r in range(nRegions):
@@ -603,137 +605,138 @@ class UKNA_BSEN1991_2_crowd():
 #            #print(area_transverse)
             
             
-        def get_crowd_density(bridgeClass:str,
-                              verbose=True,
-                              saveAsAttr=True):
-            """
-            Get crowd density according from Table NA.7, UK NA to BS EN 
-            1991-2, according to `bridgeClass`
-            
-            Returns density expressed as persons/m2
-            """
-    
-            bridgeClass = bridgeClass.upper()
-            
-            if bridgeClass == 'A':
-                density=0.0
-                
-            elif bridgeClass == 'B':
-                density=0.4
-                
-            elif bridgeClass == 'C':
-                density=0.8
-                
-            elif bridgeClass == 'D':
-                density=1.5
-                
-            else:
-                raise ValueError("Invalid 'bridgeClass'!")
-                
-            if verbose:
-                print("Bridge class: '%s'" % bridgeClass)
-                print("Crowd density (persons/m2): %.1f" % crowd_density)
-                
-            if density==0:
-                raise ValueError("Crowd density = 0; no analysis required!")
-                            
-            return density
-                
-        
-        def _check_width_func_list(self,
-                                   width_func_list):
-            """
-            Performs checks on input `width_func_list` 
-            as supplied to `__init__()`
-            """
-            
-            # Check that list type
-            if not isinstance(width_func_list,list):
-            
-                # Handle case of single float supplied by converting to list
-                if isinstance(width_func_list,float):
-                    width_func_list = [width_func_list]
-            
-                else:    
-                    raise ValueError("`width_func_list`: list expected")
-                    
-            # Check all list items are functions or floats
-            for i, width_func in enumerate(width_func_list):
-            
-                if not isfunction(width_func):
-                    
-                    if not isinstance(width_func,float):
-                        
-                        raise ValueError("`width_func_list[%d]`" % i + 
-                                         " is not a function, as required")
-                    
-            return width_func_list
-        
-        
-        def _check_modeshapes_fname_arr(self,
-                                        modeshapes_fname_arr,
-                                        nRegions_expected):
-            
-            # Check shapes
-            nRegions, nEdges = modeshapes_fname_arr.shape
-            
-            if nRegions_expected != nRegions:
-                raise ValueError("Unexpected `nRegions`\n: " +
-                                 "Conflicts with nRegions inferred " + 
-                                 "from `width_func_list` input")
-            
-            if nEdges != 2:
-                raise ValueError("nEdges = 2 required\n " + 
-                                 "Modeshapes at edges " + 
-                                 "of each regions must be provided via " + 
-                                 "`modeshapes_fname_arr` input")
-                
-            # Check all files exist
-            for index, file_str in numpy.ndenumerate(modeshapes_fname_arr):
-                
-                if not os.path.isfile(file_str):
-                    raise ValueError("`modeshapes_fname_list[{0}]`" % index +
-                                     " does not exist!")
-                    
-                    
-        def _read_modeshapes(self,modeshapes_fname_arr):
-            """
-            Reads modeshapes from file
-            
-            ***
-            Required:
-               
-            * `modeshapes_fname_arr`, array of strings, denoting file paths
-            
-            """
-            
-            Ltrack_list = []
-            modeshapeFunc_list = []
-            
-            # Loop through array containing modeshape filenames
-            for fname_list in modeshapes_fname_arr:
-                
-                Ltrack_list_inner = [] 
-                modeshapeFunc_list_inner = []
-                
-                for fName in fname_list:
-                
-                    mfunc, L = modalsys_obj.DefineModeshapes(fName=fName,
-                                                             saveAsAttr=False)
-                
-                    # Append to inner lists
-                    Ltrack_list_inner.append(L)
-                    modeshapeFunc_list_inner.append(mfunc)
-                    
-                # Append to create list of lists
-                Ltrack_list.append(Ltrack_list_inner)
-                modeshapeFunc_list.append(modeshapeFunc_list_inner)
-                
-            # Convert lists to arrays
-            Ltrack_list = numpy.array(Ltrack_list)
-            modeshapeFunc_list = numpy.array(modeshapeFunc_list)
-        
-            return modeshapeFunc_list, Ltrack_list
+    def get_crowd_density(self,
+                          bridgeClass:str,
+                          verbose=True,
+                          saveAsAttr=True):
+        """
+        Get crowd density according from Table NA.7, UK NA to BS EN 
+        1991-2, according to `bridgeClass`
+
+        Returns density expressed as persons/m2
+        """
+
+        bridgeClass = bridgeClass.upper()
+
+        if bridgeClass == 'A':
+            density=0.0
+
+        elif bridgeClass == 'B':
+            density=0.4
+
+        elif bridgeClass == 'C':
+            density=0.8
+
+        elif bridgeClass == 'D':
+            density=1.5
+
+        else:
+            raise ValueError("Invalid 'bridgeClass'!")
+
+        if verbose:
+            print("Bridge class: '%s'" % bridgeClass)
+            print("Crowd density (persons/m2): %.1f" % density)
+
+        if density==0:
+            raise ValueError("Crowd density = 0; no analysis required!")
+
+        return density
+
+
+    def _check_width_func_list(self,
+                               width_func_list):
+        """
+        Performs checks on input `width_func_list` 
+        as supplied to `__init__()`
+        """
+
+        # Check that list type
+        if not isinstance(width_func_list,list):
+
+            # Handle case of single float supplied by converting to list
+            if isinstance(width_func_list,float):
+                width_func_list = [width_func_list]
+
+            else:    
+                raise ValueError("`width_func_list`: list expected")
+
+        # Check all list items are functions or floats
+        for i, width_func in enumerate(width_func_list):
+
+            if not isfunction(width_func):
+
+                if not isinstance(width_func,float):
+
+                    raise ValueError("`width_func_list[%d]`" % i + 
+                                     " is not a function, as required")
+
+        return width_func_list
+
+
+    def _check_modeshapes_fname_arr(self,
+                                    modeshapes_fname_arr,
+                                    nRegions_expected):
+
+        # Check shapes
+        nRegions, nEdges = modeshapes_fname_arr.shape
+
+        if nRegions_expected != nRegions:
+            raise ValueError("Unexpected `nRegions`\n: " +
+                             "Conflicts with nRegions inferred " + 
+                             "from `width_func_list` input")
+
+        if nEdges != 2:
+            raise ValueError("nEdges = 2 required\n " + 
+                             "Modeshapes at edges " + 
+                             "of each regions must be provided via " + 
+                             "`modeshapes_fname_arr` input")
+
+        # Check all files exist
+        for index, file_str in numpy.ndenumerate(modeshapes_fname_arr):
+
+            if not os.path.isfile(file_str):
+                raise ValueError("`modeshapes_fname_list[{0}]`" % index +
+                                 " does not exist!")
+
+
+    def _read_modeshapes(self,modalsys_obj,modeshapes_fname_arr):
+        """
+        Reads modeshapes from file
+
+        ***
+        Required:
+
+        * `modeshapes_fname_arr`, array of strings, denoting file paths
+
+        """
+
+        Ltrack_list = []
+        modeshapeFunc_list = []
+
+        # Loop through array containing modeshape filenames
+        for fname_list in modeshapes_fname_arr:
+
+            Ltrack_list_inner = [] 
+            modeshapeFunc_list_inner = []
+
+            for fName in fname_list:
+
+                mfunc, L = modalsys_obj.DefineModeshapes(fName=fName,
+                                                         saveAsAttr=False)
+
+                # Append to inner lists
+                Ltrack_list_inner.append(L)
+                modeshapeFunc_list_inner.append(mfunc)
+
+            # Append to create list of lists
+            Ltrack_list.append(Ltrack_list_inner)
+            modeshapeFunc_list.append(modeshapeFunc_list_inner)
+
+        # Convert lists to arrays
+        Ltrack_list = numpy.array(Ltrack_list)
+        modeshapeFunc_list = numpy.array(modeshapeFunc_list)
+
+        return modeshapeFunc_list, Ltrack_list
         
         
     
@@ -1313,10 +1316,71 @@ class PedestrianDynamics_transientAnalyses(Multiple):
         
 # ************* PRIVATE CLASSES (only to be used within module) *************    
         
-class _DeckRegion():
+class _DeckStrip():
+    """
+    Class used to define and integrate over 2D regions (deck strips)
+    spanning the following domains:
     
-    def __init__(self,ID:int):
-        print(ID)
+    x: [0, L]
+    y: [-b(x)/2, +b(x)/2]
+    """
+    
+    def __init__(self,
+                 name:string,
+                 L:float,
+                 width_func,
+                 func_edge1,
+                 func_edge2):
+        """
+        Initialisation function
+        
+        ***
+        Required:
+        
+        * `name`, _string_; identifier for class instance, preferably unique
+        
+        * `L`, _float_; length of strip (in m)
+        
+        * `width_func`, _function_ expected, defines width _b_ of strip (in m)
+          as a function of chainage along the _centreline_ of the strip.
+          _Float_ may also be provided, in case of deck strips which are uniform 
+          in x.
+          
+        * `func_edge1`, defines function to be integrated, along the edge of 
+        the strip at y = -b(x)/2
+        
+        * `func_edge2`, defines function to be integrated, along the edge of 
+        the strip at y = +b(x)/2
+        
+        """
+        
+        self.ID = ID
+        self.L = L
+        self.width_func = width_func
+        """
+        _Function (_ or _float_) to describe how width of deck strip
+        varies with chainage
+        """
+        
+        self.modeshape_func_edge1 = modeshape_func_edge1
+        """
+        """
+        
+    
+    def print_details():
+        """
+        Prints details of deck region instance
+        """
+        
+        print("Length of edge lines for regions:")
+        for r, length_list in enumerate(Ltrack_list):
+            print("Region %d" % r)
+            print("[" + ", ".join("%.2f" % f for f in length_list) + "]")
+
+        print("Width of regions:")
+        for r, width_func in enumerate(width_func_list):
+            print("Region %d" % r)
+            print(width_func)
     
     
 # ********************** FUNCTIONS   ****************************************
