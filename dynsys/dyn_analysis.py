@@ -10,6 +10,7 @@ import timeit
 import itertools
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
+from mpl_toolkits.mplot3d import Axes3D
 import dill
 import os
 import scipy
@@ -568,11 +569,11 @@ class UKNA_BSEN1991_2_crowd():
         
         for r in range(nRegions):
             
-            deckregion_obj = _DeckRegion(ID="Region %d" % r,
-                                         L=Ltrack_list[r],
-                                         width_func=width_func_list[r],
-                                         modeshape_func_edge1=mFunc_list[r,0],
-                                         modeshape_func_edge2=mFunc_list[r,1])
+            deckregion_obj = _DeckStrip(name="Region %d" % r,
+                                        L=Ltrack_list[r],
+                                        width_func=width_func_list[r],
+                                        func_edge1=mFunc_list[r,0],
+                                        func_edge2=mFunc_list[r,1])
 
             deck_regions_list.append(deckregion_obj)
                 
@@ -582,27 +583,13 @@ class UKNA_BSEN1991_2_crowd():
             print("nRegions: %d" % nRegions)
             
             for deckregion_obj in deck_regions_list:
+                
                 deckregion_obj.print_details()
-        
+                
+                deckregion_obj.integrate(mode_index)
             
                 
-#        # Compute area and modal area integrals for deck regions            
-#        for r in range(nRegions):
-#            
-#            # Evaluate modeshapes at edges of deck using 
-#            x1 = numpy.linspace(0,Ltrack_list[r,0])
-#            x2 = numpy.linspace(0,Ltrack_list[r,1])
-#            x_CL = 0.5*(x1+x2)
-#            
-#            phi1 = modeshapeFunc_list[r,0](x1)[:,mode_index]
-#            phi2 = modeshapeFunc_list[r,1](x2)[:,mode_index]
-#            width = width_func_list[r](x_CL)
-#            print(width)
-#            
-#            
-#            # Determine area integrals on transverse sections
-#            #area_transverse = CalcSignCorrectedAreaIntegral(width,phi1,phi2)
-#            #print(area_transverse)
+
             
             
     def get_crowd_density(self,
@@ -1323,10 +1310,11 @@ class _DeckStrip():
     
     x: [0, L]
     y: [-b(x)/2, +b(x)/2]
+    
     """
     
     def __init__(self,
-                 name:string,
+                 name:str,
                  L:float,
                  width_func,
                  func_edge1,
@@ -1354,34 +1342,152 @@ class _DeckStrip():
         
         """
         
-        self.ID = ID
-        self.L = L
+        self.name = name
+        """
+        Name assigned to deck strip instance
+        """
+        
+        if len(L)!= 2:
+            raise ValueError("List of length 2 expected for `L` parameter")
+        
+        self.L_list = L
+        """
+        Length of deck strip, measured along edge 1 and edge2 respectively
+        
+        _List_ of length 2 expected
+        """
+        
         self.width_func = width_func
         """
         _Function (_ or _float_) to describe how width of deck strip
-        varies with chainage
+        varies with chainage, b(x)
         """
         
-        self.modeshape_func_edge1 = modeshape_func_edge1
+        self.func_edge1 = func_edge1
         """
+        _Function_ to define variation of integrand along -b(x) edge
         """
+        
+        self.func_edge2 = func_edge2
+        """
+        _Function_ to define variation of integrand along +b(x) edge
+        """
+        
         
     
-    def print_details():
+    def print_details(self):
         """
         Prints details of deck region instance
         """
         
-        print("Length of edge lines for regions:")
-        for r, length_list in enumerate(Ltrack_list):
-            print("Region %d" % r)
-            print("[" + ", ".join("%.2f" % f for f in length_list) + "]")
-
-        print("Width of regions:")
-        for r, width_func in enumerate(width_func_list):
-            print("Region %d" % r)
-            print(width_func)
+        for key, val in self.__dict__.items():
+            
+            print(key + ":")
+            print(val)
     
+        print("")
+        
+        
+        
+    def integrate(self,index,
+                  func_edge1=None,
+                  func_edge2=None,
+                  num=100,
+                  makePlot=True):
+        """
+        Integrates function (integrand) over domain
+        
+        Required:
+            
+        * `index`, integer index to apply to values returned by functions
+            
+        Optional:
+        
+        * `num`, defines number of transverse cuts to make when integrating
+        
+        Functions `func_edge1` and `func_edge2` can be supplied to override
+        corresponding functions held as attributes. Howeverr default behaviour 
+        is to use attribute functions.
+        
+        
+        """
+        
+        # Handle optional arguments
+        if func_edge1 is None:
+            func_edge1 = self.func_edge1
+         
+        if func_edge2 is None:
+            func_edge2 = self.func_edge2
+            
+        # Retrieve other attributes
+        L_list = self.L_list
+        width_func = self.width_func    
+        
+        # Evaluate functions
+        x_edge1 = numpy.linspace(0,L_list[0],num=num)
+        x_edge2 = numpy.linspace(0,L_list[1],num=num)
+        x_CL = 0.5*(x_edge1+x_edge2)
+            
+        if isinstance(func_edge1,float):
+            f_edge1 = func_edge1 * numpy.ones(num)
+        else:
+            f_edge1 = func_edge1(x_edge1)
+            
+        if isinstance(func_edge2,float):
+            f_edge2 = func_edge2 * numpy.ones(num)
+        else:
+            f_edge2 = func_edge2(x_edge2)
+          
+        if isinstance(width_func,float):
+            width = width_func * numpy.ones(num)
+        else:
+            width = width_func(x_CL)    
+            
+        y_edge1 = -width/2
+        y_edge2 = +width/2
+
+        # Determine integrals on transverse sections
+        integral_y = CalcSignCorrectedAreaIntegral(width,f_edge1,f_edge2)
+
+        # Determine area integral by integrating over transverse cuts
+        integral_x = scipy.integrate.cumtrapz(integral_y,
+                                              x=x_CL,
+                                              axis=0,
+                                              initial=0.0)
+        overall_integral = integral_x[-1]
+        
+        if makePlot:
+            
+            fig = plt.figure()
+            
+            fig.suptitle("Deck region `%s`" % self.name)
+            fig.set_size_inches((10,6))
+            fig.subplots_adjust(hspace=0)
+            
+            ax = fig.add_subplot(3,1,1,projection='3d',proj_type = 'ortho')
+            #ax.set_aspect('equal')
+            
+            for m in range(f_edge1.shape[1]):
+                
+                x_vals = numpy.vstack((x_edge1,x_edge2))
+                y_vals = numpy.vstack((y_edge1,y_edge2))
+                f_vals = numpy.vstack((f_edge1[:,m],f_edge2[:,m]))
+                
+                ax.plot_surface(x_vals,y_vals,f_vals)
+                
+            ax.set_title("Strip geometry and integrand")
+            
+            ax = fig.add_subplot(3,1,2)
+            ax.plot(x_CL,integral_y)
+            ax.set_ylabel("Transverse integrals (m)")
+            ax.set_xticks([])
+            
+            ax = fig.add_subplot(3,1,3)
+            ax.plot(x_CL,integral_x)
+            ax.set_ylabel("Overall integrals ($m^2$)")
+            
+        # Return overall integrat        
+        return overall_integral
     
 # ********************** FUNCTIONS   ****************************************
         
@@ -1494,10 +1600,14 @@ def CalcSignCorrectedAreaIntegral(b,phi1,phi2):
     
     # Change shapes agree
     if phi1.shape != phi2.shape:
-        raise ValueError("Shapes of `phi1` and `phi2` do not agree!")
+        raise ValueError("Shapes of `phi1` and `phi2` do not agree!" + 
+                         "phi1.shape: {0}\n".format(phi1.shape) + 
+                         "phi2.shape: {0}\n".format(phi2.shape))
         
-    if phi1.shape != b.shape:
-        raise ValueError("Shapes of `phi1` and `b` do not agree!")        
+    if phi1.shape[0] != b.shape[0]:
+        raise ValueError("Axis 0 of `phi1` and `b` do not agree!\n" + 
+                         "phi1.shape: {0}\n".format(phi1.shape) + 
+                         "b.shape: {0}\n".format(b.shape))        
     
     # Test to see if same signs
     same_sign = numpy.equal(numpy.sign(phi1),numpy.sign(phi2))
@@ -1507,10 +1617,11 @@ def CalcSignCorrectedAreaIntegral(b,phi1,phi2):
     phi2_abs = numpy.abs(phi2)
     
     # Compute area integral on assumption of same sign
-    area_same_sign = 0.5*b*(phi1_abs+phi2_abs)
+    area_same_sign = numpy.multiply(0.5*b,(phi1_abs+phi2_abs).T).T
     
     # Compute area integral where different sign
-    area_different_sign = 0.5*b*(phi1_abs**2+phi2_abs**2)/(phi1_abs+phi2_abs)
+    phi_eff = (phi1_abs**2+phi2_abs**2)/(phi1_abs+phi2_abs)
+    area_different_sign = numpy.multiply(0.5*b,phi_eff.T).T
     
     # Select appropriate case
     area_to_use = numpy.where(same_sign,area_same_sign,area_different_sign)
