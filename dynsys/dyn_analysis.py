@@ -564,6 +564,8 @@ class UKNA_BSEN1991_2_crowd():
         mFunc_list, Ltrack_list = self._read_modeshapes(modalsys_obj,
                                                         modeshapes_fname_arr)
             
+        print("mode_index: {0}".format(mode_index))
+        
         # Define deck regions
         deck_regions_list = []
         
@@ -586,8 +588,19 @@ class UKNA_BSEN1991_2_crowd():
                 
                 deckregion_obj.print_details()
                 
-                deckregion_obj.integrate(mode_index)
+        # Obtain area integral over all deck strips
+        deck_area = 0.0
+        modal_areas = 0.0
+        
+        for r, deckregion_obj in enumerate(deck_regions_list):
             
+            deck_area += deckregion_obj.calc_area()
+            
+            modal_areas += deckregion_obj.integrate(mode_index)
+            
+        print("Deck area: {0}".format(deck_area))
+        print("Modal areas:")
+        print(modal_areas)
                 
 
             
@@ -1388,7 +1401,15 @@ class _DeckStrip():
     
         print("")
         
-        
+    def calc_area(self,num=100):
+        """
+        Calculates area of deck strip by integration
+        """
+        return self.integrate(0,
+                              func_edge1=1.0,
+                              func_edge2=1.0,
+                              num=num,
+                              makePlot=True)
         
     def integrate(self,index,
                   func_edge1=None,
@@ -1485,7 +1506,9 @@ class _DeckStrip():
             y3 = self.y3
             f3 = self.phi3
             
-            for m, _h in zip(range(f_edge1.shape[1]),h):
+            nModes = f_edge1.shape[1]
+            
+            for m, _h in zip(range(nModes),h):
                 
                 x_vals = numpy.vstack((x_edge1,
                                        0.5*(x_edge1+x_edge2),
@@ -1545,6 +1568,11 @@ class _DeckStrip():
         is to situations where the sign of a distirbuted load is to varied to 
         always be in the adverse (non-cancelling) sense._
         """
+        
+        # Convert arrays
+        #b = numpy.array(b)
+        #phi1 = numpy.asmatrix(phi1).T
+        #phi2 = numpy.asmatrix(phi2).T
         
         # Change shapes agree
         if phi1.shape != phi2.shape:
