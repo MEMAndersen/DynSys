@@ -1624,7 +1624,7 @@ class _DeckStrip():
             sign_vals = numpy.sign(phi_i)
             
             # Adjust third spine ordinates if signs differ
-            if sign_vals[0]!=sign_vals[1]:
+            if sign_vals[0]<0 or sign_vals[1]<0:
                 
                 if sign_vals[0]>=0:
                     # 1st ordinate is positive, which implies the 2nd is not
@@ -1641,7 +1641,10 @@ class _DeckStrip():
                     _phi1 = -_phi1
                     
                 else:
-                    raise ValueError("Unexpected `sign_vals`!")
+                    # Both edge ordinates are negative
+                    # Reverse to positive
+                    _phi1 = -_phi1
+                    _phi2 = -_phi2
                     
                 # Modeshape along third spine = 0 given above definitions
                 # for y-position of the spine
