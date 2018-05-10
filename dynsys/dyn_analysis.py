@@ -578,29 +578,29 @@ class UKNA_BSEN1991_2_crowd():
                                         func_edge2=mFunc_list[r,1])
 
             deck_regions_list.append(deckregion_obj)
+            
+        self.deck_regions_list = deck_regions_list
+        """
+        List of DeckStrip classes, defining deck strips
+        """
                 
         if verbose: 
             
-            print("Details of deck regions:")
-            print("nRegions: %d" % nRegions)
+            print("\nDetails of deck regions:")
+            print("nRegions: %d\n" % nRegions)
             
             for deckregion_obj in deck_regions_list:
                 
                 deckregion_obj.print_details()
                 
-        # Obtain area integral over all deck strips
-        deck_area = 0.0
-        modal_areas = 0.0
-        
-        for r, deckregion_obj in enumerate(deck_regions_list):
-            
-            deck_area += deckregion_obj.calc_area()
-            
-            modal_areas += deckregion_obj.integrate(mode_index)
-            
-        print("Deck area: {0}".format(deck_area))
-        print("Modal areas:")
-        print(modal_areas)
+        # Obtain area integrals over all deck strips
+        deck_area = self.calc_deck_area()
+        modal_areas = self.calc_modal_areas(mode_index, makePlot=makePlot)
+                    
+        if verbose:
+            print("Total deck area: {0}".format(deck_area))
+            print("Modal areas:")
+            print(modal_areas)
                 
 
             
@@ -738,9 +738,20 @@ class UKNA_BSEN1991_2_crowd():
 
         return modeshapeFunc_list, Ltrack_list
         
+    def calc_deck_area(self):
+        """
+        Returns the total deck area, taken across all deck strips
+        """
         
+        return sum([x.calc_area() for x in self.deck_regions_list])
     
-    
+    def calc_modal_areas(self,mode_index,makePlot=False):
+        """
+        Returns modal area integrals
+        """
+        
+        return numpy.sum([x.integrate(mode_index,makePlot=makePlot)
+                          for x in self.deck_regions_list],axis=0)
     
      
 class Multiple():
@@ -1389,7 +1400,7 @@ class _DeckStrip():
         
         
     
-    def print_details(self):
+    def print_details(self,calcArea=True):
         """
         Prints details of deck region instance
         """
@@ -1398,10 +1409,14 @@ class _DeckStrip():
             
             print(key + ":")
             print(val)
+        
+        if calcArea:
+            print("area:")
+            print("%.2f" % self.calc_area())
     
         print("")
         
-    def calc_area(self,num=100):
+    def calc_area(self,num=100,makePlot=False):
         """
         Calculates area of deck strip by integration
         """
@@ -1409,7 +1424,7 @@ class _DeckStrip():
                               func_edge1=1.0,
                               func_edge2=1.0,
                               num=num,
-                              makePlot=True)
+                              makePlot=makePlot)
         
     def integrate(self,index,
                   func_edge1=None,
@@ -1451,12 +1466,12 @@ class _DeckStrip():
         x_CL = 0.5*(x_edge1+x_edge2)
             
         if isinstance(func_edge1,float):
-            f_edge1 = func_edge1 * numpy.ones(num)
+            f_edge1 = func_edge1 * numpy.ones((num,1))
         else:
             f_edge1 = func_edge1(x_edge1)
             
         if isinstance(func_edge2,float):
-            f_edge2 = func_edge2 * numpy.ones(num)
+            f_edge2 = func_edge2 * numpy.ones((num,1))
         else:
             f_edge2 = func_edge2(x_edge2)
           
@@ -1506,9 +1521,9 @@ class _DeckStrip():
             y3 = self.y3
             f3 = self.phi3
             
-            nModes = f_edge1.shape[1]
+            N = f_edge1.shape[1]
             
-            for m, _h in zip(range(nModes),h):
+            for m, _h in zip(range(N),h):
                 
                 x_vals = numpy.vstack((x_edge1,
                                        0.5*(x_edge1+x_edge2),
@@ -1521,9 +1536,8 @@ class _DeckStrip():
                 f_vals = numpy.vstack((f_edge1[:,m],
                                        f3[:,m],
                                        f_edge2[:,m]))
-                
-                ax1.plot_wireframe(x_vals,y_vals,f_vals,
-                                  color=_h.get_color())
+                                            
+                ax1.plot_wireframe(x_vals,y_vals,f_vals,color=_h.get_color())
                 #ax.plot_surface(x_vals,y_vals,f_vals)
                 
                 ax3.text(x_CL[-1],
@@ -1585,8 +1599,8 @@ class _DeckStrip():
                              "phi1.shape: {0}\n".format(phi1.shape) + 
                              "b.shape: {0}\n".format(b.shape))  
             
-        if target_index < 0 or target_index >= phi1.shape[1]:
-            raise ValueError("Invalid `target_index` specified!")
+        #if target_index < 0 or target_index >= phi1.shape[1]:
+        #    raise ValueError("Invalid `target_index` specified!")
         
         # Loop through one transverse cut at a time
         integral_y_list = []
