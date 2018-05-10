@@ -1327,7 +1327,8 @@ class _DeckStrip():
         
         * `name`, _string_; identifier for class instance, preferably unique
         
-        * `L`, _float_; length of strip (in m)
+        * `L`, list of floats, length 2 expected. Denotes length of strip 
+          as measured along edge curves.
         
         * `width_func`, _function_ expected, defines width _b_ of strip (in m)
           as a function of chainage along the _centreline_ of the strip.
@@ -1393,7 +1394,7 @@ class _DeckStrip():
                   func_edge1=None,
                   func_edge2=None,
                   num=100,
-                  makePlot=True):
+                  makePlot=False):
         """
         Integrates function (integrand) over domain
         
@@ -1443,11 +1444,8 @@ class _DeckStrip():
         else:
             width = width_func(x_CL)    
             
-        y_edge1 = -width/2
-        y_edge2 = +width/2
-
         # Determine integrals on transverse sections
-        integral_y = CalcSignCorrectedAreaIntegral(width,f_edge1,f_edge2)
+        integral_y = self.calc_integral_y(width,f_edge1,f_edge2,index)
 
         # Determine area integral by integrating over transverse cuts
         integral_x = scipy.integrate.cumtrapz(integral_y,
@@ -1460,34 +1458,175 @@ class _DeckStrip():
             
             fig = plt.figure()
             
-            fig.suptitle("Deck region `%s`" % self.name)
-            fig.set_size_inches((10,6))
+            fig.suptitle("Deck region `%s`\n" % self.name + 
+                         "Target index %d" % index)
+            fig.set_size_inches((14,7))
             fig.subplots_adjust(hspace=0)
             
-            ax = fig.add_subplot(3,1,1,projection='3d',proj_type = 'ortho')
+            ax2 = fig.add_subplot(3,1,2)
+            h = ax2.plot(x_CL,integral_y)
+            ax2.set_ylabel("Transverse integrals (m)")
+            ax2.set_xticks([])
+            ax2.axhline(0.0,color='k',alpha=0.3)
+            
+            ax3 = fig.add_subplot(3,1,3)
+            ax3.plot(x_CL,integral_x)
+            ax3.set_ylabel("Overall integrals ($m^2$)")
+            ax3.axhline(0.0,color='k',alpha=0.3)
+            
+            ax1 = fig.add_subplot(3,1,1,projection='3d',proj_type = 'ortho')
+            ax1.set_title("Strip geometry and integrand")
             #ax.set_aspect('equal')
             
-            for m in range(f_edge1.shape[1]):
-                
-                x_vals = numpy.vstack((x_edge1,x_edge2))
-                y_vals = numpy.vstack((y_edge1,y_edge2))
-                f_vals = numpy.vstack((f_edge1[:,m],f_edge2[:,m]))
-                
-                ax.plot_surface(x_vals,y_vals,f_vals)
-                
-            ax.set_title("Strip geometry and integrand")
+            y_edge1 = -width/2
+            y_edge2 = +width/2
             
-            ax = fig.add_subplot(3,1,2)
-            ax.plot(x_CL,integral_y)
-            ax.set_ylabel("Transverse integrals (m)")
-            ax.set_xticks([])
+            # Get ordinates along third spine
+            y3 = self.y3
+            f3 = self.phi3
             
-            ax = fig.add_subplot(3,1,3)
-            ax.plot(x_CL,integral_x)
-            ax.set_ylabel("Overall integrals ($m^2$)")
+            for m, _h in zip(range(f_edge1.shape[1]),h):
+                
+                x_vals = numpy.vstack((x_edge1,
+                                       0.5*(x_edge1+x_edge2),
+                                       x_edge2))
+                
+                y_vals = numpy.vstack((y_edge1,
+                                       y3,
+                                       y_edge2))
+                
+                f_vals = numpy.vstack((f_edge1[:,m],
+                                       f3[:,m],
+                                       f_edge2[:,m]))
+                
+                ax1.plot_wireframe(x_vals,y_vals,f_vals,
+                                  color=_h.get_color())
+                #ax.plot_surface(x_vals,y_vals,f_vals)
+                
+                ax3.text(x_CL[-1],
+                         overall_integral[m],
+                         "%.3f" % overall_integral[m])
+                
+            fig.legend(h,["Index %d" % x for x in range(len(h))])
             
         # Return overall integrat        
         return overall_integral
+    
+    def calc_integral_y(self,b,phi1,phi2,target_index:int):
+        """
+        Computes transverse 1D integral across domain of width `b`, 
+        given edge ordinates `phi1` and phi2` at various longitudinal 
+        ordinates.
+        
+        Linear variation of integrand within integration domain is assumed.
+                    
+        Arrays of compatible dimensions must be supplied (this is checked)
+        
+        ***
+        Required:
+            
+        * `b`, 1D array of width ordinates
+        
+        * `phi1`, 2D array of function ordinates along edge 1
+        
+        * `phi2`, 2D array of function ordinates along edge 2
+                
+        * `target_index`, _integer_, used to denote index of arrays for which 
+          integral is "targeted", along axis 0.
+          
+        For this dimension referred to be `target_index`, the sign of the 
+        integrand will be adjusted such that the integral over that dimension 
+        is equivilent to the integral of the modulus of the integrand function. 
+        The pattern of sign-reversal will be used consistently for integration 
+        over all other dimensions.
+        
+        ***
+        _A useful application of this function (for which it has been written!) 
+        is to situations where the sign of a distirbuted load is to varied to 
+        always be in the adverse (non-cancelling) sense._
+        """
+        
+        # Change shapes agree
+        if phi1.shape != phi2.shape:
+            raise ValueError("Shapes of `phi1` and `phi2` do not agree!" + 
+                             "phi1.shape: {0}\n".format(phi1.shape) + 
+                             "phi2.shape: {0}\n".format(phi2.shape))
+            
+        if phi1.shape[0] != b.shape[0]:
+            raise ValueError("Axis 0 of `phi1` and `b` do not agree!\n" + 
+                             "phi1.shape: {0}\n".format(phi1.shape) + 
+                             "b.shape: {0}\n".format(b.shape))  
+            
+        if target_index < 0 or target_index >= phi1.shape[1]:
+            raise ValueError("Invalid `target_index` specified!")
+        
+        # Loop through one transverse cut at a time
+        integral_y_list = []
+        y3 = []
+        phi3 = []
+        
+        for _phi1, _phi2, _b in zip(phi1,phi2,b):
+            
+            # Define y-coordinate of edge lines
+            _y1 = -_b/2
+            _y2 = +_b/2
+            
+            # Create a third spine along the deck centreline, 
+            # with intepolated (averaged) integrand values
+            _y3   = 0.5*(_y1 + _y2)
+            _phi3 = 0.5*(_phi1 + _phi2)
+            
+            # Test to see if integrand same sign (for target dimension)
+            i = target_index
+            phi_i = [_phi1[i],_phi2[i]]
+            sign_vals = numpy.sign(phi_i)
+            
+            # Adjust third spine ordinates if signs differ
+            if sign_vals[0]!=sign_vals[1]:
+                
+                if sign_vals[0]>=0:
+                    # 1st ordinate is positive, which implies the 2nd is not
+                    _y3 = _y1 + phi_i[0] / (phi_i[0] - phi_i[1]) * _b
+                    
+                    # Negate ordinates across all dimensions
+                    _phi2 = -_phi2
+                    
+                elif sign_vals[1]>=0:
+                    # 2nd ordinate is positive, which implies the 1st is not
+                    _y3 = _y2 - phi_i[1] / (phi_i[1] - phi_i[0]) * _b
+                    
+                    # Negate ordinates across all dimensions
+                    _phi1 = -_phi1
+                    
+                else:
+                    raise ValueError("Unexpected `sign_vals`!")
+                    
+                # Modeshape along third spine = 0 given above definitions
+                # for y-position of the spine
+                _phi3 = numpy.zeros_like(_phi1)
+        
+            # Calculate transverse integral
+            y_vals = numpy.vstack((_y1,_y3,_y2))
+    
+            phi_vals = numpy.vstack((_phi1,_phi3,_phi2))
+    
+            integral_y = scipy.integrate.cumtrapz(phi_vals,
+                                                  x=y_vals,
+                                                  axis=0,
+                                                  initial=0.0)
+            
+            integral_y_list.append(integral_y[-1])
+            y3.append(_y3)
+            phi3.append(_phi3)
+            
+        # Save central spine as attributes
+        self.y3 = numpy.array(y3)
+        self.phi3 = numpy.array(phi3)
+                    
+        return numpy.array(integral_y_list)
+    
+        
+        
     
 # ********************** FUNCTIONS   ****************************************
         
@@ -1586,47 +1725,7 @@ def Calc_Seff(modeshapeFunc,S,
     return Seff, lambda_vals
 
 
-def CalcSignCorrectedAreaIntegral(b,phi1,phi2):
-    """
-    Computes sign-corrected integral across domain of width `b`, given (signed) 
-    edge ordinates `phi1` and phi2`.
-    
-    Linear variation of integrand within integration domain is assumed 
-    
-    ![derivation](../dynsys/img/sign_corrected_integral_derivation.PNG)
-        
-    Arrays of equal length can be supplied.
-    """
-    
-    # Change shapes agree
-    if phi1.shape != phi2.shape:
-        raise ValueError("Shapes of `phi1` and `phi2` do not agree!" + 
-                         "phi1.shape: {0}\n".format(phi1.shape) + 
-                         "phi2.shape: {0}\n".format(phi2.shape))
-        
-    if phi1.shape[0] != b.shape[0]:
-        raise ValueError("Axis 0 of `phi1` and `b` do not agree!\n" + 
-                         "phi1.shape: {0}\n".format(phi1.shape) + 
-                         "b.shape: {0}\n".format(b.shape))        
-    
-    # Test to see if same signs
-    same_sign = numpy.equal(numpy.sign(phi1),numpy.sign(phi2))
-    
-    # Obtain absolute values
-    phi1_abs = numpy.abs(phi1)
-    phi2_abs = numpy.abs(phi2)
-    
-    # Compute area integral on assumption of same sign
-    area_same_sign = numpy.multiply(0.5*b,(phi1_abs+phi2_abs).T).T
-    
-    # Compute area integral where different sign
-    phi_eff = (phi1_abs**2+phi2_abs**2)/(phi1_abs+phi2_abs)
-    area_different_sign = numpy.multiply(0.5*b,phi_eff.T).T
-    
-    # Select appropriate case
-    area_to_use = numpy.where(same_sign,area_same_sign,area_different_sign)
-        
-    return area_to_use
+
 
 
     
@@ -2032,11 +2131,32 @@ if __name__ == "__main__":
         
     elif testRoutine==8:
         
-        b = numpy.array([2.0,2.0,2.0,4.0,4.0])
-        phi1 = numpy.array([1.0,1.0,1.0,1.0,1.0])
-        phi2 = numpy.array([1.0,0.0,-1.0,1.0,-1.0])
-        integral_area = CalcSignCorrectedAreaIntegral(b,phi1,phi2)
-        print(integral_area)
+        L = 150.0
+        N = 151
+        
+        def phi1_func(x):
+            m1 = numpy.sin(3 * numpy.pi * x / L)
+            m2 = numpy.abs(numpy.sin(3 * numpy.pi * x / L))
+            m3 = numpy.where(x<100.0, numpy.sin(numpy.pi * x / 100.0),0.0)
+            m = numpy.vstack((m1,m2,m3)).T
+            return m
+        
+        def phi2_func(x):
+            return -0.2*phi1_func(x)
+                
+        def width_func(x):
+            return 0.2 + 1.0*numpy.sin(numpy.pi * x / L)
+        
+        target_index=0
+        
+        deck_strip_obj = _DeckStrip("test",[L,L],
+                                    width_func,
+                                    phi1_func,
+                                    phi2_func)
+        
+        deck_strip_obj.integrate(index=0,num=N,makePlot=True)
+        deck_strip_obj.integrate(index=1,num=N,makePlot=True)
+        deck_strip_obj.integrate(index=2,num=N,makePlot=True)
         
     else:
         raise ValueError("Test routine does not exist!")
