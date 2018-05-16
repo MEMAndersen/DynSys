@@ -38,7 +38,8 @@ width_funcs = [1.5,width_region1,2.0]
 
 # Run crowd loading
 crowd_analysis = UKNA_BSEN1991_2_crowd(modalsys_obj=my_sys,
-                                       mode_index=0,
                                        bridgeClass=bridgeClass,
                                        width_func_list=width_funcs,
                                        modeshapes_fname_arr=mshape_fnames)
+
+crowd_analysis.run(mode_index=2,load_intensity=1.0)

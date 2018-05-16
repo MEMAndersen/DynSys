@@ -20,6 +20,7 @@ from inspect import isfunction
 import tstep
 import loading
 import msd_chain
+from dynsys import PlotFrequencyResponse
 
 from loading import UKNA_BSEN1991_2_walkers_joggers_loading as pedestrian_loading
 
@@ -480,7 +481,6 @@ class UKNA_BSEN1991_2_crowd():
     
     def __init__(self,
                  modalsys_obj,
-                 mode_index:int,
                  width_func_list=[3.0],
                  modeshapes_fname_arr=["modeshapes_edge1.csv",
                                         "modeshapes_edge2.csv"],
@@ -498,9 +498,6 @@ class UKNA_BSEN1991_2_crowd():
                
         * `modalsys_obj`, object defining modal system to be analysed
             
-        * `mode_index`, _integer_ to denote mode at which resonance should 
-          to targeted
-          
         * `modeshapes_fname_arr`, array of strings, of shape (nRegions,2) 
           denoting files containing modeshape variation along the edges of 
           each deck region:
@@ -533,7 +530,7 @@ class UKNA_BSEN1991_2_crowd():
         
         # Create default name for analysis object
         if name is None:
-            name = modalsys_obj.name + " - Mode %d - Crowd" % mode_index
+            name = modalsys_obj.name + " - Crowd Loading"
             
         self.name = name
         """
@@ -563,9 +560,7 @@ class UKNA_BSEN1991_2_crowd():
         # Read modeshape data from file, determine interpolation functions
         mFunc_list, Ltrack_list = self._read_modeshapes(modalsys_obj,
                                                         modeshapes_fname_arr)
-            
-        print("mode_index: {0}".format(mode_index))
-        
+                    
         # Define deck regions
         deck_regions_list = []
         
@@ -583,27 +578,166 @@ class UKNA_BSEN1991_2_crowd():
         """
         List of DeckStrip classes, defining deck strips
         """
+        
+        # Calculate deck area
+        self.deck_area = self.calc_deck_area()
+        """
+        Total deck area ($m^2$), obtained by integration over all deck strips
+        """
+        
+        # Get damped natural frequencies for system
+        self.f_d = modalsys_obj.CalcEigenproperties()["f_d"][1::2]
+        """
+        Damped natural frequencies of system being analysed
+        """
+        
+        # Save other attributes
+        self.modalsys_obj = modalsys_obj
+        """
+        `ModalSys` object, corresponding to system being analysed
+        """
                 
         if verbose: 
             
-            print("\nDetails of deck regions:")
-            print("nRegions: %d\n" % nRegions)
+            self.print_details()
+                
+        
+    def run(self,mode_index:int,load_intensity:float=None,
+            verbose=True, makePlot=True
+            ):
+        """
+        Runs calculations to determine steady-state crowd loading responses
+        
+        ***
+        Required:
             
-            for deckregion_obj in deck_regions_list:
-                
-                deckregion_obj.print_details()
-                
+        * `mode_index`, _integer_, denotes the mode at which resonance is 
+          to be targeted
+        
+        * `load_intensity`, _float_, denotes the load intensity (in N/m2) 
+          to be applied. If _None_, `load_intensity` will be calculated 
+          according to UK NA to BS EN 1991-2 codified requirements
+          
+        """
+        
+        print("\n**** Running steady-state crowd loading analysis ****")
+        
+        print("Target mode index: %d" % mode_index)
+        
+        # Calculate load intensity, if not provided directly
+        if load_intensity is None:
+            raise ValueError("Calculation of `load_intensity` to UK NA to " + 
+                             "BS EN 1991-2 not yet implemented!")
+        
         # Obtain area integrals over all deck strips
-        deck_area = self.calc_deck_area()
         modal_areas = self.calc_modal_areas(mode_index, makePlot=makePlot)
+        self.modal_areas = modal_areas
+                 
+        # Multiply by load intensity to obtain modal force amplitudes
+        # Note modal force amplitudes should be regarded as complex variables 
+        # (although here they will be real-valued) whereby negative values 
+        # imply a force which is 180 degrees out of phase
+        modal_forces = load_intensity * modal_areas
+        self.modal_forces = modal_forces
+        
+        # Obtain frequency transfer function G(f) relating applied forces 
+        # (i.e. modal forces in this application) to DOF accelerations 
+        # (i.e. modal accelerations in this application)
+        #
+        # It is only necessary to evaluate G(f) at resonant frequency for mode 
+        # being targeted, although for validation / plotting it may be 
+        # advantageous to evaluate G(f) over a wider frequency range
+        #
+        # By definition, G(f1) is a matrix that can be used to relate 
+        # sinusoidal modal forces to sinusoidal modal accelerations, 
+        # given forcing frequency f1.
+        #
+        # Note: G(f) will in general be complex-valued; the should be 
+        # intepreted to denote scaling and phase lag
+        
+        target_f = self.f_d[mode_index]
+        print("Frequency for targeted mode: \n%.2f Hz" % target_f)
+        
+        def Calc_G_f(fVals):
+            return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
+                                                      force_accn=True)
+    
+        f1, G_f_target = Calc_G_f(target_f)
+        G_f_target = numpy.asmatrix(G_f_target[:,:,0])
+        
+
+        
+        
+        if makePlot:
+            
+            f, G_f_full = Calc_G_f(None)
+            
+            nModes = G_f_full.shape[0]
+            
+            fig, axarr = plt.subplots(nModes,sharex=True,sharey=True)
+            
+            for m in range(nModes):
+                
+                ax = axarr[m]
+                
+                for j in range(G_f_full.shape[1]):
                     
+                    _G_f = G_f_full[m,j,:]
+                    
+                    # Use function for plotting frequency responses
+                    # (this ensures good choice of f_vals)
+                    PlotFrequencyResponse(f,_G_f,
+                                          positive_f_only=True,
+                                          ax_magnitude=ax,
+                                          plotPhase=False)
+                    
+                # Override properties for ax
+                ax.set_title("")
+                ax.set_ylabel("Modal accn %d" % (m+1))
+                
+                if m != nModes:
+                    ax.set_xlabel("")
+                    
+                # Overlay values used in calculation
+                ax.plot(f1,numpy.abs(G_f_target[m,:]),"r.")
+                ax.axvline(x=target_f,color='k',alpha=0.3)
+                    
+            fig.suptitle("Frequency response functions\n" + 
+                         "relating applied modal forces (N) " + 
+                         "to modal accelerations (m/$s^2$)")
+            
+            fig.set_size_inches((14,7))
+            fig.legend(ax.lines,["Modal force %d" % (m+1) for m in range(nModes)])
+                
+        
         if verbose:
-            print("Total deck area: {0}".format(deck_area))
+
             print("Modal areas:")
             print(modal_areas)
+            
+            
+        print("**** Analysis complete! ****\n")
                 
 
+    def print_details(self):
+        """
+        Prints details about the analysis that has been defined
+        """
+        print("\nDetails of deck regions:")
+        
+        deck_regions_list = self.deck_regions_list
+        
+        print("nRegions: %d\n" % len(deck_regions_list))
+        
+        for deckregion_obj in deck_regions_list:
             
+            deckregion_obj.print_details()
+            
+        print("Total deck area (m2):\n%.2f" % self.deck_area)
+        
+        print("Damped natural frequencies of system (Hz):\n{0}"
+              .format(self.f_d))
+        
             
     def get_crowd_density(self,
                           bridgeClass:str,
@@ -743,7 +877,9 @@ class UKNA_BSEN1991_2_crowd():
         Returns the total deck area, taken across all deck strips
         """
         
-        return sum([x.calc_area() for x in self.deck_regions_list])
+        total_area = sum([x.calc_area() for x in self.deck_regions_list])
+        
+        return float(total_area)
     
     def calc_modal_areas(self,mode_index,makePlot=False):
         """
@@ -1405,13 +1541,17 @@ class _DeckStrip():
         Prints details of deck region instance
         """
         
+        keys2print = ["name","L_list","width_func","func_edge1","func_edge2"]
+        
         for key, val in self.__dict__.items():
             
-            print(key + ":")
-            print(val)
+            if key in keys2print:
+                
+                print(key + ":")
+                print(val)
         
         if calcArea:
-            print("area:")
+            print("Area:")
             print("%.2f" % self.calc_area())
     
         print("")
