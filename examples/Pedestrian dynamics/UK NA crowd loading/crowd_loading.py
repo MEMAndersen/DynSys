@@ -6,6 +6,7 @@ to UK NA to BS EN 1991-2
 
 # Python dist imports
 import numpy
+import matplotlib.pyplot as plt
 
 # DynSys package imports
 import modalsys
@@ -42,4 +43,6 @@ crowd_analysis = UKNA_BSEN1991_2_crowd(modalsys_obj=my_sys,
                                        width_func_list=width_funcs,
                                        modeshapes_fname_arr=mshape_fnames)
 
-crowd_analysis.run(mode_index=2,load_intensity=1.0)
+target_acc = crowd_analysis.run(mode_index=2,load_intensity=2.0)
+crowd_analysis.plot_results()
+

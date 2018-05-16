@@ -1340,7 +1340,8 @@ class DynSys:
                          fVals=None, fmax=None,
                          A=None, B=None, 
                          C=None, D=None,
-                         force_accn:bool=False
+                         force_accn:bool=False,
+                         verbose=True
                          ):
         """
         Evaluates frequency response G(f) at specified frequencies
@@ -1390,11 +1391,12 @@ class DynSys:
             C = self.output_mtrx
                     
         if C.shape[0]==0:
-            print("***\nWarning: no output matrix defined. "+
-                  "Output matrix Gf will hence relate to state " + 
-                  "displacements, velocities and accelerations\n***")
+            if verbose:
+                print("***\nWarning: no output matrix defined. "+
+                      "Output matrix Gf will hence relate to state " + 
+                      "displacements and velocities\n***")
             
-            C = npy.identity(3*nDOF)
+            C = npy.identity(2*nDOF)
             
         # Retain only columns relating to state variables (disp, vel)
         C = C[:,:2*nDOF]
