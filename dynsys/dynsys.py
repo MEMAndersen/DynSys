@@ -630,6 +630,20 @@ class DynSys:
 
         return A     
     
+    def GetStateMatrix(self,forceRecalculate=False):
+        """
+        Helper function to obtain state matrix, if already calculated 
+        and held as attribute. Otherwise state matrix will be recalculated
+        """
+        if forceRecalculate:
+            return self.CalcStateMatrix()
+        
+        else:
+            attr = "_A_mtrx"
+            if hasattr(self,attr):
+                return getattr(self,attr)
+            else:
+                return self.CalcStateMatrix()
     
     def CalcLoadMatrix(self,
                        saveAsAttr=True,
@@ -658,7 +672,7 @@ class DynSys:
         """
         
         # Retrieve system matrices
-        if M is None: M = self.M_mtrx
+        if M is None: M = self._M_mtrx
         
         self._CheckSystemMatrices(M_mtrx=M)
         
@@ -685,6 +699,22 @@ class DynSys:
             
         return B
     
+    
+    def GetLoadMatrix(self,forceRecalculate=False):
+        """
+        Helper function to obtain load matrix, if already calculated 
+        and held as attribute. Otherwise load matrix will be recalculated
+        """
+        if forceRecalculate:
+            return self.CalcLoadMatrix()
+        
+        else:
+            attr = "_B_mtrx"
+            if hasattr(self,attr):
+                return getattr(self,attr)
+            else:
+                return self.CalcLoadMatrix()
+            
     
     def EqnOfMotion(self,x, t,
                     forceFunc,
@@ -1268,9 +1298,15 @@ class DynSys:
         
         # Obtain f_salient
         if f_salient is None:
-            f_salient = self.CalcEigenproperties()["f_n"]
+            
+            # Peaks are at _damped_ natural frequencies (note: not undamped)
+            f_salient = self.CalcEigenproperties()["f_d"]
             f_salient = npy.sort(f_salient)
-            #print("Salient frequencies: \n{0}".format(f_salient))
+            
+            # Extend beyond min/max f_n value
+            f_salient = f_salient.tolist()
+            f_salient.insert(0, f_salient[0] - 0.5*(f_salient[1]-f_salient[0]))
+            f_salient.append(f_salient[-1] + 0.5*(f_salient[-1]-f_salient[-2]))
         
         # Flatten input
         f_salient = npy.ravel(f_salient)
@@ -1301,11 +1337,10 @@ class DynSys:
     
     # Define frequency response
     def CalcFreqResponse(self,
-                         fVals=None,
-                         fmax=None,
-                         A_mtrx=None,
-                         B_mtrx=None,
-                         output_mtrx=None
+                         fVals=None, fmax=None,
+                         A=None, B=None, 
+                         C=None, D=None,
+                         force_accn:bool=False
                          ):
         """
         Evaluates frequency response G(f) at specified frequencies
@@ -1322,46 +1357,65 @@ class DynSys:
         If `None` (default) then frequencies list will be obtained using 
         `freqVals()` member function.
         
-        * `A_mtrx`, `B_mtrx`: allows overriding of system and load matrices 
+        * `A`, `B`: allows overriding of system and load matrices 
         held as attributes.
         
-        * `output_mtrx`: allows custom output matrix (or list of output 
-        matrices) to be provided. Otherwise `output_mtrx` attribute will be 
-        used, if defined. Otherwise an exception will be raised.
+        * `C`, `D`: allows custom output matrices to be provided. 
+        If None, `output_mtrx` attribute will be used as `C` and `D` 
+        will be ignored.
+        
+        * `force_accn`, _boolean_,  can be set to override the above behaviour 
+        and obtain frequency transfer matrix relating applied forces to 
+        accelerations of the DOFs. E.g. for modal systems, modal acceleration 
+        transfer matrix can be obtained in this way
         
         """
+        nDOF = self.nDOF
+        
         # Handle optional arguments
         if fVals is None:
             fVals = self.freqVals(fmax=fmax)
             
         fVals = npy.ravel(fVals)
         
-        if A_mtrx is None:
-            A_mtrx = self.CalcStateMatrix()
+        if A is None:
+            A = self.GetStateMatrix()
             
-        if B_mtrx is None:
-            B_mtrx = self.CalcLoadMatrix()
+        if B is None:
+            B = self.GetLoadMatrix()
             
-        # Get output matrix
-        if output_mtrx is None:
-            output_mtrx = self.output_mtrx
-                
-        # Obtain only the part of the output matrix relating to state variables
-        nDOF = self.nDOF
-        output_mtrx = output_mtrx[:,:2*nDOF]
-        
-        if output_mtrx.shape[0]==0:
+        # Get output matrices
+        if C is None:
+            
+            C = self.output_mtrx
+                    
+        if C.shape[0]==0:
             print("***\nWarning: no output matrix defined. "+
-                  "Identity matrix will be used instead\n"+
-                  "Output matrix Gf will hence relate to state variables\n***")
-            output_mtrx = npy.identity(2*nDOF)
+                  "Output matrix Gf will hence relate to state " + 
+                  "displacements, velocities and accelerations\n***")
+            
+            C = npy.identity(3*nDOF)
+            
+        # Retain only columns relating to state variables (disp, vel)
+        C = C[:,:2*nDOF]
+            
+        # Override the above 
+        if force_accn:
+            
+            #print("`force_accn` invoked; frequency response function relates" + 
+            #      " applied forces to DOF accelerations")
+            
+            # Get system matrices and output matrices
+            nDOF = self.nDOF
+            C = A[nDOF:2*nDOF,:] # rows relating to accelerations
+            D = B[nDOF:2*nDOF,:] # rows relating to accelerations
         
         # Determine number of inputs and frequencies
-        Ni = B_mtrx.shape[1]
+        Ni = B.shape[1]
         nf = len(fVals)
         
         # Determine number of outputs
-        No = output_mtrx.shape[0]
+        No = C.shape[0]
         
         # Define array to contain frequency response for each 
         G_f = npy.zeros((No,Ni,nf),dtype=complex)
@@ -1374,10 +1428,16 @@ class DynSys:
             
             # Define G(jw) at this frequency
             if not self.isSparse:
-                Gf = output_mtrx* npy.linalg.inv(jw * npy.identity(A_mtrx.shape[0]) - A_mtrx) * B_mtrx
-            else:
-                Gf = output_mtrx * sparse.linalg.inv(jw * sparse.identity(A_mtrx.shape[0]) - A_mtrx) * B_mtrx
+                I = npy.identity(A.shape[0])
+                Gf = C * npy.linalg.inv(jw * I - A) * B
                 
+            else:
+                I = sparse.identity(A.shape[0])
+                Gf = C * sparse.linalg.inv(jw * I - A) * B
+                
+            if D is not None:
+                Gf += D    
+            
             # Store in array
             G_f[:,:,i] = Gf
         
@@ -1597,20 +1657,23 @@ def PlotFrequencyResponse(f,G_f,
         fmin = 0
     
     # Prepare magnitude plot
-    _ = ax_magnitude
-    _.plot(f,npy.abs(G_f),label=label_str) 
-    _.set_xlabel("Frequency f (Hz)")
-    _.set_ylabel("Magnitude |G(f)|")
-    if label_str is not None: _.legend()
+    if plotMagnitude:
+        _ = ax_magnitude
+        _.plot(f,npy.abs(G_f),label=label_str) 
+        _.set_xlim([fmin,fmax])
+        _.set_xlabel("Frequency f (Hz)")
+        _.set_ylabel("Magnitude |G(f)|")
+        if label_str is not None: _.legend()
     
     # Prepare phase plot
-    _ = ax_phase
-    _.plot(f,npy.angle(G_f),label=label_str)
-    _.set_xlim([fmin,fmax])
-    _.set_ylim([-npy.pi,+npy.pi]) # angles will always be in this range
-    _.set_xlabel("Frequency f (Hz)")
-    _.set_ylabel("Phase G(f) (rad)")
-    if label_str is not None: _.legend()
+    if plotPhase:
+        _ = ax_phase
+        _.plot(f,npy.angle(G_f),label=label_str)
+        _.set_xlim([fmin,fmax])
+        _.set_ylim([-npy.pi,+npy.pi]) # angles will always be in this range
+        _.set_xlabel("Frequency f (Hz)")
+        _.set_ylabel("Phase G(f) (rad)")
+        if label_str is not None: _.legend()
     
     # Overlay vertical lines to denote pole frequencies
 
