@@ -628,9 +628,7 @@ class UKNA_BSEN1991_2_crowd():
         
         # Calculate load intensity, if not provided directly
         if load_intensity is None:
-            raise ValueError("Calculation of `load_intensity` to UK NA to " + 
-                             "BS EN 1991-2 not yet implemented!\n" + 
-                             "Value must be provided to `load_intensity`")
+            load_intensity = self.calc_load_intensity()
         
         # Obtain area integrals over all deck strips
         modal_areas = self.calc_modal_areas(mode_index, makePlot=makePlot)
@@ -772,6 +770,15 @@ class UKNA_BSEN1991_2_crowd():
         
         return modal_accn_target
                 
+    def calc_load_intensity(self):
+        """
+        Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
+        """
+    
+        raise ValueError("Calculation of `load_intensity` to UK NA to " + 
+                         "BS EN 1991-2 not yet implemented!\n" + 
+                         "Value must be provided via `load_intensity` input")
+    
 
     def print_details(self):
         """
