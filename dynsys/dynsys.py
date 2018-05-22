@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Classes used to define linear dynamic systems
+
+@author: rihy
 """
 
 from __init__ import __version__ as currentVersion
