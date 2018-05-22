@@ -16,6 +16,9 @@ system. However major release number will always correspond.
 
 ### Changed
 
+* Pedestrian dynamics classes and functions moved to new module `ped_dyn.py`
+  (previously these were within the `dyn_analysis.py` module)
+
 ### Added
 * Crowd loading to UK NA to BS EN 1991-2 now implemented
 
@@ -24,6 +27,9 @@ system. However major release number will always correspond.
 * Bug as noted by BNCY in `dyn_analysis.py` now fixed. A check of the class name 
   of `loadtrain_obj` was being made, but as a result of recent changes this 
   was checking the derived class name.
+
+* `trainAnalysis.py` updated with minor change to reflect new `stats_dict` nested
+  dict structure
 
 ### Removed
 
