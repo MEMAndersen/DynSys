@@ -398,12 +398,16 @@ class SteadyStateCrowdLoading():
         """
         
         # Get damped natural frequencies for system
-        self.f_d = modalsys_obj.CalcEigenproperties()["f_d"][1::2]
+        eig_results = modalsys_obj.CalcEigenproperties()
+        self.f_d = eig_results["f_d"][1::2]
         """
         Damped natural frequencies of system being analysed
         """
         
-        
+        self.eta = eig_results["eta"][1::2]
+        """
+        Damping ratios for system modes
+        """
         
         # Save other attributes
         self.modalsys_obj = modalsys_obj
@@ -430,20 +434,12 @@ class SteadyStateCrowdLoading():
           to be targeted
         
         * `load_intensity`, _float_, denotes the load intensity (in N/m2) 
-          to be applied. If _None_, `load_intensity` will be calculated 
-          according to UK NA to BS EN 1991-2 codified requirements
+          to be applied. If _None_, `load_intensity` to be calculated 
+          using `calc_load_intensity()` method function.
           
         """
         
-        # Calculate load intensity, if not provided directly
-        if load_intensity is None:
-            load_intensity = self.calc_load_intensity(mode_index)
-            
-        self.load_intensity = load_intensity
-        """
-        Uniform load intensity (in $N/m^2$) to be applied to deck regions
-        """
-        
+
         print("\n**** Running steady-state crowd loading analysis ****")
         
         target_mode = mode_index + 1
@@ -453,6 +449,15 @@ class SteadyStateCrowdLoading():
         # Obtain area integrals over all deck strips
         modal_areas = self.calc_modal_areas(mode_index, makePlot=makePlot)
         self.modal_areas = modal_areas
+        
+        # Calculate load intensity, if not provided directly
+        if load_intensity is None:
+            load_intensity = self.calc_load_intensity(mode_index)
+            
+        self.load_intensity = load_intensity
+        """
+        Uniform load intensity (in N/m2) to be applied to deck regions
+        """
                  
         # Multiply by load intensity to obtain modal force amplitudes
         # Note modal force amplitudes should be regarded as complex variables 
@@ -850,14 +855,11 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         
         """
         
-        # Get crowd density according to bridgeClass
-        crowd_density = self.get_crowd_density(bridgeClass,verbose=verbose)
-        
-        self.crowd_density = crowd_density
+        self.bridgeClass = bridgeClass.upper()
         """
-        Crowd density, expressed in persons/m2
+        Bridge class per Table NA.7
         """
-        
+               
         # Run parent init function
         super().__init__(modalsys_obj = modalsys_obj,
                          width_func_list = width_func_list,
@@ -869,7 +871,6 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         
         
     def get_crowd_density(self,
-                          bridgeClass:str,
                           verbose=True,
                           saveAsAttr=True):
         """
@@ -879,7 +880,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         Returns density expressed as persons/m2
         """
 
-        bridgeClass = bridgeClass.upper()
+        bridgeClass = self.bridgeClass
 
         if bridgeClass == 'A':
             density=0.0
@@ -906,7 +907,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         return density
     
     
-    def calc_load_intensity(self,mode_index:int,verbose=True):
+    def calc_load_intensity(self,mode_index:int,calc_lambda=True,verbose=True):
         """
         Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
         
@@ -920,30 +921,50 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         # Retrieve attributes    
         A = self.deck_area
         
+        # Get crowd density according to bridgeClass
+        # Crowd density, expressed in persons/m2
+        crowd_density = self.get_crowd_density(verbose=False)
+        
+        # Get total number of pedestrians
+        N = crowd_density * A
+        
         # Define code inputs
         F0 = 280.0 # N, refer Table NA.8
 
         # Derive adjustment factors
         fv = self.f_d[mode_index]
-        kv = UKNA_BSEN1991_2_Figure_NA_8(fv=fv, analysis_type="walkers")
+        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv, analysis_type="walkers")
         
         log_dec = 2*numpy.pi*self.eta[mode_index]
-        Seff = ?
-        gamma = UKNA_BSEN1991_2_Figure_NA_9()
-    
-    
-        load_intensity = 1.0
+
+        gamma = UKNA_BSEN1991_2_Figure_NA_9(logDec=log_dec,groupType="crowd")
         
+        # Effective number of pedestrians parameter, refer NA. 2.44.5(1)
+        # To generalise to deck of variable width, use area ratio as Seff/S
+        if calc_lambda:
+            Aeff = self.modal_areas[mode_index]
+            lambda_val = 0.634*Aeff/A
+        else:
+            lambda_val = 1.0 # conservative
+    
+        # Calculate load intensity per NA.2.44.5(1)
+        load_intensity = 1.8*(F0/A)*k*((gamma*N/lambda_val)**0.5)
         
         if verbose:
             
-            print("*** Load intensity calculation to UK NA to BS EN 1992-1 ***")
-            print("Summary of key results / parameters:")
-            print("F0 = %.1f\t(N)" % F0)
-            print("A  = %.2f\t(m2)" % A)
-            print("fv = %.2f\t(Hz)" % fv)
-            print("kv = %.2f" % kv)
-            
+            print("\nKey results from load intensity calc:")
+            print("F0       = %.1f\t(N)" % F0)
+            print("A        = %.2f\t(m2)" % A)
+            print("Aeff     = %.2f\t(m2)" % Aeff)
+            print("rho      = %.2f" % crowd_density)
+            print("N        = %.1f" % N)
+            print("fv       = %.3f\t(Hz)" % fv)
+            print("k        = %.3f" % k)
+            print("log_dec  = %.3f" % log_dec)
+            print("gamma    = %.3f" % gamma)
+            print("lambda   = %.3f" % lambda_val)
+            print("w        = %.3f\t(N/m2)" % load_intensity)
+            print("")
 
         return load_intensity
     
@@ -1710,7 +1731,7 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
 
 
 
-def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff,
+def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,
                                 groupType="pedestrian",
                                 makePlot=False):
     """
@@ -1722,49 +1743,62 @@ def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff,
     """
     
     # Digitised data for Figure NA.9
-    delta_vals = numpy.arange(0,0.21,0.02).tolist()
-    Seff_vals = [10,12,15,20,30,40,60,100,200,300]
-    
-    gamma_vals=[[0.680,0.435,0.315,0.245,0.200,0.135,0.100,0.062,0.048,0.030],
-                [0.692,0.462,0.345,0.283,0.240,0.180,0.150,0.117,0.103,0.093],
-                [0.705,0.488,0.380,0.320,0.280,0.225,0.200,0.175,0.163,0.155],
-                [0.716,0.512,0.410,0.350,0.315,0.267,0.248,0.230,0.218,0.215],
-                [0.728,0.535,0.437,0.382,0.352,0.310,0.292,0.277,0.270,0.268],
-                [0.738,0.556,0.465,0.415,0.385,0.350,0.335,0.322,0.320,0.320],
-                [0.746,0.577,0.492,0.445,0.420,0.390,0.375,0.367,0.366,0.366],
-                [0.755,0.597,0.518,0.473,0.451,0.426,0.415,0.408,0.408,0.408],
-                [0.763,0.614,0.540,0.503,0.482,0.460,0.450,0.445,0.445,0.445],
-                [0.774,0.632,0.565,0.530,0.513,0.496,0.485,0.480,0.480,0.480],
-                [0.783,0.645,0.585,0.555,0.540,0.530,0.520,0.513,0.513,0.513]]
-    gamma_vals = numpy.array(gamma_vals).T
-
-    gamma_func = scipy.interpolate.interp2d(delta_vals,Seff_vals,gamma_vals,
-                                            bounds_error=True)
-    
-    # Use interpolation function to read off value at inputs specified
-    gamma = gamma_func(logDec,Seff)
-    
-    # Make plot (to show digitised curves)
-    if makePlot:
+    if groupType=="pedestrian":
         
-        fig, ax = plt.subplots()
+        if Seff is None:
+            raise ValueError("`Seff` required!")
         
-        for Seff in Seff_vals:
+        delta_vals = numpy.arange(0,0.21,0.02).tolist()
+        Seff_vals = [10,12,15,20,30,40,60,100,200,300]
+        
+        gamma_vals=[[0.680,0.435,0.315,0.245,0.200,0.135,0.100,0.062,0.048,0.030],
+                    [0.692,0.462,0.345,0.283,0.240,0.180,0.150,0.117,0.103,0.093],
+                    [0.705,0.488,0.380,0.320,0.280,0.225,0.200,0.175,0.163,0.155],
+                    [0.716,0.512,0.410,0.350,0.315,0.267,0.248,0.230,0.218,0.215],
+                    [0.728,0.535,0.437,0.382,0.352,0.310,0.292,0.277,0.270,0.268],
+                    [0.738,0.556,0.465,0.415,0.385,0.350,0.335,0.322,0.320,0.320],
+                    [0.746,0.577,0.492,0.445,0.420,0.390,0.375,0.367,0.366,0.366],
+                    [0.755,0.597,0.518,0.473,0.451,0.426,0.415,0.408,0.408,0.408],
+                    [0.763,0.614,0.540,0.503,0.482,0.460,0.450,0.445,0.445,0.445],
+                    [0.774,0.632,0.565,0.530,0.513,0.496,0.485,0.480,0.480,0.480],
+                    [0.783,0.645,0.585,0.555,0.540,0.530,0.520,0.513,0.513,0.513]]
+        gamma_vals = numpy.array(gamma_vals).T
+    
+        gamma_func = scipy.interpolate.interp2d(delta_vals,Seff_vals,gamma_vals,
+                                                bounds_error=True)
+        
+        # Use interpolation function to read off value at inputs specified
+        gamma = gamma_func(logDec,Seff)
+        
+        # Make plot (to show digitised curves)
+        if makePlot:
             
-            ax.plot(delta_vals,gamma_func(delta_vals,Seff),label=("%.0f"%Seff))
-        
-        ax.axvline(logDec,color='k',linestyle='--',alpha=0.3)
-        ax.axhline(gamma,color='k',linestyle='--',alpha=0.3)
-        
-        ax.legend(loc='lower right',title="$S_{eff}$ (m)")
-        
-        ax.set_xlim([0,0.2]) # per Fig.NA.9
-        ax.set_ylim([0,0.8]) # per Fig.NA.9
+            fig, ax = plt.subplots()
             
-        ax.set_title("Reduction factor $\gamma$\n" + 
-                     "per Figure NA.9, UK NA to BS EN 1992-1:2003")
-        ax.set_xlabel("Log decrement damping")
-        ax.set_ylabel("$\gamma$")
+            for Seff in Seff_vals:
+                
+                ax.plot(delta_vals,gamma_func(delta_vals,Seff),
+                        label=("%.0f"%Seff))
+            
+            ax.axvline(logDec,color='k',linestyle='--',alpha=0.3)
+            ax.axhline(gamma,color='k',linestyle='--',alpha=0.3)
+            
+            ax.legend(loc='lower right',title="$S_{eff}$ (m)")
+            
+            ax.set_xlim([0,0.2]) # per Fig.NA.9
+            ax.set_ylim([0,0.8]) # per Fig.NA.9
+                
+            ax.set_title("Reduction factor $\gamma$\n" + 
+                         "per Figure NA.9, UK NA to BS EN 1992-1:2003")
+            ax.set_xlabel("Log decrement damping")
+            ax.set_ylabel("$\gamma$")
+        
+    elif groupType=="crowd":
+        
+        gamma = (logDec / 0.20)*0.23
+        
+    else:
+        raise ValueError("Unexpected `groupType`")
     
     return gamma
 

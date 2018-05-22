@@ -10,14 +10,34 @@ system. However major release number will always correspond.</p>
 <hr />
 <h2>Unreleased</h2>
 <h3>Changed</h3>
+<ul>
+<li>Pedestrian dynamics classes and functions moved to new module <code>ped_dyn.py</code>
+  (previously these were within the <code>dyn_analysis.py</code> module)</li>
+</ul>
 <h3>Added</h3>
 <ul>
-<li>New function <code>CalcTransverseAreaIntegral()</code> defined within <code>dyn_analysis</code> 
-  module. This function can be used generally, but is specifically used within 
-  crowd loading analysis</li>
+<li>Crowd loading to UK NA to BS EN 1991-2 now implemented</li>
 </ul>
 <h3>Fixed</h3>
+<ul>
+<li>
+<p>Bug as noted by BNCY in <code>dyn_analysis.py</code> now fixed. A check of the class name 
+  of <code>loadtrain_obj</code> was being made, but as a result of recent changes this 
+  was checking the derived class name.</p>
+</li>
+<li>
+<p><code>trainAnalysis.py</code> updated with minor change to reflect new <code>stats_dict</code> nested
+  dict structure</p>
+</li>
+</ul>
 <h3>Removed</h3>
+<h2>[1.1.1] - 2018-05-22 - RIHY</h2>
+<p><em>Hotfix responding to BNCY's 21/05/2018 email</em></p>
+<h3>Fixed</h3>
+<ul>
+<li>Tempororary fix implemented to address bug, by commenting-out rows.
+  To be addressed properly in future releases.</li>
+</ul>
 <h2>[1.1.0] - 2018-04-23 - RIHY</h2>
 <h3>Changed</h3>
 <ul>
