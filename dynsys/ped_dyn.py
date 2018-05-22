@@ -304,12 +304,11 @@ class SteadyStateCrowdLoading():
     
     def __init__(self,
                  modalsys_obj,
-                 load_intensity:float=None,
                  width_func_list=[3.0],
                  modeshapes_fname_arr=["modeshapes_edge1.csv",
                                         "modeshapes_edge2.csv"],
                  name=None,
-                 verbose=False,
+                 verbose=True,
                  makePlot=False):
         """
         Initialisation function
@@ -358,15 +357,6 @@ class SteadyStateCrowdLoading():
         Name assigned to class instance
         """
             
-        # Calculate load intensity, if not provided directly
-        if load_intensity is None:
-            load_intensity = self.calc_load_intensity()
-            
-        self.load_intensity = load_intensity
-        """
-        Uniform load intensity (in $N/m^2$) to be applied to deck regions
-        """
-                
         # Check `width_func_list` input
         width_func_list = self._check_width_func_list(width_func_list)
         nRegions = len(width_func_list)
@@ -413,6 +403,8 @@ class SteadyStateCrowdLoading():
         Damped natural frequencies of system being analysed
         """
         
+        
+        
         # Save other attributes
         self.modalsys_obj = modalsys_obj
         """
@@ -424,7 +416,8 @@ class SteadyStateCrowdLoading():
             self.print_details()
                 
         
-    def run(self,mode_index:int,
+        
+    def run(self,mode_index:int,load_intensity:float=None,
             verbose=True, makePlot=False
             ):
         """
@@ -440,6 +433,15 @@ class SteadyStateCrowdLoading():
           to be applied. If _None_, `load_intensity` will be calculated 
           according to UK NA to BS EN 1991-2 codified requirements
           
+        """
+        
+        # Calculate load intensity, if not provided directly
+        if load_intensity is None:
+            load_intensity = self.calc_load_intensity(mode_index)
+            
+        self.load_intensity = load_intensity
+        """
+        Uniform load intensity (in $N/m^2$) to be applied to deck regions
         """
         
         print("\n**** Running steady-state crowd loading analysis ****")
@@ -856,12 +858,8 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         Crowd density, expressed in persons/m2
         """
         
-        # Determine required load intensity
-        load_intensity = self.calc_load_intensity()
-        
         # Run parent init function
         super().__init__(modalsys_obj = modalsys_obj,
-                         load_intensity = load_intensity,
                          width_func_list = width_func_list,
                          modeshapes_fname_arr = modeshapes_fname_arr,
                          name = name,
@@ -908,7 +906,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         return density
     
     
-    def calc_load_intensity(self):
+    def calc_load_intensity(self,mode_index:int,verbose=True):
         """
         Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
         
@@ -926,9 +924,26 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         F0 = 280.0 # N, refer Table NA.8
 
         # Derive adjustment factors
-        #kv = 
+        fv = self.f_d[mode_index]
+        kv = UKNA_BSEN1991_2_Figure_NA_8(fv=fv, analysis_type="walkers")
+        
+        log_dec = 2*numpy.pi*self.eta[mode_index]
+        Seff = ?
+        gamma = UKNA_BSEN1991_2_Figure_NA_9()
+    
     
         load_intensity = 1.0
+        
+        
+        if verbose:
+            
+            print("*** Load intensity calculation to UK NA to BS EN 1992-1 ***")
+            print("Summary of key results / parameters:")
+            print("F0 = %.1f\t(N)" % F0)
+            print("A  = %.2f\t(m2)" % A)
+            print("fv = %.2f\t(Hz)" % fv)
+            print("kv = %.2f" % kv)
+            
 
         return load_intensity
     
