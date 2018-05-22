@@ -17,14 +17,25 @@ system. However major release number will always correspond.
 ### Changed
 
 ### Added
-* New function `CalcTransverseAreaIntegral()` defined within `dyn_analysis` 
-  module. This function can be used generally, but is specifically used within 
-  crowd loading analysis
+* Crowd loading to UK NA to BS EN 1991-2 now implemented
 
 ### Fixed
 
+* Bug as noted by BNCY in `dyn_analysis.py` now fixed. A check of the class name 
+  of `loadtrain_obj` was being made, but as a result of recent changes this 
+  was checking the derived class name.
+
 ### Removed
 
+
+## [1.1.1] - 2018-05-22 - RIHY
+
+_Hotfix responding to BNCY's 21/05/2018 email_
+
+### Fixed
+
+* Tempororary fix implemented to address bug, by commenting-out rows.
+  To be addressed properly in future releases.
 
 ## [1.1.0] - 2018-04-23 - RIHY
 
