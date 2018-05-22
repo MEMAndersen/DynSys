@@ -1,4 +1,4 @@
-Version: 1.1.0
+Version: 1.1.1
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1324,9 +1324,9 @@ table {
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modalsys_obj`: instance of `ModalSys` class expected!&quot;</span><span class="p">)</span>
             
         <span class="c1"># Check class name of base class of loadtrain_obj</span>
-        <span class="k">if</span> <span class="n">loadtrain_obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">!=</span> <span class="s2">&quot;LoadTrain&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`loadtrain_obj`: instance of `LoadTrain` class &quot;</span><span class="o">+</span>
-                             <span class="s2">&quot;(or dervied classes) expected!&quot;</span><span class="p">)</span>
+        <span class="c1">#if loadtrain_obj.__class__.__bases__[0].__name__ != &quot;LoadTrain&quot;:</span>
+        <span class="c1">#    raise ValueError(&quot;`loadtrain_obj`: instance of `LoadTrain` class &quot;+</span>
+        <span class="c1">#                     &quot;(or dervied classes) expected!&quot;)</span>
         
         <span class="c1"># Run parent init</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">modalsys_obj</span><span class="p">,</span><span class="n">loadtrain_obj</span><span class="p">)</span>
@@ -3623,9 +3623,9 @@ track.</p>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modalsys_obj`: instance of `ModalSys` class expected!&quot;</span><span class="p">)</span>
             
         <span class="c1"># Check class name of base class of loadtrain_obj</span>
-        <span class="k">if</span> <span class="n">loadtrain_obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">!=</span> <span class="s2">&quot;LoadTrain&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`loadtrain_obj`: instance of `LoadTrain` class &quot;</span><span class="o">+</span>
-                             <span class="s2">&quot;(or dervied classes) expected!&quot;</span><span class="p">)</span>
+        <span class="c1">#if loadtrain_obj.__class__.__bases__[0].__name__ != &quot;LoadTrain&quot;:</span>
+        <span class="c1">#    raise ValueError(&quot;`loadtrain_obj`: instance of `LoadTrain` class &quot;+</span>
+        <span class="c1">#                     &quot;(or dervied classes) expected!&quot;)</span>
         
         <span class="c1"># Run parent init</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">modalsys_obj</span><span class="p">,</span><span class="n">loadtrain_obj</span><span class="p">)</span>
@@ -3857,9 +3857,9 @@ mode-generalised force functions for each mode. <em>This is checked</em>.</p>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`modalsys_obj`: instance of `ModalSys` class expected!&quot;</span><span class="p">)</span>
         
     <span class="c1"># Check class name of base class of loadtrain_obj</span>
-    <span class="k">if</span> <span class="n">loadtrain_obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">!=</span> <span class="s2">&quot;LoadTrain&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`loadtrain_obj`: instance of `LoadTrain` class &quot;</span><span class="o">+</span>
-                         <span class="s2">&quot;(or dervied classes) expected!&quot;</span><span class="p">)</span>
+    <span class="c1">#if loadtrain_obj.__class__.__bases__[0].__name__ != &quot;LoadTrain&quot;:</span>
+    <span class="c1">#    raise ValueError(&quot;`loadtrain_obj`: instance of `LoadTrain` class &quot;+</span>
+    <span class="c1">#                     &quot;(or dervied classes) expected!&quot;)</span>
     
     <span class="c1"># Run parent init</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">modalsys_obj</span><span class="p">,</span><span class="n">loadtrain_obj</span><span class="p">)</span>
