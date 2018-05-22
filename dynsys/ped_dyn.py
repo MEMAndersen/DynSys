@@ -18,8 +18,110 @@ from inspect import isfunction
 
 # DynSys package imports
 import dyn_analysis
+import loading
 from dynsys import PlotFrequencyResponse
-from loading import UKNA_BSEN1991_2_walkers_joggers_loading as ped_loading
+#from loading import UKNA_BSEN1991_2_walkers_joggers_loading as ped_loading
+
+
+
+class UKNA_BSEN1991_2_walkers_joggers_loading(loading.LoadTrain):
+    """
+    Defines moving point load to represent the action of walkers / joggers
+    per NA.2.44.4 of BS EN 1991-2
+    
+    ![NA.2.44.4](../dynsys/img/UKNA_BSEN1991_2_NA2_44_4.PNG)
+    """
+    
+    def __init__(self,
+                 fv:float,
+                 gamma:float=1.0,
+                 N:int=2,
+                 analysis_type:str="walkers"):
+        """
+        Defines fluctuating point load to represent either walkers or joggers 
+        according to NA.2.44.4, UK NA to BS EN 1991-2
+        
+        ***
+        Required:
+        
+        * `fv`, natural frequency (Hz) of the mode under consideration
+        
+        ***
+        Optional:
+        
+        * `gamma`, reduction factor to allow for unsynchronised actions in a 
+          pedestrian group. Value of 1.0 used by default (conservative)
+          
+        * `N`, _integer_ number of pedestrians in group. Default value 
+          corresponds to bridge class A; but actual value should generally be 
+          provided
+          
+        * `analysis_type`, _string_, either 'walkers' or 'joggers' required, 
+          to denote the case under consideration
+        
+        """
+        
+        # Determine F0 from Table NA.8
+        if analysis_type=="walkers":
+            F0 = 280
+        elif analysis_type=="joggers":
+            F0 = 910
+        else:
+            raise ValueError("Invalid 'analysis_type'!" + 
+                             "'walkers' or 'joggers' expected")
+            
+        # Get k(fv) factor
+        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,analysis_type=analysis_type)
+            
+        # Calculate amplitude of sinusoidal forcing function per NA.2.44.4(1)
+        F_amplitude = F0 * k * (1 + gamma*(N-1))**0.5
+        
+        # Define sinusoidal function of unit amplitude
+        def sine_func(t):
+            return numpy.sin(2*numpy.pi*fv*t)
+        
+        # Run init for parent 'LoadTrain' class
+        super().__init__(loadX=[0.0],
+                         loadVals=F_amplitude,
+                         intensityFunc=sine_func,
+                         name=analysis_type)
+        
+        # Save other attributes
+        self.F0 = F0
+        """
+        Reference amplitude of applied fluctuating force (N)
+        """
+        
+        self.N = N
+        """
+        Number of pedestrians in the group
+        """
+        
+        self.gamma = gamma
+        """
+        Reduction factor, in the range [0,1.0], to allow for unsynchronised 
+        actions in a pedestrian group
+        """
+        
+        self.fv = fv
+        """
+        Natural frequency (Hz) of the mode for which loading has been derived
+        """
+        
+        self.k = k
+        """
+        Factor to account for:
+            
+        * The effects of a more realistic pedestrian population
+        * Harmonic responses
+        * Relative weighting of pedestrian sensitivity to response
+        """
+        
+        self.F_amplitude = F_amplitude
+        """
+        Amplitude of sinusoidal moving load (N)
+        calculated according to NA.2.44.4(1)
+        """
 
 
         
@@ -154,10 +256,10 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         self.gamma = gamma
         
         # Define loading objects to represent walkers and joggers
-        loading_obj = ped_loading(fv = f_d,
-                                  gamma=gamma,
-                                  N=N_to_use,
-                                  analysis_type=analysis_type)
+        loading_obj = UKNA_BSEN1991_2_walkers_joggers_loading(fv = f_d,
+                                                              gamma=gamma,
+                                                              N=N_to_use,
+                                                              analysis_type=analysis_type)
         
         # Determine reasonable time step to use
         if dt is None:
@@ -188,21 +290,26 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
             
             
             
-class UKNA_BSEN1991_2_crowd():
+            
+            
+            
+            
+class SteadyStateCrowdLoading():
     """
-    Class to implement crowd loading analysis to UK NA to BS EN1991-2
+    Class to implement steady state crowd loading analysis
+    
+    _Will usually be used as base class for analyses to specific codes, 
+    e.g. HiVoSS or UK NA to BS EN 1991-2_
     """
     
     def __init__(self,
                  modalsys_obj,
+                 load_intensity:float=None,
                  width_func_list=[3.0],
                  modeshapes_fname_arr=["modeshapes_edge1.csv",
                                         "modeshapes_edge2.csv"],
                  name=None,
-                 bridgeClass='A',
                  verbose=False,
-                 calc_Seff=True,
-                 nTcuts=100,
                  makePlot=False):
         """
         Initialisation function
@@ -251,12 +358,13 @@ class UKNA_BSEN1991_2_crowd():
         Name assigned to class instance
         """
             
-        # Get crowd density according to bridgeClass
-        crowd_density = self.get_crowd_density(bridgeClass,verbose=verbose)
-        
-        self.crowd_density = crowd_density
+        # Calculate load intensity, if not provided directly
+        if load_intensity is None:
+            load_intensity = self.calc_load_intensity()
+            
+        self.load_intensity = load_intensity
         """
-        Crowd density, expressed in persons/m2
+        Uniform load intensity (in $N/m^2$) to be applied to deck regions
         """
                 
         # Check `width_func_list` input
@@ -316,7 +424,7 @@ class UKNA_BSEN1991_2_crowd():
             self.print_details()
                 
         
-    def run(self,mode_index:int,load_intensity:float=None,
+    def run(self,mode_index:int,
             verbose=True, makePlot=False
             ):
         """
@@ -340,10 +448,6 @@ class UKNA_BSEN1991_2_crowd():
         print("Target mode index: %d" % target_mode)
         self.target_mode = target_mode
         
-        # Calculate load intensity, if not provided directly
-        if load_intensity is None:
-            load_intensity = self.calc_load_intensity()
-        
         # Obtain area integrals over all deck strips
         modal_areas = self.calc_modal_areas(mode_index, makePlot=makePlot)
         self.modal_areas = modal_areas
@@ -352,7 +456,7 @@ class UKNA_BSEN1991_2_crowd():
         # Note modal force amplitudes should be regarded as complex variables 
         # (although here they will be real-valued) whereby negative values 
         # imply a force which is 180 degrees out of phase
-        modal_forces = load_intensity * modal_areas
+        modal_forces = self.load_intensity * modal_areas
         self.modal_forces = modal_forces
         
         # Evaluate frequency transfer functions G(f) relating applied forces 
@@ -472,9 +576,8 @@ class UKNA_BSEN1991_2_crowd():
                          "to modal accelerations (m/$s^2$)")
             
             fig.set_size_inches((14,7))
-            fig.legend(ax.lines[:nModes],["Modal force %d" % (m+1) for m in range(nModes)])
-        
-                
+            fig.legend(ax.lines[:nModes],["Modal force %d" % (m+1)
+                                          for m in range(nModes)])
         
         if verbose:
 
@@ -484,16 +587,8 @@ class UKNA_BSEN1991_2_crowd():
         
         return modal_accn_target
                 
-    def calc_load_intensity(self):
-        """
-        Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
-        """
     
-        raise ValueError("Calculation of `load_intensity` to UK NA to " + 
-                         "BS EN 1991-2 not yet implemented!\n" + 
-                         "Value must be provided via `load_intensity` input")
     
-
     def print_details(self):
         """
         Prints details about the analysis that has been defined
@@ -512,6 +607,8 @@ class UKNA_BSEN1991_2_crowd():
         
         print("Damped natural frequencies of system (Hz):\n{0}"
               .format(self.f_d))
+        
+        
         
     def print_results(self):
         """
@@ -573,44 +670,6 @@ class UKNA_BSEN1991_2_crowd():
         ax.set_title("Steady-state response amplitudes")
         
         
-            
-    def get_crowd_density(self,
-                          bridgeClass:str,
-                          verbose=True,
-                          saveAsAttr=True):
-        """
-        Get crowd density according from Table NA.7, UK NA to BS EN 
-        1991-2, according to `bridgeClass`
-
-        Returns density expressed as persons/m2
-        """
-
-        bridgeClass = bridgeClass.upper()
-
-        if bridgeClass == 'A':
-            density=0.0
-
-        elif bridgeClass == 'B':
-            density=0.4
-
-        elif bridgeClass == 'C':
-            density=0.8
-
-        elif bridgeClass == 'D':
-            density=1.5
-
-        else:
-            raise ValueError("Invalid 'bridgeClass'!")
-
-        if verbose:
-            print("Bridge class: '%s'" % bridgeClass)
-            print("Crowd density (persons/m2): %.1f" % density)
-
-        if density==0:
-            raise ValueError("Crowd density = 0; no analysis required!")
-
-        return density
-
 
     def _check_width_func_list(self,
                                width_func_list):
@@ -707,6 +766,7 @@ class UKNA_BSEN1991_2_crowd():
 
         return modeshapeFunc_list, Ltrack_list
         
+    
     def calc_deck_area(self):
         """
         Returns the total deck area, taken across all deck strips
@@ -716,6 +776,7 @@ class UKNA_BSEN1991_2_crowd():
         
         return float(total_area)
     
+    
     def calc_modal_areas(self,mode_index,makePlot=False):
         """
         Returns modal area integrals
@@ -723,7 +784,154 @@ class UKNA_BSEN1991_2_crowd():
         
         return numpy.sum([x.integrate(mode_index,makePlot=makePlot)
                           for x in self.deck_regions_list],axis=0)
+        
+    
+    def calc_load_intensity(self):
+        """
+        _Method to be overriden by derived classes_
+        """
+        raise ValueError("`calc_load_intensity` not implemented!" + 
+                         "To be overriden by derived class method")
             
+
+
+class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
+    """
+    Class to implement steady state crowd loading analysis 
+    to UK NA to BS EN1991-2
+    """
+    
+    def __init__(self,
+                 modalsys_obj,
+                 width_func_list=[3.0],
+                 modeshapes_fname_arr=["modeshapes_edge1.csv",
+                                        "modeshapes_edge2.csv"],
+                 name=None,
+                 bridgeClass='A',
+                 verbose=False,
+                 makePlot=False):
+        """
+        Initialisation function
+        
+        ***
+        Required:
+               
+        * `modalsys_obj`, object defining modal system to be analysed
+            
+        * `modeshapes_fname_arr`, array of strings, of shape (nRegions,2) 
+          denoting files containing modeshape variation along the edges of 
+          each deck region:
+              
+              * Axis 1 to be of shape = 2 (1 file for each edge)
+              
+              * Axis 0 length corresponds to number of deck regions, nRegions
+          
+        * `width_func_list`, list of functions to denote how width (m) of 
+          each deck region varies with chainage _along the centreline of the 
+          region_:
+              
+              * List length = nRegions required (this is checked)
+              
+              * List of floats may be provided if deck width is constant within 
+                each regions. But list length requirement above still applies
+    
+        ***
+        Optional:
+        
+        * calc_Seff`, _boolean_, dictates whether effective span will be 
+          computed according to Figure NA.7. If False, overall span will be 
+          used (conservative)
+          
+        * `nLcuts`, _integer_, denotes number of transverse cuts to make when 
+          evaluating area integrals. Increasing number will increase accuracy,  
+          at the cost of longer computation time
+        
+        """
+        
+        # Get crowd density according to bridgeClass
+        crowd_density = self.get_crowd_density(bridgeClass,verbose=verbose)
+        
+        self.crowd_density = crowd_density
+        """
+        Crowd density, expressed in persons/m2
+        """
+        
+        # Determine required load intensity
+        load_intensity = self.calc_load_intensity()
+        
+        # Run parent init function
+        super().__init__(modalsys_obj = modalsys_obj,
+                         load_intensity = load_intensity,
+                         width_func_list = width_func_list,
+                         modeshapes_fname_arr = modeshapes_fname_arr,
+                         name = name,
+                         verbose = verbose,
+                         makePlot = makePlot
+                         )
+        
+        
+    def get_crowd_density(self,
+                          bridgeClass:str,
+                          verbose=True,
+                          saveAsAttr=True):
+        """
+        Get crowd density according from Table NA.7, UK NA to BS EN 
+        1991-2, according to `bridgeClass`
+
+        Returns density expressed as persons/m2
+        """
+
+        bridgeClass = bridgeClass.upper()
+
+        if bridgeClass == 'A':
+            density=0.0
+
+        elif bridgeClass == 'B':
+            density=0.4
+
+        elif bridgeClass == 'C':
+            density=0.8
+
+        elif bridgeClass == 'D':
+            density=1.5
+
+        else:
+            raise ValueError("Invalid 'bridgeClass'!")
+
+        if verbose:
+            print("Bridge class: '%s'" % bridgeClass)
+            print("Crowd density (persons/m2): %.1f" % density)
+
+        if density==0:
+            raise ValueError("Crowd density = 0; no analysis required!")
+
+        return density
+    
+    
+    def calc_load_intensity(self):
+        """
+        Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
+        
+        ![Cl_2_44_5](../dynsys/img/UKNA_BSEN1991_2_Cl_2_44_5.png)
+        """
+    
+        #raise ValueError("Calculation of `load_intensity` to UK NA to " + 
+        #                 "BS EN 1991-2 not yet implemented!\n" + 
+        #                 "Value must be provided via `load_intensity` input")
+    
+        # Retrieve attributes    
+        A = self.deck_area
+        
+        # Define code inputs
+        F0 = 280.0 # N, refer Table NA.8
+
+        # Derive adjustment factors
+        #kv = 
+    
+        load_intensity = 1.0
+
+        return load_intensity
+    
 
 class PedestrianDynamics_transientAnalyses(dyn_analysis.Multiple):
     """
@@ -763,7 +971,7 @@ class PedestrianDynamics_transientAnalyses(dyn_analysis.Multiple):
         mode_index_list = numpy.arange(0,2*nModes,2).tolist()
         
         # Run parent init function
-        super().__init__(className="UKNA_BSEN1991_2_walkers_joggers",
+        super().__init__(classDef=UKNA_BSEN1991_2_walkers_joggers,
                          dynsys_obj=modalsys_obj,
                          bridgeClass=bridgeClass,
                          mode_index=mode_index_list,
@@ -1388,6 +1596,105 @@ def Calc_Seff(modeshapeFunc,S,
 
 
 
+def UKNA_BSEN1991_2_Figure_NA_8(fv,
+                                analysis_type="walkers",
+                                kind='cubic',
+                                makePlot=False):
+    """
+    Returns $k_{v}(f)$ from Figure NA.8 in BS EN 1992-1:2003
+    
+    ***
+    Required:
+        
+    * `fv`, mode frequency in Hz to evaluate kv at
+    
+    ***
+    Optional:
+    
+    * `analysis_type`, _string_, either 'walkers' or 'joggers'
+    
+    * `kind`, keyword argument used by scipy.interpolate.interp1d function. 
+      Defines method of interpolation, e.g. 'linear' or 'cubic'
+      
+    * `makePlot`, _boolean_, if True plot will be made akin to Figure NA.8
+    
+    """
+    
+    # Arrays to digitise Figure NA.8
+    walkersData = [[0.000,0.000], [0.200,0.000], [0.400,0.010], [0.600,0.030],
+                   [0.800,0.080], [1.000,0.240], [1.200,0.440], [1.400,0.720],
+                   [1.600,0.930], [1.700,0.980], [1.800,1.000], [2.000,0.997],
+                   [2.100,0.970], [2.200,0.900], [2.400,0.650], [2.600,0.400],
+                   [2.800,0.250], [3.000,0.280], [3.200,0.320], [3.400,0.340],
+                   [3.600,0.360], [3.800,0.360], [4.000,0.350], [4.500,0.280],
+                   [5.000,0.180], [5.500,0.130], [6.000,0.115], [6.500,0.098],
+                   [7.000,0.080], [8.000,0.020], [9.000,0.000]]
+    
+    walkersData = numpy.array(walkersData)
+    
+    walkersFunc = scipy.interpolate.interp1d(x=walkersData[:,0],
+                                             y=walkersData[:,1],
+                                             kind=kind,
+                                             bounds_error=False,
+                                             fill_value=0.0)
+    
+    joggersData = [[0.000,0.000], [0.200,0.000], [0.400,0.000], [0.600,0.000],
+                   [0.800,0.000], [1.000,0.010], [1.200,0.040], [1.400,0.150],
+                   [1.600,0.300], [1.700,0.450], [1.800,0.550], [2.000,0.870],
+                   [2.100,1.010], [2.200,1.110], [2.400,1.160], [2.600,1.120],
+                   [2.800,0.930], [3.000,0.640], [3.200,0.360], [3.400,0.160],
+                   [3.600,0.100], [3.800,0.130], [4.000,0.160], [4.500,0.210],
+                   [5.000,0.220], [5.500,0.180], [6.000,0.110], [6.500,0.040],
+                   [7.000,0.030], [8.000,0.020], [9.000,0.000]]
+    
+    joggersData = numpy.array(joggersData)
+    
+    joggersFunc = scipy.interpolate.interp1d(x=joggersData[:,0],
+                                             y=joggersData[:,1],
+                                             kind=kind,
+                                             bounds_error=False,
+                                             fill_value=0.0)
+    
+    # Get applicable array to use
+    if analysis_type=="walkers":
+        k_fv_func = walkersFunc
+    elif analysis_type=="joggers":
+        k_fv_func = joggersFunc
+    else:
+        raise ValueError("Invalid 'analysis_type' specified!")
+    
+    # Use interpolation function to read off value at fv
+    k_fv = k_fv_func(fv)
+    
+    # Make plot (to show digitised curves)
+    if makePlot:
+        
+        fVals = numpy.arange(0.0,8.2,0.05)
+        caseA = walkersFunc(fVals)
+        caseB = joggersFunc(fVals)
+        
+        fig, ax = plt.subplots()
+        
+        ax.plot(fVals,caseA,label='A')
+        ax.plot(fVals,caseB,label='B')
+        
+        ax.axvline(fv,color='r',alpha=0.3)
+        ax.axhline(k_fv,color='r',alpha=0.3)
+        
+        ax.legend()
+        
+        ax.set_xlim([0,8.0]) # per Fig.NA.8
+        ax.set_ylim([0,1.4]) # per Fig.NA.8
+        
+        ax.set_title("Combined population and harmonic factor k($f_{v}$)\n" + 
+                     "per Figure NA.8, UK NA to BS EN 1992-1:2003")
+        ax.set_xlabel("Mode frequency $f_{v}$, Hz")
+        ax.set_ylabel("k($f_{v}$)")
+    
+    return k_fv
+
+
+
 def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff,
                                 groupType="pedestrian",
                                 makePlot=False):
@@ -1502,3 +1809,29 @@ if __name__ == "__main__":
         deck_strip_obj.integrate(index=1,num=N,makePlot=True)
         deck_strip_obj.integrate(index=2,num=N,makePlot=True)
     
+    if testRoutine ==4:
+        # Tests UKNA_BSEN1991_2_Figure_NA_8() function
+        
+        kv = UKNA_BSEN1991_2_Figure_NA_8(fv=2.5,
+                                         analysis_type="joggers",
+                                         makePlot=True)
+        
+    if testRoutine ==5:
+        # Tests UKNA_BSEN1991_2_walkers_joggers_loading() class methods
+        
+        fn = 2.3
+        Tn = 1/fn
+        
+        loading_obj = UKNA_BSEN1991_2_walkers_joggers_loading(fv=fn,
+                                                      analysis_type="joggers")
+        loading_obj.PrintDetails()
+        
+        tVals = numpy.arange(0,5,0.01)
+        loadVals = [loading_obj.loadVals(t) for t in tVals]
+            
+        fig,ax = plt.subplots()
+        
+        ax.plot(tVals,loadVals)
+        
+        for T in [Tn,2*Tn,3*Tn,10*Tn]:
+            ax.axvline(T,color='r',alpha=0.3)
