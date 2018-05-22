@@ -1,3 +1,5 @@
 #
-__version__ = "1.1.0_dev"
+
+__version__ = "1.1.1"
+
 __author__ = "Richard Hollamby (RIHY), COWI UK Bridge"
