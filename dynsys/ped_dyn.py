@@ -453,11 +453,12 @@ class SteadyStateCrowdLoading():
         # Calculate load intensity, if not provided directly
         if load_intensity is None:
             load_intensity = self.calc_load_intensity(mode_index)
-            
+        print("UDL intensity (N/m2): %.2f" % load_intensity)    
         self.load_intensity = load_intensity
         """
         Uniform load intensity (in N/m2) to be applied to deck regions
         """
+        
                  
         # Multiply by load intensity to obtain modal force amplitudes
         # Note modal force amplitudes should be regarded as complex variables 
