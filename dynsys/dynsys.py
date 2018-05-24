@@ -1286,7 +1286,7 @@ class DynSys:
         
         
     
-    def freqVals(self,f_salient=None,nf_pad:int=100,fmax=None):
+    def freqVals(self,f_salient=None,nf_pad:int=400,fmax=None):
         """"
         Define frequency values to evaluate frequency response G(f) at
         ***
