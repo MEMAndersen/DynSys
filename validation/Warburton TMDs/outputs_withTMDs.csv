@@ -1,0 +1,5 @@
+Description,DIS 1,DIS 2,VEL 1,VEL 2,ACC 1,ACC 2
+Main mass displacement (m),1,0,0,0,0,0
+Damper mass displacement (m),0,1,0,0,0,0
+Relative displacement (m),-1,1,0,0,0,0
+Main mass acceleration ($m/s^2$),0,0,0,0,1,0
