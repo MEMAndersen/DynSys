@@ -1657,6 +1657,8 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
     
     """
     
+    fv = numpy.abs(fv) # positive value to be used
+    
     # Arrays to digitise Figure NA.8
     walkersData = [[0.000,0.000], [0.200,0.000], [0.400,0.010], [0.600,0.030],
                    [0.800,0.080], [1.000,0.240], [1.200,0.440], [1.400,0.720],
