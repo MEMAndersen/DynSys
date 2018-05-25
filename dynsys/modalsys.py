@@ -408,8 +408,9 @@ class ModalSys(DynSys):
         
         return ModalForces
             
-    @deprecation.deprecated(deprecated_in="1.0.0",current_version=currentVersion)
+    
     def AppendTMDs(self,chainage_TMD,mass_TMD,freq_TMD,eta_TMD,
+                   modeshape_TMD=None,
                    defineRelDispOutputs=True):
         """
         Function appends a set of TMDs (a list of simple mass-spring-dashpot
@@ -446,13 +447,13 @@ class ModalSys(DynSys):
                              "for systems with constraints")
             
         # Define modeshape interpolation function (if not done so already)
-        if not hasattr(self,"modeshapeFunc"):
+        if not hasattr(self,"modeshapeFunc") and modeshape_TMD is None:
             raise ValueError("Error: you must run 'DefineModeshapes' first!")
             
         # Define diagonal mass matrix for modes and TMDs
-        M_a = self.M_mtrx
-        C_a = self.C_mtrx
-        K_a = self.K_mtrx
+        M_a = self._M_mtrx
+        C_a = self._C_mtrx
+        K_a = self._K_mtrx
         Nm = M_a.shape[0]
         
         # Define TMD matrices
@@ -465,7 +466,21 @@ class ModalSys(DynSys):
         N_T = M_T.shape[0]
 
         # Use modeshape function to obtain modeshape ordinates at TMD positions
-        modeshape_TMD = self.modeshapeFunc(chainage_TMD)
+        if modeshape_TMD is None:
+            
+            # Use interpolation function already defined to get TMD modeshapes
+            modeshape_TMD = self.modeshapeFunc(chainage_TMD)
+            
+        else:
+            
+            # Modeshape data to be provided directly via array
+            pass
+        
+        # Check dimesions ok
+        if modeshape_TMD.shape!=(N_T,Nm):
+            raise ValueError("Error: `modeshape_TMD` shape (N_T,Nm) required\n"+
+                             "Shape: {0}".format(modeshape_TMD.shape))
+        
         self.chainage_TMD = chainage_TMD
         self.modeshape_TMD = modeshape_TMD
         
@@ -476,7 +491,6 @@ class ModalSys(DynSys):
         
         # Define B_aT matrix
         B_aT = npy.hstack((modeshape_TMD,-npy.identity(N_T)))
-        B_aT
         
         # Determine K_aT matrix
         k1 = npy.hstack((K_a,npy.asmatrix(npy.zeros((Nm,N_T)))))
@@ -528,9 +542,9 @@ class ModalSys(DynSys):
             output_mtrx = npy.append(output_mtrx,new_outputs,axis=0)
         
         # Overwrite system matrices
-        self.M_mtrx = M_aT
-        self.C_mtrx = C_aT
-        self.K_mtrx = K_aT
+        self._M_mtrx = M_aT
+        self._C_mtrx = C_aT
+        self._K_mtrx = K_aT
         
         nDOF = M_aT.shape[0]
         self.nDOF = nDOF
