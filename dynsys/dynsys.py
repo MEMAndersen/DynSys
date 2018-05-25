@@ -684,8 +684,6 @@ class DynSys:
         else:
             Minv = sparse.linalg.inv(M)
             
-        
-        
         if not self.isSparse:
             B1 = npy.zeros_like(Minv)
             B2 = Minv
@@ -1008,10 +1006,14 @@ class DynSys:
             ax.plot(range(len(f_n_abs)),f_n_abs)
             ax.set_xlabel("Mode index")
             ax.set_ylabel("Undamped natural frequency (Hz)")
+            ax.set_title("Natural frequencies vs mode index")
             
         elif plotType == 4:
             
             ax.plot(f_n,eta,'.b')
+            ax.set_xlabel("Frequency (Hz)")
+            ax.set_ylabel("Damping ratio")
+            ax.set_title("Pole frequency vs damping ratio plot")
             
         else:
             raise ValueError("Error: unexpected plotType requested!")
@@ -1373,6 +1375,9 @@ class DynSys:
         transfer matrix can be obtained in this way
         
         """
+        
+        print("Calculating frequency response matrices..")
+        
         nDOF = self.nDOF
         
         # Handle optional arguments
@@ -1382,10 +1387,10 @@ class DynSys:
         fVals = npy.ravel(fVals)
         
         if A is None:
-            A = self.GetStateMatrix()
+            A = self.GetStateMatrix(forceRecalculate=True)
             
         if B is None:
-            B = self.GetLoadMatrix()
+            B = self.GetLoadMatrix(forceRecalculate=True)
             
         # Get output matrices
         if C is None:
@@ -1421,6 +1426,20 @@ class DynSys:
         # Determine number of outputs
         No = C.shape[0]
         
+        # Print shapes of all arrays
+        print("Shapes of A B C D matrices:")
+        
+        print("A: {0}".format(A.shape))
+        
+        print("B: {0}".format(B.shape))
+        
+        print("C: {0}".format(C.shape))
+        
+        if D is not None:
+            print("D: {0}".format(D.shape))
+        else:
+            print("D: None")
+            
         # Define array to contain frequency response for each 
         G_f = npy.zeros((No,Ni,nf),dtype=complex)
         
