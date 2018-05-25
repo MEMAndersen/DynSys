@@ -11,6 +11,7 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import pandas as pd
 import matplotlib.pyplot as plt
+import scipy
 
 import deprecation # not in anaconda distribution - obtain this from pip
 #@deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
@@ -864,18 +865,18 @@ class DynSys:
             A_c = A_c.todense()
         
         # Eigenvalue decomposition of continuous-time system matrix A
-        s,X = npy.linalg.eig(A_c)               # s is vector of singular values, columns of X are right eigenvectors of A
-        s_left,Y = npy.linalg.eig(A_c.T)        # s is vector of singular values, columns of Y are left eigenvectors of A
+        # s is vector of singular values
+        # columns of X are right eigenvectors of A
+        # columns of Y are left eigenvectors of A
+        s,Y,X = scipy.linalg.eig(A_c,left=True,right=True)
         X = npy.asmatrix(X)
         Y = npy.asmatrix(Y)
         
-        # Determine left and right eigenvalues which correspond to one-another
-        right_indexs = npy.argsort(s)
-        left_indexs = npy.argsort(s_left)
-        s = s[right_indexs]
-        s_left = s_left[left_indexs]
-        X = X[:,right_indexs]
-        Y = Y[:,left_indexs]
+        # Scipy routine actually returns conjugate of Y
+        # Refer discussion here:
+        # https://stackoverflow.com/questions/15560905/
+        # is-scipy-linalg-eig-giving-the-correct-left-eigenvectors
+        Y = Y.conj()
                 
         if normaliseEigenvectors:
             X,Y = self._NormaliseEigenvectors(X,Y)
