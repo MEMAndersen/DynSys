@@ -177,6 +177,7 @@ class DynSys:
                              M_mtrx=None,
                              C_mtrx=None,
                              K_mtrx=None,
+                             checkConstraints=True,
                              J_dict=None):
         """
         Function carries out shape checks on system matrices held as class 
@@ -213,12 +214,14 @@ class DynSys:
                              + "Shape: {0}".format(K_mtrx))
             
         # Check shape of all constraints matrices
-        for key, J_mtrx in J_dict.items():
-            
-            if J_mtrx.shape[1]!=nDOF:    
-                raise ValueError("Error: J matrix column dimension inconsistent!\n"
-                                 + "Shape: {0}\n".format(J_mtrx.shape)  
-                                 + "J_mtrx: {0}".format(J_mtrx))
+        if checkConstraints:
+            for key, J_mtrx in J_dict.items():
+                
+                if J_mtrx.shape[1]!=nDOF:    
+                    raise ValueError("Error: J matrix column dimension " + 
+                                     "inconsistent!\n"
+                                     + "Shape: {0}\n".format(J_mtrx.shape)  
+                                     + "J_mtrx: {0}".format(J_mtrx))
             
         return True
     
@@ -533,12 +536,10 @@ class DynSys:
             
             
     def CalcStateMatrix(self,
-                        applyConstraints:bool=False,
                         saveAsAttr:bool=True,
                         M=None,
                         C=None,
                         K=None,
-                        J=None,
                         nDOF=None):
         """
         Assembles the continous-time state matrix `A_mtrx` used in state-space 
@@ -553,14 +554,6 @@ class DynSys:
         matrix, **K** is the system stiffness matrix and **I** is an 
         identity matrix.
         
-        When constraint equations **J** are defined, the following augmented 
-        form is obtained:
-            
-        $$ A' = [[A, J^{T}],[J,0]] $$
-        
-        Given system matrices are of shape _[N,N]_, **A** is of shape _[2N,2N]_. 
-        If _m_ constraints are defined then **A'** is of shape _[2N+m,2N+m]_.
-        
         ***
         Optional:
             
@@ -572,12 +565,7 @@ class DynSys:
         * `C`, damping matrix
         
         * `K`, stiffness matrix
-        
-        * `J`, constraints matrix
-        
-        * `applyConstraints`: if `True` then augmentated state matrix 
-            A = [[A,J.T],[J,0]] will be returned
-            
+                    
         * `saveAsAttr`: if `True` state matrix returned will also be saved as 
           an object instance attribute
         
@@ -590,13 +578,13 @@ class DynSys:
         if M is None: M = d["M_mtrx"]
         if C is None: C = d["C_mtrx"]
         if K is None: K = d["K_mtrx"]
-        if J is None: J = d["J_mtrx"]
         if nDOF is None: nDOF = d["nDOF"]
     
         # Check shape of system matrices
         self._CheckSystemMatrices(M_mtrx=M,
                                   C_mtrx=C,
                                   K_mtrx=K,
+                                  checkConstraints=False,
                                   nDOF=nDOF)
         
         # Assemble state matrix A=[[0,I],[-Minv*K,-Minv*C]]
@@ -616,22 +604,12 @@ class DynSys:
             _A = [[None,I],[-Minv @ K, -Minv @ C]]
             A = sparse.bmat(_A)
         
-        if applyConstraints:
-            
-            # Augment with constraints
-            _A = [[A,J.T],[J,None]]
-        
-            if not self.isSparse:
-                npy.bmat(_A)
-                
-            else:
-                A = sparse.bmat(_A)
-
         # Save as attribute
         if saveAsAttr:
             self._A_mtrx = A
 
         return A     
+    
     
     def GetStateMatrix(self,forceRecalculate=False):
         """
@@ -647,6 +625,7 @@ class DynSys:
                 return getattr(self,attr)
             else:
                 return self.CalcStateMatrix()
+    
     
     def CalcLoadMatrix(self,
                        saveAsAttr=True,
@@ -833,6 +812,7 @@ class DynSys:
     def CalcEigenproperties(self,
                             normaliseEigenvectors=True,
                             ax=None,
+                            verbose=False,
                             showPlots=False):
         """
         General method for determining damped eigenvectors and eigenvalues 
@@ -852,37 +832,48 @@ class DynSys:
         """
         
         # Check for constraints
-        if self.hasConstraints():
-            raise ValueError("Error: cannot (currently) use function " + 
-                             "'CalcEigenproperties' for systems " + 
-                             "with constraints"
-                             )
+        hasConstraints = self.hasConstraints()
+        if hasConstraints:
+            raise ValueError("Implementation incomplete " +
+                             "for systems with constraints!")
         
         # Assemble continous-time state matrix A
         A_c = self.CalcStateMatrix()
         
         if self.isSparse:
             A_c = A_c.todense()
-        
-        # Eigenvalue decomposition of continuous-time system matrix A
+            
+        # Compute eigenproperties of A_c
         # s is vector of singular values
         # columns of X are right eigenvectors of A
         # columns of Y are left eigenvectors of A
-        s,Y,X = scipy.linalg.eig(A_c,left=True,right=True)
-        X = npy.asmatrix(X)
-        Y = npy.asmatrix(Y)
-        
-        # Scipy routine actually returns conjugate of Y
-        # Refer discussion here:
-        # https://stackoverflow.com/questions/15560905/
-        # is-scipy-linalg-eig-giving-the-correct-left-eigenvectors
-        Y = Y.conj()
-                
+        if not hasConstraints:
+            
+            s,Y,X = solve_eig(A=A_c, verbose=verbose)
+            
+        else:
+            
+            # Get constraints matrix of [mxn] shape
+            # Relates to accelerations usually
+            J_mtrx = self.GetSystemMatrices()["J_mtrx"]
+            
+            # Define constraints matrix on state vector i.e. disp and vel
+            # Note if    J.y2dot = 0 (as per definition of J)
+            # then        J.ydot = 0
+            # and            J.y = 0
+            zeros = npy.zeros_like(J_mtrx)
+            J2 = npy.vstack((npy.hstack((J_mtrx,zeros)),
+                            npy.hstack((zeros,J_mtrx))))
+            
+            s,Y,X = solve_eig_constrained(A=A_c, J=J2,
+                                          verbose=verbose)
+            
+        # Normalise eigenvectors such that Y.T.X=I
         if normaliseEigenvectors:
-            X,Y = self._NormaliseEigenvectors(X,Y)
+            X,Y = NormaliseEigenvectors(X,Y)
         
         # Extract modal properties of system from eigenvalues
-        f_n_abs, f_n, f_d, eta = self._RealEigenvalueProperties(s)
+        f_n_abs, f_n, f_d, eta = RealEigenvalueProperties(s)
 
         # Sort eigenvalues into ascending order of f_n_abs
         i1 = npy.argsort(f_n_abs)
@@ -920,49 +911,9 @@ class DynSys:
         
         return d 
     
-    def _RealEigenvalueProperties(self,s=None):
-        """
-        Recovers real-valued properties from complex eigenvalues
-        """
-        
-        if s is None:
-            s = self.s
-        
-        f_d = npy.imag(s) / (2*npy.pi)             # damped natural frequency
-        eta = - npy.real(s) / npy.absolute(s)      # damping ratio
-        
-        f_n_abs = npy.absolute(s) / (2*npy.pi)     # undamped natural frequency
-        f_n = npy.sign(f_d) * f_n_abs              # recovers sign of frequency
-        
-        return f_n_abs, f_n, f_d, eta
+    
      
-    def _NormaliseEigenvectors(self,X=None,Y=None):
-        """
-        Normalise eigenvectors such that YT.X=I
-        
-        Optional arguments:
-        
-        * `X`: Numpy matrix, the columns of which are right-eigenvectors
-        * `Y`: Numpy matrix, the columns of which are left-eigenvectors
-        
-        """
-        
-        if X is None:
-            X = self.X
-            
-        if Y is None:
-            Y = self.Y
-        
-        d = npy.diagonal(Y.T * X)**0.5
-        
-        if d.any() != 0:
-            X = X / d
-            Y = Y / d
-        
-        self.X = X
-        self.Y = Y
-                    
-        return X, Y
+    
     
     def _EigenvaluePlot(self,
                         ax=None,
@@ -992,7 +943,7 @@ class DynSys:
         else:
             fig = ax.gcf()
             
-        f_n_abs,f_n,f_d,eta = self._RealEigenvalueProperties(s)
+        f_n_abs,f_n,f_d,eta = RealEigenvalueProperties(s)
             
         if plotType == 1:
             
@@ -1046,6 +997,7 @@ class DynSys:
         im = ax.imshow(npy.absolute(Y.T*X),interpolation='none',cmap='Greys')
         fig.colorbar(im)
         ax.set_title("Y.T * X product")
+        
     
     def CheckDOF(self,DOF):
         """
@@ -1066,6 +1018,7 @@ class DynSys:
         
         return True
     
+    
     def hasConstraints(self)->bool:
         """
         Tests whether constraint equations are defined
@@ -1075,6 +1028,7 @@ class DynSys:
             return True
         else:
             return False
+    
     
     def CheckConstraints(self,J=None,verbose=True,raiseException=True)->bool:
         """
@@ -1124,6 +1078,7 @@ class DynSys:
             if verbose: print("Constraints are independent, as required")
                     
             return True
+    
     
     def AppendSystem(self,
                      child_sys,
@@ -1589,6 +1544,200 @@ def SDOF_frequency(M,K):
     return freq_from_angularFreq((K/M)**0.5)
 
 
+
+def null_space(A, rcond=None):
+    """
+    Copy of source code from 
+    https://docs.scipy.org/doc/scipy/
+    reference/generated/scipy.linalg.null_space.html
+    
+    Included in Scipy v1.1.0
+    
+    For now recreate here
+    """
+    u, s, vh = scipy.linalg.svd(A, full_matrices=True)
+    
+    M, N = u.shape[0], vh.shape[1]
+    
+    if rcond is None:
+        rcond = npy.finfo(s.dtype).eps * max(M, N)
+        
+    tol = npy.amax(s) * rcond
+    
+    num = npy.sum(s > tol, dtype=int)
+    
+    Q = vh[num:,:].T.conj()
+    
+    return Q
+
+
+
+def solve_eig(A,B=None,verbose=False):
+    """
+    Solve generalised eigenproblem:
+                    A.x = s.B.x
+    
+    ***
+    Required:
+        
+    * `A`, square matrix of dimensions [nxn]
+      
+    ***
+    Optional:
+        
+    * `B`, square matrix of dimensions [nxn]. Default is None, in which case 
+    identity matrix [n,n] is assumed (per scipy.linalg.eig() function)
+       
+    ***
+    Returns:
+        
+    * `s`, _array_ of shape (n,), eigenvalues (in general complex-valued)
+    
+    * `Y`, _matrix_ of shape (n,n), the columns of which are left-eigenvectors
+    
+    * `X`, _matrix_ of shape (n,n), the columns of which are right-eigenvectors
+    
+    """
+
+    if verbose:
+        print("A:\n{0}\n".format(A))
+
+    # Eigenvalue decomposition A
+    # Use Scipy routine
+    s,Y,X = scipy.linalg.eig(A,left=True,right=True)
+    X = npy.asmatrix(X)
+    Y = npy.asmatrix(Y)
+    
+    # Scipy routine actually returns conjugate of Y
+    # Refer discussion here:
+    # https://stackoverflow.com/questions/15560905/
+    # is-scipy-linalg-eig-giving-the-correct-left-eigenvectors
+    # Correct for this here
+    Y = Y.conj()
+    
+    return s, Y, X
+
+
+def solve_eig_constrained(A,J,B=None,verbose=False):
+    """
+    Consider constrained eigenproblem :
+        
+                    A.x = s.B.x
+        subject to  J.x = 0         (constraints)
+    
+    We want to solve for eigenvalues s, eigenvectors x
+    
+    To do so we need to transform problem into _unconstrained_ 
+    eigenproblem as follows, using Null(J)=Z:
+        
+           (Z.T.A.Z).y  = s.(Z.T.B.Z).y
+                  A'.y  = s.B'.y
+    
+    where            A' = Z.T.A.Z
+    and              B' = Z.T.B.Z
+    
+    We solve this generalised eigenproblem for s, y using ordinary methods
+    
+    x (per the _constrained_ problem) can be recovered as:
+        
+                     x = Z.y
+                     
+    ***
+    Required:
+        
+    * `A`, square matrix of dimensions [nxn]
+    
+    * `J`, rectangular matrix of dimensions [mxn], m<n. 
+      Defines a set of m linear constraints
+      
+    ***
+    Optional:
+        
+    * `B`, square matrix of dimensions [nxn]. Default is None, in which case 
+    identity matrix [n,n] is assumed (per scipy.linalg.eig() function)
+       
+    ***
+    Returns:
+        
+    * `s`, _array_ of shape (n,), eigenvalues (in general complex-valued)
+    
+    * `Y`, _matrix_ of shape (n,n), the columns of which are left-eigenvectors
+    
+    * `X`, _matrix_ of shape (n,n), the columns of which are right-eigenvectors
+              
+    """
+    
+    print("Solving constrained eigenproblem...")
+    
+    # Solve for null space of J
+    if verbose: print("J:\n{0}\n".format(J))
+    Z = null_space(J)
+    if verbose: print("Null(J)=Z:\n{0}\n".format(Z))
+    
+    # Define matrices for unconstrained eigenproblem
+    A_dash = Z.T * A * Z
+    if verbose: print("A_dash:\n{0}\n".format(A_dash))
+    
+    if B is not None:
+        B_dash = Z.T * B * Z
+        if verbose: print("B_dash:\n{0}\n".format(B_dash))
+    else:
+        B_dash = None # scipy.linalg.eig() then forms appropriate identity
+    
+    # Solve unconstrained eigenproblem
+    s, Y, X = scipy.linalg.eig(a=A_dash,b=B_dash,left=True,right=True)
+    Y = npy.asmatrix(Y)
+    X = npy.asmatrix(X)
+    
+    # Scipy routine actually returns conjugate of Y
+    # Refer discussion here:
+    # https://stackoverflow.com/questions/15560905/
+    # is-scipy-linalg-eig-giving-the-correct-left-eigenvectors
+    # Correct for this here
+    Y = Y.conj()
+    
+    # Recover solution in x
+    # Recall x = Z.y
+    X = Z * X
+    Y = Z * Y
+    
+    return s, Y, X
+
+
+def RealEigenvalueProperties(s):
+    """
+    Recovers real-valued properties from complex eigenvalues given
+    by array `s`
+    """
+    
+    f_d = npy.imag(s) / (2*npy.pi)             # damped natural frequency
+    eta = - npy.real(s) / npy.absolute(s)      # damping ratio
+    
+    f_n_abs = npy.absolute(s) / (2*npy.pi)     # undamped natural frequency
+    f_n = npy.sign(f_d) * f_n_abs              # recovers sign of frequency
+    
+    return f_n_abs, f_n, f_d, eta
+
+
+def NormaliseEigenvectors(X,Y):
+    """
+    Normalise eigenvectors such that YT.X=I
+    
+    ***
+    Required:
+    
+    * `X`, Numpy matrix, the columns of which are right-eigenvectors
+    * `Y`, Numpy matrix, the columns of which are left-eigenvectors
+    
+    """
+        
+    d = npy.diagonal(Y.T * X)**0.5
+    
+    if d.any() != 0:
+        X = X / d
+        Y = Y / d
+                    
+    return X, Y
 
 
 def PlotFrequencyResponse(f,G_f,
