@@ -1294,10 +1294,10 @@ class DynSys:
         fVals = npy.ravel(fVals)
         
         if A is None:
-            A = self.GetStateMatrix(forceRecalculate=True)
+            A = self.GetStateMatrix(recalculate=True)
             
         if B is None:
-            B = self.GetLoadMatrix(forceRecalculate=True)
+            B = self.GetLoadMatrix(recalculate=True)
             
         # Get output matrices
         if C is None:
