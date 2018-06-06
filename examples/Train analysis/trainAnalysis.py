@@ -38,8 +38,8 @@ ML_analysis = dyn_analysis.MovingLoadAnalysis(modalsys_obj=bridge_sys,
                                               loadVel=speed_kmph*1000/3600,
                                               loadtrain_obj=loading_obj,
                                               tEpilogue=1.0,
-                                              writeResults2File=True,
-                                              results_fName="my_results.csv")
+                                              writeResults2File=True)
+                                              #results_fName="my_results.csv")
 
 results_obj = ML_analysis.run()
 
@@ -77,7 +77,7 @@ for train_fName in trains2analyse:
     loading_obj_list.append(loading.LoadTrain(fName=train_fName))
     
 # Run multiple moving load analyses
-multipleAnalyses = dyn_analysis.Multiple("MovingLoadAnalysis",
+multipleAnalyses = dyn_analysis.Multiple(dyn_analysis.MovingLoadAnalysis,
                                          dynsys_obj=bridge_sys,
                                          loadVel=(speeds_kmph*kmph_to_mps).tolist(),
                                          loadtrain_obj=loading_obj_list,
@@ -85,7 +85,7 @@ multipleAnalyses = dyn_analysis.Multiple("MovingLoadAnalysis",
                                          tEpilogue=1.0,
                                          retainResponseTimeSeries=False,
                                          writeResults2File=False)
-multipleAnalyses.run(save=True)
+multipleAnalyses.run(save=False)
 
 #%%
 def PlotStats(trainSpeeds_kmph,
@@ -176,6 +176,6 @@ fig, axarr = PlotStats(trainSpeeds_kmph=speeds_kmph,
                        statsData=absmax_stats,
                        responseNames=responseNames,
                        supTitle="Maximum acceleration responses for {0}".format(sys_name))
-fig.savefig("MaxAccSummary.png")
+#fig.savefig("MaxAccSummary.png")
 
 
