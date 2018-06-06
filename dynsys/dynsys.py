@@ -587,44 +587,29 @@ class DynSys:
                                   checkConstraints=False,
                                   nDOF=nDOF)
         
-        # Assemble state matrix A=[[0,I],[-Minv*K,-Minv*C]]
-        
-        if not self.isSparse:
-            Minv = npy.linalg.inv(M)
-            I = npy.identity(nDOF)
-        else:
-            Minv = sparse.linalg.inv(M)
-            I = sparse.identity(nDOF)
-        
-        if not self.isSparse:
-            _A = [[npy.zeros_like(I),I],[-Minv @ K, -Minv @ C]]
-            A = npy.bmat(_A)
-            
-        else:
-            _A = [[None,I],[-Minv @ K, -Minv @ C]]
-            A = sparse.bmat(_A)
+        # Assemble state matrix
+        A, Minv = calc_state_matrix(M=M,K=K,C=C,isSparse=self.isSparse)
         
         # Save as attribute
         if saveAsAttr:
             self._A_mtrx = A
-
+            self._Minv = Minv
+        
         return A     
     
     
-    def GetStateMatrix(self,forceRecalculate=False):
+    def GetStateMatrix(self,recalculate=True):
         """
         Helper function to obtain state matrix, if already calculated 
         and held as attribute. Otherwise state matrix will be recalculated
         """
-        if forceRecalculate:
-            return self.CalcStateMatrix()
         
+        attr = "_A_mtrx"
+        
+        if recalculate or not hasattr(self,attr):
+            return self.CalcStateMatrix()
         else:
-            attr = "_A_mtrx"
-            if hasattr(self,attr):
-                return getattr(self,attr)
-            else:
-                return self.CalcStateMatrix()
+            return getattr(self,attr)
     
     
     def CalcLoadMatrix(self,
@@ -658,42 +643,28 @@ class DynSys:
         
         self._CheckSystemMatrices(M_mtrx=M)
         
-        # Assemble load matrix B=[[0],[M]]
-        if not self.isSparse:
-            Minv = npy.linalg.inv(M)
-        else:
-            Minv = sparse.linalg.inv(M)
-            
-        if not self.isSparse:
-            B1 = npy.zeros_like(Minv)
-            B2 = Minv
-            B = npy.vstack((B1,B2))
-            
-        else:
-            _B = [[None],[Minv]]
-            B = sparse.bmat(_B)
+        B, Minv = calc_load_matrix(M=M,isSparse=self.isSparse)
         
         # Save as attribute
         if saveAsAttr:
             self._B_mtrx = B
+            self._Minv = Minv
             
         return B
     
     
-    def GetLoadMatrix(self,forceRecalculate=False):
+    def GetLoadMatrix(self,recalculate=False):
         """
         Helper function to obtain load matrix, if already calculated 
         and held as attribute. Otherwise load matrix will be recalculated
         """
-        if forceRecalculate:
-            return self.CalcLoadMatrix()
         
+        attr = "_B_mtrx"
+        
+        if recalculate or not hasattr(self,attr):
+            return self.CalcLoadMatrix()
         else:
-            attr = "_B_mtrx"
-            if hasattr(self,attr):
-                return getattr(self,attr)
-            else:
-                return self.CalcLoadMatrix()
+            return getattr(self,attr)
             
     
     def EqnOfMotion(self,x, t,
@@ -1534,6 +1505,7 @@ def null_space(A, rcond=None):
     Included in Scipy v1.1.0
     
     For now recreate here
+    In future should just use Scipy function!
     """
     u, s, vh = scipy.linalg.svd(A, full_matrices=True)
     
@@ -1551,54 +1523,143 @@ def null_space(A, rcond=None):
     return Q
 
 
-
-def solve_eig(M,C,K,J=None,normalise=True,verbose=True):
+def calc_state_matrix(M,K,C,Minv=None,isSparse=False):
     """
-    Consider constrained eigenproblem :
+    Assembles _state matrix_ as used in state-space representation of 
+    equation of motion
+    
+    $$ A = [[0,I],[-M^{-1}K,-M^{-1}C]] $$
         
-                    A.x = s.B.x
-        subject to  J.x = 0         (constraints)
+    where **M** is the system mass matrix, **C** is the system damping 
+    matrix, **K** is the system stiffness matrix and **I** is an 
+    identity matrix.
     
-    We want to solve for eigenvalues s, eigenvectors x
-    
-    To do so we need to transform problem into _unconstrained_ 
-    eigenproblem as follows, using Null(J)=Z:
-        
-           (Z.T.A.Z).y  = s.(Z.T.B.Z).y
-                  A'.y  = s.B'.y
-    
-    where            A' = Z.T.A.Z
-    and              B' = Z.T.B.Z
-    
-    We solve this generalised eigenproblem for s, y using ordinary methods
-    
-    x (per the _constrained_ problem) can be recovered as:
-        
-                     x = Z.y
-                     
     ***
     Required:
         
-    * `A`, square matrix of dimensions [nxn]
+    * `M`, mass matrix **M**, shape [n x n]
     
-    * `J`, rectangular matrix of dimensions [mxn], m<n. 
-      Defines a set of m linear constraints
-      
+    * `K`, stiffness matrix **K**, shape [n x n]
+    
+    * `C`, damping matrix **C**, shape [n x n]
+    
     ***
     Optional:
         
-    * `B`, square matrix of dimensions [nxn]. Default is None, in which case 
-    identity matrix [n,n] is assumed (per scipy.linalg.eig() function)
-       
+    * `Minv`, inverse mass matrix, shape [nxn]; can be supplied to avoid need 
+      to calculate inverse of `M` within this function
+    
+    * `isSparse`, _boolean_, if 'True' sparse matrix methods to be used
+    
     ***
     Returns:
         
-    * `s`, _array_ of shape (n,), eigenvalues (in general complex-valued)
+    * `A`, state matrix, shape [2n x 2n]
     
-    * `Y`, _matrix_ of shape (n,n), the columns of which are left-eigenvectors
+    * `Minv`, inverse mass matrix, shape [n x n]
     
-    * `X`, _matrix_ of shape (n,n), the columns of which are right-eigenvectors
+    """
+    
+    nDOF = M.shape[0]
+    
+    if not isSparse:
+        
+        if Minv is None:
+            Minv = npy.linalg.inv(M)
+            
+        I = npy.identity(nDOF)
+        z = npy.zeros_like(I)
+        A = npy.bmat([[z,I],[-Minv @ K, -Minv @ C]])
+        
+    else:
+        
+        if Minv is None:
+            Minv = sparse.linalg.inv(M)
+            
+        I = sparse.identity(nDOF)
+        A = sparse.bmat([[None,I],[-Minv @ K, -Minv @ C]])
+                
+    return A, Minv
+
+
+def calc_load_matrix(M,Minv=None,isSparse=False):
+    """
+    Assembles _load matrix_ as used in state-space representation of 
+    equation of motion
+
+    $$ B = [[0],[M^{-1}]] $$
+    
+    where **M** is the system mass matrix.
+    
+    ***
+    Required:
+                
+    * `M`, mass matrix, shape [n x n]
+    
+    ***
+    Optional:
+        
+    * `Minv`, inverse mass matrix, shape [n x n]; can be supplied to avoid need 
+      to calculate inverse of `M` within this function
+    
+    * `isSparse`, _boolean_, if 'True' sparse matrix methods to be used
+    
+    ***
+    Returns:
+        
+    * `B`, load matrix, shape [2n x n]
+    
+    """
+
+    if not isSparse:
+        if Minv is None:
+            Minv = npy.linalg.inv(M)
+        B = npy.vstack((npy.zeros_like(Minv),Minv))
+        
+    else:
+        if Minv is None:
+            Minv = sparse.linalg.inv(M)
+        B = sparse.bmat([[None],[Minv]])
+        
+    return B, Minv
+
+
+def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
+    """
+    Solves for eigenproperties of _state matrix_ 'A', using scipy.linalg.eig() 
+    method
+    ***
+    
+    Where constraints are defined via **J** matrix, system matrices are 
+    projected onto the null space of **J**, to give an unconstrained 
+    eigenproblem in matrix **A'**, shape [2(n-m) x 2(n-m)], i.e. of reduced 
+    dimensions.
+    
+    Eigenproperties of **A'** are computed and converted to give 
+    eigenproperties of **A**.
+                         
+    ***
+    Required:
+        
+    * `M`, `C`, `K`; system mass, damping and stiffness matrices, 
+       all of shape [n x n]
+    
+    * `J`, rectangular matrix of dimensions [m x n], m<n, defining a set of _m_ 
+      independent linear constraints
+             
+    ***
+    Returns:
+        
+    * `s`, _array_, shape (2n,), eigenvalues of 'A'
+    
+    * `Y`, _matrix_, shape [2n x 2n], the columns of which are 
+      left-eigenvectors of 'A'
+    
+    * `X`, _matrix_, shape [2n x 2n], the columns of which are 
+      right-eigenvectors of 'A'
               
+    Note all will in general be complex-valued
+      
     """
     
     if J is not None:
@@ -1621,21 +1682,11 @@ def solve_eig(M,C,K,J=None,normalise=True,verbose=True):
         if verbose: print("M':\n{0}\n".format(M))
         if verbose: print("K':\n{0}\n".format(K))
         if verbose: print("C':\n{0}\n".format(C))
-        
-    # Compute inverse mass matrix
-    M_inv = scipy.linalg.inv(M)
-    
-    # Assemble A and B matrices in eigenproblem
-    zeros = npy.zeros_like(M)
-    identity = npy.identity(M.shape[0])
-    
-    A1 = npy.hstack((zeros,identity))
-    A2 = npy.hstack((-M_inv @ K,- M_inv @ C))
-    A  = npy.vstack((A1,A2))
+            
+    # Get state matrix to compute eigenproperties of
+    A, Minv = calc_state_matrix(M,K,C,isSparse=isSparse)
     if verbose: print("A:\n{0}\n".format(A))
-        
-    del zeros, identity
-    
+            
     # Solve unconstrained eigenproblem
     s, Y, X = scipy.linalg.eig(a=A,left=True,right=True)
     Y = npy.asmatrix(Y)
