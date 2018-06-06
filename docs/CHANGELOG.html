@@ -11,12 +11,26 @@ system. However major release number will always correspond.</p>
 <h2>Unreleased</h2>
 <h3>Changed</h3>
 <ul>
-<li>Pedestrian dynamics classes and functions moved to new module <code>ped_dyn.py</code>
-  (previously these were within the <code>dyn_analysis.py</code> module)</li>
+<li>
+<p>Pedestrian dynamics classes and functions moved to new module <code>ped_dyn.py</code>
+  (previously these were within the <code>dyn_analysis.py</code> module)</p>
+</li>
+<li>
+<p>Many method previously implemented as class methods of <code>DynSys</code> class now 
+  re-implemented as functions within the <code>dynsys.py</code> module. Class methods still 
+  exist as per previous versions, but these use the public functions to do the work</p>
+</li>
 </ul>
 <h3>Added</h3>
 <ul>
-<li>Crowd loading to UK NA to BS EN 1991-2 now implemented</li>
+<li>
+<p>Crowd loading to UK NA to BS EN 1991-2 now implemented</p>
+</li>
+<li>
+<p><code>CalcEigenproperties()</code> method of <code>DynSys</code> class reimplemented to handle systems
+  with constraints. Approach for unconstrained systems similar to previous versions 
+  except scipy.linalg.eig() method now used.</p>
+</li>
 </ul>
 <h3>Fixed</h3>
 <ul>

@@ -19,8 +19,16 @@ system. However major release number will always correspond.
 * Pedestrian dynamics classes and functions moved to new module `ped_dyn.py`
   (previously these were within the `dyn_analysis.py` module)
 
+* Many method previously implemented as class methods of `DynSys` class now 
+  re-implemented as functions within the `dynsys.py` module. Class methods still 
+  exist as per previous versions, but these use the public functions to do the work
+
 ### Added
 * Crowd loading to UK NA to BS EN 1991-2 now implemented
+
+* `CalcEigenproperties()` method of `DynSys` class reimplemented to handle systems
+  with constraints. Approach for unconstrained systems similar to previous versions 
+  except scipy.linalg.eig() method now used.
 
 ### Fixed
 

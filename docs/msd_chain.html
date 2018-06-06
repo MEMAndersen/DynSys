@@ -2331,10 +2331,10 @@ transfer matrix can be obtained in this way</p>
     <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">forceRecalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
     <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">forceRecalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
     <span class="c1"># Get output matrices</span>
     <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
