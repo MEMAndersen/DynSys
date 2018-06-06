@@ -831,42 +831,22 @@ class DynSys:
         
         """
         
-        # Check for constraints
-        hasConstraints = self.hasConstraints()
-        if hasConstraints:
-            raise ValueError("Implementation incomplete " +
-                             "for systems with constraints!")
+        # Get system matrices
+        d = self.GetSystemMatrices()
+        M = d["M_mtrx"]
+        K = d["K_mtrx"]
+        C = d["C_mtrx"]
         
-        # Assemble continous-time state matrix A
-        A_c = self.CalcStateMatrix()
-        
-        if self.isSparse:
-            A_c = A_c.todense()
+        if self.hasConstraints():
+            J = d["J_mtrx"]
+        else:
+            J = None
             
         # Compute eigenproperties of A_c
         # s is vector of singular values
         # columns of X are right eigenvectors of A
-        # columns of Y are left eigenvectors of A
-        if not hasConstraints:
-            
-            s,Y,X = solve_eig(A=A_c, verbose=verbose)
-            
-        else:
-            
-            # Get constraints matrix of [mxn] shape
-            # Relates to accelerations usually
-            J_mtrx = self.GetSystemMatrices()["J_mtrx"]
-            
-            # Define constraints matrix on state vector i.e. disp and vel
-            # Note if    J.y2dot = 0 (as per definition of J)
-            # then        J.ydot = 0
-            # and            J.y = 0
-            zeros = npy.zeros_like(J_mtrx)
-            J2 = npy.vstack((npy.hstack((J_mtrx,zeros)),
-                            npy.hstack((zeros,J_mtrx))))
-            
-            s,Y,X = solve_eig_constrained(A=A_c, J=J2,
-                                          verbose=verbose)
+        # columns of Y are left eigenvectors of A  
+        s,Y,X = solve_eig(M=M,K=K,C=C,J=J,verbose=verbose)
             
         # Normalise eigenvectors such that Y.T.X=I
         if normaliseEigenvectors:
@@ -1572,53 +1552,7 @@ def null_space(A, rcond=None):
 
 
 
-def solve_eig(A,B=None,verbose=False):
-    """
-    Solve generalised eigenproblem:
-                    A.x = s.B.x
-    
-    ***
-    Required:
-        
-    * `A`, square matrix of dimensions [nxn]
-      
-    ***
-    Optional:
-        
-    * `B`, square matrix of dimensions [nxn]. Default is None, in which case 
-    identity matrix [n,n] is assumed (per scipy.linalg.eig() function)
-       
-    ***
-    Returns:
-        
-    * `s`, _array_ of shape (n,), eigenvalues (in general complex-valued)
-    
-    * `Y`, _matrix_ of shape (n,n), the columns of which are left-eigenvectors
-    
-    * `X`, _matrix_ of shape (n,n), the columns of which are right-eigenvectors
-    
-    """
-
-    if verbose:
-        print("A:\n{0}\n".format(A))
-
-    # Eigenvalue decomposition A
-    # Use Scipy routine
-    s,Y,X = scipy.linalg.eig(A,left=True,right=True)
-    X = npy.asmatrix(X)
-    Y = npy.asmatrix(Y)
-    
-    # Scipy routine actually returns conjugate of Y
-    # Refer discussion here:
-    # https://stackoverflow.com/questions/15560905/
-    # is-scipy-linalg-eig-giving-the-correct-left-eigenvectors
-    # Correct for this here
-    Y = Y.conj()
-    
-    return s, Y, X
-
-
-def solve_eig_constrained(A,J,B=None,verbose=False):
+def solve_eig(M,C,K,J=None,normalise=True,verbose=True):
     """
     Consider constrained eigenproblem :
         
@@ -1667,25 +1601,43 @@ def solve_eig_constrained(A,J,B=None,verbose=False):
               
     """
     
-    print("Solving constrained eigenproblem...")
-    
-    # Solve for null space of J
-    if verbose: print("J:\n{0}\n".format(J))
-    Z = null_space(J)
-    if verbose: print("Null(J)=Z:\n{0}\n".format(Z))
-    
-    # Define matrices for unconstrained eigenproblem
-    A_dash = Z.T * A * Z
-    if verbose: print("A_dash:\n{0}\n".format(A_dash))
-    
-    if B is not None:
-        B_dash = Z.T * B * Z
-        if verbose: print("B_dash:\n{0}\n".format(B_dash))
+    if J is not None:
+        constrained=True
     else:
-        B_dash = None # scipy.linalg.eig() then forms appropriate identity
+        constrained=False
+        
+        
+    if constrained:
+    
+        # Solve for null space of J
+        Z = null_space(J)
+        if verbose: print("Null(J)=Z:\n{0}\n".format(Z))
+    
+        # Compute modified M, C and K matrices
+        M = Z.T @ M @ Z
+        C = Z.T @ C @ Z
+        K = Z.T @ K @ Z
+        
+        if verbose: print("M':\n{0}\n".format(M))
+        if verbose: print("K':\n{0}\n".format(K))
+        if verbose: print("C':\n{0}\n".format(C))
+        
+    # Compute inverse mass matrix
+    M_inv = scipy.linalg.inv(M)
+    
+    # Assemble A and B matrices in eigenproblem
+    zeros = npy.zeros_like(M)
+    identity = npy.identity(M.shape[0])
+    
+    A1 = npy.hstack((zeros,identity))
+    A2 = npy.hstack((-M_inv @ K,- M_inv @ C))
+    A  = npy.vstack((A1,A2))
+    if verbose: print("A:\n{0}\n".format(A))
+        
+    del zeros, identity
     
     # Solve unconstrained eigenproblem
-    s, Y, X = scipy.linalg.eig(a=A_dash,b=B_dash,left=True,right=True)
+    s, Y, X = scipy.linalg.eig(a=A,left=True,right=True)
     Y = npy.asmatrix(Y)
     X = npy.asmatrix(X)
     
@@ -1693,14 +1645,29 @@ def solve_eig_constrained(A,J,B=None,verbose=False):
     # Refer discussion here:
     # https://stackoverflow.com/questions/15560905/
     # is-scipy-linalg-eig-giving-the-correct-left-eigenvectors
-    # Correct for this here
     Y = Y.conj()
     
+    if verbose: print("X:\n{0}\n".format(X))
+    if verbose: print("Y:\n{0}\n".format(Y))
+            
     # Recover solution in x
     # Recall x = Z.y
-    X = Z * X
-    Y = Z * Y
-    
+    if constrained:
+        
+        zeros = npy.zeros_like(Z)
+        Z2 = npy.vstack((npy.hstack((Z,zeros)),npy.hstack((zeros,Z))))
+        if verbose: print("Z2:\n{0}\n".format(Z2))
+        X = Z2 @ X
+        Y = Z2 @ Y
+        
+    # Normalise eigenvectors such that Y.T @ X = I
+    if normalise:
+        d = npy.diagonal(Y.T @ X)**0.5
+        X = X / d
+        Y = Y / d
+        
+    # Return eigenvalues (poles)
+    # and left and right eigenvector matrices (modeshapes)
     return s, Y, X
 
 
