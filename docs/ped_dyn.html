@@ -1033,9 +1033,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1612,11 +1609,12 @@ table {
         <span class="c1"># Calculate load intensity, if not provided directly</span>
         <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">load_intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">mode_index</span><span class="p">)</span>
-            
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;UDL intensity (N/m2): </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">load_intensity</span><span class="p">)</span>    
         <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
                  
         <span class="c1"># Multiply by load intensity to obtain modal force amplitudes</span>
         <span class="c1"># Note modal force amplitudes should be regarded as complex variables </span>
@@ -2815,6 +2813,8 @@ table {
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
+    <span class="n">fv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fv</span><span class="p">)</span> <span class="c1"># positive value to be used</span>
+    
     <span class="c1"># Arrays to digitise Figure NA.8</span>
     <span class="n">walkersData</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.000</span><span class="p">,</span><span class="mf">0.000</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.200</span><span class="p">,</span><span class="mf">0.000</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.400</span><span class="p">,</span><span class="mf">0.010</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.600</span><span class="p">,</span><span class="mf">0.030</span><span class="p">],</span>
                    <span class="p">[</span><span class="mf">0.800</span><span class="p">,</span><span class="mf">0.080</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.000</span><span class="p">,</span><span class="mf">0.240</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.200</span><span class="p">,</span><span class="mf">0.440</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.400</span><span class="p">,</span><span class="mf">0.720</span><span class="p">],</span>
@@ -3249,6 +3249,8 @@ BS EN 1991-2</p>
 <span class="sd">    * `makePlot`, _boolean_, if True plot will be made akin to Figure NA.8</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">fv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fv</span><span class="p">)</span> <span class="c1"># positive value to be used</span>
     
     <span class="c1"># Arrays to digitise Figure NA.8</span>
     <span class="n">walkersData</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.000</span><span class="p">,</span><span class="mf">0.000</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.200</span><span class="p">,</span><span class="mf">0.000</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.400</span><span class="p">,</span><span class="mf">0.010</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.600</span><span class="p">,</span><span class="mf">0.030</span><span class="p">],</span>
@@ -4415,11 +4417,12 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
         <span class="c1"># Calculate load intensity, if not provided directly</span>
         <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">load_intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">mode_index</span><span class="p">)</span>
-            
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;UDL intensity (N/m2): </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">load_intensity</span><span class="p">)</span>    
         <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
                  
         <span class="c1"># Multiply by load intensity to obtain modal force amplitudes</span>
         <span class="c1"># Note modal force amplitudes should be regarded as complex variables </span>
@@ -5229,11 +5232,12 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
     <span class="c1"># Calculate load intensity, if not provided directly</span>
     <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">load_intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">mode_index</span><span class="p">)</span>
-        
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;UDL intensity (N/m2): </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">load_intensity</span><span class="p">)</span>    
     <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
              
     <span class="c1"># Multiply by load intensity to obtain modal force amplitudes</span>
     <span class="c1"># Note modal force amplitudes should be regarded as complex variables </span>
@@ -6143,11 +6147,12 @@ to UK NA to BS EN1991-2</p></div>
     <span class="c1"># Calculate load intensity, if not provided directly</span>
     <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">load_intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">mode_index</span><span class="p">)</span>
-        
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;UDL intensity (N/m2): </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">load_intensity</span><span class="p">)</span>    
     <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
              
     <span class="c1"># Multiply by load intensity to obtain modal force amplitudes</span>
     <span class="c1"># Note modal force amplitudes should be regarded as complex variables </span>
