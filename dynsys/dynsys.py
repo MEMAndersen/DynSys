@@ -782,9 +782,9 @@ class DynSys:
         
     def CalcEigenproperties(self,
                             normaliseEigenvectors=True,
-                            ax=None,
                             verbose=False,
-                            showPlots=False):
+                            makePlots=False,
+                            axarr=None):
         """
         General method for determining damped eigenvectors and eigenvalues 
         of system
@@ -793,13 +793,72 @@ class DynSys:
         Note in general eigenproperties will be complex due to non-proportional
         damping.
         
-        Eigendecomposition of the system state matrix `A_mtrx` is carried out to 
+        Eigendecomposition of the system state matrix 'A' is carried out to 
         obtain eigenvalues and displacement-velocity eigenvectors.
         
+        Engineers who are not familiar with the background theory should read
+        the following excellent paper:
+            
+        *An Engineering Interpretation of the Complex 
+        Eigensolution of Linear Dynamic Systems*
         
-        **Important Note**: this function cannot (currently) be used for 
-        systems with constraint equations. An exception will be raised.
+        by Christopher Hoen. 
         
+        [PDF](../references/An Engineering Interpretation of the Complex 
+        Eigensolution of Linear Dynamic Systems.pdf)
+        
+        ***
+        **Required:**
+            
+        No arguments; the mass, stiffness, damping and (if defined) constraint 
+        matrices held as attributes of the system will be used.
+        
+        ***
+        **Optional:**
+            
+        * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors 
+          should be normalised, such that Y.T @ X = I
+          
+        * `makePlots`, _boolean_, if True plots will be produced to illustrate 
+          the eigensolution obtained
+          
+        * `axarr`, list of _axes_ onto which plots should be made. If None 
+          plots will be made onto new figures
+          
+        * `verbose`, _boolean_, if True intermediate output & text will be 
+          printed to the console
+         
+        ***
+        **Returns:**
+             
+        _Dict_ containing the following entries:
+            
+        * 's', _array_ containing the eigenvalues of 'A'
+        
+        * 'X', _matrix_, the columns of which are the right-eigenvectors of 'A'
+        
+        * 'Y', _matrix_, the columns of which are the left-eigenvectors of 'A'
+        
+        The above entries will in general be complex-valued and represent the 
+        eigenproperties of 'A'.
+        
+        The following entries are real-valued and 
+        express the complex eigenvalues 's' in terms which should be more 
+        familiar to structural/mechanical engineers:
+        
+        * 'f_n', _array_ of _undamped natural frequencies_, in Hz. 
+          
+        Note as 's' comprises conjugate pairs, there will be N pairs of 
+        positive and negative frequencies for a system with N degrees of 
+        freedom (i.e. 'A' matrix of shape [2N x 2N])
+          
+        * 'f_d', _array_ of _damped_ natural frequencies_, in Hz
+        
+        * 'w_n', 'w_d'; circular natural natural frequencies related to the 
+          above, in rad/s
+          
+        * 'eta', damping ratio (1.0=critical)
+                
         """
         
         # Get system matrices
@@ -843,11 +902,17 @@ class DynSys:
         self.f_d = f_d
         self.eta = eta
         
-        if showPlots:
-            self._OrthogonalityPlot(ax=ax)
-            self._EigenvaluePlot(ax=ax,plotType=1)
-            self._EigenvaluePlot(ax=ax,plotType=2)
-            self._EigenvaluePlot(ax=ax,plotType=4)
+        ax_list = []
+        
+        if makePlots:
+            
+            if axarr is None:
+                axarr = [None,None,None,None]
+                
+            ax_list.append(self._OrthogonalityPlot(ax=axarr[0]))
+            ax_list.append(self._EigenvaluePlot(ax=axarr[1],plotType=1))
+            ax_list.append(self._EigenvaluePlot(ax=axarr[2],plotType=2))
+            ax_list.append(self._EigenvaluePlot(ax=axarr[3],plotType=4))
         
         # Return complex eigensolution as dict
         d={}
@@ -859,6 +924,8 @@ class DynSys:
         d["eta"]=eta
         d["f_d"]=f_d
         d["w_d"]=angularFreq(f_d)
+        
+        d["ax_list"]=ax_list
         
         return d 
     
@@ -921,6 +988,8 @@ class DynSys:
         else:
             raise ValueError("Error: unexpected plotType requested!")
             
+        return ax
+            
     
     def _OrthogonalityPlot(self,ax=None,X=None,Y=None):
         """
@@ -948,6 +1017,8 @@ class DynSys:
         im = ax.imshow(npy.absolute(Y.T*X),interpolation='none',cmap='Greys')
         fig.colorbar(im)
         ax.set_title("Y.T * X product")
+        
+        return ax
         
     
     def CheckDOF(self,DOF):

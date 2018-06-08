@@ -166,6 +166,20 @@ class TStep_Results:
         """
         
         
+    def ClearResults(self):
+        """
+        Clear all results from previous time-stepping analysis
+        """
+        
+        self.t = None
+        self.f = None
+        self.v = None
+        self.vdot = None
+        self.v2dot = None
+        self.f_constraint = None
+        self.nResults = 0
+        
+        
     def RecordResults(self,t,f,v,vdot,v2dot,f_constraint):
         """
         Used to record results from time-stepping analysis as implemented 
@@ -279,12 +293,14 @@ class TStep_Results:
             
         return lines
         
+    
     def PlotStateResults(self,
                          dynsys_obj=None,
-                         printProgress:bool=True,
+                         verbose:bool=True,
                          dofs2Plot=None):
         """
-        Produces time series plots of the following, all on one figure:
+        Produces time series plots of the following, as subplots in a single 
+        figure:
             
         * Applied external forces
         
@@ -296,10 +312,19 @@ class TStep_Results:
         
         * Constraint forces (only if constraint equations defined)
         
-        for the _analysis freedoms_.
+        Note all results plotted relate to the _analysis freedoms_.
+        
+        For systems composed of multiple subsystems, one figure will be 
+        produced for each subsystem.
         
         ***
-        Optional:
+        **Required:**
+        
+        (No required arguments; results held as class attributes will be 
+        plotted)
+        
+        ***
+        **Optional:**
             
         * `dynsys_obj`, can be used to specify the subsystem for which results 
           which should be plotted. If _None_ then results for all freedoms 
@@ -308,100 +333,125 @@ class TStep_Results:
         * `dofs2plot`, _list_ or _array_ of indexs of freedoms for which 
           results should be plotted. If _None_ then results for all freedoms 
           will be plotted.
+          
+        * `verbose`, _boolean_, if True text will be written to console
+          
+        ***
+        **Returns:**
+        
+        _List_ of figure objects
         
         """
         
-        if printProgress:
+        if verbose:
             print("Preparing state results plot...")
             tic=timeit.default_timer()
-        
-        # Determine number of subplots required
-        constraints = self.tstep_obj.dynsys_obj.hasConstraints()
-        if constraints:
-            nPltRows=5
-        else:
-            nPltRows=4
             
-        # Create plot of results for analysis DOFs
-        fig, axarr = plt.subplots(nPltRows, sharex=True)
-        fig.set_size_inches((18,9))
-    
-        # Set xlim
-        xlim = [self.tstep_obj.tStart,self.tstep_obj.tEnd]
-        
-        # Get system description string
-        sysStr = ""
+        # Get subsystems to iterate over
         DynSys_list = self.tstep_obj.dynsys_obj.DynSys_list
-        
-        if all([x.isModal for x in DynSys_list]):
-            # All systems and subsystems are modal
-            sysStr = "Modal "
+        if dynsys_obj is not None:
             
-        # Get data to plot
-        if dynsys_obj is None:
-            dynsys_obj = self.tstep_obj.dynsys_obj # parent system
+            if not (dynsys_obj in DynSys_list):
+                raise ValueError("`dynsys_obj` not in DynSys_list!")
+                
+            DynSys_list = [dynsys_obj]
         
-        f, v, vdot, v2dot = self.GetResults(dynsys_obj,['f','v','vdot','v2dot'])
+        # Iterate over all subsystems, producing figure for each
+        fig_list = []
         
-        # Handle dofs2Plot in case of none
-        if dofs2Plot is None:
-            dofs2Plot = range(v.shape[1])
+        for obj in DynSys_list:
+
+            # Determine number of subplots required
+            constraints = obj.hasConstraints()
+            if constraints:
+                nPltRows=5
+            else:
+                nPltRows=4
+                
+            # Create plot of results for analysis DOFs
+            fig, axarr = plt.subplots(nPltRows, sharex=True)
+            fig.set_size_inches((18,9))
+            fig_list.append(fig)
         
-        # Create time series plots
-        self._TimePlot(ax=axarr[0],
-                       t_vals=self.t,
-                       data_vals=f[:,dofs2Plot],
-                       xlim=xlim,
-                       titleStr="Applied {0}Forces (N)".format(sysStr))
-        
-        self._TimePlot(ax=axarr[1],
-                       t_vals=self.t,
-                       data_vals=v[:,dofs2Plot],
-                       titleStr="{0}Displacements (m)".format(sysStr))
-        
-        self._TimePlot(ax=axarr[2],
-                       t_vals=self.t,
-                       data_vals=vdot[:,dofs2Plot],
-                       titleStr="{0}Velocities (m/s)".format(sysStr))
-        
-        self._TimePlot(ax=axarr[3],
-                       t_vals=self.t,
-                       data_vals=v2dot[:,dofs2Plot],
-                       titleStr="{0}Accelerations ($m/s^2$)".format(sysStr))
-        
-        if constraints:
-            self._TimePlot(ax=axarr[4],
-                           t_vals=self.t,
-                           data_vals=self.f_constraint,
-                           titleStr="{0}Constraint forces (N)".format(sysStr))
+            # Set xlim
+            xlim = [self.tstep_obj.tStart,self.tstep_obj.tEnd]
             
-        axarr[-1].set_xlabel("Time (secs)")
-        fig.subplots_adjust(hspace=0.3)
+            # Get system description string
+            sysStr = ""
+            DynSys_list = obj.DynSys_list
+            
+            if all([x.isModal for x in DynSys_list]):
+                # All systems and subsystems are modal
+                sysStr = "Modal "
+                
+            # Get data to plot            
+            t,f,v,vdot,v2dot =self.GetResults(obj,['t','f','v','vdot','v2dot'])
+            
+            # Handle dofs2Plot in case of none
+            if dofs2Plot is None:
+                dofs2Plot = range(v.shape[1])
+            
+            # Create time series plots
+            self._TimePlot(ax=axarr[0],
+                           t_vals=t,
+                           data_vals=f[:,dofs2Plot],
+                           xlim=xlim,
+                           titleStr="Applied %sForces (N)" % sysStr)
+            
+            self._TimePlot(ax=axarr[1],
+                           t_vals=t,
+                           data_vals=v[:,dofs2Plot],
+                           titleStr="%sDisplacements (m)" % sysStr)
+            
+            self._TimePlot(ax=axarr[2],
+                           t_vals=t,
+                           data_vals=vdot[:,dofs2Plot],
+                           titleStr="%sVelocities (m/s)" % sysStr)
+            
+            self._TimePlot(ax=axarr[3],
+                           t_vals=t,
+                           data_vals=v2dot[:,dofs2Plot],
+                           titleStr="%sAccelerations ($m/s^2$)" % sysStr)
+            
+            if constraints:
+                self._TimePlot(ax=axarr[4],
+                               t_vals=t,
+                               data_vals=obj.f_constraint,
+                               titleStr="%sConstraint forces (N)" % sysStr)
+                
+            axarr[-1].set_xlabel("Time (secs)")
+            fig.subplots_adjust(hspace=0.3)
+            
+            # Overall title for plot
+            fig.suptitle("State variable results for '%s'" % obj.name)
         
-        # Overall title for plot
-        fig.suptitle("State variable results for '{0}'".format(dynsys_obj.name))
-        
-        if printProgress:
+        if verbose:
             toc=timeit.default_timer()
             print("Plot prepared after %.3f seconds." % (toc-tic))
             
-        return fig
+        return fig_list
+    
     
     def PlotResponseResults(self,
                             dynsys_obj=None,
                             responses2plot=None,
                             y_overlay:list=None,
-                            verbose=False,
+                            verbose=True,
                             raiseErrors=True,
                             useCommonPlot:bool=False,
-                            useCommonScale:bool=True,
-                            printProgress:bool=True):
+                            useCommonScale:bool=True):
         """
         Produces a new figure with linked time series subplots for 
         all responses/outputs
         
         ***
-        Optional:
+        **Required:**
+        
+        (No required arguments; results held as class attributes will be 
+        plotted)
+        
+        ***
+        **Optional:**
             
         * `dynsys_obj`, can be used to specify the subsystem for which results 
           which should be plotted. If _None_ then results for all freedoms 
@@ -410,9 +460,29 @@ class TStep_Results:
         * `responses2plot`, can be used to specify the indexs of responses to 
           plot, with the specified `dynsys_obj`.
           
+        * `y_overlay`, _list_ of floats, can be used to overlay a horizontal 
+          line onto plots e.g. to denote some criteria or limit to be satisfied
+          
+        * `verbose`, _boolean_, if True then output will be written to console
+          
+        * `raiseErrors`, _boolean, dictates whether `ValueError()` should be 
+          raised in case of no results to plot.
+        
+        * `useCommonPlot`, _boolean_, if True all responses will be overlaid 
+          onto a single axis. Otherwise multiple subplots will created, one for 
+          each response
+          
+        * `useCommonScale`, _boolean_, if multiple subplots are created, 
+          dictates whether a common vertical scale should be used
+          
+        ***
+        **Returns:**
+         
+        _List_ of figure objects
+          
         """
         
-        if printProgress:
+        if verbose:
             print("Preparing response results plots...")
             tic=timeit.default_timer()
             
@@ -516,40 +586,69 @@ class TStep_Results:
                         for y_val  in y_overlay:
                             ax.axhline(y_val,color='r')
             
-        if printProgress:
+        if verbose:
             toc=timeit.default_timer()
             print("Plots prepared after %.3f seconds." % (toc-tic))
             
             
         return fig_list
         
+    
     def PlotResults(self,
                     dynsys_obj=None,
-                    printProgress:bool=True,
-                    dofs2Plot:bool=None,
-                    useCommonPlot:bool=False):
+                    verbose:bool=True,
+                    dofs2Plot:list=None,
+                    useCommonPlot:bool=False,
+                    useCommonScale:bool=False):
         """
-        Produces the following standard plots to document the results of 
-        time-stepping analysis:
-            
+        Presents the results of time-stepping analysis by producing the 
+        following plots:
+        
         * State results plot: refer `PlotStateResults()`
         
         * Response results plot: refer `PlotResponseResults()`
+        
+        ***
+        **Required:**
+        
+        (No required arguments; results held as class attributes will be 
+        plotted)
+        
+        ***
+        **Optional:**
+            
+        * `dynsys_obj`, object specifying system whose results are to be 
+          plotted. If _None_ plots will be produced for all systems. 
+        
+        * `verbose`, _boolean_, if True progress will be written to console
+        
+        * `dof2Plot`, _list_ of integers to denote DOFs to plot. Can be used to 
+          produce a 'cleaner' plot, in case of large numbers of DOFs.
+          
+        * `useCommonPlot`, `useCommonScale`: _boolean_, 
+          refer `PlotResponseResults()` docs for details
+        
+        ***
+        **Returns:**
+        
+        _List_ of figure objects
         
         """
             
         figs=[]
         
         figs.append(self.PlotStateResults(dynsys_obj=dynsys_obj,
-                                          printProgress=printProgress,
+                                          verbose=verbose,
                                           dofs2Plot=dofs2Plot))
         
         figs.append(self.PlotResponseResults(dynsys_obj=dynsys_obj,
                                              raiseErrors=False,
-                                             printProgress=printProgress,
-                                             useCommonPlot=useCommonPlot))
+                                             verbose=verbose,
+                                             useCommonPlot=useCommonPlot,
+                                             useCommonScale=useCommonScale))
         
         return figs
+    
     
     def PlotResponsePSDs(self,nperseg=None):
         """
@@ -659,10 +758,11 @@ class TStep_Results:
         
         plt.show()
         
+        
     def CalcResponses(self,
                       write_results_to_file=False,
                       results_fName="ts_results.csv",
-                      showMsgs=True):
+                      verbose=True):
         """
         Responses are obtained by pre-multiplying results by output matrices
         
@@ -700,11 +800,11 @@ class TStep_Results:
                 
         # Calculate DOF statistics
         if self.calc_dof_stats:
-            self.CalcDOFStats(showMsgs=showMsgs)
+            self.CalcDOFStats(verbose=verbose)
             
         # Calculate response statistics
         if self.calc_response_stats:
-            self.CalcResponseStats(showMsgs=showMsgs)
+            self.CalcResponseStats(verbose=verbose)
             
         # Write time series results to file
         if write_results_to_file:
@@ -712,25 +812,54 @@ class TStep_Results:
                 
         # Delete DOF time series data (to free-up memory)
         if not self.retainDOFTimeSeries:
-            if showMsgs: print("Clearing DOF time series data to save memory...")
+            if verbose: print("Clearing DOF time series data to save memory...")
             del self.v
             del self.vdot
             del self.v2dot
         
         # Delete response time series data (to free up memory)
         if not self.retainResponseTimeSeries:
-            if showMsgs: print("Clearing response time series data to save memory...")
+            if verbose: print("Clearing response time series data to save memory...")
             del self.responses_list
             del self.response_names_list
         
-    def CalcDOFStats(self,showMsgs=True):
+        
+        
+    def CalcDOFStats(self,verbose=True):
         """
         Obtain basic statistics to describe DOF time series
+        
+        ***
+        **Required:**
+        
+        No arguments are required
+        
+        ***
+        **Optional:**
+        
+        * `verbose`, _boolean_, controls the amount of console output
+        
+        ***
+        **Returns:**
+        
+        Stats are returned as a _list_ of _dicts_, with list indexs as follows:
+            
+        * 0 : DOF displacements
+        
+        * 1 : DOF velocities
+        
+        * 2 : DOF accelerations
+        
+        * 3 : Constraint forces (only if constraints defined)
+        
+        Dict entries will in general be _arrays_, giving stats results for each 
+        degree of freedom
+        
         """
         
         if self.calc_dof_stats:
             
-            if showMsgs: print("Calculating DOF statistics...")
+            if verbose: print("Calculating DOF statistics...")
             
             stats=[]
             
@@ -754,13 +883,14 @@ class TStep_Results:
             self.dof_stats=stats
             
         else:
-            if showMsgs:
-                print("calcResponseStats=False option set. " +
-                      "Response statistics will not be computed.")
+            if verbose:
+                print("calcDOFStats=False option set. " +
+                      "DOF statistics will not be computed.")
         
         return stats
         
-    def CalcResponseStats(self,showMsgs=True):
+    
+    def CalcResponseStats(self,verbose=True):
         """
         Obtain basic statistics to describe response time series
         """
@@ -774,7 +904,7 @@ class TStep_Results:
             # Loop over all systems and subsystems
             for dynsys_obj, responses in zip(dynsys_list,responses_list):
                 
-                if showMsgs:
+                if verbose:
                     print("Calculating response statistics " + 
                           "for '{0}'...".format(dynsys_obj.name))
                         
@@ -795,7 +925,7 @@ class TStep_Results:
                 self.response_stats_dict[dynsys_obj] = stats_dict
             
         else:
-            if showMsgs:
+            if verbose:
                 print("calcResponseStats=False option set." + 
                       "Response statistics will not be computed.")
         
