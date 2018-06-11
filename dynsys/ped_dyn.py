@@ -20,8 +20,8 @@ from inspect import isfunction
 import dyn_analysis
 import loading
 from dynsys import PlotFrequencyResponse
+import tstep
 #from loading import UKNA_BSEN1991_2_walkers_joggers_loading as ped_loading
-
 
 
 class UKNA_BSEN1991_2_walkers_joggers_loading(loading.LoadTrain):
@@ -421,44 +421,65 @@ class SteadyStateCrowdLoading():
                 
         
         
-    def run(self,mode_index:int,load_intensity:float=None,
+    def run(self,target_mode:int,load_intensity:float=None,
+            run_tstep=False,tstep_kwargs:dict={},
             verbose=True, makePlot=False
             ):
         """
         Runs calculations to determine steady-state crowd loading responses
         
         ***
-        Required:
+        **Required:**
             
         * `mode_index`, _integer_, denotes the mode at which resonance is 
           to be targeted
+          
+        ***
+        **Optional:**
         
         * `load_intensity`, _float_, denotes the load intensity (in N/m2) 
           to be applied. If _None_, `load_intensity` to be calculated 
           using `calc_load_intensity()` method function.
+          
+        * `run_tstep`, _boolean_, if True a time-stepping analysis will be run, 
+          which can be used to verify the the steady-state resonance solution 
+          that is ordinarily obtained.
+          
+        * `tstep_kwargs`, _dict_ of keyword arguments to be passed when 
+          initialising time-stepping analysis using the `TStep()` class. Only 
+          used if `run_tstep` is True. 
+          Refer [documentation](../docs/tstep.html) for `TStep()` 
+          class for more details.
+          
+          [documentation]: 
           
         """
         
 
         print("\n**** Running steady-state crowd loading analysis ****")
         
-        target_mode = mode_index + 1
-        print("Target mode index: %d" % target_mode)
         self.target_mode = target_mode
+        if verbose: print("Target mode index: %d" % target_mode)
         
         # Obtain area integrals over all deck strips
-        modal_areas = self.calc_modal_areas(mode_index, makePlot=makePlot)
+        modal_areas = self.calc_modal_areas(target_mode, makePlot=makePlot)
         self.modal_areas = modal_areas
         
         # Calculate load intensity, if not provided directly
         if load_intensity is None:
-            load_intensity = self.calc_load_intensity(mode_index)
-        print("UDL intensity (N/m2): %.2f" % load_intensity)    
+            load_intensity, rslts_dict = self.calc_load_intensity(target_mode)
+        
         self.load_intensity = load_intensity
         """
         Uniform load intensity (in N/m2) to be applied to deck regions
         """
         
+        self.load_intensity_rslts_dict = rslts_dict
+        """
+        _Dict_ to store key results from load intensity calculation
+        """
+        
+        if verbose: print("UDL intensity (N/m2): %.2f" % load_intensity)
                  
         # Multiply by load intensity to obtain modal force amplitudes
         # Note modal force amplitudes should be regarded as complex variables 
@@ -483,9 +504,10 @@ class SteadyStateCrowdLoading():
         # Note: G(f) will in general be complex-valued; the should be 
         # intepreted to denote scaling and phase lag
         
-        target_f = self.f_d[mode_index]
+        target_f = self.f_d[target_mode]
         self.target_f = target_f
-        print("Frequency for targeted mode: %.2f Hz" % target_f)
+        
+        if verbose: print("Frequency for targeted mode: %.2f Hz" % target_f)
         
         def Calc_G3(fVals):
             """
@@ -521,12 +543,12 @@ class SteadyStateCrowdLoading():
         self.modal_accn = modal_accn
         
         # Adjust phase such that acc for target mode has phase=0
-        z1 = 1.0 * numpy.exp(1j*numpy.angle(modal_accn[mode_index]))
+        z1 = 1.0 * numpy.exp(1j*numpy.angle(modal_accn[target_mode]))
         modal_accn = modal_accn / z1
         
         # Get modal acceleration of targeted mode
         # Note phase=0 due to above adjustment, hence ok to take real part only
-        modal_accn_target = numpy.real(modal_accn[mode_index])
+        modal_accn_target = numpy.real(modal_accn[target_mode])
         self.modal_accn_target = modal_accn_target
                        
         # Calculate responses amplitudes using full transfer matrix
@@ -583,7 +605,7 @@ class SteadyStateCrowdLoading():
                          "relating applied modal forces (N) " + 
                          "to modal accelerations (m/$s^2$)")
             
-            fig.set_size_inches((14,7))
+            fig.set_size_inches((14,8))
             fig.legend(ax.lines[:nModes],["Modal force %d" % (m+1)
                                           for m in range(nModes)])
         
@@ -593,6 +615,28 @@ class SteadyStateCrowdLoading():
             
         print("**** Analysis complete! ****\n")
         
+        if run_tstep:
+            
+            # Run time-stepping analysis to validate /check the above approach
+            
+            # Define sinusoidal load function consistent with above
+            def load_func(t):
+                return modal_forces * numpy.sin(2*numpy.pi*target_f*t)
+            
+            load_func_dict = {self.modalsys_obj : load_func}
+            
+            # Define and run time-stepping analysis
+            tstep_analysis = tstep.TStep(dynsys_obj=self.modalsys_obj,
+                                         force_func_dict=load_func_dict,
+                                         **tstep_kwargs)
+            
+            tstep_results = tstep_analysis.run(verbose=verbose)  
+            
+            self.tstep_results = tstep_results
+            """
+            Results from time-stepping analysis; instance of `TStep_Results()`
+            """
+
         return modal_accn_target
                 
     
@@ -645,16 +689,41 @@ class SteadyStateCrowdLoading():
         printcomplex(self.response_amplitudes)
         
         
-    def plot_results(self):
+    def plot_results(self,overlay_val:float=None):
         """
-        Plots results of analysis
+        Plots results of steady-state response analysis
+        
+        If time-stepping analysis has also been carried out (as a cross-check) 
+        results of that analysis will be plotted also
+        
+        ***
+        
+        **Required:**
+        
+        (No arguments required)
+        
+        ***
+        **Optional:**
+        
+        * `overlay_val`, _float_, value to overlay onto response plots. 
+          (A common use of this would be to overlay the applicable acceleration 
+          limit, against which responses are to be compared)
+        
+        ***
+        **Returns:**
+        
+        _Nested list_ of figure objects
+        
         """
         
+        fig_list = []
+        
         fig, axarr = plt.subplots(2)
+        fig_list.append(fig)
         
         fig.suptitle("Steady-state pedestrian crowd loading analysis results\n"+
                      "Target mode: %d" % self.target_mode)
-        fig.set_size_inches((14,7))
+        fig.set_size_inches((14,8))
         fig.subplots_adjust(hspace=0.3)
         
         # Produce bar plot of modal accelerations
@@ -677,6 +746,42 @@ class SteadyStateCrowdLoading():
         
         ax.set_title("Steady-state response amplitudes")
         
+        if overlay_val is not None:
+            ax.axvline(overlay_val,color='darkorange')
+        
+        # Plot results of time-stepping analysis, if avaliable
+        if hasattr(self,"tstep_results"):
+            
+            tstep_fig_list = self.tstep_results.PlotResults(useCommonPlot=False,
+                                                            useCommonScale=True)
+            fig_list += tstep_fig_list
+            
+            # Overlay expected modal acceleration amplitudes
+            # (from steady-state analysis)
+            state_results_fig = fig_list[1][0]
+            response_results_fig = fig_list[2][0]
+            
+            ax = state_results_fig.get_axes()[3] # plot of modal accelerations
+            accn_val = numpy.abs(self.modal_accn_target)    # value to overlay
+            ax.axhline(+accn_val,color='r',linestyle='--',alpha=0.3)
+            ax.axhline(-accn_val,color='r',linestyle='--',alpha=0.3)
+            
+            # Overlay expected response amplitudes 
+            # (from steady-state analysis)
+            axarr = response_results_fig.get_axes()
+            val2overlay = numpy.abs(self.response_amplitudes)
+
+            for ax, val in zip(axarr,val2overlay):
+                ax.axhline(+val,color='r',linestyle='--',alpha=0.3)
+                ax.axhline(-val,color='r',linestyle='--',alpha=0.3) 
+                
+                if overlay_val is not None:
+                    ax.axhline(+overlay_val,color='darkorange')
+                    ax.axhline(-overlay_val,color='darkorange')
+                    factor=1.2 # to be >1.0, ensures lines visible!
+                    ax.set_ylim(-factor*overlay_val,+factor*overlay_val)
+            
+        return fig_list       
         
 
     def _check_width_func_list(self,
@@ -908,7 +1013,8 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         return density
     
     
-    def calc_load_intensity(self,mode_index:int,calc_lambda=True,verbose=True):
+    def calc_load_intensity(self,mode_index:int,calc_lambda=True,
+                            verbose=True,makePlot=True):
         """
         Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
         
@@ -933,7 +1039,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         F0 = 280.0 # N, refer Table NA.8
 
         # Derive adjustment factors
-        fv = self.f_d[mode_index]
+        fv = numpy.abs(self.f_d[mode_index])
         k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv, analysis_type="walkers")
         
         log_dec = 2*numpy.pi*self.eta[mode_index]
@@ -951,23 +1057,35 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         # Calculate load intensity per NA.2.44.5(1)
         load_intensity = 1.8*(F0/A)*k*((gamma*N/lambda_val)**0.5)
         
+        # Prepare markdown string of nicely formatted text
+        md_txt = ""
+        md_txt += "Key results from UK NA to BS EN 1991-2 load intensity calculation:"
+        md_txt += "\n" + "F0       = %.1f\t(N)" % F0
+        md_txt += "\n" + "A        = %.2f\t(m2)" % A
+        md_txt += "\n" + "Aeff     = %.2f\t(m2)" % Aeff
+        md_txt += "\n" + "rho      = %.2f" % crowd_density
+        md_txt += "\n" + "N        = %.1f" % N
+        md_txt += "\n" + "fv       = %.3f\t(Hz)" % fv
+        md_txt += "\n" + "k        = %.3f" % k
+        md_txt += "\n" + "log_dec  = %.3f" % log_dec
+        md_txt += "\n" + "gamma    = %.3f" % gamma
+        md_txt += "\n" + "lambda   = %.3f" % lambda_val
+        md_txt += "\n" + "w        = %.3f\t(N/m2)" % load_intensity
+        
         if verbose:
-            
-            print("\nKey results from load intensity calc:")
-            print("F0       = %.1f\t(N)" % F0)
-            print("A        = %.2f\t(m2)" % A)
-            print("Aeff     = %.2f\t(m2)" % Aeff)
-            print("rho      = %.2f" % crowd_density)
-            print("N        = %.1f" % N)
-            print("fv       = %.3f\t(Hz)" % fv)
-            print("k        = %.3f" % k)
-            print("log_dec  = %.3f" % log_dec)
-            print("gamma    = %.3f" % gamma)
-            print("lambda   = %.3f" % lambda_val)
-            print("w        = %.3f\t(N/m2)" % load_intensity)
-            print("")
+            print("\n" + md_txt + "\n")    
 
-        return load_intensity
+        # Prepare dict to return key results
+        results_dict = {}
+        results_dict["F0"]=F0
+        results_dict["fv"]=fv
+        results_dict["rho"]=crowd_density
+        results_dict["k"]=k
+        results_dict["lambda"]=lambda_val
+        results_dict["log_dec"]=log_dec
+        results_dict["w"]=load_intensity
+
+        return load_intensity, results_dict
     
 
 class PedestrianDynamics_transientAnalyses(dyn_analysis.Multiple):
@@ -1360,7 +1478,7 @@ class _DeckStrip():
             
             fig.suptitle("Deck region `%s`\n" % self.name + 
                          "Target index %d" % index)
-            fig.set_size_inches((14,7))
+            fig.set_size_inches((14,8))
             fig.subplots_adjust(hspace=0)
             
             ax2 = fig.add_subplot(3,1,2)
