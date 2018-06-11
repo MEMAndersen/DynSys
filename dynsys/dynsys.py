@@ -747,7 +747,7 @@ class DynSys:
         # Get input force at time t
         f = npy.asmatrix(forceFunc(t)).T
         
-        # Calculate net force (excluding constraint forces)
+        # Calculate net force (excluding constraint forces
         f_net = f - K.dot(y) - C.dot(ydot)
         
         # Solve for accelerations
@@ -1323,7 +1323,7 @@ class DynSys:
                          A=None, B=None, 
                          C=None, D=None,
                          force_accn:bool=False,
-                         verbose=True
+                         verbose=False
                          ):
         """
         Evaluates frequency response G(f) at specified frequencies
@@ -1405,18 +1405,16 @@ class DynSys:
         No = C.shape[0]
         
         # Print shapes of all arrays
-        print("Shapes of A B C D matrices:")
+        if verbose:
+            print("Shapes of A B C D matrices:")
+            print("A: {0}".format(A.shape))
+            print("B: {0}".format(B.shape))
+            print("C: {0}".format(C.shape))
         
-        print("A: {0}".format(A.shape))
-        
-        print("B: {0}".format(B.shape))
-        
-        print("C: {0}".format(C.shape))
-        
-        if D is not None:
-            print("D: {0}".format(D.shape))
-        else:
-            print("D: None")
+            if D is not None:
+                print("D: {0}".format(D.shape))
+            else:
+                print("D: None")
             
         # Define array to contain frequency response for each 
         G_f = npy.zeros((No,Ni,nf),dtype=complex)
@@ -1445,12 +1443,14 @@ class DynSys:
         # Return values
         return fVals, G_f
     
+    
     def PlotSystems_all(self,ax,**kwargs):
         """
         Generic plotter function to display current configuration of 
         all systems and subsystems
         """
         return None
+    
     
     def PlotSystem(self,ax,**kwargs):
         """
