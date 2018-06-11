@@ -370,7 +370,7 @@ class TStep_Results:
                 
             # Create plot of results for analysis DOFs
             fig, axarr = plt.subplots(nPltRows, sharex=True)
-            fig.set_size_inches((18,9))
+            fig.set_size_inches((14,8))
             fig_list.append(fig)
         
             # Set xlim
@@ -590,7 +590,6 @@ class TStep_Results:
             toc=timeit.default_timer()
             print("Plots prepared after %.3f seconds." % (toc-tic))
             
-            
         return fig_list
         
     
@@ -634,20 +633,18 @@ class TStep_Results:
         _List_ of figure objects
         
         """
-            
-        figs=[]
         
-        figs.append(self.PlotStateResults(dynsys_obj=dynsys_obj,
+        fig_list1 = self.PlotStateResults(dynsys_obj=dynsys_obj,
                                           verbose=verbose,
-                                          dofs2Plot=dofs2Plot))
+                                          dofs2Plot=dofs2Plot)
         
-        figs.append(self.PlotResponseResults(dynsys_obj=dynsys_obj,
+        fig_list2 = self.PlotResponseResults(dynsys_obj=dynsys_obj,
                                              raiseErrors=False,
                                              verbose=verbose,
                                              useCommonPlot=useCommonPlot,
-                                             useCommonScale=useCommonScale))
+                                             useCommonScale=useCommonScale)
         
-        return figs
+        return [fig_list1,fig_list2]
     
     
     def PlotResponsePSDs(self,nperseg=None):
