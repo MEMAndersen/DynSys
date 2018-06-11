@@ -11,6 +11,7 @@ from __init__ import __version__ as currentVersion
 import numpy
 import os
 import scipy
+import pandas
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from mpl_toolkits.mplot3d import Axes3D
@@ -36,7 +37,8 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(loading.LoadTrain):
                  fv:float,
                  gamma:float=1.0,
                  N:int=2,
-                 analysis_type:str="walkers"):
+                 analysis_type:str="walkers",
+                 makePlot=True):
         """
         Defines fluctuating point load to represent either walkers or joggers 
         according to NA.2.44.4, UK NA to BS EN 1991-2
@@ -71,7 +73,9 @@ class UKNA_BSEN1991_2_walkers_joggers_loading(loading.LoadTrain):
                              "'walkers' or 'joggers' expected")
             
         # Get k(fv) factor
-        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,analysis_type=analysis_type)
+        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,
+                                        analysis_type=analysis_type,
+                                        makePlot=makePlot)
             
         # Calculate amplitude of sinusoidal forcing function per NA.2.44.4(1)
         F_amplitude = F0 * k * (1 + gamma*(N-1))**0.5
@@ -140,6 +144,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                  dt=None,
                  verbose=True,
                  calc_Seff=True,
+                 makePlot=True,
                  **kwargs):
         """
         Initialisation function
@@ -252,7 +257,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         self.Seff = Seff
         
         # Obtain gamma from Figure NA.9
-        gamma = UKNA_BSEN1991_2_Figure_NA_9(logdec,Seff)
+        gamma = UKNA_BSEN1991_2_Figure_NA_9(logdec,Seff,makePlot=makePlot)
         self.gamma = gamma
         
         # Define loading objects to represent walkers and joggers
@@ -467,14 +472,15 @@ class SteadyStateCrowdLoading():
         
         # Calculate load intensity, if not provided directly
         if load_intensity is None:
-            load_intensity, rslts_dict = self.calc_load_intensity(target_mode)
+            load_intensity, d = self.calc_load_intensity(target_mode,
+                                                         makePlot=makePlot)
         
         self.load_intensity = load_intensity
         """
         Uniform load intensity (in N/m2) to be applied to deck regions
         """
         
-        self.load_intensity_rslts_dict = rslts_dict
+        self.load_intensity_rslts_dict = d
         """
         _Dict_ to store key results from load intensity calculation
         """
@@ -618,6 +624,8 @@ class SteadyStateCrowdLoading():
         if run_tstep:
             
             # Run time-stepping analysis to validate /check the above approach
+            print("***Running time-stepping analysis, as cross-check of "+
+                  "steady-state resonance approach...***")
             
             # Define sinusoidal load function consistent with above
             def load_func(t):
@@ -636,6 +644,8 @@ class SteadyStateCrowdLoading():
             """
             Results from time-stepping analysis; instance of `TStep_Results()`
             """
+            
+            print("***Time-stepping analysis complete!***")
 
         return modal_accn_target
                 
@@ -687,6 +697,27 @@ class SteadyStateCrowdLoading():
         print("Responses:")
         print(self.response_names)
         printcomplex(self.response_amplitudes)
+        
+        
+    def get_response_amplitudes(self,print_phase=False):
+        """
+        Returns response amplitudes as pandas dataframe
+        """
+        
+        data = numpy.abs(self.response_amplitudes)
+        index_list = self.response_names
+        columns_list = ["Amplitude"]
+        
+        if print_phase:
+            phase_angles = numpy.angle(self.response_amplitudes)
+            data = numpy.hstack((data,phase_angles))
+            columns_list.append("Phase angle")
+        
+        df = pandas.DataFrame(data=data,
+                              index=index_list,
+                              columns=columns_list)
+        
+        return df
         
         
     def plot_results(self,overlay_val:float=None):
@@ -753,7 +784,8 @@ class SteadyStateCrowdLoading():
         if hasattr(self,"tstep_results"):
             
             tstep_fig_list = self.tstep_results.PlotResults(useCommonPlot=False,
-                                                            useCommonScale=True)
+                                                            useCommonScale=True,
+                                                            y_overlay=[+overlay_val,-overlay_val])
             fig_list += tstep_fig_list
             
             # Overlay expected modal acceleration amplitudes
@@ -774,12 +806,6 @@ class SteadyStateCrowdLoading():
             for ax, val in zip(axarr,val2overlay):
                 ax.axhline(+val,color='r',linestyle='--',alpha=0.3)
                 ax.axhline(-val,color='r',linestyle='--',alpha=0.3) 
-                
-                if overlay_val is not None:
-                    ax.axhline(+overlay_val,color='darkorange')
-                    ax.axhline(-overlay_val,color='darkorange')
-                    factor=1.2 # to be >1.0, ensures lines visible!
-                    ax.set_ylim(-factor*overlay_val,+factor*overlay_val)
             
         return fig_list       
         
@@ -899,7 +925,7 @@ class SteadyStateCrowdLoading():
                           for x in self.deck_regions_list],axis=0)
         
     
-    def calc_load_intensity(self):
+    def calc_load_intensity(self,**kwargs):
         """
         _Method to be overriden by derived classes_
         """
@@ -1040,11 +1066,14 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
 
         # Derive adjustment factors
         fv = numpy.abs(self.f_d[mode_index])
-        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv, analysis_type="walkers")
+        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,analysis_type="walkers",
+                                        makePlot=makePlot)
         
         log_dec = 2*numpy.pi*self.eta[mode_index]
 
-        gamma = UKNA_BSEN1991_2_Figure_NA_9(logDec=log_dec,groupType="crowd")
+        gamma = UKNA_BSEN1991_2_Figure_NA_9(logDec=log_dec,
+                                            groupType="crowd",
+                                            makePlot=makePlot)
         
         # Effective number of pedestrians parameter, refer NA. 2.44.5(1)
         # To generalise to deck of variable width, use area ratio as Seff/S

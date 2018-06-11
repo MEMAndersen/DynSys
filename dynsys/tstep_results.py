@@ -11,6 +11,7 @@ import numpy as npy
 import scipy.signal
 import matplotlib.pyplot as plt
 import timeit
+import pandas
 from datetime import datetime
 
 class TStep_Results:
@@ -436,6 +437,7 @@ class TStep_Results:
                             dynsys_obj=None,
                             responses2plot=None,
                             y_overlay:list=None,
+                            y_overlay_color:str='darkorange',
                             verbose=True,
                             raiseErrors=True,
                             useCommonPlot:bool=False,
@@ -539,9 +541,15 @@ class TStep_Results:
             
             # Determine common scale to use for plots
             if useCommonScale:    
+                
                 maxVal = npy.max(_responses)
                 minVal = npy.min(_responses)
                 absmaxVal = npy.max([maxVal,minVal])
+                
+                if y_overlay is not None:
+                    
+                    y_overlay_max = npy.max(npy.array(y_overlay))
+                    absmaxVal = npy.max([absmaxVal,1.1*y_overlay_max])
             
             # Loop through plotting all responses
             tvals = self.t
@@ -562,8 +570,21 @@ class TStep_Results:
                 vals = _responses[r,:].T
                 label_str = _response_names[r]
                 
-                # Make plot
+                # Make time series plot
                 ax.plot(tvals,vals,label=label_str)
+                
+                # Plot horizontal lines to overlay values provided
+                # Only plot once in case of common plot
+                if (useCommonPlot and r==0) or (not useCommonPlot):
+    
+                    if y_overlay is not None:
+                        
+                        # Convert to list in case of single float passed
+                        if not isinstance(y_overlay,list):
+                            y_overlay = [y_overlay]
+                            
+                        for y_val  in y_overlay:
+                            ax.axhline(y_val,color=y_overlay_color)
                            
                 # Set axis limits and labels
                 ax.set_xlim(tInterval)
@@ -578,13 +599,7 @@ class TStep_Results:
                 if _response_names is not None:
                     ax.legend(loc='right')
                 
-                # Plot horizontal lines to overlay values provided
-                # Only plot once in case of common plot
-                if (useCommonPlot and r==0) or (not useCommonPlot):
-    
-                    if y_overlay is not None:
-                        for y_val  in y_overlay:
-                            ax.axhline(y_val,color='r')
+                
             
         if verbose:
             toc=timeit.default_timer()
@@ -598,7 +613,8 @@ class TStep_Results:
                     verbose:bool=True,
                     dofs2Plot:list=None,
                     useCommonPlot:bool=False,
-                    useCommonScale:bool=False):
+                    useCommonScale:bool=False,
+                    y_overlay:float=None):
         """
         Presents the results of time-stepping analysis by producing the 
         following plots:
@@ -642,7 +658,8 @@ class TStep_Results:
                                              raiseErrors=False,
                                              verbose=verbose,
                                              useCommonPlot=useCommonPlot,
-                                             useCommonScale=useCommonScale)
+                                             useCommonScale=useCommonScale,
+                                             y_overlay=y_overlay)
         
         return [fig_list1,fig_list2]
     
@@ -927,6 +944,23 @@ class TStep_Results:
                       "Response statistics will not be computed.")
         
         return stats_dict
+    
+    
+    def get_response_stats_df(self):
+        """
+        Returns response stats as list of Pandas dataframes
+        """
+        
+        df_list = []
+        
+        for dynsys_obj, stats_dict in self.response_stats_dict.items():
+            
+            response_names = dynsys_obj.output_names
+
+            df_list.append(pandas.DataFrame(data=stats_dict,
+                                            index=response_names))
+            
+        return df_list
     
     
     def PrintResponseStats(self):

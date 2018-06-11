@@ -33,7 +33,7 @@ class ModalSys(DynSys):
                  fname_modalParams="modalParams.csv",
                  fname_modeshapes="modeshapes.csv",
                  output_mtrx=None,
-                 output_names=[],
+                 output_names=None,
                  fLimit=None,
                  ):
         """

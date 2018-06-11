@@ -225,9 +225,11 @@ class DynSys:
             
         return True
     
+    
     def CheckOutputMtrx(self,
                         output_mtrx=None,
-                        output_names=None):
+                        output_names=None,
+                        verbose=False):
         """
         Checks that all defined output matrices are of the correct shape
         """
@@ -238,7 +240,19 @@ class DynSys:
             
         if output_names is None:
             output_names = self.output_names
-                
+        
+        if verbose:
+            
+            print("\nCheckOutputMtrx() method invoked:")
+        
+            print("output_mtrx:")
+            print(output_mtrx.shape)
+            
+            print("output_names:")
+            print(output_names)
+            
+            print("")
+        
         # Check list lengths agree
         
         if len(output_names)!=output_mtrx.shape[0]:
@@ -285,7 +299,8 @@ class DynSys:
     def AddOutputMtrx(self,
                       output_mtrx=None,
                       output_names=None,
-                      fName='outputs.csv'):
+                      fName='outputs.csv',
+                      verbose=False):
         """
         Appends `output_mtrx` to `outputsList`
         ***
@@ -311,8 +326,19 @@ class DynSys:
         self.output_mtrx = npy.append(self.output_mtrx,output_mtrx,axis=0)
         self.output_names += output_names
         
+        if verbose:
+            
+            print("AddOutputMtrx() method invoked.")
+            
+            print("Updated output matrix shape:")
+            print(self.output_mtrx.shape)
+            
+            print("Updated output names list:")
+            print(self.output_names)
+        
         # Check dimensions of all output matrices defined
         self.CheckOutputMtrx()
+        
     
     def PrintSystemMatrices(self,printShapes=True,printValues=False):
         """
@@ -370,7 +396,7 @@ class DynSys:
                     print("")
     
 
-    def GetSystemMatrices(self,createNewSystem=True):
+    def GetSystemMatrices(self,createNewSystem=False):
         """
         Function is used to retrieve system matrices, which are not usually to 
         be accessed directly, except by member functions
@@ -1354,7 +1380,7 @@ class DynSys:
         
         """
         
-        print("Calculating frequency response matrices..")
+        if verbose: print("Calculating frequency response matrices..")
         
         nDOF = self.nDOF
         
@@ -1369,7 +1395,7 @@ class DynSys:
             
         if B is None:
             B = self.GetLoadMatrix(recalculate=True)
-            
+        
         # Get output matrices
         if C is None:
             
@@ -1439,6 +1465,8 @@ class DynSys:
             
             # Store in array
             G_f[:,:,i] = Gf
+            
+        print("Done!")
         
         # Return values
         return fVals, G_f

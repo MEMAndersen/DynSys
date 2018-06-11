@@ -38,6 +38,9 @@ system. However major release number will always correspond.
 
 * `trainAnalysis.py` updated with minor change to reflect new `stats_dict` nested
   dict structure
+  
+* Bug associated with output matrices fixed; was only an issue when re-defining 
+  systems
 
 ### Removed
 

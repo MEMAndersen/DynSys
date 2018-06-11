@@ -1090,6 +1090,7 @@ table {
     <li class="mono"><a href="#ped_dyn.SteadyStateCrowdLoading.calc_deck_area">calc_deck_area</a></li>
     <li class="mono"><a href="#ped_dyn.SteadyStateCrowdLoading.calc_load_intensity">calc_load_intensity</a></li>
     <li class="mono"><a href="#ped_dyn.SteadyStateCrowdLoading.calc_modal_areas">calc_modal_areas</a></li>
+    <li class="mono"><a href="#ped_dyn.SteadyStateCrowdLoading.get_response_amplitudes">get_response_amplitudes</a></li>
     <li class="mono"><a href="#ped_dyn.SteadyStateCrowdLoading.plot_results">plot_results</a></li>
     <li class="mono"><a href="#ped_dyn.SteadyStateCrowdLoading.print_details">print_details</a></li>
     <li class="mono"><a href="#ped_dyn.SteadyStateCrowdLoading.print_results">print_results</a></li>
@@ -1107,6 +1108,7 @@ table {
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_crowd.calc_load_intensity">calc_load_intensity</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_crowd.calc_modal_areas">calc_modal_areas</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_crowd.get_crowd_density">get_crowd_density</a></li>
+    <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_crowd.get_response_amplitudes">get_response_amplitudes</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_crowd.plot_results">plot_results</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_crowd.print_details">print_details</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_crowd.print_results">print_results</a></li>
@@ -1170,6 +1172,7 @@ table {
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">FuncFormatter</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
@@ -1195,7 +1198,8 @@ table {
                  <span class="n">fv</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
                  <span class="n">gamma</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                 <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">):</span>
+                 <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Defines fluctuating point load to represent either walkers or joggers </span>
 <span class="sd">        according to NA.2.44.4, UK NA to BS EN 1991-2</span>
@@ -1230,7 +1234,9 @@ table {
                              <span class="s2">&quot;&#39;walkers&#39; or &#39;joggers&#39; expected&quot;</span><span class="p">)</span>
             
         <span class="c1"># Get k(fv) factor</span>
-        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span><span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span>
+                                        <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
+                                        <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
             
         <span class="c1"># Calculate amplitude of sinusoidal forcing function per NA.2.44.4(1)</span>
         <span class="n">F_amplitude</span> <span class="o">=</span> <span class="n">F0</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">gamma</span><span class="o">*</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
@@ -1299,6 +1305,7 @@ table {
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation function</span>
@@ -1411,7 +1418,7 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">Seff</span> <span class="o">=</span> <span class="n">Seff</span>
         
         <span class="c1"># Obtain gamma from Figure NA.9</span>
-        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logdec</span><span class="p">,</span><span class="n">Seff</span><span class="p">)</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logdec</span><span class="p">,</span><span class="n">Seff</span><span class="p">,</span><span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
         
         <span class="c1"># Define loading objects to represent walkers and joggers</span>
@@ -1626,14 +1633,15 @@ table {
         
         <span class="c1"># Calculate load intensity, if not provided directly</span>
         <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">load_intensity</span><span class="p">,</span> <span class="n">rslts_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">)</span>
+            <span class="n">load_intensity</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">,</span>
+                                                         <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">rslts_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">d</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        _Dict_ to store key results from load intensity calculation</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1777,6 +1785,8 @@ table {
         <span class="k">if</span> <span class="n">run_tstep</span><span class="p">:</span>
             
             <span class="c1"># Run time-stepping analysis to validate /check the above approach</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Running time-stepping analysis, as cross-check of &quot;</span><span class="o">+</span>
+                  <span class="s2">&quot;steady-state resonance approach...***&quot;</span><span class="p">)</span>
             
             <span class="c1"># Define sinusoidal load function consistent with above</span>
             <span class="k">def</span> <span class="nf">load_func</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
@@ -1795,6 +1805,8 @@ table {
             <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Results from time-stepping analysis; instance of `TStep_Results()`</span>
 <span class="sd">            &quot;&quot;&quot;</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Time-stepping analysis complete!***&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">modal_accn_target</span>
                 
@@ -1846,6 +1858,27 @@ table {
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Responses:&quot;</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_names</span><span class="p">)</span>
         <span class="n">printcomplex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">get_response_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">print_phase</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns response amplitudes as pandas dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+        <span class="n">index_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_names</span>
+        <span class="n">columns_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">print_phase</span><span class="p">:</span>
+            <span class="n">phase_angles</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">data</span><span class="p">,</span><span class="n">phase_angles</span><span class="p">))</span>
+            <span class="n">columns_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Phase angle&quot;</span><span class="p">)</span>
+        
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                              <span class="n">index</span><span class="o">=</span><span class="n">index_list</span><span class="p">,</span>
+                              <span class="n">columns</span><span class="o">=</span><span class="n">columns_list</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">df</span>
         
         
     <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">overlay_val</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -1912,7 +1945,8 @@ table {
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;tstep_results&quot;</span><span class="p">):</span>
             
             <span class="n">tstep_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">PlotResults</span><span class="p">(</span><span class="n">useCommonPlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                                                            <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                                                            <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                            <span class="n">y_overlay</span><span class="o">=</span><span class="p">[</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">])</span>
             <span class="n">fig_list</span> <span class="o">+=</span> <span class="n">tstep_fig_list</span>
             
             <span class="c1"># Overlay expected modal acceleration amplitudes</span>
@@ -1933,12 +1967,6 @@ table {
             <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axarr</span><span class="p">,</span><span class="n">val2overlay</span><span class="p">):</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> 
-                
-                <span class="k">if</span> <span class="n">overlay_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                    <span class="n">factor</span><span class="o">=</span><span class="mf">1.2</span> <span class="c1"># to be &gt;1.0, ensures lines visible!</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">+</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">)</span>
             
         <span class="k">return</span> <span class="n">fig_list</span>       
         
@@ -2058,7 +2086,7 @@ table {
                           <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">deck_regions_list</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         
     
-    <span class="k">def</span> <span class="nf">calc_load_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">calc_load_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        _Method to be overriden by derived classes_</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -2199,11 +2227,14 @@ table {
 
         <span class="c1"># Derive adjustment factors</span>
         <span class="n">fv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_d</span><span class="p">[</span><span class="n">mode_index</span><span class="p">])</span>
-        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span> <span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span><span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+                                        <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="n">log_dec</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">[</span><span class="n">mode_index</span><span class="p">]</span>
 
-        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logDec</span><span class="o">=</span><span class="n">log_dec</span><span class="p">,</span><span class="n">groupType</span><span class="o">=</span><span class="s2">&quot;crowd&quot;</span><span class="p">)</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logDec</span><span class="o">=</span><span class="n">log_dec</span><span class="p">,</span>
+                                            <span class="n">groupType</span><span class="o">=</span><span class="s2">&quot;crowd&quot;</span><span class="p">,</span>
+                                            <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="c1"># Effective number of pedestrians parameter, refer NA. 2.44.5(1)</span>
         <span class="c1"># To generalise to deck of variable width, use area ratio as Seff/S</span>
@@ -4552,14 +4583,15 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
         
         <span class="c1"># Calculate load intensity, if not provided directly</span>
         <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">load_intensity</span><span class="p">,</span> <span class="n">rslts_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">)</span>
+            <span class="n">load_intensity</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">,</span>
+                                                         <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">rslts_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">d</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        _Dict_ to store key results from load intensity calculation</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -4703,6 +4735,8 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
         <span class="k">if</span> <span class="n">run_tstep</span><span class="p">:</span>
             
             <span class="c1"># Run time-stepping analysis to validate /check the above approach</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Running time-stepping analysis, as cross-check of &quot;</span><span class="o">+</span>
+                  <span class="s2">&quot;steady-state resonance approach...***&quot;</span><span class="p">)</span>
             
             <span class="c1"># Define sinusoidal load function consistent with above</span>
             <span class="k">def</span> <span class="nf">load_func</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
@@ -4721,6 +4755,8 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
             <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Results from time-stepping analysis; instance of `TStep_Results()`</span>
 <span class="sd">            &quot;&quot;&quot;</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Time-stepping analysis complete!***&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">modal_accn_target</span>
                 
@@ -4772,6 +4808,27 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Responses:&quot;</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_names</span><span class="p">)</span>
         <span class="n">printcomplex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">get_response_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">print_phase</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns response amplitudes as pandas dataframe</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+        <span class="n">index_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_names</span>
+        <span class="n">columns_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">print_phase</span><span class="p">:</span>
+            <span class="n">phase_angles</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">data</span><span class="p">,</span><span class="n">phase_angles</span><span class="p">))</span>
+            <span class="n">columns_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Phase angle&quot;</span><span class="p">)</span>
+        
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                              <span class="n">index</span><span class="o">=</span><span class="n">index_list</span><span class="p">,</span>
+                              <span class="n">columns</span><span class="o">=</span><span class="n">columns_list</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">df</span>
         
         
     <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">overlay_val</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -4838,7 +4895,8 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;tstep_results&quot;</span><span class="p">):</span>
             
             <span class="n">tstep_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">PlotResults</span><span class="p">(</span><span class="n">useCommonPlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                                                            <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                                                            <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                            <span class="n">y_overlay</span><span class="o">=</span><span class="p">[</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">])</span>
             <span class="n">fig_list</span> <span class="o">+=</span> <span class="n">tstep_fig_list</span>
             
             <span class="c1"># Overlay expected modal acceleration amplitudes</span>
@@ -4859,12 +4917,6 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
             <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axarr</span><span class="p">,</span><span class="n">val2overlay</span><span class="p">):</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> 
-                
-                <span class="k">if</span> <span class="n">overlay_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                    <span class="n">factor</span><span class="o">=</span><span class="mf">1.2</span> <span class="c1"># to be &gt;1.0, ensures lines visible!</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">+</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">)</span>
             
         <span class="k">return</span> <span class="n">fig_list</span>       
         
@@ -4984,7 +5036,7 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
                           <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">deck_regions_list</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         
     
-    <span class="k">def</span> <span class="nf">calc_load_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">calc_load_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        _Method to be overriden by derived classes_</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -5217,7 +5269,7 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
             
   <div class="item">
     <div class="name def" id="ped_dyn.SteadyStateCrowdLoading.calc_load_intensity">
-    <p>def <span class="ident">calc_load_intensity</span>(</p><p>self)</p>
+    <p>def <span class="ident">calc_load_intensity</span>(</p><p>self, **kwargs)</p>
     </div>
     
 
@@ -5227,7 +5279,7 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.SteadyStateCrowdLoading.calc_load_intensity', this);">Show source &equiv;</a></p>
   <div id="source-ped_dyn.SteadyStateCrowdLoading.calc_load_intensity" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_load_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_load_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    _Method to be overriden by derived classes_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -5260,6 +5312,45 @@ e.g. HiVoSS or UK NA to BS EN 1991-2</em></p></div>
     
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">mode_index</span><span class="p">,</span><span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
                       <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">deck_regions_list</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.SteadyStateCrowdLoading.get_response_amplitudes">
+    <p>def <span class="ident">get_response_amplitudes</span>(</p><p>self, print_phase=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns response amplitudes as pandas dataframe</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.SteadyStateCrowdLoading.get_response_amplitudes', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.SteadyStateCrowdLoading.get_response_amplitudes" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_response_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">print_phase</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns response amplitudes as pandas dataframe</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+    <span class="n">index_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_names</span>
+    <span class="n">columns_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">print_phase</span><span class="p">:</span>
+        <span class="n">phase_angles</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">data</span><span class="p">,</span><span class="n">phase_angles</span><span class="p">))</span>
+        <span class="n">columns_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Phase angle&quot;</span><span class="p">)</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                          <span class="n">index</span><span class="o">=</span><span class="n">index_list</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">columns_list</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">df</span>
 </pre></div>
 
   </div>
@@ -5359,7 +5450,8 @@ results of that analysis will be plotted also</p>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;tstep_results&quot;</span><span class="p">):</span>
         
         <span class="n">tstep_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">PlotResults</span><span class="p">(</span><span class="n">useCommonPlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                                                        <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                                                        <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                        <span class="n">y_overlay</span><span class="o">=</span><span class="p">[</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">])</span>
         <span class="n">fig_list</span> <span class="o">+=</span> <span class="n">tstep_fig_list</span>
         
         <span class="c1"># Overlay expected modal acceleration amplitudes</span>
@@ -5379,12 +5471,6 @@ results of that analysis will be plotted also</p>
         <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axarr</span><span class="p">,</span><span class="n">val2overlay</span><span class="p">):</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> 
-            
-            <span class="k">if</span> <span class="n">overlay_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                <span class="n">factor</span><span class="o">=</span><span class="mf">1.2</span> <span class="c1"># to be &gt;1.0, ensures lines visible!</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">+</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">)</span>
         
     <span class="k">return</span> <span class="n">fig_list</span>       
 </pre></div>
@@ -5562,14 +5648,15 @@ results of that analysis will be plotted also</p>
     
     <span class="c1"># Calculate load intensity, if not provided directly</span>
     <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">load_intensity</span><span class="p">,</span> <span class="n">rslts_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">)</span>
+        <span class="n">load_intensity</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">,</span>
+                                                     <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">rslts_dict</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">d</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    _Dict_ to store key results from load intensity calculation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -5712,6 +5799,8 @@ results of that analysis will be plotted also</p>
     <span class="k">if</span> <span class="n">run_tstep</span><span class="p">:</span>
         
         <span class="c1"># Run time-stepping analysis to validate /check the above approach</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Running time-stepping analysis, as cross-check of &quot;</span><span class="o">+</span>
+              <span class="s2">&quot;steady-state resonance approach...***&quot;</span><span class="p">)</span>
         
         <span class="c1"># Define sinusoidal load function consistent with above</span>
         <span class="k">def</span> <span class="nf">load_func</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
@@ -5730,6 +5819,8 @@ results of that analysis will be plotted also</p>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Results from time-stepping analysis; instance of `TStep_Results()`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Time-stepping analysis complete!***&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">modal_accn_target</span>
 </pre></div>
 
@@ -5960,11 +6051,14 @@ to UK NA to BS EN1991-2</p></div>
 
         <span class="c1"># Derive adjustment factors</span>
         <span class="n">fv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_d</span><span class="p">[</span><span class="n">mode_index</span><span class="p">])</span>
-        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span> <span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span><span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+                                        <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="n">log_dec</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">[</span><span class="n">mode_index</span><span class="p">]</span>
 
-        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logDec</span><span class="o">=</span><span class="n">log_dec</span><span class="p">,</span><span class="n">groupType</span><span class="o">=</span><span class="s2">&quot;crowd&quot;</span><span class="p">)</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logDec</span><span class="o">=</span><span class="n">log_dec</span><span class="p">,</span>
+                                            <span class="n">groupType</span><span class="o">=</span><span class="s2">&quot;crowd&quot;</span><span class="p">,</span>
+                                            <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="c1"># Effective number of pedestrians parameter, refer NA. 2.44.5(1)</span>
         <span class="c1"># To generalise to deck of variable width, use area ratio as Seff/S</span>
@@ -6216,10 +6310,13 @@ to UK NA to BS EN1991-2</p></div>
     <span class="n">F0</span> <span class="o">=</span> <span class="mf">280.0</span> <span class="c1"># N, refer Table NA.8</span>
     <span class="c1"># Derive adjustment factors</span>
     <span class="n">fv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_d</span><span class="p">[</span><span class="n">mode_index</span><span class="p">])</span>
-    <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span> <span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span><span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+                                    <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
     
     <span class="n">log_dec</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">[</span><span class="n">mode_index</span><span class="p">]</span>
-    <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logDec</span><span class="o">=</span><span class="n">log_dec</span><span class="p">,</span><span class="n">groupType</span><span class="o">=</span><span class="s2">&quot;crowd&quot;</span><span class="p">)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logDec</span><span class="o">=</span><span class="n">log_dec</span><span class="p">,</span>
+                                        <span class="n">groupType</span><span class="o">=</span><span class="s2">&quot;crowd&quot;</span><span class="p">,</span>
+                                        <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
     
     <span class="c1"># Effective number of pedestrians parameter, refer NA. 2.44.5(1)</span>
     <span class="c1"># To generalise to deck of variable width, use area ratio as Seff/S</span>
@@ -6342,6 +6439,45 @@ to UK NA to BS EN1991-2</p></div>
   
             
   <div class="item">
+    <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_crowd.get_response_amplitudes">
+    <p>def <span class="ident">get_response_amplitudes</span>(</p><p>self, print_phase=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns response amplitudes as pandas dataframe</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.UKNA_BSEN1991_2_crowd.get_response_amplitudes', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.UKNA_BSEN1991_2_crowd.get_response_amplitudes" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_response_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">print_phase</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns response amplitudes as pandas dataframe</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+    <span class="n">index_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_names</span>
+    <span class="n">columns_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">print_phase</span><span class="p">:</span>
+        <span class="n">phase_angles</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">response_amplitudes</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">data</span><span class="p">,</span><span class="n">phase_angles</span><span class="p">))</span>
+        <span class="n">columns_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Phase angle&quot;</span><span class="p">)</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                          <span class="n">index</span><span class="o">=</span><span class="n">index_list</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">columns_list</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">df</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_crowd.plot_results">
     <p>def <span class="ident">plot_results</span>(</p><p>self, overlay_val=None)</p>
     </div>
@@ -6432,7 +6568,8 @@ results of that analysis will be plotted also</p>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s2">&quot;tstep_results&quot;</span><span class="p">):</span>
         
         <span class="n">tstep_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">PlotResults</span><span class="p">(</span><span class="n">useCommonPlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                                                        <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                                                        <span class="n">useCommonScale</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                        <span class="n">y_overlay</span><span class="o">=</span><span class="p">[</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">])</span>
         <span class="n">fig_list</span> <span class="o">+=</span> <span class="n">tstep_fig_list</span>
         
         <span class="c1"># Overlay expected modal acceleration amplitudes</span>
@@ -6452,12 +6589,6 @@ results of that analysis will be plotted also</p>
         <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axarr</span><span class="p">,</span><span class="n">val2overlay</span><span class="p">):</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> 
-            
-            <span class="k">if</span> <span class="n">overlay_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">+</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">-</span><span class="n">overlay_val</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">)</span>
-                <span class="n">factor</span><span class="o">=</span><span class="mf">1.2</span> <span class="c1"># to be &gt;1.0, ensures lines visible!</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">,</span><span class="o">+</span><span class="n">factor</span><span class="o">*</span><span class="n">overlay_val</span><span class="p">)</span>
         
     <span class="k">return</span> <span class="n">fig_list</span>       
 </pre></div>
@@ -6635,14 +6766,15 @@ results of that analysis will be plotted also</p>
     
     <span class="c1"># Calculate load intensity, if not provided directly</span>
     <span class="k">if</span> <span class="n">load_intensity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">load_intensity</span><span class="p">,</span> <span class="n">rslts_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">)</span>
+        <span class="n">load_intensity</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_load_intensity</span><span class="p">(</span><span class="n">target_mode</span><span class="p">,</span>
+                                                     <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity</span> <span class="o">=</span> <span class="n">load_intensity</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uniform load intensity (in N/m2) to be applied to deck regions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">rslts_dict</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">load_intensity_rslts_dict</span> <span class="o">=</span> <span class="n">d</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    _Dict_ to store key results from load intensity calculation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -6785,6 +6917,8 @@ results of that analysis will be plotted also</p>
     <span class="k">if</span> <span class="n">run_tstep</span><span class="p">:</span>
         
         <span class="c1"># Run time-stepping analysis to validate /check the above approach</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Running time-stepping analysis, as cross-check of &quot;</span><span class="o">+</span>
+              <span class="s2">&quot;steady-state resonance approach...***&quot;</span><span class="p">)</span>
         
         <span class="c1"># Define sinusoidal load function consistent with above</span>
         <span class="k">def</span> <span class="nf">load_func</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
@@ -6803,6 +6937,8 @@ results of that analysis will be plotted also</p>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Results from time-stepping analysis; instance of `TStep_Results()`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***Time-stepping analysis complete!***&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">modal_accn_target</span>
 </pre></div>
 
@@ -6850,6 +6986,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation function</span>
@@ -6962,7 +7099,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
         <span class="bp">self</span><span class="o">.</span><span class="n">Seff</span> <span class="o">=</span> <span class="n">Seff</span>
         
         <span class="c1"># Obtain gamma from Figure NA.9</span>
-        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logdec</span><span class="p">,</span><span class="n">Seff</span><span class="p">)</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logdec</span><span class="p">,</span><span class="n">Seff</span><span class="p">,</span><span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
         
         <span class="c1"># Define loading objects to represent walkers and joggers</span>
@@ -7015,7 +7152,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
             
   <div class="item">
     <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, dt=None, verbose=True, calc_Seff=True, **kwargs)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, dt=None, verbose=True, calc_Seff=True, makePlot=True, **kwargs)</p>
     </div>
     
 
@@ -7061,6 +7198,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
              <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
              <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialisation function</span>
@@ -7173,7 +7311,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
     <span class="bp">self</span><span class="o">.</span><span class="n">Seff</span> <span class="o">=</span> <span class="n">Seff</span>
     
     <span class="c1"># Obtain gamma from Figure NA.9</span>
-    <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logdec</span><span class="p">,</span><span class="n">Seff</span><span class="p">)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logdec</span><span class="p">,</span><span class="n">Seff</span><span class="p">,</span><span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
     
     <span class="c1"># Define loading objects to represent walkers and joggers</span>
@@ -7404,7 +7542,8 @@ per NA.2.44.4 of BS EN 1991-2</p>
                  <span class="n">fv</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
                  <span class="n">gamma</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                 <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">):</span>
+                 <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Defines fluctuating point load to represent either walkers or joggers </span>
 <span class="sd">        according to NA.2.44.4, UK NA to BS EN 1991-2</span>
@@ -7439,7 +7578,9 @@ per NA.2.44.4 of BS EN 1991-2</p>
                              <span class="s2">&quot;&#39;walkers&#39; or &#39;joggers&#39; expected&quot;</span><span class="p">)</span>
             
         <span class="c1"># Get k(fv) factor</span>
-        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span><span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span>
+                                        <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
+                                        <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
             
         <span class="c1"># Calculate amplitude of sinusoidal forcing function per NA.2.44.4(1)</span>
         <span class="n">F_amplitude</span> <span class="o">=</span> <span class="n">F0</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">gamma</span><span class="o">*</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
@@ -7508,7 +7649,7 @@ per NA.2.44.4 of BS EN 1991-2</p>
             
   <div class="item">
     <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, fv, gamma=1.0, N=2, analysis_type=&#39;walkers&#39;)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, fv, gamma=1.0, N=2, analysis_type=&#39;walkers&#39;, makePlot=True)</p>
     </div>
     
 
@@ -7545,7 +7686,8 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
              <span class="n">fv</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
              <span class="n">gamma</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
              <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-             <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">):</span>
+             <span class="n">analysis_type</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+             <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines fluctuating point load to represent either walkers or joggers </span>
 <span class="sd">    according to NA.2.44.4, UK NA to BS EN 1991-2</span>
@@ -7580,7 +7722,9 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
                          <span class="s2">&quot;&#39;walkers&#39; or &#39;joggers&#39; expected&quot;</span><span class="p">)</span>
         
     <span class="c1"># Get k(fv) factor</span>
-    <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span><span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_Figure_NA_8</span><span class="p">(</span><span class="n">fv</span><span class="o">=</span><span class="n">fv</span><span class="p">,</span>
+                                    <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
+                                    <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
     <span class="c1"># Calculate amplitude of sinusoidal forcing function per NA.2.44.4(1)</span>
     <span class="n">F_amplitude</span> <span class="o">=</span> <span class="n">F0</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">gamma</span><span class="o">*</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span>
