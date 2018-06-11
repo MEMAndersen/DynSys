@@ -43,6 +43,6 @@ crowd_analysis = UKNA_BSEN1991_2_crowd(modalsys_obj=my_sys,
                                        width_func_list=width_funcs,
                                        modeshapes_fname_arr=mshape_fnames)
 
-target_acc = crowd_analysis.run(mode_index=0)
-crowd_analysis.plot_results()
-
+target_acc = crowd_analysis.run(target_mode=0, run_tstep=True,
+                                tstep_kwargs={'tEnd':60.0,'dt':0.02})
+fig_list = crowd_analysis.plot_results(overlay_val=2.0)
