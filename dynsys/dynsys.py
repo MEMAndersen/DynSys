@@ -1360,7 +1360,7 @@ class DynSys:
         
         ***
         
-        Optional:
+        **Optional:**
             
         * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.
         If `None` (default) then frequencies list will be obtained using 
@@ -1377,6 +1377,17 @@ class DynSys:
         and obtain frequency transfer matrix relating applied forces to 
         accelerations of the DOFs. E.g. for modal systems, modal acceleration 
         transfer matrix can be obtained in this way
+        
+        ***
+        
+        **Returns:**
+        
+        * `f_vals`, _array_ of frequency values to which `G_f` relates
+        
+        * `G_f`, _ndarray_, usually of shape 
+          (C.shape[0], B.shape[1], f_vals.shape[0]), 
+          i.e. at each frequency there is a matrix described the complex-valued 
+          frequency transfer function mapping applied loads to outputs
         
         """
         
