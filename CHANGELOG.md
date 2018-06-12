@@ -8,6 +8,17 @@ and this project adheres to:
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+
+### Fixed
+
+### Removed
+
+
 ## [1.2.0] - 2018-06-12 - RIHY
 
 ### Changed
