@@ -331,7 +331,7 @@ class TStep:
             i += 1
         
 
-    def run(self,method='RK45',showMsgs=True):
+    def run(self,method='RK45',verbose=True):
         """
         Runs time-stepping analysis
         ***
@@ -339,18 +339,37 @@ class TStep:
         Solution is obtained using Scipy's ODE solver for initial value 
         problems [solve_ivp].
         
-        Optional argument `method` can be used to specify the particular 
-        solver type to use. Refer Scipy docs for details of the 
-        options avaliable.
+        ***
+        **Required:**
         
+        No arguments are required. Solution settings should have been defined 
+        when class was initialised; refer `__init__()` documentation.
+        
+        ***
+        **Optional**
+        
+        * `method`, string, can be used to specify the particular 
+          solver type to use.
+          
+        Refer Scipy docs for details of the options avaliable.
         `RK45` is the default solver. As described in the documentation for 
         [solve_ivp], this is an explicit Runge-Kutta method of order 5(4). 
         This should be appropriate for most applications.
         
+        * `verbose`, _boolean_, if True progress will be written to console
+        
         [solve_ivp]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp
+        
+        ***
+        **Returns:**
+        
+        Instance of `TStep_Results` class, in which results are stored. Refer 
+        [documentation](../docs/tstep_results.html) for details of attributes 
+        and methods avaliable.
+        
         """
         
-        if showMsgs: 
+        if verbose: 
             if self.name is None:
                 print("Running time-stepping analysis...")
             else:
@@ -368,14 +387,14 @@ class TStep:
         kwargs["events"]=self.event_funcs
         
         # Print to denote parameters used
-        if showMsgs: print("Analysis time interval: [%.2f, %.2f] seconds" % (tmin,tmax))
+        if verbose: print("Analysis time interval: [%.2f, %.2f] seconds" % (tmin,tmax))
         
         if self.dt is not None:
-            if showMsgs: print("Fixed 't_eval' time step specified: dt = %.2e seconds" % self.dt)
+            if verbose: print("Fixed 't_eval' time step specified: dt = %.2e seconds" % self.dt)
             kwargs["t_eval"]=npy.arange(tmin,tmax,self.dt)
         else:
             if self.max_dt is not None:
-                if showMsgs: print("Maximum time step specified: max_dt = %.3f seconds" % self.max_dt)
+                if verbose: print("Maximum time step specified: max_dt = %.3f seconds" % self.max_dt)
                 kwargs["max_step"]=self.max_dt
         
         # Define ODE function in the expected form dy/dt = f(t,y)
@@ -428,6 +447,9 @@ class TStep:
             xdot = npy.ravel(npy.vstack((ydot,y2dot)))
 
             return xdot
+        
+        # Clear results prior to running solver
+        results_obj.ClearResults()
         
         # Run solver
         terminateSolver = False
@@ -500,8 +522,8 @@ class TStep:
                 # The solver successfully reached the interval end
                 
                 terminateSolver = True
-                if showMsgs: print("Analysis complete!")
-                if showMsgs: print(sol.message) 
+                if verbose: print("Analysis complete!")
+                if verbose: print(sol.message) 
                 
             else:
                 
@@ -510,11 +532,11 @@ class TStep:
         # Calculate responses
         results_obj.CalcResponses(write_results_to_file=self.writeResults2File,
                                   results_fName=self.results_fName,
-                                  showMsgs=showMsgs)
+                                  verbose=verbose)
         
-        if showMsgs: print("Total time steps: {0}".format(results_obj.nResults))        
-        if showMsgs: print("Overall solution time: %.3f seconds" % solve_time)
-        if showMsgs: print("Overall post-processing time: %.3f seconds" % resultsproc_time)
+        if verbose: print("Total time steps: {0}".format(results_obj.nResults))        
+        if verbose: print("Overall solution time: %.3f seconds" % solve_time)
+        if verbose: print("Overall post-processing time: %.3f seconds" % resultsproc_time)
         
         return results_obj
     

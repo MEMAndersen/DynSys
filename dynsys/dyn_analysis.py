@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Classes and methods used to implement specific forms of dynamic analysis
+
+@author: rihy
 """
 
 from __init__ import __version__ as currentVersion
@@ -9,31 +11,13 @@ import numpy
 import timeit
 import itertools
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 import dill
-import os
-import scipy
 #import multiprocessing   # does not work with Spyder!
 
 import tstep
 import loading
 import msd_chain
 
-from loading import UKNA_BSEN1991_2_walkers_joggers_loading as pedestrian_loading
-
-
-def load(fName):
-    """
-    De-serialises `Dyn_Analysis` object from pickle fill
-    """
-    
-    with open(fName,'rb') as fobj:
-        print("\nLoading serialised `tstep_results` object from `{0}`".format(fName))
-        obj = dill.load(fobj)
-        
-    print("De-serialisation successful!\n")
-    
-    return obj
 
 class Dyn_Analysis():
     """
@@ -173,10 +157,18 @@ class MovingLoadAnalysis(Dyn_Analysis):
         if modalsys_obj.__class__.__name__ != "ModalSys":
             raise ValueError("`modalsys_obj`: instance of `ModalSys` class expected!")
             
-        # Check class name of base class of loadtrain_obj
-        #if loadtrain_obj.__class__.__bases__[0].__name__ != "LoadTrain":
-        #    raise ValueError("`loadtrain_obj`: instance of `LoadTrain` class "+
-        #                     "(or dervied classes) expected!")
+        # Check loadtrain_obj is of class 'LoadTrain' or derived class
+
+        if loadtrain_obj.__class__.__name__ != "LoadTrain":
+        
+            base_class_name = loadtrain_obj.__class__.__bases__[0].__name__
+
+            if base_class_name != "LoadTrain":
+                
+                raise ValueError("`loadtrain_obj`: instance of `LoadTrain` "+
+                                 "class (or derived classes) expected!\n" + 
+                                 "`loadtrain_obj` base class: %s" 
+                                 % base_class_name)
         
         # Run parent init
         super().__init__(name,modalsys_obj,loadtrain_obj)
@@ -305,168 +297,9 @@ class MovingLoadAnalysis(Dyn_Analysis):
         _Refer documentation from that function for further details_
         """
         self.results_obj.PlotResults(dofs2Plot=dofs2Plot)
-        
-        
-class UKNA_BSEN1991_2_walkers_joggers(MovingLoadAnalysis):
-        """
-        Implements transient analysis for walkers/joggers case
-        per NA.2.44.4 of UK NA to BS EN 1992-1:2003
-        """
-        
-        def __init__(self,
-                     modalsys_obj,
-                     mode_index:int,
-                     name=None,
-                     bridgeClass='A',
-                     analysis_type="walkers",
-                     dt=None,
-                     verbose=True,
-                     calc_Seff=True,
-                     **kwargs):
-            """
-            Initialisation function
-            
-            ***
-            Required:
-               
-            * `modalsys_obj`, object defining modal system to be analysed
-        
-            ***
-            Optional:
-                
-            * `dt`, time step to be used for results evaluation. If _None_ then 
-              a reasonable time step to use will be determined, based on the 
-              frequency of the forcing function
-            
-            * calc_Seff`, _boolean_, dictates whether effective span will be 
-              computed according to Figure NA.7. If False, overall span will be 
-              used (conservative).
-            
-            Additional keyword arguments can be defined. These should relate 
-            the `__init__()` function of the `MovingLoadAnalysis` class 
-                
-            """
-            
-            # Create default name for analysis object
-            if name is None:
-                name = modalsys_obj.name + " - Mode %d" % mode_index
-            
-            # Get applicable parameters per Table NA.7 according to bridgeClass
-            bridgeClass = bridgeClass.upper()
-            
-            if bridgeClass == 'A':
-                N_walkers = 2
-                N_joggers = 0
-                
-            elif bridgeClass == 'B':
-                N_walkers = 4
-                N_joggers = 1
-                
-            elif bridgeClass == 'C':
-                N_walkers = 8
-                N_joggers = 2
-                
-            elif bridgeClass == 'D':
-                N_walkers = 16
-                N_joggers = 4
-                
-            else:
-                raise ValueError("Invalid 'bridgeClass'!")
-            
-            # Define loading velocity per Table NA.8
-            # Get appropriate N value to use
-            if analysis_type == "walkers":
-                load_velocity = 1.7
-                N_to_use = N_walkers
-                
-            elif analysis_type == "joggers":
-                load_velocity = 3.0
-                N_to_use = N_joggers
-                
-            else:
-                raise ValueError("Invalid 'analysis_type'!")
-                
-            self.N = N_to_use
-                
-            # Get natural frequency of mode to consider
-            eig_results = modalsys_obj.CalcEigenproperties()
-            f_d = eig_results["f_d"] # damped natural frequencies of mode
-            f_d = numpy.abs(f_d[mode_index])
-            
-            eta = eig_results["eta"][mode_index]
-            logdec = 2*numpy.pi*eta
-            
-            self.fv = f_d
-            self.eta = eta
-            self.logdec = logdec
-            
-            # Analyse modeshape to determine effective span
-            S = modalsys_obj.Ltrack
-            
-            if calc_Seff:
-                
-                attrName = "Seff"
-                
-                if hasattr(modalsys_obj,attrName):
-                    Seff = getattr(modalsys_obj,attrName)
-                
-                else:
-                    
-                    Seff, lambda_vals = Calc_Seff(modalsys_obj.modeshapeFunc,S=S,
-                                                  verbose=True,
-                                                  makePlot=False)
-                    
-                    # save to avoid recalculating
-                    setattr(modalsys_obj,attrName,Seff) 
-                    modalsys_obj.lambda_vals = lambda_vals
-                    
-                # Get Seff for mode being considered
-                Seff = Seff[int(mode_index/2)]
-                
-            else:
-                # "In all cases it is conservative to use Seff = S"
-                Seff = S
-            
-            self.Seff = Seff
-            
-            # Obtain gamma from Figure NA.9
-            gamma = UKNA_BSEN1991_2_Figure_NA_9(logdec,Seff)
-            self.gamma = gamma
-            
-            # Define loading objects to represent walkers and joggers
-            loading_obj = pedestrian_loading(fv = f_d,
-                                             gamma=gamma,
-                                             N=N_to_use,
-                                             analysis_type=analysis_type)
-            
-            # Determine reasonable time step to use
-            if dt is None:
-                # Rule of thumb - 10x frequency under consideration
-                fs = 10 * f_d
-                dt = 1 / fs  
-            
-            # Run parent init
-            super().__init__(modalsys_obj=modalsys_obj,
-                             name=name,
-                             loadtrain_obj=loading_obj,
-                             loadVel=load_velocity,
-                             use_abs_modeshape=True, # use sign-corrected modeshapes
-                             dt=dt,
-                             **kwargs)
-            
-            if verbose:
-                print("***** Transient moving load analysis initialised *****")
-                print("Modal system:\t\t'%s'" % modalsys_obj.name)
-                print("Bridge class:\t\t'%s'" % bridgeClass)
-                print("Mode index:\t\t%d" % (mode_index+1))
-                print("Mode frequency:\t\t%.2f Hz" % f_d)
-                print("Loading object:\t\t'%s'" % loading_obj.name)
-                print("Load velocity:\t\t%.1f m/s" % load_velocity)
-                print("Seff (m):\t\t%.1f" % Seff)
-                print("gamma:\t\t\t%.2f" % gamma)
-                print("")
-            
      
+            
+
 class Multiple():
     """
     Function to run multiple dynamic analyses and provide functionality to 
@@ -475,7 +308,7 @@ class Multiple():
     """
     
     def __init__(self,
-                 className:str,
+                 classDef,
                  dynsys_obj:object,
                  writeResults2File:bool=False,
                  retainDOFTimeSeries:bool=False,
@@ -487,7 +320,7 @@ class Multiple():
         
         Required:
             
-        * `className`, _string_ to denote `Dyn_Analysis` class (usually inherited) 
+        * `classDef`, `Dyn_Analysis` class definition (usually inherited) 
           that implements the required analysis type
           
         * `dynsys_obj`, dynamic system to which analysis relates
@@ -509,17 +342,14 @@ class Multiple():
           
         """
     
+        className = classDef.__name__
         print("Initialising multiple `{0}`".format(className))
     
         if className == "MovingLoadAnalysis":
             
-            ReqdClass = MovingLoadAnalysis
-            
             kwargs2permute = ["loadVel","loadtrain_obj"]
             
         elif className == "UKNA_BSEN1991_2_walkers_joggers":
-            
-            ReqdClass = UKNA_BSEN1991_2_walkers_joggers
             
             kwargs2permute = ["analysis_type","mode_index"]
         
@@ -567,8 +397,8 @@ class Multiple():
                                 "writeResults2File":writeResults2File,
                                 "results_fName":results_fName})
             
-            # Initialisise analysis object
-            analysis_list.append(ReqdClass(name="%04d"% i,
+            # Initialisise new analysis object
+            analysis_list.append(classDef(name="%04d"% i,
                                            modalsys_obj=dynsys_obj,
                                            **kwargs_dict))
             
@@ -825,318 +655,27 @@ class Multiple():
     
     
     
-class PedestrianDynamics_transientAnalyses(Multiple):
-    """
-    Implements the full set of analyses required to fully-implement the 
-    method given in NA.2.44.4 of UK NA to BS EN 1991-2
-    i.e. transient analyses for both walkers and joggers, for all modes
-    """
-    
-    def __init__(self,
-                 modalsys_obj,
-                 bridgeClass='A',
-                 **kwargs):
-        
-        """
-        Initialisation function
-        ****
-        
-        Required:
-          
-        * `modalsys_obj`, modal system to which analysis relates
-        
-        ***
-        Optional:
-            
-        * `bridgeClass`, _string_, either 'A', 'B', 'C', or 'D'. 
-          Refer Table NA.7 for description of bridge classes
-          
-        Additional keyword arguments may be passed. These should relate to the 
-        `__init__()` function of the `Multiple` class.
-          
-        """
-        
-        # Get mode indexs to loop over
-        # Note modes sorted into ascending frequency but in conjugate pairs
-        # Hence step through modes x2
-        nModes = modalsys_obj.GetSystemMatrices()["nDOF"]
-        mode_index_list = numpy.arange(0,2*nModes,2).tolist()
-        
-        # Run parent init function
-        super().__init__(className="UKNA_BSEN1991_2_walkers_joggers",
-                         dynsys_obj=modalsys_obj,
-                         bridgeClass=bridgeClass,
-                         mode_index=mode_index_list,
-                         analysis_type=["walkers","joggers"],
-                         verbose=False,
-                         **kwargs)
-        
-        # Save key variables as attributes
-        self.bridgeClass = bridgeClass
+
         
         
-    def plot_modal_params(self):
-        
-        fig, axarr = plt.subplots(2)
-        fig.set_size_inches((6,8))
-        
-        fig.subplots_adjust(hspace=0.4,right=0.8)
-        
-        # Get modal properties as used in analyses
-        nModes = int(len(self.analysis_list)/2)
-        mode_index = numpy.arange(0,nModes,1)+1
-        fv = [x.fv for x in self.analysis_list][:nModes]
-        eta = [x.eta for x in self.analysis_list][:nModes]
-        
-        # Plot details of system
-        ax = axarr[0]
-        ax.bar(mode_index,fv)
-        ax.set_xlabel("Mode index")
-        ax.set_xticks(mode_index)
-        ax.set_ylabel("$f_{d}$ (Hz)",fontsize=8.0)
-        ax.set_title("Damped natural frequencies")
-        
-        ax = axarr[1]
-        ax.bar(mode_index,eta)
-        ax.set_xlabel("Mode index")
-        ax.set_xticks(mode_index)
-        ax.set_ylim([0,ax.get_ylim()[1]])
-        ax.set_ylabel("Damping ratio",fontsize=8.0)
-        ax.yaxis.set_major_formatter(FuncFormatter(lambda y, _: '{:.1%}'.format(y))) 
-        ax.set_title("Modal damping")
-        
-        # Add equivilent axis for log dec
-        ax2 = ax.twinx()
-        
-        def logdec(eta):
-            return 2*numpy.pi*eta
-        
-        delta_incr = 0.01
-        new_yticks=numpy.arange(0,ax.get_ylim()[1],delta_incr/(2*numpy.pi))
-        
-        ax2.set_ylim(ax.get_ylim())
-        ax2.set_yticks(new_yticks)
-        ax2.set_yticklabels(["%.2f" % d for d in logdec(new_yticks)])
-        ax2.set_ylabel("Log decrement $\delta$")
-        
-        return fig
-    
-    
-    def plot_response_stats(self,
-                            dynsys2plot=None,
-                            responses2plot=None,
-                            sharey='row',
-                            verbose=True):
-        """
-        Plots statistics of responses computed, across all analyses
-        
-        ***
-        Optional:
-            
-        * `dynsys2plot`, list of subsystem objects to plot responses 
-          for. If None (default) responses will be plotted for all 
-          subsystems
-            
-        * `responses2plot`, list of indices specifying responses to be
-          plotted. If None (default) all responses will be plotted, for
-          each sub-system
-          
-        * `sharey`, passed to pyplot.subplots() method. Controls whether 
-          subplots should share common y scale.
-          
-        """
-        
-        print("Plotting response statistics...")
-        
-        nModes = int(len(self.analysis_list)/2)
-        mode_index = numpy.arange(0,nModes,1)+1
-        
-        fig_list = []
-        
-        if dynsys2plot is None:
-            dynsys2plot = self.dynsys_obj.DynSys_list
-        else:
-            if not (dynsys2plot in self.dynsys_obj.DynSys_list):
-                raise ValueError("'dynsys2plot' does not belong " + 
-                                 "to system analysed!")
-                
-            if not isinstance(dynsys2plot,list):
-                dynsys2plot = [dynsys2plot]
-            
-        # Loop over all systems and subsystems
-        for dynsys_obj in dynsys2plot:
-            
-            # Get stats dict relating to this system
-            stats_dict = self.stats_dict[dynsys_obj]
-            
-            # Get indices of responses to plot
-            response_names = dynsys_obj.output_names
-            
-            if responses2plot is None:
-                nResponses = len(response_names)
-                responses2plot = list(range(nResponses))
-            else:
-                nResponses = len(responses2plot)
-            
-            # Create new figure
-            fig, axarr = plt.subplots(nResponses,2,
-                                      sharex=True,
-                                      sharey=sharey)
-            fig.set_size_inches((14,8))
-            fig_list.append(fig)
-            
-            # Loop to plot all responses requested
-            for row, r in enumerate(responses2plot):
-                
-                response_name = response_names[r]
-                
-                # Get stats for this response
-                stats_dict_r = {}
-                
-                for stats_name, stats_vals in stats_dict.items():
-                    
-                    stats_dict_r[stats_name]=stats_vals[:,:,r]
-            
-                if verbose:
-                    print("Plotting stats for response '%s':" % response_name)
-                
-                # Plot response stats for walkers and joggers responses
-                
-                for col, case in zip([0,1],['walkers','joggers']):
-                    
-                    ax = axarr[row,col]
-                    
-                    for i, stats_name in enumerate(['absmax','max','min']):
-                    
-                        stats_vals = stats_dict_r[stats_name][col,:]
-                        
-                        w=0.1
-                        ax.bar(mode_index+(i-1)*w,
-                               stats_vals,
-                               width=w,
-                               label=stats_name
-                               )
-    
-                    ax.legend(loc='lower right',fontsize=6.0)
-                    
-                    if col==0:
-                        ax.set_ylabel(response_name,size=8.0)
-                        
-                    if row==0:
-                        ax.set_title("Responses to %s" % case)
-                        
-                    if row==nResponses-1:
-                        ax.set_xlabel("Mode index")
-                        ax.set_xticks(mode_index)
-                        
-                
-            
-            fig.suptitle("Statistics of computed responses to pedestrian loading\n" + 
-                         "UK NA to BS EN 1991-2, NA.2.44.4\n" + 
-                         "Subsystem: '%s'\n" % dynsys_obj.name,
-                         fontsize=10.0)
-    
-        return fig_list
-        
-    
     
 # ********************** FUNCTIONS   ****************************************
-        
-def Calc_Seff(modeshapeFunc,S,
-              dx=2.0,
-              makePlot=True,
-              verbose=True):
+  
+
+def load(fName):
     """
-    Calculates effective span, as defined by NA.2.44.4 and Figure NA.7 in 
-    BS EN 1991-2
-    
-    ![Figure_NA_7](../dynsys/img/UKNA_BSEN1991_2_FigNA7.PNG)
-    
-    ***
-    Required:
-        
-    * `modeshapeFunc`, _function_ defining variation of modeshapes with 
-      chainage. In general, for systems with multiple modes, `modeshapeFunc` to 
-      return _array_.
-      
-    * `S`, length of structure. Integration of modeshapes to compute 
-      _effective span_ is carried out in the interval _[0, S]_.
-      
-    ***
-    Optional:
-      
-    * `dx`, distance increment used by `scipy.integrate.cumtrapz()`
-      
-    
+    De-serialises object from pickle file, given `fName`
     """
     
-    # Note absolute value integral to be computed
-    def abs_modeshapeFunc(x):
-        return numpy.abs(modeshapeFunc(x))
+    with open(fName,'rb') as fobj:
+        print("\nLoading serialised  object from `{0}`".format(fName))
+        obj = dill.load(fobj)
+        
+    print("De-serialisation successful!\n")
     
-    # Evaluate modeshapes at specified chainages
-    x_vals = numpy.arange(0,S+0.5*dx,dx)
-    y_vals = modeshapeFunc(x_vals)
-    y_abs_vals = abs_modeshapeFunc(x_vals)
-    
-    # Integrate using Scipy routine
-    y_integral_vals = scipy.integrate.cumtrapz(y_abs_vals,x_vals,
-                                               axis=0,initial=0.0)
-    y_integral = y_integral_vals[-1,:]
-    
-    # Get maxima
-    y_absmax = numpy.max(y_abs_vals,axis=0)
-    y_absmax_overall = numpy.max(y_absmax)
-    
-    # Compute Seff
-    Seff = numpy.divide(y_integral, 0.634*y_absmax)
-    
-    # Compute lambda per eqn in Figure NA.7
-    lambda_vals = 0.634 * Seff / S
-    
-    if verbose:
-        print("Analysing modeshape functions to determine Seff...")
-        print("S (m):\t\t{0}".format(S))
-        print("Seff (m):\t{0}".format(Seff))
-        print("Max modeshapes:\t{0}".format(y_absmax))
-        print("")
-    
-    if makePlot:
-        
-        fig, axarr = plt.subplots(3,sharex=True)
-        
-        fig.suptitle("Calculation of $S_{eff}$ (m)")
-        
-        ax1 = axarr[0]
-        ax2 = axarr[1]
-        ax3 = axarr[2]
-        
-        handles = ax1.plot(x_vals,y_vals)
-        ax1.set_ylabel("Modeshapes, $\phi(x)$")
-        ax1.set_ylim([-y_absmax_overall,y_absmax_overall])
-        
-        ax2.plot(x_vals,y_abs_vals)
-        ax2.set_ylabel("$|\phi|(x)$")
-        ax2.set_ylim([0,y_absmax_overall])
-        
-        ax3.plot(x_vals,y_integral_vals)
-        ax3.set_xlim([0,S])
-        ax3.set_xlabel("Chainage (m)")
-        ax3.set_ylabel("$\int_{0}^{x}|\phi|(x).dx$")
-        ax3.set_ylim([0,ax3.get_ylim()[1]])
-        
-        for val, handle in zip(y_integral,handles):
-        
-            ax2.axhline(val/S,
-                        color=handle.get_color(),
-                        linestyle='--',
-                        alpha=0.5)
-            
-            ax3.text(S,val," %.1f"%val,fontsize=6.0)
-        
-    return Seff, lambda_vals
-        
-    
+    return obj
+      
+
 def ResponseSpectrum(accFunc,
                      tResponse,
                      T_vals=None,
@@ -1328,6 +867,8 @@ def ResponseSpectrum(accFunc,
     
     return return_dict
     
+
+
 def DesignResponseSpectrum_BSEN1998_1(T_vals=None,
                                       a_g=0.02,
                                       S=1.00,
@@ -1383,71 +924,13 @@ def DesignResponseSpectrum_BSEN1998_1(T_vals=None,
         
     return T_vals, Se_vals
 
-
-def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff,
-                                groupType="pedestrian",
-                                makePlot=False):
-    """
-    Determine reduction factor gamma, 
-    per Figure NA.9, UK NA to BS EN 1991-2:2003
-    
-    Gamma factors allows for the unsynchronized combination of pedestrian 
-    actions within groups and crowds.
-    """
-    
-    # Digitised data for Figure NA.9
-    delta_vals = numpy.arange(0,0.21,0.02).tolist()
-    Seff_vals = [10,12,15,20,30,40,60,100,200,300]
-    
-    gamma_vals=[[0.680,0.435,0.315,0.245,0.200,0.135,0.100,0.062,0.048,0.030],
-                [0.692,0.462,0.345,0.283,0.240,0.180,0.150,0.117,0.103,0.093],
-                [0.705,0.488,0.380,0.320,0.280,0.225,0.200,0.175,0.163,0.155],
-                [0.716,0.512,0.410,0.350,0.315,0.267,0.248,0.230,0.218,0.215],
-                [0.728,0.535,0.437,0.382,0.352,0.310,0.292,0.277,0.270,0.268],
-                [0.738,0.556,0.465,0.415,0.385,0.350,0.335,0.322,0.320,0.320],
-                [0.746,0.577,0.492,0.445,0.420,0.390,0.375,0.367,0.366,0.366],
-                [0.755,0.597,0.518,0.473,0.451,0.426,0.415,0.408,0.408,0.408],
-                [0.763,0.614,0.540,0.503,0.482,0.460,0.450,0.445,0.445,0.445],
-                [0.774,0.632,0.565,0.530,0.513,0.496,0.485,0.480,0.480,0.480],
-                [0.783,0.645,0.585,0.555,0.540,0.530,0.520,0.513,0.513,0.513]]
-    gamma_vals = numpy.array(gamma_vals).T
-
-    gamma_func = scipy.interpolate.interp2d(delta_vals,Seff_vals,gamma_vals,
-                                            bounds_error=True)
-    
-    # Use interpolation function to read off value at inputs specified
-    gamma = gamma_func(logDec,Seff)
-    
-    # Make plot (to show digitised curves)
-    if makePlot:
-        
-        fig, ax = plt.subplots()
-        
-        for Seff in Seff_vals:
-            
-            ax.plot(delta_vals,gamma_func(delta_vals,Seff),label=("%.0f"%Seff))
-        
-        ax.axvline(logDec,color='k',linestyle='--',alpha=0.3)
-        ax.axhline(gamma,color='k',linestyle='--',alpha=0.3)
-        
-        ax.legend(loc='lower right',title="$S_{eff}$ (m)")
-        
-        ax.set_xlim([0,0.2]) # per Fig.NA.9
-        ax.set_ylim([0,0.8]) # per Fig.NA.9
-            
-        ax.set_title("Reduction factor $\gamma$\n" + 
-                     "per Figure NA.9, UK NA to BS EN 1992-1:2003")
-        ax.set_xlabel("Log decrement damping")
-        ax.set_ylabel("$\gamma$")
-    
-    return gamma
-    
+  
     
 # ********************** TEST ROUTINE ****************************************
 
 if __name__ == "__main__":
     
-    testRoutine=7
+    testRoutine=5
     
     if testRoutine==1:
         
@@ -1498,11 +981,11 @@ if __name__ == "__main__":
         modal_sys = modalsys.ModalSys(isSparse=False)
         modal_sys.AddOutputMtrx(fName="outputs.csv")
         
-        rslts = run_multiple("MovingLoadAnalysis",
-                             dynsys_obj=modal_sys,
-                             loadVel=(numpy.array([380,390,400])*1000/3600).tolist(),
-                             loadtrain_fName=["trainA2.csv","trainA5.csv"],
-                             dt=0.01)
+        rslts = Multiple("MovingLoadAnalysis",
+                         dynsys_obj=modal_sys,
+                         loadVel=(numpy.array([380,390,400])*1000/3600).tolist(),
+                         loadtrain_fName=["trainA2.csv","trainA5.csv"],
+                         dt=0.01)
         
         [x.PlotResults() for x in rslts]
         
@@ -1520,21 +1003,6 @@ if __name__ == "__main__":
         
         T_vals, Se_vals = DesignResponseSpectrum_BSEN1998_1()
         plt.plot(T_vals,Se_vals)
-        
-    elif testRoutine==6:
-        gamma_val = UKNA_BSEN1991_2_Figure_NA_9(0.045,35.0,makePlot=True)
-        gamma_val = UKNA_BSEN1991_2_Figure_NA_9(0.100,200.,makePlot=True)
-        gamma_val = UKNA_BSEN1991_2_Figure_NA_9(0.080,400.,makePlot=True) # out of bounds error expected
-           
-    elif testRoutine==7:
-        
-        L = 50.0
-        
-        def testFunc(x):
-            return numpy.array([numpy.sin(numpy.pi*x/L),
-                                numpy.sin(1.2*numpy.pi*x/L)]).T
-        
-        Seff = Calc_Seff(testFunc,L,makePlot=True)
-        
+
     else:
         raise ValueError("Test routine does not exist!")

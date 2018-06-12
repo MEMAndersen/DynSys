@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Script to illustrate pedestrian dynamics analyses to UK NA to BS EN 1991-2
+Script to illustrate walkers/joggers pedestrian dynamics analyses 
+to UK NA to BS EN 1991-2
 """
 
 # DynSys package imports
 import modalsys
-from dyn_analysis import UKNA_BSEN1991_2_walkers_joggers as walkers_joggers_analysis
-from dyn_analysis import PedestrianDynamics_transientAnalyses
+from ped_dyn import UKNA_BSEN1991_2_walkers_joggers
+from ped_dyn import PedestrianDynamics_transientAnalyses
 
 #%%
 
@@ -22,10 +23,10 @@ my_sys.AddOutputMtrx()
 #%%
 
 # Define single walkers/joggers analysis
-my_analysis = walkers_joggers_analysis(modalsys_obj=my_sys,
-                                       mode_index=4,
-                                       analysis_type="joggers",
-                                       bridgeClass=bridgeClass)
+my_analysis = UKNA_BSEN1991_2_walkers_joggers(modalsys_obj=my_sys,
+                                              mode_index=4,
+                                              analysis_type="joggers",
+                                              bridgeClass=bridgeClass)
                                        
 results_obj = my_analysis.run()
 tstep_obj = results_obj.tstep_obj

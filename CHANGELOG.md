@@ -6,15 +6,66 @@ The format is based on:
 and this project adheres to: 
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-*Note*: Version numbers correspond to version numbers in .py files. These will 
-in general differ from version numbers maintained by Portal version control 
-system. However major release number will always correspond.
-
 ***
+
+## [1.2.0] - 2018-06-12 - RIHY
+
+### Changed
+
+* Pedestrian dynamics classes and functions moved to new module `ped_dyn.py`
+  (previously these were within the `dyn_analysis.py` module)
+
+* Many method previously implemented as class methods of `DynSys` class now 
+  re-implemented as functions within the `dynsys.py` module. Class methods 
+  still exist as per previous versions, but these use the public functions to 
+  do the work
+  
+* Various misc updates to plotting methods within `tstep_results.py` module
+
+* The majority of docstrings have been reviewed/improved, to ensure they 
+  reflect the source code and provide more references to theory, codes etc.
+
+### Added
+
+* `tutorial.ipynb`, a IPython (Jupyter) notebook which provides an introduction 
+  on how to go about using the classes/functions within the package
+
+* Crowd loading to UK NA to BS EN 1991-2 now implemented
+
+* `CalcEigenproperties()` method of `DynSys` class reimplemented to handle 
+  systems with constraints. Approach for unconstrained systems similar to 
+  previous versions except `scipy.linalg.eig()` method now used.
+  
+* `/tests` updated: new test of `CalcEigenvalues()` method devised
+
+### Fixed
+
+* Bug as noted by BNCY in `dyn_analysis.py` now fixed. A check of the class 
+  name of `loadtrain_obj` was being made, but as a result of recent changes 
+  this was checking the derived class name.
+
+* `trainAnalysis.py` updated with minor change to reflect new `stats_dict` 
+  nested dict structure
+  
+* Bug associated with output matrices fixed; was only an issue when re-defining 
+  systems
+
+### Removed
+
+
+## [1.1.1] - 2018-05-22 - RIHY
+
+_Hotfix responding to BNCY's 21/05/2018 email_
+
+### Fixed
+
+* Tempororary fix implemented to address bug, by commenting-out rows.
+  To be addressed properly in future releases.
 
 ## [1.1.0] - 2018-04-23 - RIHY
 
 ### Changed
+* Version number now included in html docs
 
 ### Added
 * New functionality to implement UK NA to BS EN 1992-1 footbridge dynamics:

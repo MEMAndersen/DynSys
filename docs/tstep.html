@@ -1,4 +1,4 @@
-Version: 1.1.1
+Version: 1.2.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1412,7 +1412,7 @@ systems</p>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
         
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK45&#39;</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK45&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs time-stepping analysis</span>
 <span class="sd">        ***</span>
@@ -1420,18 +1420,37 @@ systems</p>
 <span class="sd">        Solution is obtained using Scipy&#39;s ODE solver for initial value </span>
 <span class="sd">        problems [solve_ivp].</span>
 <span class="sd">        </span>
-<span class="sd">        Optional argument `method` can be used to specify the particular </span>
-<span class="sd">        solver type to use. Refer Scipy docs for details of the </span>
-<span class="sd">        options avaliable.</span>
+<span class="sd">        ***</span>
+<span class="sd">        **Required:**</span>
 <span class="sd">        </span>
+<span class="sd">        No arguments are required. Solution settings should have been defined </span>
+<span class="sd">        when class was initialised; refer `__init__()` documentation.</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        **Optional**</span>
+<span class="sd">        </span>
+<span class="sd">        * `method`, string, can be used to specify the particular </span>
+<span class="sd">          solver type to use.</span>
+<span class="sd">          </span>
+<span class="sd">        Refer Scipy docs for details of the options avaliable.</span>
 <span class="sd">        `RK45` is the default solver. As described in the documentation for </span>
 <span class="sd">        [solve_ivp], this is an explicit Runge-Kutta method of order 5(4). </span>
 <span class="sd">        This should be appropriate for most applications.</span>
 <span class="sd">        </span>
+<span class="sd">        * `verbose`, _boolean_, if True progress will be written to console</span>
+<span class="sd">        </span>
 <span class="sd">        [solve_ivp]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        **Returns:**</span>
+<span class="sd">        </span>
+<span class="sd">        Instance of `TStep_Results` class, in which results are stored. Refer </span>
+<span class="sd">        [documentation](../docs/tstep_results.html) for details of attributes </span>
+<span class="sd">        and methods avaliable.</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Running time-stepping analysis...&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1449,14 +1468,14 @@ systems</p>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;events&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_funcs</span>
         
         <span class="c1"># Print to denote parameters used</span>
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;t_eval&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_step&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span>
         
         <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
@@ -1509,6 +1528,9 @@ systems</p>
             <span class="n">xdot</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">ydot</span><span class="p">,</span><span class="n">y2dot</span><span class="p">)))</span>
 
             <span class="k">return</span> <span class="n">xdot</span>
+        
+        <span class="c1"># Clear results prior to running solver</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">ClearResults</span><span class="p">()</span>
         
         <span class="c1"># Run solver</span>
         <span class="n">terminateSolver</span> <span class="o">=</span> <span class="bp">False</span>
@@ -1581,8 +1603,8 @@ systems</p>
                 <span class="c1"># The solver successfully reached the interval end</span>
                 
                 <span class="n">terminateSolver</span> <span class="o">=</span> <span class="bp">True</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> 
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> 
                 
             <span class="k">else</span><span class="p">:</span>
                 
@@ -1591,11 +1613,11 @@ systems</p>
         <span class="c1"># Calculate responses</span>
         <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
                                   <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
-                                  <span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
+                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">results_obj</span>
     
@@ -1996,7 +2018,7 @@ for further details:</p></div>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
         
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK45&#39;</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK45&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs time-stepping analysis</span>
 <span class="sd">        ***</span>
@@ -2004,18 +2026,37 @@ for further details:</p></div>
 <span class="sd">        Solution is obtained using Scipy&#39;s ODE solver for initial value </span>
 <span class="sd">        problems [solve_ivp].</span>
 <span class="sd">        </span>
-<span class="sd">        Optional argument `method` can be used to specify the particular </span>
-<span class="sd">        solver type to use. Refer Scipy docs for details of the </span>
-<span class="sd">        options avaliable.</span>
+<span class="sd">        ***</span>
+<span class="sd">        **Required:**</span>
 <span class="sd">        </span>
+<span class="sd">        No arguments are required. Solution settings should have been defined </span>
+<span class="sd">        when class was initialised; refer `__init__()` documentation.</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        **Optional**</span>
+<span class="sd">        </span>
+<span class="sd">        * `method`, string, can be used to specify the particular </span>
+<span class="sd">          solver type to use.</span>
+<span class="sd">          </span>
+<span class="sd">        Refer Scipy docs for details of the options avaliable.</span>
 <span class="sd">        `RK45` is the default solver. As described in the documentation for </span>
 <span class="sd">        [solve_ivp], this is an explicit Runge-Kutta method of order 5(4). </span>
 <span class="sd">        This should be appropriate for most applications.</span>
 <span class="sd">        </span>
+<span class="sd">        * `verbose`, _boolean_, if True progress will be written to console</span>
+<span class="sd">        </span>
 <span class="sd">        [solve_ivp]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        **Returns:**</span>
+<span class="sd">        </span>
+<span class="sd">        Instance of `TStep_Results` class, in which results are stored. Refer </span>
+<span class="sd">        [documentation](../docs/tstep_results.html) for details of attributes </span>
+<span class="sd">        and methods avaliable.</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Running time-stepping analysis...&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -2033,14 +2074,14 @@ for further details:</p></div>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;events&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_funcs</span>
         
         <span class="c1"># Print to denote parameters used</span>
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;t_eval&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_step&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span>
         
         <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
@@ -2093,6 +2134,9 @@ for further details:</p></div>
             <span class="n">xdot</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">ydot</span><span class="p">,</span><span class="n">y2dot</span><span class="p">)))</span>
 
             <span class="k">return</span> <span class="n">xdot</span>
+        
+        <span class="c1"># Clear results prior to running solver</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">ClearResults</span><span class="p">()</span>
         
         <span class="c1"># Run solver</span>
         <span class="n">terminateSolver</span> <span class="o">=</span> <span class="bp">False</span>
@@ -2165,8 +2209,8 @@ for further details:</p></div>
                 <span class="c1"># The solver successfully reached the interval end</span>
                 
                 <span class="n">terminateSolver</span> <span class="o">=</span> <span class="bp">True</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> 
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> 
                 
             <span class="k">else</span><span class="p">:</span>
                 
@@ -2175,11 +2219,11 @@ for further details:</p></div>
         <span class="c1"># Calculate responses</span>
         <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
                                   <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
-                                  <span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
+                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">results_obj</span>
 </pre></div>
@@ -2440,7 +2484,7 @@ otherwise the dynamic system in question will not do anything!</p></div>
             
   <div class="item">
     <div class="name def" id="tstep.TStep.run">
-    <p>def <span class="ident">run</span>(</p><p>self, method=&#39;RK45&#39;, showMsgs=True)</p>
+    <p>def <span class="ident">run</span>(</p><p>self, method=&#39;RK45&#39;, verbose=True)</p>
     </div>
     
 
@@ -2450,16 +2494,32 @@ otherwise the dynamic system in question will not do anything!</p></div>
 <hr />
 <p>Solution is obtained using Scipy's ODE solver for initial value 
 problems <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp">solve_ivp</a>.</p>
-<p>Optional argument <code>method</code> can be used to specify the particular 
-solver type to use. Refer Scipy docs for details of the 
-options avaliable.</p>
-<p><code>RK45</code> is the default solver. As described in the documentation for 
+<hr />
+<p><strong>Required:</strong></p>
+<p>No arguments are required. Solution settings should have been defined 
+when class was initialised; refer <code>__init__()</code> documentation.</p>
+<hr />
+<p><strong>Optional</strong></p>
+<ul>
+<li><code>method</code>, string, can be used to specify the particular 
+  solver type to use.</li>
+</ul>
+<p>Refer Scipy docs for details of the options avaliable.
+<code>RK45</code> is the default solver. As described in the documentation for 
 <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp">solve_ivp</a>, this is an explicit Runge-Kutta method of order 5(4). 
-This should be appropriate for most applications.</p></div>
+This should be appropriate for most applications.</p>
+<ul>
+<li><code>verbose</code>, <em>boolean</em>, if True progress will be written to console</li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<p>Instance of <code>TStep_Results</code> class, in which results are stored. Refer 
+<a href="../docs/tstep_results.html">documentation</a> for details of attributes 
+and methods avaliable.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep.TStep.run', this);">Show source &equiv;</a></p>
   <div id="source-tstep.TStep.run" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK45&#39;</span><span class="p">,</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK45&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Runs time-stepping analysis</span>
 <span class="sd">    ***</span>
@@ -2467,18 +2527,37 @@ This should be appropriate for most applications.</p></div>
 <span class="sd">    Solution is obtained using Scipy&#39;s ODE solver for initial value </span>
 <span class="sd">    problems [solve_ivp].</span>
 <span class="sd">    </span>
-<span class="sd">    Optional argument `method` can be used to specify the particular </span>
-<span class="sd">    solver type to use. Refer Scipy docs for details of the </span>
-<span class="sd">    options avaliable.</span>
+<span class="sd">    ***</span>
+<span class="sd">    **Required:**</span>
 <span class="sd">    </span>
+<span class="sd">    No arguments are required. Solution settings should have been defined </span>
+<span class="sd">    when class was initialised; refer `__init__()` documentation.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Optional**</span>
+<span class="sd">    </span>
+<span class="sd">    * `method`, string, can be used to specify the particular </span>
+<span class="sd">      solver type to use.</span>
+<span class="sd">      </span>
+<span class="sd">    Refer Scipy docs for details of the options avaliable.</span>
 <span class="sd">    `RK45` is the default solver. As described in the documentation for </span>
 <span class="sd">    [solve_ivp], this is an explicit Runge-Kutta method of order 5(4). </span>
 <span class="sd">    This should be appropriate for most applications.</span>
 <span class="sd">    </span>
+<span class="sd">    * `verbose`, _boolean_, if True progress will be written to console</span>
+<span class="sd">    </span>
 <span class="sd">    [solve_ivp]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">    </span>
+<span class="sd">    Instance of `TStep_Results` class, in which results are stored. Refer </span>
+<span class="sd">    [documentation](../docs/tstep_results.html) for details of attributes </span>
+<span class="sd">    and methods avaliable.</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> 
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Running time-stepping analysis...&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2496,14 +2575,14 @@ This should be appropriate for most applications.</p></div>
     <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;events&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_funcs</span>
     
     <span class="c1"># Print to denote parameters used</span>
-    <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis time interval: [</span><span class="si">%.2f</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2">] seconds&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
     
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Fixed &#39;t_eval&#39; time step specified: dt = </span><span class="si">%.2e</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;t_eval&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Maximum time step specified: max_dt = </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_step&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_dt</span>
     
     <span class="c1"># Define ODE function in the expected form dy/dt = f(t,y)</span>
@@ -2555,6 +2634,9 @@ This should be appropriate for most applications.</p></div>
         <span class="n">y2dot</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;y2dot&quot;</span><span class="p">]</span>
         <span class="n">xdot</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">ydot</span><span class="p">,</span><span class="n">y2dot</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">xdot</span>
+    
+    <span class="c1"># Clear results prior to running solver</span>
+    <span class="n">results_obj</span><span class="o">.</span><span class="n">ClearResults</span><span class="p">()</span>
     
     <span class="c1"># Run solver</span>
     <span class="n">terminateSolver</span> <span class="o">=</span> <span class="bp">False</span>
@@ -2627,8 +2709,8 @@ This should be appropriate for most applications.</p></div>
             <span class="c1"># The solver successfully reached the interval end</span>
             
             <span class="n">terminateSolver</span> <span class="o">=</span> <span class="bp">True</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> 
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> 
             
         <span class="k">else</span><span class="p">:</span>
             
@@ -2637,11 +2719,11 @@ This should be appropriate for most applications.</p></div>
     <span class="c1"># Calculate responses</span>
     <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
                               <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
-                              <span class="n">showMsgs</span><span class="o">=</span><span class="n">showMsgs</span><span class="p">)</span>
+                              <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     
-    <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
-    <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall post-processing time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">resultsproc_time</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">results_obj</span>
 </pre></div>

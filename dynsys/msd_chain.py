@@ -48,21 +48,21 @@ class MSD_Chain(DynSys):
         
         * `f_vals`, undamped natural frequency (Hz)
         
-        * `eta_vals`, damping ratio (1.0 = critical)
-        
         * `K_vals`, stiffness (N/m) applicable to the each DOF linkage
+        
+        Either `K_vals` or `f_vals` must be provided. If both are provided, 
+        `K_vals` will be used.
+        
+        * `eta_vals`, damping ratio (1.0 = critical)
         
         * `C_vals`, dashpot rate (Ns/m) applicable to the each DOF linkage
         
-        
-        If `K_vals` and/or `C_vals` are provided in additional to `f_vals` 
-        and/or `f_vals`, these will override results obtained using the latter.
+        Either `C_vals` or `eta_vals` must be provided. If both are provided, 
+        `C_vals` will be used.
         
         """
-        
-        # ----
-        
-        # ---- Flatten input and establish nDOFs -----
+
+        # Flatten input and establish nDOFs
         
         M_vals = npy.ravel(npy.asarray(M_vals))
         
@@ -73,48 +73,33 @@ class MSD_Chain(DynSys):
         
         nDOF = M_vals.shape[0]
         
-        # ---- Initialise undefined inputs as required -----
-        
-        # Frequency (Hz)
+        # Determine K matrix
         if f_vals is None:
             
             if K_vals is None:
-                raise ValueError("Given `f_vals` has not been provided, " + 
-                                 "`K_vals` is required")
+                raise ValueError("Either `f_vals` or `K_vals` is required")
             else:
                 f_vals = SDOF_frequency(M_vals,K_vals)
         
-        # Circular natural frequency (rad/s)
         omega_vals = angularFreq(f_vals)
+                
+        if K_vals is None:
+            K_vals = SDOF_stiffness(M_vals,omega=omega_vals)                
         
-        # SDOF stiffnesses and dashpot constants
-        K_vals = SDOF_stiffness(M_vals,omega=omega_vals)
-        
-        # Damping ratio (1.0=critical)
+        # Determine C matrix
         if eta_vals is None:
             
             if C_vals is None:
-                raise ValueError("Given `eta_vals` has not been provided, " + 
-                                 "`C_vals` is required")
+                raise ValueError("Either `eta_vals` or `C_vals` is required")
             
             else:
                 eta_vals = SDOF_dampingRatio(M_vals,K_vals,C_vals)
                 
         if C_vals is None:
-            
-            if eta_vals is None:
-                raise ValueError("Given `C_vals` has not been provided, " + 
-                                 "`eta_vals` is required")
-            
             C_vals = SDOF_dashpot(M_vals,K_vals,eta_vals)
         
-        # ---- Check input is valid and consistent ----
-        if f_vals.shape[0]!=nDOF:
-            raise ValueError("Error: length of f_vals does not agree with expected nDOF!")
-        if eta_vals.shape[0]!=nDOF:
-            raise ValueError("Error: length of eta_vals does not agree with expected nDOF!")    
         
-        # ---- Define system matrices ----
+        # Define system matrices
         
         M_mtrx = npy.asmatrix(npy.diag(M_vals))
         

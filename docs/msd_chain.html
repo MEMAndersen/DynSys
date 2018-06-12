@@ -1,4 +1,4 @@
-Version: 1.1.1
+Version: 1.2.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1080,6 +1080,8 @@ table {
     <li class="mono"><a href="#msd_chain.MSD_Chain.CheckDOF">CheckDOF</a></li>
     <li class="mono"><a href="#msd_chain.MSD_Chain.CheckOutputMtrx">CheckOutputMtrx</a></li>
     <li class="mono"><a href="#msd_chain.MSD_Chain.EqnOfMotion">EqnOfMotion</a></li>
+    <li class="mono"><a href="#msd_chain.MSD_Chain.GetLoadMatrix">GetLoadMatrix</a></li>
+    <li class="mono"><a href="#msd_chain.MSD_Chain.GetStateMatrix">GetStateMatrix</a></li>
     <li class="mono"><a href="#msd_chain.MSD_Chain.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#msd_chain.MSD_Chain.PlotSystem">PlotSystem</a></li>
     <li class="mono"><a href="#msd_chain.MSD_Chain.PlotSystems_all">PlotSystems_all</a></li>
@@ -1160,21 +1162,21 @@ a chain of SDOF mass-spring-dashpot systems</p>
 <span class="sd">        </span>
 <span class="sd">        * `f_vals`, undamped natural frequency (Hz)</span>
 <span class="sd">        </span>
-<span class="sd">        * `eta_vals`, damping ratio (1.0 = critical)</span>
-<span class="sd">        </span>
 <span class="sd">        * `K_vals`, stiffness (N/m) applicable to the each DOF linkage</span>
+<span class="sd">        </span>
+<span class="sd">        Either `K_vals` or `f_vals` must be provided. If both are provided, </span>
+<span class="sd">        `K_vals` will be used.</span>
+<span class="sd">        </span>
+<span class="sd">        * `eta_vals`, damping ratio (1.0 = critical)</span>
 <span class="sd">        </span>
 <span class="sd">        * `C_vals`, dashpot rate (Ns/m) applicable to the each DOF linkage</span>
 <span class="sd">        </span>
-<span class="sd">        </span>
-<span class="sd">        If `K_vals` and/or `C_vals` are provided in additional to `f_vals` </span>
-<span class="sd">        and/or `f_vals`, these will override results obtained using the latter.</span>
+<span class="sd">        Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
+<span class="sd">        `C_vals` will be used.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># ----</span>
-        
-        <span class="c1"># ---- Flatten input and establish nDOFs -----</span>
+
+        <span class="c1"># Flatten input and establish nDOFs</span>
         
         <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
@@ -1185,48 +1187,33 @@ a chain of SDOF mass-spring-dashpot systems</p>
         
         <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         
-        <span class="c1"># ---- Initialise undefined inputs as required -----</span>
-        
-        <span class="c1"># Frequency (Hz)</span>
+        <span class="c1"># Determine K matrix</span>
         <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `f_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;`K_vals` is required&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
         
-        <span class="c1"># Circular natural frequency (rad/s)</span>
         <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
         
-        <span class="c1"># SDOF stiffnesses and dashpot constants</span>
-        <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>
-        
-        <span class="c1"># Damping ratio (1.0=critical)</span>
+        <span class="c1"># Determine C matrix</span>
         <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `eta_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;`C_vals` is required&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
             
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="p">)</span>
                 
         <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `C_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;`eta_vals` is required&quot;</span><span class="p">)</span>
-            
             <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
         
-        <span class="c1"># ---- Check input is valid and consistent ----</span>
-        <span class="k">if</span> <span class="n">f_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">nDOF</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: length of f_vals does not agree with expected nDOF!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">eta_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">nDOF</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: length of eta_vals does not agree with expected nDOF!&quot;</span><span class="p">)</span>    
         
-        <span class="c1"># ---- Define system matrices ----</span>
+        <span class="c1"># Define system matrices</span>
         
         <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
@@ -1479,21 +1466,21 @@ a chain of SDOF mass-spring-dashpot systems</p>
 <span class="sd">        </span>
 <span class="sd">        * `f_vals`, undamped natural frequency (Hz)</span>
 <span class="sd">        </span>
-<span class="sd">        * `eta_vals`, damping ratio (1.0 = critical)</span>
-<span class="sd">        </span>
 <span class="sd">        * `K_vals`, stiffness (N/m) applicable to the each DOF linkage</span>
+<span class="sd">        </span>
+<span class="sd">        Either `K_vals` or `f_vals` must be provided. If both are provided, </span>
+<span class="sd">        `K_vals` will be used.</span>
+<span class="sd">        </span>
+<span class="sd">        * `eta_vals`, damping ratio (1.0 = critical)</span>
 <span class="sd">        </span>
 <span class="sd">        * `C_vals`, dashpot rate (Ns/m) applicable to the each DOF linkage</span>
 <span class="sd">        </span>
-<span class="sd">        </span>
-<span class="sd">        If `K_vals` and/or `C_vals` are provided in additional to `f_vals` </span>
-<span class="sd">        and/or `f_vals`, these will override results obtained using the latter.</span>
+<span class="sd">        Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
+<span class="sd">        `C_vals` will be used.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># ----</span>
-        
-        <span class="c1"># ---- Flatten input and establish nDOFs -----</span>
+
+        <span class="c1"># Flatten input and establish nDOFs</span>
         
         <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
@@ -1504,48 +1491,33 @@ a chain of SDOF mass-spring-dashpot systems</p>
         
         <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         
-        <span class="c1"># ---- Initialise undefined inputs as required -----</span>
-        
-        <span class="c1"># Frequency (Hz)</span>
+        <span class="c1"># Determine K matrix</span>
         <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `f_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;`K_vals` is required&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
         
-        <span class="c1"># Circular natural frequency (rad/s)</span>
         <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
         
-        <span class="c1"># SDOF stiffnesses and dashpot constants</span>
-        <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>
-        
-        <span class="c1"># Damping ratio (1.0=critical)</span>
+        <span class="c1"># Determine C matrix</span>
         <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `eta_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;`C_vals` is required&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
             
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="p">)</span>
                 
         <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `C_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;`eta_vals` is required&quot;</span><span class="p">)</span>
-            
             <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
         
-        <span class="c1"># ---- Check input is valid and consistent ----</span>
-        <span class="k">if</span> <span class="n">f_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">nDOF</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: length of f_vals does not agree with expected nDOF!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">eta_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">nDOF</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: length of eta_vals does not agree with expected nDOF!&quot;</span><span class="p">)</span>    
         
-        <span class="c1"># ---- Define system matrices ----</span>
+        <span class="c1"># Define system matrices</span>
         
         <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
@@ -1639,17 +1611,21 @@ the same shape (this is checked).</p>
 <p><code>f_vals</code>, undamped natural frequency (Hz)</p>
 </li>
 <li>
-<p><code>eta_vals</code>, damping ratio (1.0 = critical)</p>
-</li>
-<li>
 <p><code>K_vals</code>, stiffness (N/m) applicable to the each DOF linkage</p>
+</li>
+</ul>
+<p>Either <code>K_vals</code> or <code>f_vals</code> must be provided. If both are provided, 
+<code>K_vals</code> will be used.</p>
+<ul>
+<li>
+<p><code>eta_vals</code>, damping ratio (1.0 = critical)</p>
 </li>
 <li>
 <p><code>C_vals</code>, dashpot rate (Ns/m) applicable to the each DOF linkage</p>
 </li>
 </ul>
-<p>If <code>K_vals</code> and/or <code>C_vals</code> are provided in additional to <code>f_vals</code> 
-and/or <code>f_vals</code>, these will override results obtained using the latter.</p></div>
+<p>Either <code>C_vals</code> or <code>eta_vals</code> must be provided. If both are provided, 
+<code>C_vals</code> will be used.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.__init__', this);">Show source &equiv;</a></p>
   <div id="source-msd_chain.MSD_Chain.__init__" class="source">
@@ -1675,21 +1651,20 @@ and/or <code>f_vals</code>, these will override results obtained using the latte
 <span class="sd">    </span>
 <span class="sd">    * `f_vals`, undamped natural frequency (Hz)</span>
 <span class="sd">    </span>
-<span class="sd">    * `eta_vals`, damping ratio (1.0 = critical)</span>
-<span class="sd">    </span>
 <span class="sd">    * `K_vals`, stiffness (N/m) applicable to the each DOF linkage</span>
+<span class="sd">    </span>
+<span class="sd">    Either `K_vals` or `f_vals` must be provided. If both are provided, </span>
+<span class="sd">    `K_vals` will be used.</span>
+<span class="sd">    </span>
+<span class="sd">    * `eta_vals`, damping ratio (1.0 = critical)</span>
 <span class="sd">    </span>
 <span class="sd">    * `C_vals`, dashpot rate (Ns/m) applicable to the each DOF linkage</span>
 <span class="sd">    </span>
-<span class="sd">    </span>
-<span class="sd">    If `K_vals` and/or `C_vals` are provided in additional to `f_vals` </span>
-<span class="sd">    and/or `f_vals`, these will override results obtained using the latter.</span>
+<span class="sd">    Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
+<span class="sd">    `C_vals` will be used.</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># ----</span>
-    
-    <span class="c1"># ---- Flatten input and establish nDOFs -----</span>
+    <span class="c1"># Flatten input and establish nDOFs</span>
     
     <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
     
@@ -1700,48 +1675,33 @@ and/or <code>f_vals</code>, these will override results obtained using the latte
     
     <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     
-    <span class="c1"># ---- Initialise undefined inputs as required -----</span>
-    
-    <span class="c1"># Frequency (Hz)</span>
+    <span class="c1"># Determine K matrix</span>
     <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
         <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `f_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                             <span class="s2">&quot;`K_vals` is required&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
     
-    <span class="c1"># Circular natural frequency (rad/s)</span>
     <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
+            
+    <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
     
-    <span class="c1"># SDOF stiffnesses and dashpot constants</span>
-    <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>
-    
-    <span class="c1"># Damping ratio (1.0=critical)</span>
+    <span class="c1"># Determine C matrix</span>
     <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
         <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `eta_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                             <span class="s2">&quot;`C_vals` is required&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
         
         <span class="k">else</span><span class="p">:</span>
             <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="p">)</span>
             
     <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `C_vals` has not been provided, &quot;</span> <span class="o">+</span> 
-                             <span class="s2">&quot;`eta_vals` is required&quot;</span><span class="p">)</span>
-        
         <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
     
-    <span class="c1"># ---- Check input is valid and consistent ----</span>
-    <span class="k">if</span> <span class="n">f_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">nDOF</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: length of f_vals does not agree with expected nDOF!&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">eta_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="n">nDOF</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: length of eta_vals does not agree with expected nDOF!&quot;</span><span class="p">)</span>    
     
-    <span class="c1"># ---- Define system matrices ----</span>
+    <span class="c1"># Define system matrices</span>
     
     <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
     
@@ -1872,7 +1832,7 @@ equations are independent</p></div>
             
   <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.AddOutputMtrx">
-    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, fName=&#39;outputs.csv&#39;)</p>
+    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, fName=&#39;outputs.csv&#39;, verbose=False)</p>
     </div>
     
 
@@ -1889,7 +1849,8 @@ equations are independent</p></div>
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                   <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                   <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                  <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">):</span>
+                  <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">,</span>
+                  <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Appends `output_mtrx` to `outputsList`</span>
 <span class="sd">    ***</span>
@@ -1914,6 +1875,16 @@ equations are independent</p></div>
     <span class="c1"># Append to attribute</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">+=</span> <span class="n">output_names</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;AddOutputMtrx() method invoked.&quot;</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output matrix shape:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output names list:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span>
     
     <span class="c1"># Check dimensions of all output matrices defined</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">CheckOutputMtrx</span><span class="p">()</span>
@@ -2182,7 +2153,7 @@ with nonlinear systems).</p></div>
             
   <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.CalcEigenproperties">
-    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, normaliseEigenvectors=True, ax=None, showPlots=False)</p>
+    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, normaliseEigenvectors=True, verbose=False, makePlots=False, axarr=None)</p>
     </div>
     
 
@@ -2193,17 +2164,84 @@ of system</p>
 <hr />
 <p>Note in general eigenproperties will be complex due to non-proportional
 damping.</p>
-<p>Eigendecomposition of the system state matrix <code>A_mtrx</code> is carried out to 
+<p>Eigendecomposition of the system state matrix 'A' is carried out to 
 obtain eigenvalues and displacement-velocity eigenvectors.</p>
-<p><strong>Important Note</strong>: this function cannot (currently) be used for 
-systems with constraint equations. An exception will be raised.</p></div>
+<p>Engineers who are not familiar with the background theory should read
+the following excellent paper:</p>
+<p><em>An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems</em></p>
+<p>by Christopher Hoen. </p>
+<p><a href="../references/An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems.pdf">PDF</a></p>
+<hr />
+<p><strong>Required:</strong></p>
+<p>No arguments; the mass, stiffness, damping and (if defined) constraint 
+matrices held as attributes of the system will be used.</p>
+<hr />
+<p><strong>Optional:</strong></p>
+<ul>
+<li>
+<p><code>normaliseEigenvectors</code>, <em>boolean</em>, dictates whether eigenvectors 
+  should be normalised, such that Y.T @ X = I</p>
+</li>
+<li>
+<p><code>makePlots</code>, <em>boolean</em>, if True plots will be produced to illustrate 
+  the eigensolution obtained</p>
+</li>
+<li>
+<p><code>axarr</code>, list of <em>axes</em> onto which plots should be made. If None 
+  plots will be made onto new figures</p>
+</li>
+<li>
+<p><code>verbose</code>, <em>boolean</em>, if True intermediate output &amp; text will be 
+  printed to the console</p>
+</li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<p><em>Dict</em> containing the following entries:</p>
+<ul>
+<li>
+<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
+</li>
+<li>
+<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
+</li>
+<li>
+<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
+</li>
+</ul>
+<p>The above entries will in general be complex-valued and represent the 
+eigenproperties of 'A'.</p>
+<p>The following entries are real-valued and 
+express the complex eigenvalues 's' in terms which should be more 
+familiar to structural/mechanical engineers:</p>
+<ul>
+<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
+</ul>
+<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
+positive and negative frequencies for a system with N degrees of 
+freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
+<ul>
+<li>
+<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
+</li>
+<li>
+<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
+  above, in rad/s</p>
+</li>
+<li>
+<p>'eta', damping ratio (1.0=critical)</p>
+</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcEigenproperties', this);">Show source &equiv;</a></p>
   <div id="source-msd_chain.MSD_Chain.CalcEigenproperties" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                         <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                        <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                        <span class="n">showPlots</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+                        <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                        <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                        <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
 <span class="sd">    of system</span>
@@ -2212,47 +2250,97 @@ systems with constraint equations. An exception will be raised.</p></div>
 <span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
 <span class="sd">    damping.</span>
 <span class="sd">    </span>
-<span class="sd">    Eigendecomposition of the system state matrix `A_mtrx` is carried out to </span>
+<span class="sd">    Eigendecomposition of the system state matrix &#39;A&#39; is carried out to </span>
 <span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
 <span class="sd">    </span>
+<span class="sd">    Engineers who are not familiar with the background theory should read</span>
+<span class="sd">    the following excellent paper:</span>
+<span class="sd">        </span>
+<span class="sd">    *An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems*</span>
 <span class="sd">    </span>
-<span class="sd">    **Important Note**: this function cannot (currently) be used for </span>
-<span class="sd">    systems with constraint equations. An exception will be raised.</span>
+<span class="sd">    by Christopher Hoen. </span>
 <span class="sd">    </span>
+<span class="sd">    [PDF](../references/An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems.pdf)</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">    No arguments; the mass, stiffness, damping and (if defined) constraint </span>
+<span class="sd">    matrices held as attributes of the system will be used.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Optional:**</span>
+<span class="sd">        </span>
+<span class="sd">    * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors </span>
+<span class="sd">      should be normalised, such that Y.T @ X = I</span>
+<span class="sd">      </span>
+<span class="sd">    * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
+<span class="sd">      the eigensolution obtained</span>
+<span class="sd">      </span>
+<span class="sd">    * `axarr`, list of _axes_ onto which plots should be made. If None </span>
+<span class="sd">      plots will be made onto new figures</span>
+<span class="sd">      </span>
+<span class="sd">    * `verbose`, _boolean_, if True intermediate output &amp; text will be </span>
+<span class="sd">      printed to the console</span>
+<span class="sd">     </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">         </span>
+<span class="sd">    _Dict_ containing the following entries:</span>
+<span class="sd">        </span>
+<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    The above entries will in general be complex-valued and represent the </span>
+<span class="sd">    eigenproperties of &#39;A&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    The following entries are real-valued and </span>
+<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
+<span class="sd">    familiar to structural/mechanical engineers:</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
+<span class="sd">      </span>
+<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
+<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
+<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
+<span class="sd">      above, in rad/s</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
+<span class="sd">            </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="c1"># Check for constraints</span>
+    <span class="c1"># Get system matrices</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+    
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: cannot (currently) use function &quot;</span> <span class="o">+</span> 
-                         <span class="s2">&quot;&#39;CalcEigenproperties&#39; for systems &quot;</span> <span class="o">+</span> 
-                         <span class="s2">&quot;with constraints&quot;</span>
-                         <span class="p">)</span>
-    
-    <span class="c1"># Assemble continous-time state matrix A</span>
-    <span class="n">A_c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcStateMatrix</span><span class="p">()</span>
-    
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-        <span class="n">A_c</span> <span class="o">=</span> <span class="n">A_c</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
-    
-    <span class="c1"># Eigenvalue decomposition of continuous-time system matrix A</span>
-    <span class="n">s</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">A_c</span><span class="p">)</span>               <span class="c1"># s is vector of singular values, columns of X are right eigenvectors of A</span>
-    <span class="n">s_left</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">A_c</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>        <span class="c1"># s is vector of singular values, columns of Y are left eigenvectors of A</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
-    
-    <span class="c1"># Determine left and right eigenvalues which correspond to one-another</span>
-    <span class="n">right_indexs</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-    <span class="n">left_indexs</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">s_left</span><span class="p">)</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">right_indexs</span><span class="p">]</span>
-    <span class="n">s_left</span> <span class="o">=</span> <span class="n">s_left</span><span class="p">[</span><span class="n">left_indexs</span><span class="p">]</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">right_indexs</span><span class="p">]</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">left_indexs</span><span class="p">]</span>
-            
+        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="c1"># Compute eigenproperties of A_c</span>
+    <span class="c1"># s is vector of singular values</span>
+    <span class="c1"># columns of X are right eigenvectors of A</span>
+    <span class="c1"># columns of Y are left eigenvectors of A  </span>
+    <span class="n">s</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        
+    <span class="c1"># Normalise eigenvectors such that Y.T.X=I</span>
     <span class="k">if</span> <span class="n">normaliseEigenvectors</span><span class="p">:</span>
-        <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
     
     <span class="c1"># Extract modal properties of system from eigenvalues</span>
-    <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
     <span class="c1"># Sort eigenvalues into ascending order of f_n_abs</span>
     <span class="n">i1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
@@ -2270,11 +2358,17 @@ systems with constraint equations. An exception will be raised.</p></div>
     <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">f_d</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
     
-    <span class="k">if</span> <span class="n">showPlots</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">ax_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
+        
+        <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">axarr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]</span>
+            
+        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
     
     <span class="c1"># Return complex eigensolution as dict</span>
     <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
@@ -2287,6 +2381,8 @@ systems with constraint equations. An exception will be raised.</p></div>
     <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_d</span>
     <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span>
     
+    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_list&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">ax_list</span>
+    
     <span class="k">return</span> <span class="n">d</span> 
 </pre></div>
 
@@ -2298,7 +2394,7 @@ systems with constraint equations. An exception will be raised.</p></div>
             
   <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.CalcFreqResponse">
-    <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, fVals=None, fmax=None, A_mtrx=None, B_mtrx=None, output_mtrx=None)</p>
+    <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, fVals=None, fmax=None, A=None, B=None, C=None, D=None, force_accn=False, verbose=False)</p>
     </div>
     
 
@@ -2317,24 +2413,30 @@ If <code>None</code> (default) then frequencies list will be obtained using
 <code>freqVals()</code> member function.</p>
 </li>
 <li>
-<p><code>A_mtrx</code>, <code>B_mtrx</code>: allows overriding of system and load matrices 
+<p><code>A</code>, <code>B</code>: allows overriding of system and load matrices 
 held as attributes.</p>
 </li>
 <li>
-<p><code>output_mtrx</code>: allows custom output matrix (or list of output 
-matrices) to be provided. Otherwise <code>output_mtrx</code> attribute will be 
-used, if defined. Otherwise an exception will be raised.</p>
+<p><code>C</code>, <code>D</code>: allows custom output matrices to be provided. 
+If None, <code>output_mtrx</code> attribute will be used as <code>C</code> and <code>D</code> 
+will be ignored.</p>
+</li>
+<li>
+<p><code>force_accn</code>, <em>boolean</em>,  can be set to override the above behaviour 
+and obtain frequency transfer matrix relating applied forces to 
+accelerations of the DOFs. E.g. for modal systems, modal acceleration 
+transfer matrix can be obtained in this way</p>
 </li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcFreqResponse', this);">Show source &equiv;</a></p>
   <div id="source-msd_chain.MSD_Chain.CalcFreqResponse" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                     <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">A_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">B_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span>
+                     <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                     <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">force_accn</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                     <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
                      <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluates frequency response G(f) at specified frequencies</span>
@@ -2351,47 +2453,82 @@ used, if defined. Otherwise an exception will be raised.</p>
 <span class="sd">    If `None` (default) then frequencies list will be obtained using </span>
 <span class="sd">    `freqVals()` member function.</span>
 <span class="sd">    </span>
-<span class="sd">    * `A_mtrx`, `B_mtrx`: allows overriding of system and load matrices </span>
+<span class="sd">    * `A`, `B`: allows overriding of system and load matrices </span>
 <span class="sd">    held as attributes.</span>
 <span class="sd">    </span>
-<span class="sd">    * `output_mtrx`: allows custom output matrix (or list of output </span>
-<span class="sd">    matrices) to be provided. Otherwise `output_mtrx` attribute will be </span>
-<span class="sd">    used, if defined. Otherwise an exception will be raised.</span>
+<span class="sd">    * `C`, `D`: allows custom output matrices to be provided. </span>
+<span class="sd">    If None, `output_mtrx` attribute will be used as `C` and `D` </span>
+<span class="sd">    will be ignored.</span>
+<span class="sd">    </span>
+<span class="sd">    * `force_accn`, _boolean_,  can be set to override the above behaviour </span>
+<span class="sd">    and obtain frequency transfer matrix relating applied forces to </span>
+<span class="sd">    accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
+<span class="sd">    transfer matrix can be obtained in this way</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
+    
+    <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+    
     <span class="c1"># Handle optional arguments</span>
     <span class="k">if</span> <span class="n">fVals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">fVals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
         
     <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
     
-    <span class="k">if</span> <span class="n">A_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">A_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcStateMatrix</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
-    <span class="k">if</span> <span class="n">B_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">B_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcLoadMatrix</span><span class="p">()</span>
-        
-    <span class="c1"># Get output matrix</span>
-    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
-            
-    <span class="c1"># Obtain only the part of the output matrix relating to state variables</span>
-    <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-    <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
-    <span class="k">if</span> <span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***</span><span class="se">\n</span><span class="s2">Warning: no output matrix defined. &quot;</span><span class="o">+</span>
-              <span class="s2">&quot;Identity matrix will be used instead</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
-              <span class="s2">&quot;Output matrix Gf will hence relate to state variables</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">)</span>
+    <span class="c1"># Get output matrices</span>
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+                
+    <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***</span><span class="se">\n</span><span class="s2">Warning: no output matrix defined. &quot;</span><span class="o">+</span>
+                  <span class="s2">&quot;Output matrix Gf will hence relate to state &quot;</span> <span class="o">+</span> 
+                  <span class="s2">&quot;displacements and velocities</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
+        
+        <span class="n">C</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">)</span>
+        
+    <span class="c1"># Retain only columns relating to state variables (disp, vel)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">C</span><span class="p">[:,:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+        
+    <span class="c1"># Override the above </span>
+    <span class="k">if</span> <span class="n">force_accn</span><span class="p">:</span>
+        
+        <span class="c1">#print(&quot;`force_accn` invoked; frequency response function relates&quot; + </span>
+        <span class="c1">#      &quot; applied forces to DOF accelerations&quot;)</span>
+        
+        <span class="c1"># Get system matrices and output matrices</span>
+        <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
     
     <span class="c1"># Determine number of inputs and frequencies</span>
-    <span class="n">Ni</span> <span class="o">=</span> <span class="n">B_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">Ni</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
     
     <span class="c1"># Determine number of outputs</span>
-    <span class="n">No</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">No</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     
+    <span class="c1"># Print shapes of all arrays</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Shapes of A B C D matrices:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;A: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;B: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    
+        <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: None&quot;</span><span class="p">)</span>
+        
     <span class="c1"># Define array to contain frequency response for each </span>
     <span class="n">G_f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">No</span><span class="p">,</span><span class="n">Ni</span><span class="p">,</span><span class="n">nf</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
     
@@ -2403,12 +2540,20 @@ used, if defined. Otherwise an exception will be raised.</p>
         
         <span class="c1"># Define G(jw) at this frequency</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">A_mtrx</span><span class="p">)</span> <span class="o">*</span> <span class="n">B_mtrx</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">output_mtrx</span> <span class="o">*</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">A_mtrx</span><span class="p">)</span> <span class="o">*</span> <span class="n">B_mtrx</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="o">*</span> <span class="n">B</span>
             
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="o">*</span> <span class="n">B</span>
+            
+        <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">Gf</span> <span class="o">+=</span> <span class="n">D</span>    
+        
         <span class="c1"># Store in array</span>
         <span class="n">G_f</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf</span>
+        
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
     
     <span class="c1"># Return values</span>
     <span class="k">return</span> <span class="n">fVals</span><span class="p">,</span> <span class="n">G_f</span>
@@ -2476,30 +2621,16 @@ class attributes will be used.</em></p>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Retrieve system matrices</span>
-    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx</span>
+    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M_mtrx</span>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">M_mtrx</span><span class="o">=</span><span class="n">M</span><span class="p">)</span>
     
-    <span class="c1"># Assemble load matrix B=[[0],[M]]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-        <span class="n">Minv</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">Minv</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
-        
-    
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-        <span class="n">B1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">Minv</span><span class="p">)</span>
-        <span class="n">B2</span> <span class="o">=</span> <span class="n">Minv</span>
-        <span class="n">B</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">B1</span><span class="p">,</span><span class="n">B2</span><span class="p">))</span>
-        
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">_B</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">None</span><span class="p">],[</span><span class="n">Minv</span><span class="p">]]</span>
-        <span class="n">B</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_B</span><span class="p">)</span>
+    <span class="n">B</span><span class="p">,</span> <span class="n">Minv</span> <span class="o">=</span> <span class="n">calc_load_matrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">)</span>
     
     <span class="c1"># Save as attribute</span>
     <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_B_mtrx</span> <span class="o">=</span> <span class="n">B</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Minv</span> <span class="o">=</span> <span class="n">Minv</span>
         
     <span class="k">return</span> <span class="n">B</span>
 </pre></div>
@@ -2512,7 +2643,7 @@ class attributes will be used.</em></p>
             
   <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.CalcStateMatrix">
-    <p>def <span class="ident">CalcStateMatrix</span>(</p><p>self, applyConstraints=False, saveAsAttr=True, M=None, C=None, K=None, J=None, nDOF=None)</p>
+    <p>def <span class="ident">CalcStateMatrix</span>(</p><p>self, saveAsAttr=True, M=None, C=None, K=None, nDOF=None)</p>
     </div>
     
 
@@ -2526,11 +2657,6 @@ methods</p>
 <p>where <strong>M</strong> is the system mass matrix, <strong>C</strong> is the system damping 
 matrix, <strong>K</strong> is the system stiffness matrix and <strong>I</strong> is an 
 identity matrix.</p>
-<p>When constraint equations <strong>J</strong> are defined, the following augmented 
-form is obtained:</p>
-<p>$$ A' = [[A, J^{T}],[J,0]] $$</p>
-<p>Given system matrices are of shape <em>[N,N]</em>, <strong>A</strong> is of shape <em>[2N,2N]</em>. 
-If <em>m</em> constraints are defined then <strong>A'</strong> is of shape <em>[2N+m,2N+m]</em>.</p>
 <hr />
 <p>Optional:</p>
 <p><em>Unless optional arguments are specified, system matrices stored as 
@@ -2546,13 +2672,6 @@ class attributes will be used.</em></p>
 <p><code>K</code>, stiffness matrix</p>
 </li>
 <li>
-<p><code>J</code>, constraints matrix</p>
-</li>
-<li>
-<p><code>applyConstraints</code>: if <code>True</code> then augmentated state matrix 
-    A = [[A,J.T],[J,0]] will be returned</p>
-</li>
-<li>
 <p><code>saveAsAttr</code>: if <code>True</code> state matrix returned will also be saved as 
   an object instance attribute</p>
 </li>
@@ -2561,12 +2680,10 @@ class attributes will be used.</em></p>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcStateMatrix', this);">Show source &equiv;</a></p>
   <div id="source-msd_chain.MSD_Chain.CalcStateMatrix" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">applyConstraints</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                     <span class="n">saveAsAttr</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                     <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                     <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                     <span class="n">K</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                    <span class="n">J</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                     <span class="n">nDOF</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Assembles the continous-time state matrix `A_mtrx` used in state-space </span>
@@ -2581,14 +2698,6 @@ class attributes will be used.</em></p>
 <span class="sd">    matrix, **K** is the system stiffness matrix and **I** is an </span>
 <span class="sd">    identity matrix.</span>
 <span class="sd">    </span>
-<span class="sd">    When constraint equations **J** are defined, the following augmented </span>
-<span class="sd">    form is obtained:</span>
-<span class="sd">        </span>
-<span class="sd">    $$ A&#39; = [[A, J^{T}],[J,0]] $$</span>
-<span class="sd">    </span>
-<span class="sd">    Given system matrices are of shape _[N,N]_, **A** is of shape _[2N,2N]_. </span>
-<span class="sd">    If _m_ constraints are defined then **A&#39;** is of shape _[2N+m,2N+m]_.</span>
-<span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    Optional:</span>
 <span class="sd">        </span>
@@ -2600,12 +2709,7 @@ class attributes will be used.</em></p>
 <span class="sd">    * `C`, damping matrix</span>
 <span class="sd">    </span>
 <span class="sd">    * `K`, stiffness matrix</span>
-<span class="sd">    </span>
-<span class="sd">    * `J`, constraints matrix</span>
-<span class="sd">    </span>
-<span class="sd">    * `applyConstraints`: if `True` then augmentated state matrix </span>
-<span class="sd">        A = [[A,J.T],[J,0]] will be returned</span>
-<span class="sd">        </span>
+<span class="sd">                </span>
 <span class="sd">    * `saveAsAttr`: if `True` state matrix returned will also be saved as </span>
 <span class="sd">      an object instance attribute</span>
 <span class="sd">    </span>
@@ -2618,45 +2722,23 @@ class attributes will be used.</em></p>
     <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">J</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">nDOF</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">nDOF</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
 
     <span class="c1"># Check shape of system matrices</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">M_mtrx</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
                               <span class="n">C_mtrx</span><span class="o">=</span><span class="n">C</span><span class="p">,</span>
                               <span class="n">K_mtrx</span><span class="o">=</span><span class="n">K</span><span class="p">,</span>
+                              <span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                               <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">)</span>
     
-    <span class="c1"># Assemble state matrix A=[[0,I],[-Minv*K,-Minv*C]]</span>
+    <span class="c1"># Assemble state matrix</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">Minv</span> <span class="o">=</span> <span class="n">calc_state_matrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">)</span>
     
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-        <span class="n">Minv</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
-        <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nDOF</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">Minv</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
-        <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nDOF</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-        <span class="n">_A</span> <span class="o">=</span> <span class="p">[[</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">I</span><span class="p">),</span><span class="n">I</span><span class="p">],[</span><span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">K</span><span class="p">,</span> <span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">C</span><span class="p">]]</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
-        
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">_A</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">None</span><span class="p">,</span><span class="n">I</span><span class="p">],[</span><span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">K</span><span class="p">,</span> <span class="o">-</span><span class="n">Minv</span> <span class="err">@</span> <span class="n">C</span><span class="p">]]</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="n">applyConstraints</span><span class="p">:</span>
-        
-        <span class="c1"># Augment with constraints</span>
-        <span class="n">_A</span> <span class="o">=</span> <span class="p">[[</span><span class="n">A</span><span class="p">,</span><span class="n">J</span><span class="o">.</span><span class="n">T</span><span class="p">],[</span><span class="n">J</span><span class="p">,</span><span class="bp">None</span><span class="p">]]</span>
-    
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-            <span class="n">npy</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">A</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">_A</span><span class="p">)</span>
     <span class="c1"># Save as attribute</span>
     <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_A_mtrx</span> <span class="o">=</span> <span class="n">A</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Minv</span> <span class="o">=</span> <span class="n">Minv</span>
+    
     <span class="k">return</span> <span class="n">A</span>     
 </pre></div>
 
@@ -2776,7 +2858,7 @@ system, including any sub-systems, is full rank</p></div>
             
   <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.CheckOutputMtrx">
-    <p>def <span class="ident">CheckOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None)</p>
+    <p>def <span class="ident">CheckOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, verbose=False)</p>
     </div>
     
 
@@ -2788,7 +2870,8 @@ system, including any sub-systems, is full rank</p></div>
   <div id="source-msd_chain.MSD_Chain.CheckOutputMtrx" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                    <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                    <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks that all defined output matrices are of the correct shape</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2799,7 +2882,19 @@ system, including any sub-systems, is full rank</p></div>
         
     <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
-            
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CheckOutputMtrx() method invoked:&quot;</span><span class="p">)</span>
+    
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;output_mtrx:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;output_names:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    
     <span class="c1"># Check list lengths agree</span>
     
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span><span class="o">!=</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
@@ -2926,7 +3021,7 @@ following ODE:</p>
     <span class="c1"># Get input force at time t</span>
     <span class="n">f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">forceFunc</span><span class="p">(</span><span class="n">t</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
     
-    <span class="c1"># Calculate net force (excluding constraint forces)</span>
+    <span class="c1"># Calculate net force (excluding constraint forces</span>
     <span class="n">f_net</span> <span class="o">=</span> <span class="n">f</span> <span class="o">-</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ydot</span><span class="p">)</span>
     
     <span class="c1"># Solve for accelerations</span>
@@ -2966,8 +3061,74 @@ following ODE:</p>
   
             
   <div class="item">
+    <div class="name def" id="msd_chain.MSD_Chain.GetLoadMatrix">
+    <p>def <span class="ident">GetLoadMatrix</span>(</p><p>self, recalculate=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Helper function to obtain load matrix, if already calculated 
+and held as attribute. Otherwise load matrix will be recalculated</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.GetLoadMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-msd_chain.MSD_Chain.GetLoadMatrix" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetLoadMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to obtain load matrix, if already calculated </span>
+<span class="sd">    and held as attribute. Otherwise load matrix will be recalculated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;_B_mtrx&quot;</span>
+    
+    <span class="k">if</span> <span class="n">recalculate</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcLoadMatrix</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="msd_chain.MSD_Chain.GetStateMatrix">
+    <p>def <span class="ident">GetStateMatrix</span>(</p><p>self, recalculate=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Helper function to obtain state matrix, if already calculated 
+and held as attribute. Otherwise state matrix will be recalculated</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.GetStateMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-msd_chain.MSD_Chain.GetStateMatrix" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to obtain state matrix, if already calculated </span>
+<span class="sd">    and held as attribute. Otherwise state matrix will be recalculated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;_A_mtrx&quot;</span>
+    
+    <span class="k">if</span> <span class="n">recalculate</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcStateMatrix</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.GetSystemMatrices">
-    <p>def <span class="ident">GetSystemMatrices</span>(</p><p>self, createNewSystem=True)</p>
+    <p>def <span class="ident">GetSystemMatrices</span>(</p><p>self, createNewSystem=False)</p>
     </div>
     
 
@@ -2980,7 +3141,7 @@ be accessed directly, except by member functions</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.GetSystemMatrices', this);">Show source &equiv;</a></p>
   <div id="source-msd_chain.MSD_Chain.GetSystemMatrices" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">createNewSystem</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">createNewSystem</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to retrieve system matrices, which are not usually to </span>
 <span class="sd">    be accessed directly, except by member functions</span>
@@ -3289,7 +3450,7 @@ C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</stro
             
   <div class="item">
     <div class="name def" id="msd_chain.MSD_Chain.freqVals">
-    <p>def <span class="ident">freqVals</span>(</p><p>self, f_salient=None, nf_pad=100, fmax=None)</p>
+    <p>def <span class="ident">freqVals</span>(</p><p>self, f_salient=None, nf_pad=400, fmax=None)</p>
     </div>
     
 
@@ -3310,7 +3471,7 @@ Define frequency values to evaluate frequency response G(f) at</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.freqVals', this);">Show source &equiv;</a></p>
   <div id="source-msd_chain.MSD_Chain.freqVals" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">freqVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">f_salient</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">nf_pad</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">freqVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">f_salient</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">nf_pad</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span><span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;&quot;</span>
 <span class="sd">    Define frequency values to evaluate frequency response G(f) at</span>
 <span class="sd">    ***</span>
@@ -3324,9 +3485,15 @@ Define frequency values to evaluate frequency response G(f) at</p>
     
     <span class="c1"># Obtain f_salient</span>
     <span class="k">if</span> <span class="n">f_salient</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">f_salient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span>
+        
+        <span class="c1"># Peaks are at _damped_ natural frequencies (note: not undamped)</span>
+        <span class="n">f_salient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span>
         <span class="n">f_salient</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">f_salient</span><span class="p">)</span>
-        <span class="c1">#print(&quot;Salient frequencies: \n{0}&quot;.format(f_salient))</span>
+        
+        <span class="c1"># Extend beyond min/max f_n value</span>
+        <span class="n">f_salient</span> <span class="o">=</span> <span class="n">f_salient</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">f_salient</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">f_salient</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">f_salient</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">f_salient</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">f_salient</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f_salient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">f_salient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">f_salient</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
     
     <span class="c1"># Flatten input</span>
     <span class="n">f_salient</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">f_salient</span><span class="p">)</span>

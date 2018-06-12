@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Classes used to define linear dynamic systems
+
+@author: rihy
 """
 
 from __init__ import __version__ as currentVersion
@@ -9,6 +11,7 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import pandas as pd
 import matplotlib.pyplot as plt
+import scipy
 
 import deprecation # not in anaconda distribution - obtain this from pip
 #@deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
@@ -174,6 +177,7 @@ class DynSys:
                              M_mtrx=None,
                              C_mtrx=None,
                              K_mtrx=None,
+                             checkConstraints=True,
                              J_dict=None):
         """
         Function carries out shape checks on system matrices held as class 
@@ -210,18 +214,22 @@ class DynSys:
                              + "Shape: {0}".format(K_mtrx))
             
         # Check shape of all constraints matrices
-        for key, J_mtrx in J_dict.items():
-            
-            if J_mtrx.shape[1]!=nDOF:    
-                raise ValueError("Error: J matrix column dimension inconsistent!\n"
-                                 + "Shape: {0}\n".format(J_mtrx.shape)  
-                                 + "J_mtrx: {0}".format(J_mtrx))
+        if checkConstraints:
+            for key, J_mtrx in J_dict.items():
+                
+                if J_mtrx.shape[1]!=nDOF:    
+                    raise ValueError("Error: J matrix column dimension " + 
+                                     "inconsistent!\n"
+                                     + "Shape: {0}\n".format(J_mtrx.shape)  
+                                     + "J_mtrx: {0}".format(J_mtrx))
             
         return True
     
+    
     def CheckOutputMtrx(self,
                         output_mtrx=None,
-                        output_names=None):
+                        output_names=None,
+                        verbose=False):
         """
         Checks that all defined output matrices are of the correct shape
         """
@@ -232,7 +240,19 @@ class DynSys:
             
         if output_names is None:
             output_names = self.output_names
-                
+        
+        if verbose:
+            
+            print("\nCheckOutputMtrx() method invoked:")
+        
+            print("output_mtrx:")
+            print(output_mtrx.shape)
+            
+            print("output_names:")
+            print(output_names)
+            
+            print("")
+        
         # Check list lengths agree
         
         if len(output_names)!=output_mtrx.shape[0]:
@@ -279,7 +299,8 @@ class DynSys:
     def AddOutputMtrx(self,
                       output_mtrx=None,
                       output_names=None,
-                      fName='outputs.csv'):
+                      fName='outputs.csv',
+                      verbose=False):
         """
         Appends `output_mtrx` to `outputsList`
         ***
@@ -305,8 +326,19 @@ class DynSys:
         self.output_mtrx = npy.append(self.output_mtrx,output_mtrx,axis=0)
         self.output_names += output_names
         
+        if verbose:
+            
+            print("AddOutputMtrx() method invoked.")
+            
+            print("Updated output matrix shape:")
+            print(self.output_mtrx.shape)
+            
+            print("Updated output names list:")
+            print(self.output_names)
+        
         # Check dimensions of all output matrices defined
         self.CheckOutputMtrx()
+        
     
     def PrintSystemMatrices(self,printShapes=True,printValues=False):
         """
@@ -364,7 +396,7 @@ class DynSys:
                     print("")
     
 
-    def GetSystemMatrices(self,createNewSystem=True):
+    def GetSystemMatrices(self,createNewSystem=False):
         """
         Function is used to retrieve system matrices, which are not usually to 
         be accessed directly, except by member functions
@@ -530,12 +562,10 @@ class DynSys:
             
             
     def CalcStateMatrix(self,
-                        applyConstraints:bool=False,
                         saveAsAttr:bool=True,
                         M=None,
                         C=None,
                         K=None,
-                        J=None,
                         nDOF=None):
         """
         Assembles the continous-time state matrix `A_mtrx` used in state-space 
@@ -550,14 +580,6 @@ class DynSys:
         matrix, **K** is the system stiffness matrix and **I** is an 
         identity matrix.
         
-        When constraint equations **J** are defined, the following augmented 
-        form is obtained:
-            
-        $$ A' = [[A, J^{T}],[J,0]] $$
-        
-        Given system matrices are of shape _[N,N]_, **A** is of shape _[2N,2N]_. 
-        If _m_ constraints are defined then **A'** is of shape _[2N+m,2N+m]_.
-        
         ***
         Optional:
             
@@ -569,12 +591,7 @@ class DynSys:
         * `C`, damping matrix
         
         * `K`, stiffness matrix
-        
-        * `J`, constraints matrix
-        
-        * `applyConstraints`: if `True` then augmentated state matrix 
-            A = [[A,J.T],[J,0]] will be returned
-            
+                    
         * `saveAsAttr`: if `True` state matrix returned will also be saved as 
           an object instance attribute
         
@@ -587,48 +604,38 @@ class DynSys:
         if M is None: M = d["M_mtrx"]
         if C is None: C = d["C_mtrx"]
         if K is None: K = d["K_mtrx"]
-        if J is None: J = d["J_mtrx"]
         if nDOF is None: nDOF = d["nDOF"]
     
         # Check shape of system matrices
         self._CheckSystemMatrices(M_mtrx=M,
                                   C_mtrx=C,
                                   K_mtrx=K,
+                                  checkConstraints=False,
                                   nDOF=nDOF)
         
-        # Assemble state matrix A=[[0,I],[-Minv*K,-Minv*C]]
+        # Assemble state matrix
+        A, Minv = calc_state_matrix(M=M,K=K,C=C,isSparse=self.isSparse)
         
-        if not self.isSparse:
-            Minv = npy.linalg.inv(M)
-            I = npy.identity(nDOF)
-        else:
-            Minv = sparse.linalg.inv(M)
-            I = sparse.identity(nDOF)
-        
-        if not self.isSparse:
-            _A = [[npy.zeros_like(I),I],[-Minv @ K, -Minv @ C]]
-            A = npy.bmat(_A)
-            
-        else:
-            _A = [[None,I],[-Minv @ K, -Minv @ C]]
-            A = sparse.bmat(_A)
-        
-        if applyConstraints:
-            
-            # Augment with constraints
-            _A = [[A,J.T],[J,None]]
-        
-            if not self.isSparse:
-                npy.bmat(_A)
-                
-            else:
-                A = sparse.bmat(_A)
-
         # Save as attribute
         if saveAsAttr:
             self._A_mtrx = A
-
+            self._Minv = Minv
+        
         return A     
+    
+    
+    def GetStateMatrix(self,recalculate=True):
+        """
+        Helper function to obtain state matrix, if already calculated 
+        and held as attribute. Otherwise state matrix will be recalculated
+        """
+        
+        attr = "_A_mtrx"
+        
+        if recalculate or not hasattr(self,attr):
+            return self.CalcStateMatrix()
+        else:
+            return getattr(self,attr)
     
     
     def CalcLoadMatrix(self,
@@ -658,33 +665,33 @@ class DynSys:
         """
         
         # Retrieve system matrices
-        if M is None: M = self.M_mtrx
+        if M is None: M = self._M_mtrx
         
         self._CheckSystemMatrices(M_mtrx=M)
         
-        # Assemble load matrix B=[[0],[M]]
-        if not self.isSparse:
-            Minv = npy.linalg.inv(M)
-        else:
-            Minv = sparse.linalg.inv(M)
-            
-        
-        
-        if not self.isSparse:
-            B1 = npy.zeros_like(Minv)
-            B2 = Minv
-            B = npy.vstack((B1,B2))
-            
-        else:
-            _B = [[None],[Minv]]
-            B = sparse.bmat(_B)
+        B, Minv = calc_load_matrix(M=M,isSparse=self.isSparse)
         
         # Save as attribute
         if saveAsAttr:
             self._B_mtrx = B
+            self._Minv = Minv
             
         return B
     
+    
+    def GetLoadMatrix(self,recalculate=False):
+        """
+        Helper function to obtain load matrix, if already calculated 
+        and held as attribute. Otherwise load matrix will be recalculated
+        """
+        
+        attr = "_B_mtrx"
+        
+        if recalculate or not hasattr(self,attr):
+            return self.CalcLoadMatrix()
+        else:
+            return getattr(self,attr)
+            
     
     def EqnOfMotion(self,x, t,
                     forceFunc,
@@ -766,7 +773,7 @@ class DynSys:
         # Get input force at time t
         f = npy.asmatrix(forceFunc(t)).T
         
-        # Calculate net force (excluding constraint forces)
+        # Calculate net force (excluding constraint forces
         f_net = f - K.dot(y) - C.dot(ydot)
         
         # Solve for accelerations
@@ -801,8 +808,9 @@ class DynSys:
         
     def CalcEigenproperties(self,
                             normaliseEigenvectors=True,
-                            ax=None,
-                            showPlots=False):
+                            verbose=False,
+                            makePlots=False,
+                            axarr=None):
         """
         General method for determining damped eigenvectors and eigenvalues 
         of system
@@ -811,47 +819,97 @@ class DynSys:
         Note in general eigenproperties will be complex due to non-proportional
         damping.
         
-        Eigendecomposition of the system state matrix `A_mtrx` is carried out to 
+        Eigendecomposition of the system state matrix 'A' is carried out to 
         obtain eigenvalues and displacement-velocity eigenvectors.
         
+        Engineers who are not familiar with the background theory should read
+        the following excellent paper:
+            
+        *An Engineering Interpretation of the Complex 
+        Eigensolution of Linear Dynamic Systems*
         
-        **Important Note**: this function cannot (currently) be used for 
-        systems with constraint equations. An exception will be raised.
+        by Christopher Hoen. 
         
+        [PDF](../references/An Engineering Interpretation of the Complex 
+        Eigensolution of Linear Dynamic Systems.pdf)
+        
+        ***
+        **Required:**
+            
+        No arguments; the mass, stiffness, damping and (if defined) constraint 
+        matrices held as attributes of the system will be used.
+        
+        ***
+        **Optional:**
+            
+        * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors 
+          should be normalised, such that Y.T @ X = I
+          
+        * `makePlots`, _boolean_, if True plots will be produced to illustrate 
+          the eigensolution obtained
+          
+        * `axarr`, list of _axes_ onto which plots should be made. If None 
+          plots will be made onto new figures
+          
+        * `verbose`, _boolean_, if True intermediate output & text will be 
+          printed to the console
+         
+        ***
+        **Returns:**
+             
+        _Dict_ containing the following entries:
+            
+        * 's', _array_ containing the eigenvalues of 'A'
+        
+        * 'X', _matrix_, the columns of which are the right-eigenvectors of 'A'
+        
+        * 'Y', _matrix_, the columns of which are the left-eigenvectors of 'A'
+        
+        The above entries will in general be complex-valued and represent the 
+        eigenproperties of 'A'.
+        
+        The following entries are real-valued and 
+        express the complex eigenvalues 's' in terms which should be more 
+        familiar to structural/mechanical engineers:
+        
+        * 'f_n', _array_ of _undamped natural frequencies_, in Hz. 
+          
+        Note as 's' comprises conjugate pairs, there will be N pairs of 
+        positive and negative frequencies for a system with N degrees of 
+        freedom (i.e. 'A' matrix of shape [2N x 2N])
+          
+        * 'f_d', _array_ of _damped_ natural frequencies_, in Hz
+        
+        * 'w_n', 'w_d'; circular natural natural frequencies related to the 
+          above, in rad/s
+          
+        * 'eta', damping ratio (1.0=critical)
+                
         """
         
-        # Check for constraints
+        # Get system matrices
+        d = self.GetSystemMatrices()
+        M = d["M_mtrx"]
+        K = d["K_mtrx"]
+        C = d["C_mtrx"]
+        
         if self.hasConstraints():
-            raise ValueError("Error: cannot (currently) use function " + 
-                             "'CalcEigenproperties' for systems " + 
-                             "with constraints"
-                             )
-        
-        # Assemble continous-time state matrix A
-        A_c = self.CalcStateMatrix()
-        
-        if self.isSparse:
-            A_c = A_c.todense()
-        
-        # Eigenvalue decomposition of continuous-time system matrix A
-        s,X = npy.linalg.eig(A_c)               # s is vector of singular values, columns of X are right eigenvectors of A
-        s_left,Y = npy.linalg.eig(A_c.T)        # s is vector of singular values, columns of Y are left eigenvectors of A
-        X = npy.asmatrix(X)
-        Y = npy.asmatrix(Y)
-        
-        # Determine left and right eigenvalues which correspond to one-another
-        right_indexs = npy.argsort(s)
-        left_indexs = npy.argsort(s_left)
-        s = s[right_indexs]
-        s_left = s_left[left_indexs]
-        X = X[:,right_indexs]
-        Y = Y[:,left_indexs]
-                
+            J = d["J_mtrx"]
+        else:
+            J = None
+            
+        # Compute eigenproperties of A_c
+        # s is vector of singular values
+        # columns of X are right eigenvectors of A
+        # columns of Y are left eigenvectors of A  
+        s,Y,X = solve_eig(M=M,K=K,C=C,J=J,verbose=verbose)
+            
+        # Normalise eigenvectors such that Y.T.X=I
         if normaliseEigenvectors:
-            X,Y = self._NormaliseEigenvectors(X,Y)
+            X,Y = NormaliseEigenvectors(X,Y)
         
         # Extract modal properties of system from eigenvalues
-        f_n_abs, f_n, f_d, eta = self._RealEigenvalueProperties(s)
+        f_n_abs, f_n, f_d, eta = RealEigenvalueProperties(s)
 
         # Sort eigenvalues into ascending order of f_n_abs
         i1 = npy.argsort(f_n_abs)
@@ -870,11 +928,17 @@ class DynSys:
         self.f_d = f_d
         self.eta = eta
         
-        if showPlots:
-            self._OrthogonalityPlot(ax=ax)
-            self._EigenvaluePlot(ax=ax,plotType=1)
-            self._EigenvaluePlot(ax=ax,plotType=2)
-            self._EigenvaluePlot(ax=ax,plotType=4)
+        ax_list = []
+        
+        if makePlots:
+            
+            if axarr is None:
+                axarr = [None,None,None,None]
+                
+            ax_list.append(self._OrthogonalityPlot(ax=axarr[0]))
+            ax_list.append(self._EigenvaluePlot(ax=axarr[1],plotType=1))
+            ax_list.append(self._EigenvaluePlot(ax=axarr[2],plotType=2))
+            ax_list.append(self._EigenvaluePlot(ax=axarr[3],plotType=4))
         
         # Return complex eigensolution as dict
         d={}
@@ -887,51 +951,13 @@ class DynSys:
         d["f_d"]=f_d
         d["w_d"]=angularFreq(f_d)
         
+        d["ax_list"]=ax_list
+        
         return d 
     
-    def _RealEigenvalueProperties(self,s=None):
-        """
-        Recovers real-valued properties from complex eigenvalues
-        """
-        
-        if s is None:
-            s = self.s
-        
-        f_d = npy.imag(s) / (2*npy.pi)             # damped natural frequency
-        eta = - npy.real(s) / npy.absolute(s)      # damping ratio
-        
-        f_n_abs = npy.absolute(s) / (2*npy.pi)     # undamped natural frequency
-        f_n = npy.sign(f_d) * f_n_abs              # recovers sign of frequency
-        
-        return f_n_abs, f_n, f_d, eta
+    
      
-    def _NormaliseEigenvectors(self,X=None,Y=None):
-        """
-        Normalise eigenvectors such that YT.X=I
-        
-        Optional arguments:
-        
-        * `X`: Numpy matrix, the columns of which are right-eigenvectors
-        * `Y`: Numpy matrix, the columns of which are left-eigenvectors
-        
-        """
-        
-        if X is None:
-            X = self.X
-            
-        if Y is None:
-            Y = self.Y
-        
-        d = npy.diagonal(Y.T * X)**0.5
-        
-        if d.any() != 0:
-            X = X / d
-            Y = Y / d
-        
-        self.X = X
-        self.Y = Y
-                    
-        return X, Y
+    
     
     def _EigenvaluePlot(self,
                         ax=None,
@@ -961,7 +987,7 @@ class DynSys:
         else:
             fig = ax.gcf()
             
-        f_n_abs,f_n,f_d,eta = self._RealEigenvalueProperties(s)
+        f_n_abs,f_n,f_d,eta = RealEigenvalueProperties(s)
             
         if plotType == 1:
             
@@ -976,13 +1002,19 @@ class DynSys:
             ax.plot(range(len(f_n_abs)),f_n_abs)
             ax.set_xlabel("Mode index")
             ax.set_ylabel("Undamped natural frequency (Hz)")
+            ax.set_title("Natural frequencies vs mode index")
             
         elif plotType == 4:
             
             ax.plot(f_n,eta,'.b')
+            ax.set_xlabel("Frequency (Hz)")
+            ax.set_ylabel("Damping ratio")
+            ax.set_title("Pole frequency vs damping ratio plot")
             
         else:
             raise ValueError("Error: unexpected plotType requested!")
+            
+        return ax
             
     
     def _OrthogonalityPlot(self,ax=None,X=None,Y=None):
@@ -1011,6 +1043,9 @@ class DynSys:
         im = ax.imshow(npy.absolute(Y.T*X),interpolation='none',cmap='Greys')
         fig.colorbar(im)
         ax.set_title("Y.T * X product")
+        
+        return ax
+        
     
     def CheckDOF(self,DOF):
         """
@@ -1031,6 +1066,7 @@ class DynSys:
         
         return True
     
+    
     def hasConstraints(self)->bool:
         """
         Tests whether constraint equations are defined
@@ -1040,6 +1076,7 @@ class DynSys:
             return True
         else:
             return False
+    
     
     def CheckConstraints(self,J=None,verbose=True,raiseException=True)->bool:
         """
@@ -1089,6 +1126,7 @@ class DynSys:
             if verbose: print("Constraints are independent, as required")
                     
             return True
+    
     
     def AppendSystem(self,
                      child_sys,
@@ -1254,7 +1292,7 @@ class DynSys:
         
         
     
-    def freqVals(self,f_salient=None,nf_pad:int=100,fmax=None):
+    def freqVals(self,f_salient=None,nf_pad:int=400,fmax=None):
         """"
         Define frequency values to evaluate frequency response G(f) at
         ***
@@ -1268,9 +1306,15 @@ class DynSys:
         
         # Obtain f_salient
         if f_salient is None:
-            f_salient = self.CalcEigenproperties()["f_n"]
+            
+            # Peaks are at _damped_ natural frequencies (note: not undamped)
+            f_salient = self.CalcEigenproperties()["f_d"]
             f_salient = npy.sort(f_salient)
-            #print("Salient frequencies: \n{0}".format(f_salient))
+            
+            # Extend beyond min/max f_n value
+            f_salient = f_salient.tolist()
+            f_salient.insert(0, f_salient[0] - 0.5*(f_salient[1]-f_salient[0]))
+            f_salient.append(f_salient[-1] + 0.5*(f_salient[-1]-f_salient[-2]))
         
         # Flatten input
         f_salient = npy.ravel(f_salient)
@@ -1301,11 +1345,11 @@ class DynSys:
     
     # Define frequency response
     def CalcFreqResponse(self,
-                         fVals=None,
-                         fmax=None,
-                         A_mtrx=None,
-                         B_mtrx=None,
-                         output_mtrx=None
+                         fVals=None, fmax=None,
+                         A=None, B=None, 
+                         C=None, D=None,
+                         force_accn:bool=False,
+                         verbose=False
                          ):
         """
         Evaluates frequency response G(f) at specified frequencies
@@ -1322,47 +1366,82 @@ class DynSys:
         If `None` (default) then frequencies list will be obtained using 
         `freqVals()` member function.
         
-        * `A_mtrx`, `B_mtrx`: allows overriding of system and load matrices 
+        * `A`, `B`: allows overriding of system and load matrices 
         held as attributes.
         
-        * `output_mtrx`: allows custom output matrix (or list of output 
-        matrices) to be provided. Otherwise `output_mtrx` attribute will be 
-        used, if defined. Otherwise an exception will be raised.
+        * `C`, `D`: allows custom output matrices to be provided. 
+        If None, `output_mtrx` attribute will be used as `C` and `D` 
+        will be ignored.
+        
+        * `force_accn`, _boolean_,  can be set to override the above behaviour 
+        and obtain frequency transfer matrix relating applied forces to 
+        accelerations of the DOFs. E.g. for modal systems, modal acceleration 
+        transfer matrix can be obtained in this way
         
         """
+        
+        if verbose: print("Calculating frequency response matrices..")
+        
+        nDOF = self.nDOF
+        
         # Handle optional arguments
         if fVals is None:
             fVals = self.freqVals(fmax=fmax)
             
         fVals = npy.ravel(fVals)
         
-        if A_mtrx is None:
-            A_mtrx = self.CalcStateMatrix()
+        if A is None:
+            A = self.GetStateMatrix(recalculate=True)
             
-        if B_mtrx is None:
-            B_mtrx = self.CalcLoadMatrix()
-            
-        # Get output matrix
-        if output_mtrx is None:
-            output_mtrx = self.output_mtrx
-                
-        # Obtain only the part of the output matrix relating to state variables
-        nDOF = self.nDOF
-        output_mtrx = output_mtrx[:,:2*nDOF]
+        if B is None:
+            B = self.GetLoadMatrix(recalculate=True)
         
-        if output_mtrx.shape[0]==0:
-            print("***\nWarning: no output matrix defined. "+
-                  "Identity matrix will be used instead\n"+
-                  "Output matrix Gf will hence relate to state variables\n***")
-            output_mtrx = npy.identity(2*nDOF)
+        # Get output matrices
+        if C is None:
+            
+            C = self.output_mtrx
+                    
+        if C.shape[0]==0:
+            if verbose:
+                print("***\nWarning: no output matrix defined. "+
+                      "Output matrix Gf will hence relate to state " + 
+                      "displacements and velocities\n***")
+            
+            C = npy.identity(2*nDOF)
+            
+        # Retain only columns relating to state variables (disp, vel)
+        C = C[:,:2*nDOF]
+            
+        # Override the above 
+        if force_accn:
+            
+            #print("`force_accn` invoked; frequency response function relates" + 
+            #      " applied forces to DOF accelerations")
+            
+            # Get system matrices and output matrices
+            nDOF = self.nDOF
+            C = A[nDOF:2*nDOF,:] # rows relating to accelerations
+            D = B[nDOF:2*nDOF,:] # rows relating to accelerations
         
         # Determine number of inputs and frequencies
-        Ni = B_mtrx.shape[1]
+        Ni = B.shape[1]
         nf = len(fVals)
         
         # Determine number of outputs
-        No = output_mtrx.shape[0]
+        No = C.shape[0]
         
+        # Print shapes of all arrays
+        if verbose:
+            print("Shapes of A B C D matrices:")
+            print("A: {0}".format(A.shape))
+            print("B: {0}".format(B.shape))
+            print("C: {0}".format(C.shape))
+        
+            if D is not None:
+                print("D: {0}".format(D.shape))
+            else:
+                print("D: None")
+            
         # Define array to contain frequency response for each 
         G_f = npy.zeros((No,Ni,nf),dtype=complex)
         
@@ -1374,15 +1453,24 @@ class DynSys:
             
             # Define G(jw) at this frequency
             if not self.isSparse:
-                Gf = output_mtrx* npy.linalg.inv(jw * npy.identity(A_mtrx.shape[0]) - A_mtrx) * B_mtrx
-            else:
-                Gf = output_mtrx * sparse.linalg.inv(jw * sparse.identity(A_mtrx.shape[0]) - A_mtrx) * B_mtrx
+                I = npy.identity(A.shape[0])
+                Gf = C * npy.linalg.inv(jw * I - A) * B
                 
+            else:
+                I = sparse.identity(A.shape[0])
+                Gf = C * sparse.linalg.inv(jw * I - A) * B
+                
+            if D is not None:
+                Gf += D    
+            
             # Store in array
             G_f[:,:,i] = Gf
+            
+        print("Done!")
         
         # Return values
         return fVals, G_f
+    
     
     def PlotSystems_all(self,ax,**kwargs):
         """
@@ -1390,6 +1478,7 @@ class DynSys:
         all systems and subsystems
         """
         return None
+    
     
     def PlotSystem(self,ax,**kwargs):
         """
@@ -1506,6 +1595,267 @@ def SDOF_frequency(M,K):
 
 
 
+def null_space(A, rcond=None):
+    """
+    Copy of source code from 
+    https://docs.scipy.org/doc/scipy/
+    reference/generated/scipy.linalg.null_space.html
+    
+    Included in Scipy v1.1.0
+    
+    For now recreate here
+    In future should just use Scipy function!
+    """
+    u, s, vh = scipy.linalg.svd(A, full_matrices=True)
+    
+    M, N = u.shape[0], vh.shape[1]
+    
+    if rcond is None:
+        rcond = npy.finfo(s.dtype).eps * max(M, N)
+        
+    tol = npy.amax(s) * rcond
+    
+    num = npy.sum(s > tol, dtype=int)
+    
+    Q = vh[num:,:].T.conj()
+    
+    return Q
+
+
+def calc_state_matrix(M,K,C,Minv=None,isSparse=False):
+    """
+    Assembles _state matrix_ as used in state-space representation of 
+    equation of motion
+    
+    $$ A = [[0,I],[-M^{-1}K,-M^{-1}C]] $$
+        
+    where **M** is the system mass matrix, **C** is the system damping 
+    matrix, **K** is the system stiffness matrix and **I** is an 
+    identity matrix.
+    
+    ***
+    Required:
+        
+    * `M`, mass matrix **M**, shape [n x n]
+    
+    * `K`, stiffness matrix **K**, shape [n x n]
+    
+    * `C`, damping matrix **C**, shape [n x n]
+    
+    ***
+    Optional:
+        
+    * `Minv`, inverse mass matrix, shape [nxn]; can be supplied to avoid need 
+      to calculate inverse of `M` within this function
+    
+    * `isSparse`, _boolean_, if 'True' sparse matrix methods to be used
+    
+    ***
+    Returns:
+        
+    * `A`, state matrix, shape [2n x 2n]
+    
+    * `Minv`, inverse mass matrix, shape [n x n]
+    
+    """
+    
+    nDOF = M.shape[0]
+    
+    if not isSparse:
+        
+        if Minv is None:
+            Minv = npy.linalg.inv(M)
+            
+        I = npy.identity(nDOF)
+        z = npy.zeros_like(I)
+        A = npy.bmat([[z,I],[-Minv @ K, -Minv @ C]])
+        
+    else:
+        
+        if Minv is None:
+            Minv = sparse.linalg.inv(M)
+            
+        I = sparse.identity(nDOF)
+        A = sparse.bmat([[None,I],[-Minv @ K, -Minv @ C]])
+                
+    return A, Minv
+
+
+def calc_load_matrix(M,Minv=None,isSparse=False):
+    """
+    Assembles _load matrix_ as used in state-space representation of 
+    equation of motion
+
+    $$ B = [[0],[M^{-1}]] $$
+    
+    where **M** is the system mass matrix.
+    
+    ***
+    Required:
+                
+    * `M`, mass matrix, shape [n x n]
+    
+    ***
+    Optional:
+        
+    * `Minv`, inverse mass matrix, shape [n x n]; can be supplied to avoid need 
+      to calculate inverse of `M` within this function
+    
+    * `isSparse`, _boolean_, if 'True' sparse matrix methods to be used
+    
+    ***
+    Returns:
+        
+    * `B`, load matrix, shape [2n x n]
+    
+    """
+
+    if not isSparse:
+        if Minv is None:
+            Minv = npy.linalg.inv(M)
+        B = npy.vstack((npy.zeros_like(Minv),Minv))
+        
+    else:
+        if Minv is None:
+            Minv = sparse.linalg.inv(M)
+        B = sparse.bmat([[None],[Minv]])
+        
+    return B, Minv
+
+
+def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
+    """
+    Solves for eigenproperties of _state matrix_ 'A', using scipy.linalg.eig() 
+    method
+    ***
+    
+    Where constraints are defined via **J** matrix, system matrices are 
+    projected onto the null space of **J**, to give an unconstrained 
+    eigenproblem in matrix **A'**, shape [2(n-m) x 2(n-m)], i.e. of reduced 
+    dimensions.
+    
+    Eigenproperties of **A'** are computed and converted to give 
+    eigenproperties of **A**.
+                         
+    ***
+    Required:
+        
+    * `M`, `C`, `K`; system mass, damping and stiffness matrices, 
+       all of shape [n x n]
+    
+    * `J`, rectangular matrix of dimensions [m x n], m<n, defining a set of _m_ 
+      independent linear constraints
+             
+    ***
+    Returns:
+        
+    * `s`, _array_, shape (2n,), eigenvalues of 'A'
+    
+    * `Y`, _matrix_, shape [2n x 2n], the columns of which are 
+      left-eigenvectors of 'A'
+    
+    * `X`, _matrix_, shape [2n x 2n], the columns of which are 
+      right-eigenvectors of 'A'
+              
+    Note all will in general be complex-valued
+      
+    """
+    
+    if J is not None:
+        constrained=True
+    else:
+        constrained=False
+        
+        
+    if constrained:
+    
+        # Solve for null space of J
+        Z = null_space(J)
+        if verbose: print("Null(J)=Z:\n{0}\n".format(Z))
+    
+        # Compute modified M, C and K matrices
+        M = Z.T @ M @ Z
+        C = Z.T @ C @ Z
+        K = Z.T @ K @ Z
+        
+        if verbose: print("M':\n{0}\n".format(M))
+        if verbose: print("K':\n{0}\n".format(K))
+        if verbose: print("C':\n{0}\n".format(C))
+            
+    # Get state matrix to compute eigenproperties of
+    A, Minv = calc_state_matrix(M,K,C,isSparse=isSparse)
+    if verbose: print("A:\n{0}\n".format(A))
+            
+    # Solve unconstrained eigenproblem
+    s, Y, X = scipy.linalg.eig(a=A,left=True,right=True)
+    Y = npy.asmatrix(Y)
+    X = npy.asmatrix(X)
+    
+    # Scipy routine actually returns conjugate of Y
+    # Refer discussion here:
+    # https://stackoverflow.com/questions/15560905/
+    # is-scipy-linalg-eig-giving-the-correct-left-eigenvectors
+    Y = Y.conj()
+    
+    if verbose: print("X:\n{0}\n".format(X))
+    if verbose: print("Y:\n{0}\n".format(Y))
+            
+    # Recover solution in x
+    # Recall x = Z.y
+    if constrained:
+        
+        zeros = npy.zeros_like(Z)
+        Z2 = npy.vstack((npy.hstack((Z,zeros)),npy.hstack((zeros,Z))))
+        if verbose: print("Z2:\n{0}\n".format(Z2))
+        X = Z2 @ X
+        Y = Z2 @ Y
+        
+    # Normalise eigenvectors such that Y.T @ X = I
+    if normalise:
+        d = npy.diagonal(Y.T @ X)**0.5
+        X = X / d
+        Y = Y / d
+        
+    # Return eigenvalues (poles)
+    # and left and right eigenvector matrices (modeshapes)
+    return s, Y, X
+
+
+def RealEigenvalueProperties(s):
+    """
+    Recovers real-valued properties from complex eigenvalues given
+    by array `s`
+    """
+    
+    f_d = npy.imag(s) / (2*npy.pi)             # damped natural frequency
+    eta = - npy.real(s) / npy.absolute(s)      # damping ratio
+    
+    f_n_abs = npy.absolute(s) / (2*npy.pi)     # undamped natural frequency
+    f_n = npy.sign(f_d) * f_n_abs              # recovers sign of frequency
+    
+    return f_n_abs, f_n, f_d, eta
+
+
+def NormaliseEigenvectors(X,Y):
+    """
+    Normalise eigenvectors such that YT.X=I
+    
+    ***
+    Required:
+    
+    * `X`, Numpy matrix, the columns of which are right-eigenvectors
+    * `Y`, Numpy matrix, the columns of which are left-eigenvectors
+    
+    """
+        
+    d = npy.diagonal(Y.T * X)**0.5
+    
+    if d.any() != 0:
+        X = X / d
+        Y = Y / d
+                    
+    return X, Y
+
 
 def PlotFrequencyResponse(f,G_f,
                           positive_f_only:bool=True,
@@ -1597,20 +1947,23 @@ def PlotFrequencyResponse(f,G_f,
         fmin = 0
     
     # Prepare magnitude plot
-    _ = ax_magnitude
-    _.plot(f,npy.abs(G_f),label=label_str) 
-    _.set_xlabel("Frequency f (Hz)")
-    _.set_ylabel("Magnitude |G(f)|")
-    if label_str is not None: _.legend()
+    if plotMagnitude:
+        _ = ax_magnitude
+        _.plot(f,npy.abs(G_f),label=label_str) 
+        _.set_xlim([fmin,fmax])
+        _.set_xlabel("Frequency f (Hz)")
+        _.set_ylabel("Magnitude |G(f)|")
+        if label_str is not None: _.legend()
     
     # Prepare phase plot
-    _ = ax_phase
-    _.plot(f,npy.angle(G_f),label=label_str)
-    _.set_xlim([fmin,fmax])
-    _.set_ylim([-npy.pi,+npy.pi]) # angles will always be in this range
-    _.set_xlabel("Frequency f (Hz)")
-    _.set_ylabel("Phase G(f) (rad)")
-    if label_str is not None: _.legend()
+    if plotPhase:
+        _ = ax_phase
+        _.plot(f,npy.angle(G_f),label=label_str)
+        _.set_xlim([fmin,fmax])
+        _.set_ylim([-npy.pi,+npy.pi]) # angles will always be in this range
+        _.set_xlabel("Frequency f (Hz)")
+        _.set_ylabel("Phase G(f) (rad)")
+        if label_str is not None: _.legend()
     
     # Overlay vertical lines to denote pole frequencies
 
