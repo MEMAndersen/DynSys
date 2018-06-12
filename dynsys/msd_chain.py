@@ -60,10 +60,16 @@ class MSD_Chain(DynSys):
         Either `C_vals` or `eta_vals` must be provided. If both are provided, 
         `C_vals` will be used.
         
+        Additional keyword arguments may be provided; these will be passed to 
+        `DynSys.__init__()` method; refer [docs](..\docs\dynsys.html) 
+        for that class for further details
+        
         """
 
+        if M_vals is None:
+            raise ValueError("`M_vals` cannot be 'None'")
+
         # Flatten input and establish nDOFs
-        
         M_vals = npy.ravel(npy.asarray(M_vals))
         
         if f_vals is not None:      f_vals = npy.ravel(npy.asarray(f_vals))
@@ -74,35 +80,28 @@ class MSD_Chain(DynSys):
         nDOF = M_vals.shape[0]
         
         # Determine K matrix
-        if f_vals is None:
+        if K_vals is None:
             
-            if K_vals is None:
+            if f_vals is None:
                 raise ValueError("Either `f_vals` or `K_vals` is required")
+                
             else:
                 f_vals = SDOF_frequency(M_vals,K_vals)
-        
-        omega_vals = angularFreq(f_vals)
-                
-        if K_vals is None:
-            K_vals = SDOF_stiffness(M_vals,omega=omega_vals)                
+                omega_vals = angularFreq(f_vals)
+                K_vals = SDOF_stiffness(M_vals,omega=omega_vals)                
         
         # Determine C matrix
-        if eta_vals is None:
-            
-            if C_vals is None:
-                raise ValueError("Either `eta_vals` or `C_vals` is required")
-            
-            else:
-                eta_vals = SDOF_dampingRatio(M_vals,K_vals,C_vals)
-                
         if C_vals is None:
-            C_vals = SDOF_dashpot(M_vals,K_vals,eta_vals)
-        
-        
+            
+            if eta_vals is None:
+                raise ValueError("Either `eta_vals` or `C_vals` is required")
+                
+            else:
+                C_vals = SDOF_dashpot(M_vals,K_vals,eta_vals)
+                    
         # Define system matrices
         
         M_mtrx = npy.asmatrix(npy.diag(M_vals))
-        
         C_mtrx = npy.zeros_like(M_mtrx)
         K_mtrx = npy.zeros_like(M_mtrx)
     
