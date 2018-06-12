@@ -4,11 +4,8 @@
 <a href="http://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>
 and this project adheres to: 
 <a href="http://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
-<p><em>Note</em>: Version numbers correspond to version numbers in .py files. These will 
-in general differ from version numbers maintained by Portal version control 
-system. However major release number will always correspond.</p>
 <hr />
-<h2>Unreleased</h2>
+<h2>[1.2.0] - 2018-06-12 - RIHY</h2>
 <h3>Changed</h3>
 <ul>
 <li>
@@ -17,31 +14,46 @@ system. However major release number will always correspond.</p>
 </li>
 <li>
 <p>Many method previously implemented as class methods of <code>DynSys</code> class now 
-  re-implemented as functions within the <code>dynsys.py</code> module. Class methods still 
-  exist as per previous versions, but these use the public functions to do the work</p>
+  re-implemented as functions within the <code>dynsys.py</code> module. Class methods 
+  still exist as per previous versions, but these use the public functions to 
+  do the work</p>
+</li>
+<li>
+<p>Various misc updates to plotting methods within <code>tstep_results.py</code> module</p>
+</li>
+<li>
+<p>The majority of docstrings have been reviewed/improved, to ensure they 
+  reflect the source code and provide more references to theory, codes etc.</p>
 </li>
 </ul>
 <h3>Added</h3>
 <ul>
 <li>
+<p><code>tutorial.ipynb</code>, a IPython (Jupyter) notebook which provides an introduction 
+  on how to go about using the classes/functions within the package</p>
+</li>
+<li>
 <p>Crowd loading to UK NA to BS EN 1991-2 now implemented</p>
 </li>
 <li>
-<p><code>CalcEigenproperties()</code> method of <code>DynSys</code> class reimplemented to handle systems
-  with constraints. Approach for unconstrained systems similar to previous versions 
-  except scipy.linalg.eig() method now used.</p>
+<p><code>CalcEigenproperties()</code> method of <code>DynSys</code> class reimplemented to handle 
+  systems with constraints. Approach for unconstrained systems similar to 
+  previous versions except <code>scipy.linalg.eig()</code> method now used.</p>
+</li>
+<li>
+<p><code>/tests</code> updated: new test of <code>CalcEigenvalues()</code> method devised</p>
 </li>
 </ul>
 <h3>Fixed</h3>
 <ul>
 <li>
-<p>Bug as noted by BNCY in <code>dyn_analysis.py</code> now fixed. A check of the class name 
-  of <code>loadtrain_obj</code> was being made, but as a result of recent changes this 
-  was checking the derived class name.</p>
+<p>Bug as noted by BNCY in <code>dyn_analysis.py</code> now fixed. A check of the class 
+  name of <code>loadtrain_obj</code> was being made, but as a result of recent changes 
+  this was checking the derived class name.</p>
 </li>
 <li>
-<p><code>trainAnalysis.py</code> updated with minor change to reflect new <code>stats_dict</code> nested
-  dict structure</p>
+<p><code>trainAnalysis.py</code> updated with minor change to reflect new <code>stats_dict</code> 
+  nested dict structure</p>
 </li>
 <li>
 <p>Bug associated with output matrices fixed; was only an issue when re-defining 
