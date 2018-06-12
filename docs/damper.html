@@ -1,4 +1,4 @@
-Version: 1.2.0
+Version: 1.2.0_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1183,12 +1183,20 @@ be appended to another system (e.g. a modal system)</p>
         <span class="c1"># Invoke msd_chain&#39;s init method</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         
+        <span class="c1"># Add output matrix entry to compute relative displacement</span>
+        <span class="c1"># (as this is commonly of interest)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
+        
         
     
 <span class="c1"># TEST ROUTINES</span>
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
     <span class="n">my_tmd</span> <span class="o">=</span> <span class="n">TMD</span><span class="p">(</span><span class="n">sprung_mass</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="n">nat_freq</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span><span class="n">damping_ratio</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">)</span>
+    <span class="n">my_tmd</span><span class="o">.</span><span class="n">PrintSystemMatrices</span><span class="p">(</span><span class="n">printValues</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Output matrix:</span><span class="se">\n</span><span class="s2">{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">my_tmd</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">))</span>
     
 </pre></div>
 
@@ -1279,6 +1287,11 @@ be appended to another system (e.g. a modal system)</p>
     
         <span class="c1"># Invoke msd_chain&#39;s init method</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="c1"># Add output matrix entry to compute relative displacement</span>
+        <span class="c1"># (as this is commonly of interest)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
 </pre></div>
 
   </div>
@@ -1412,6 +1425,11 @@ for that class for further details</p></div>
 
     <span class="c1"># Invoke msd_chain&#39;s init method</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="c1"># Add output matrix entry to compute relative displacement</span>
+    <span class="c1"># (as this is commonly of interest)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                       <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
 </pre></div>
 
   </div>
@@ -2087,7 +2105,7 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
 <a href="../references/Frequency response from state-space representation.pdf">derivation</a> 
 for the basis of the implementation.</p>
 <hr />
-<p>Optional:</p>
+<p><strong>Optional:</strong></p>
 <ul>
 <li>
 <p><code>fVals</code>: <em>array-like</em> of frequencies (Hz) to evaluate G(f) at.
@@ -2109,6 +2127,19 @@ and obtain frequency transfer matrix relating applied forces to
 accelerations of the DOFs. E.g. for modal systems, modal acceleration 
 transfer matrix can be obtained in this way</p>
 </li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<ul>
+<li>
+<p><code>f_vals</code>, <em>array</em> of frequency values to which <code>G_f</code> relates</p>
+</li>
+<li>
+<p><code>G_f</code>, <em>ndarray</em>, usually of shape 
+  (C.shape[0], B.shape[1], f_vals.shape[0]), 
+  i.e. at each frequency there is a matrix described the complex-valued 
+  frequency transfer function mapping applied loads to outputs</p>
+</li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CalcFreqResponse', this);">Show source &equiv;</a></p>
@@ -2129,7 +2160,7 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    </span>
-<span class="sd">    Optional:</span>
+<span class="sd">    **Optional:**</span>
 <span class="sd">        </span>
 <span class="sd">    * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
 <span class="sd">    If `None` (default) then frequencies list will be obtained using </span>
@@ -2146,6 +2177,17 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    and obtain frequency transfer matrix relating applied forces to </span>
 <span class="sd">    accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
 <span class="sd">    transfer matrix can be obtained in this way</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">    </span>
+<span class="sd">    * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
+<span class="sd">    </span>
+<span class="sd">    * `G_f`, _ndarray_, usually of shape </span>
+<span class="sd">      (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
+<span class="sd">      i.e. at each frequency there is a matrix described the complex-valued </span>
+<span class="sd">      frequency transfer function mapping applied loads to outputs</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     

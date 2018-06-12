@@ -1,4 +1,4 @@
-Version: 1.2.0
+Version: 1.2.0_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1032,9 +1032,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1174,10 +1171,16 @@ a chain of SDOF mass-spring-dashpot systems</p>
 <span class="sd">        Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
 <span class="sd">        `C_vals` will be used.</span>
 <span class="sd">        </span>
+<span class="sd">        Additional keyword arguments may be provided; these will be passed to </span>
+<span class="sd">        `DynSys.__init__()` method; refer [docs](..\docs\dynsys.html) </span>
+<span class="sd">        for that class for further details</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="n">M_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`M_vals` cannot be &#39;None&#39;&quot;</span><span class="p">)</span>
+
         <span class="c1"># Flatten input and establish nDOFs</span>
-        
         <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f_vals</span><span class="p">))</span>
@@ -1188,35 +1191,28 @@ a chain of SDOF mass-spring-dashpot systems</p>
         <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         
         <span class="c1"># Determine K matrix</span>
-        <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
-            <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
+                
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
-        
-        <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
-                
-        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
+                <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
+                <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
         
         <span class="c1"># Determine C matrix</span>
-        <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
-            
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="p">)</span>
-                
         <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
-        
-        
+            
+            <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
+                    
         <span class="c1"># Define system matrices</span>
         
         <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
-        
         <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
         <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
     
@@ -1478,10 +1474,16 @@ a chain of SDOF mass-spring-dashpot systems</p>
 <span class="sd">        Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
 <span class="sd">        `C_vals` will be used.</span>
 <span class="sd">        </span>
+<span class="sd">        Additional keyword arguments may be provided; these will be passed to </span>
+<span class="sd">        `DynSys.__init__()` method; refer [docs](..\docs\dynsys.html) </span>
+<span class="sd">        for that class for further details</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="k">if</span> <span class="n">M_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`M_vals` cannot be &#39;None&#39;&quot;</span><span class="p">)</span>
+
         <span class="c1"># Flatten input and establish nDOFs</span>
-        
         <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f_vals</span><span class="p">))</span>
@@ -1492,35 +1494,28 @@ a chain of SDOF mass-spring-dashpot systems</p>
         <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         
         <span class="c1"># Determine K matrix</span>
-        <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
-            <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
+                
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
-        
-        <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
-                
-        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
+                <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
+                <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
         
         <span class="c1"># Determine C matrix</span>
-        <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
-            
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="p">)</span>
-                
         <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
-        
-        
+            
+            <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
+                    
         <span class="c1"># Define system matrices</span>
         
         <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
-        
         <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
         <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
     
@@ -1625,7 +1620,10 @@ the same shape (this is checked).</p>
 </li>
 </ul>
 <p>Either <code>C_vals</code> or <code>eta_vals</code> must be provided. If both are provided, 
-<code>C_vals</code> will be used.</p></div>
+<code>C_vals</code> will be used.</p>
+<p>Additional keyword arguments may be provided; these will be passed to 
+<code>DynSys.__init__()</code> method; refer <a href="..\docs\dynsys.html">docs</a> 
+for that class for further details</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.__init__', this);">Show source &equiv;</a></p>
   <div id="source-msd_chain.MSD_Chain.__init__" class="source">
@@ -1663,9 +1661,14 @@ the same shape (this is checked).</p>
 <span class="sd">    Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
 <span class="sd">    `C_vals` will be used.</span>
 <span class="sd">    </span>
+<span class="sd">    Additional keyword arguments may be provided; these will be passed to </span>
+<span class="sd">    `DynSys.__init__()` method; refer [docs](..\docs\dynsys.html) </span>
+<span class="sd">    for that class for further details</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">M_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`M_vals` cannot be &#39;None&#39;&quot;</span><span class="p">)</span>
     <span class="c1"># Flatten input and establish nDOFs</span>
-    
     <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
     
     <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f_vals</span><span class="p">))</span>
@@ -1676,35 +1679,28 @@ the same shape (this is checked).</p>
     <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     
     <span class="c1"># Determine K matrix</span>
-    <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
-        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
+            
         <span class="k">else</span><span class="p">:</span>
             <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
-    
-    <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
-            
-    <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
+            <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
+            <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
     
     <span class="c1"># Determine C matrix</span>
-    <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
-        
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="p">)</span>
-            
     <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
-    
-    
+        
+        <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
+                
     <span class="c1"># Define system matrices</span>
     
     <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
-    
     <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
     <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
 
@@ -2405,7 +2401,7 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
 <a href="../references/Frequency response from state-space representation.pdf">derivation</a> 
 for the basis of the implementation.</p>
 <hr />
-<p>Optional:</p>
+<p><strong>Optional:</strong></p>
 <ul>
 <li>
 <p><code>fVals</code>: <em>array-like</em> of frequencies (Hz) to evaluate G(f) at.
@@ -2427,6 +2423,19 @@ and obtain frequency transfer matrix relating applied forces to
 accelerations of the DOFs. E.g. for modal systems, modal acceleration 
 transfer matrix can be obtained in this way</p>
 </li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<ul>
+<li>
+<p><code>f_vals</code>, <em>array</em> of frequency values to which <code>G_f</code> relates</p>
+</li>
+<li>
+<p><code>G_f</code>, <em>ndarray</em>, usually of shape 
+  (C.shape[0], B.shape[1], f_vals.shape[0]), 
+  i.e. at each frequency there is a matrix described the complex-valued 
+  frequency transfer function mapping applied loads to outputs</p>
+</li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcFreqResponse', this);">Show source &equiv;</a></p>
@@ -2447,7 +2456,7 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    </span>
-<span class="sd">    Optional:</span>
+<span class="sd">    **Optional:**</span>
 <span class="sd">        </span>
 <span class="sd">    * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
 <span class="sd">    If `None` (default) then frequencies list will be obtained using </span>
@@ -2464,6 +2473,17 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    and obtain frequency transfer matrix relating applied forces to </span>
 <span class="sd">    accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
 <span class="sd">    transfer matrix can be obtained in this way</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">    </span>
+<span class="sd">    * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
+<span class="sd">    </span>
+<span class="sd">    * `G_f`, _ndarray_, usually of shape </span>
+<span class="sd">      (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
+<span class="sd">      i.e. at each frequency there is a matrix described the complex-valued </span>
+<span class="sd">      frequency transfer function mapping applied loads to outputs</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
