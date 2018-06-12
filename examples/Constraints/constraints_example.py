@@ -22,6 +22,10 @@ my_modal_sys.AppendSystem(child_sys=TMD2,Xpos_parent=50.0,DOF_child=0)
 my_modal_sys.PrintSystemMatrices(printValues=True)
 
 #%%
+# Compute eigenproperties of system with TMDs
+eig_results = my_modal_sys.CalcEigenproperties(makePlots=True)
+
+#%%
 # Plot modeshapes
 my_modal_sys.PlotModeshapes()
 
