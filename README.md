@@ -38,6 +38,8 @@ Applications include (but are not limited to):
 
     * Proper account of non-proportional damping, which generally occurs when 
       TMDs are appended to MDOF systems
+      
+* Response spectrum analysis of ground motion time series data
 
 ## Benefits
 
