@@ -363,8 +363,8 @@ class TStep_Results:
         for obj in DynSys_list:
 
             # Determine number of subplots required
-            constraints = obj.hasConstraints()
-            if constraints:
+            hasConstraints = obj.hasConstraints()
+            if hasConstraints:
                 nPltRows=5
             else:
                 nPltRows=4
@@ -386,7 +386,10 @@ class TStep_Results:
                 sysStr = "Modal "
                 
             # Get data to plot            
-            t,f,v,vdot,v2dot =self.GetResults(obj,['t','f','v','vdot','v2dot'])
+            t,f,v,vdot,v2dot,f_constraint =self.GetResults(obj,
+                                                           ['t','f','v',
+                                                            'vdot','v2dot',
+                                                            'f_constraint'])
             
             # Handle dofs2Plot in case of none
             if dofs2Plot is None:
@@ -414,11 +417,11 @@ class TStep_Results:
                            data_vals=v2dot[:,dofs2Plot],
                            titleStr="%sAccelerations ($m/s^2$)" % sysStr)
             
-            if constraints:
+            if hasConstraints:
                 self._TimePlot(ax=axarr[4],
-                               t_vals=t,
-                               data_vals=obj.f_constraint,
-                               titleStr="%sConstraint forces (N)" % sysStr)
+                           t_vals=t,
+                           data_vals=f_constraint,
+                           titleStr="%sConstraint forces (N)" % sysStr)
                 
             axarr[-1].set_xlabel("Time (secs)")
             fig.subplots_adjust(hspace=0.3)
@@ -719,10 +722,11 @@ class TStep_Results:
             ax.set_xlabel("Frequency (Hz)")
             
             fig.suptitle("System: '{0}'".format(dynsys_obj.name))
-            fig.subplots_adjust(top=0.8)
             
             fig.tight_layout()
-            fig.subplots_adjust(right=0.7)      # create space for figlegend
+            fig.subplots_adjust(top=0.9)        # create space for suptitle
+            fig.subplots_adjust(right=0.8)      # create space for figlegend
+            
             fig_list.append(fig)
         
         return fig_list
