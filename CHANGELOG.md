@@ -8,7 +8,7 @@ and this project adheres to:
 
 ***
 
-## Unreleased
+## [1.2.1] - 2018-07-17 - RIHY
 
 ### Changed
 
@@ -18,6 +18,9 @@ and this project adheres to:
   tuned mass damper systems to be conveniently defined
 
 ### Fixed
+
+* Bug associated with calculation of lambda factor for UK NA steady-state crowd 
+  loading analysis fixed.
 
 ### Removed
 
