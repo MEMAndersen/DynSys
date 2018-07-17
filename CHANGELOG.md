@@ -8,6 +8,23 @@ and this project adheres to:
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+
+### Fixed
+
+* Further fix associated with lambda fix at v1.2.1: when multiple modes 
+  included array of maximum modeshape ordinate now calculated and appropriate 
+  value used in calculations targeting specific mode. Previous behaviour was to 
+  obtain maximum ordinate across all modes, which is inaccurate when mode being 
+  considered does not have this ordinate.
+
+### Removed
+
+
 ## [1.2.1] - 2018-07-17 - RIHY
 
 ### Changed
