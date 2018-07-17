@@ -1,4 +1,4 @@
-Version: 1.2.0
+Version: 1.2.0_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1033,9 +1033,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1305,7 +1302,7 @@ table {
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation function</span>
@@ -1402,7 +1399,7 @@ table {
                 
                 <span class="n">Seff</span><span class="p">,</span> <span class="n">lambda_vals</span> <span class="o">=</span> <span class="n">Calc_Seff</span><span class="p">(</span><span class="n">modalsys_obj</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="p">,</span><span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span>
                                               <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                              <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                                              <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
                 
                 <span class="c1"># save to avoid recalculating</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="n">modalsys_obj</span><span class="p">,</span><span class="n">attrName</span><span class="p">,</span><span class="n">Seff</span><span class="p">)</span> 
@@ -1425,7 +1422,8 @@ table {
         <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_walkers_joggers_loading</span><span class="p">(</span><span class="n">fv</span> <span class="o">=</span> <span class="n">f_d</span><span class="p">,</span>
                                                               <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
                                                               <span class="n">N</span><span class="o">=</span><span class="n">N_to_use</span><span class="p">,</span>
-                                                              <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+                                                              <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
+                                                              <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="c1"># Determine reasonable time step to use</span>
         <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -6986,7 +6984,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation function</span>
@@ -7083,7 +7081,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
                 
                 <span class="n">Seff</span><span class="p">,</span> <span class="n">lambda_vals</span> <span class="o">=</span> <span class="n">Calc_Seff</span><span class="p">(</span><span class="n">modalsys_obj</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="p">,</span><span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span>
                                               <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                              <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                                              <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
                 
                 <span class="c1"># save to avoid recalculating</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="n">modalsys_obj</span><span class="p">,</span><span class="n">attrName</span><span class="p">,</span><span class="n">Seff</span><span class="p">)</span> 
@@ -7106,7 +7104,8 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
         <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_walkers_joggers_loading</span><span class="p">(</span><span class="n">fv</span> <span class="o">=</span> <span class="n">f_d</span><span class="p">,</span>
                                                               <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
                                                               <span class="n">N</span><span class="o">=</span><span class="n">N_to_use</span><span class="p">,</span>
-                                                              <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+                                                              <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
+                                                              <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
         <span class="c1"># Determine reasonable time step to use</span>
         <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -7152,7 +7151,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
             
   <div class="item">
     <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, dt=None, verbose=True, calc_Seff=True, makePlot=True, **kwargs)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, dt=None, verbose=True, calc_Seff=True, makePlot=False, **kwargs)</p>
     </div>
     
 
@@ -7198,7 +7197,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
              <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
              <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-             <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialisation function</span>
@@ -7295,7 +7294,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
             
             <span class="n">Seff</span><span class="p">,</span> <span class="n">lambda_vals</span> <span class="o">=</span> <span class="n">Calc_Seff</span><span class="p">(</span><span class="n">modalsys_obj</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="p">,</span><span class="n">S</span><span class="o">=</span><span class="n">S</span><span class="p">,</span>
                                           <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                          <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                                          <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
             
             <span class="c1"># save to avoid recalculating</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="n">modalsys_obj</span><span class="p">,</span><span class="n">attrName</span><span class="p">,</span><span class="n">Seff</span><span class="p">)</span> 
@@ -7318,7 +7317,8 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
     <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_walkers_joggers_loading</span><span class="p">(</span><span class="n">fv</span> <span class="o">=</span> <span class="n">f_d</span><span class="p">,</span>
                                                           <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
                                                           <span class="n">N</span><span class="o">=</span><span class="n">N_to_use</span><span class="p">,</span>
-                                                          <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">)</span>
+                                                          <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
+                                                          <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
     
     <span class="c1"># Determine reasonable time step to use</span>
     <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>

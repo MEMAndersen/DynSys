@@ -1,4 +1,4 @@
-Version: 1.2.0
+Version: 1.2.0_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1032,9 +1032,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1464,8 +1461,8 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
 
             <span class="c1"># Determine number of subplots required</span>
-            <span class="n">constraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">constraints</span><span class="p">:</span>
+            <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="n">nPltRows</span><span class="o">=</span><span class="mi">5</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">nPltRows</span><span class="o">=</span><span class="mi">4</span>
@@ -1487,7 +1484,10 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                 <span class="n">sysStr</span> <span class="o">=</span> <span class="s2">&quot;Modal &quot;</span>
                 
             <span class="c1"># Get data to plot            </span>
-            <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span><span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">])</span>
+            <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span>
+                                                           <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
+                                                            <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
+                                                            <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
             
             <span class="c1"># Handle dofs2Plot in case of none</span>
             <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -1515,11 +1515,11 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                            <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
-            <span class="k">if</span> <span class="n">constraints</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
-                               <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                               <span class="n">data_vals</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">f_constraint</span><span class="p">,</span>
-                               <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Constraint forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
+                           <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">f_constraint</span><span class="p">,</span>
+                           <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Constraint forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
                 
             <span class="n">axarr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time (secs)&quot;</span><span class="p">)</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
@@ -1820,10 +1820,11 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
             
             <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;System: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
             
             <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>        <span class="c1"># create space for suptitle</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
+            
             <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">fig_list</span>
@@ -2512,8 +2513,8 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
 
             <span class="c1"># Determine number of subplots required</span>
-            <span class="n">constraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">constraints</span><span class="p">:</span>
+            <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="n">nPltRows</span><span class="o">=</span><span class="mi">5</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">nPltRows</span><span class="o">=</span><span class="mi">4</span>
@@ -2535,7 +2536,10 @@ analysis as carried out by <code>TStep</code></p></div>
                 <span class="n">sysStr</span> <span class="o">=</span> <span class="s2">&quot;Modal &quot;</span>
                 
             <span class="c1"># Get data to plot            </span>
-            <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span><span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">])</span>
+            <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span>
+                                                           <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
+                                                            <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
+                                                            <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
             
             <span class="c1"># Handle dofs2Plot in case of none</span>
             <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -2563,11 +2567,11 @@ analysis as carried out by <code>TStep</code></p></div>
                            <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
-            <span class="k">if</span> <span class="n">constraints</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
-                               <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                               <span class="n">data_vals</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">f_constraint</span><span class="p">,</span>
-                               <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Constraint forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
+                           <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">f_constraint</span><span class="p">,</span>
+                           <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Constraint forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
                 
             <span class="n">axarr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time (secs)&quot;</span><span class="p">)</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
@@ -2868,10 +2872,11 @@ analysis as carried out by <code>TStep</code></p></div>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
             
             <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;System: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
             
             <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>        <span class="c1"># create space for suptitle</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
+            
             <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">fig_list</span>
@@ -3901,10 +3906,11 @@ subsystem of the parent system (this is checked)</p>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
         
         <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;System: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
         
         <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>        <span class="c1"># create space for suptitle</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">right</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>      <span class="c1"># create space for figlegend</span>
+        
         <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">fig_list</span>
@@ -4382,8 +4388,8 @@ plotted)</p>
     
     <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
         <span class="c1"># Determine number of subplots required</span>
-        <span class="n">constraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
             <span class="n">nPltRows</span><span class="o">=</span><span class="mi">5</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">nPltRows</span><span class="o">=</span><span class="mi">4</span>
@@ -4405,7 +4411,10 @@ plotted)</p>
             <span class="n">sysStr</span> <span class="o">=</span> <span class="s2">&quot;Modal &quot;</span>
             
         <span class="c1"># Get data to plot            </span>
-        <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span><span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">])</span>
+        <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span>
+                                                       <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
         
         <span class="c1"># Handle dofs2Plot in case of none</span>
         <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -4433,11 +4442,11 @@ plotted)</p>
                        <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
                        <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
         
-        <span class="k">if</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
-                           <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">f_constraint</span><span class="p">,</span>
-                           <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Constraint forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
+                       <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
+                       <span class="n">data_vals</span><span class="o">=</span><span class="n">f_constraint</span><span class="p">,</span>
+                       <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Constraint forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
         <span class="n">axarr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time (secs)&quot;</span><span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>

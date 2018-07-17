@@ -8,6 +8,23 @@ and this project adheres to:
 
 ***
 
+## [1.2.1] - 2018-07-17 - RIHY
+
+### Changed
+
+### Added
+
+* `damper.py` module added; `TMD()` class defined within this module, to allow 
+  tuned mass damper systems to be conveniently defined
+
+### Fixed
+
+* Bug associated with calculation of lambda factor for UK NA steady-state crowd 
+  loading analysis fixed.
+
+### Removed
+
+
 ## [1.2.0] - 2018-06-12 - RIHY
 
 ### Changed

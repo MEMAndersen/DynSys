@@ -144,7 +144,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                  dt=None,
                  verbose=True,
                  calc_Seff=True,
-                 makePlot=True,
+                 makePlot=False,
                  **kwargs):
         """
         Initialisation function
@@ -241,7 +241,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                 
                 Seff, lambda_vals = Calc_Seff(modalsys_obj.modeshapeFunc,S=S,
                                               verbose=True,
-                                              makePlot=False)
+                                              makePlot=makePlot)
                 
                 # save to avoid recalculating
                 setattr(modalsys_obj,attrName,Seff) 
@@ -264,7 +264,8 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         loading_obj = UKNA_BSEN1991_2_walkers_joggers_loading(fv = f_d,
                                                               gamma=gamma,
                                                               N=N_to_use,
-                                                              analysis_type=analysis_type)
+                                                              analysis_type=analysis_type,
+                                                              makePlot=makePlot)
         
         # Determine reasonable time step to use
         if dt is None:
@@ -375,8 +376,15 @@ class SteadyStateCrowdLoading():
         self._check_modeshapes_fname_arr(modeshapes_fname_arr,nRegions)
             
         # Read modeshape data from file, determine interpolation functions
-        mFunc_list, Ltrack_list = self._read_modeshapes(modalsys_obj,
-                                                        modeshapes_fname_arr)
+        mFunc_list, Ltrack_list, max_ordinate = self._read_modeshapes(modalsys_obj,
+                                                                      modeshapes_fname_arr)
+        
+        self.max_modeshape = max_ordinate
+        """
+        Maximum |modeshape ordinate| evaluated over all deck regions
+        """
+        
+        print("Max modeshape: %.3f" % max_ordinate)
                     
         # Define deck regions
         deck_regions_list = []
@@ -467,7 +475,7 @@ class SteadyStateCrowdLoading():
         if verbose: print("Target mode index: %d" % target_mode)
         
         # Obtain area integrals over all deck strips
-        modal_areas = self.calc_modal_areas(target_mode, makePlot=makePlot)
+        modal_areas = self.calc_modal_areas(target_mode,makePlot=makePlot)
         self.modal_areas = modal_areas
         
         # Calculate load intensity, if not provided directly
@@ -866,7 +874,7 @@ class SteadyStateCrowdLoading():
                                  " does not exist!")
 
 
-    def _read_modeshapes(self,modalsys_obj,modeshapes_fname_arr):
+    def _read_modeshapes(self,modalsys_obj,modeshapes_fname_arr,num=100):
         """
         Reads modeshapes from file
 
@@ -879,17 +887,24 @@ class SteadyStateCrowdLoading():
 
         Ltrack_list = []
         modeshapeFunc_list = []
+        absmax_vals_list = []
 
         # Loop through array containing modeshape filenames
         for fname_list in modeshapes_fname_arr:
 
             Ltrack_list_inner = [] 
             modeshapeFunc_list_inner = []
+            absmax_vals_list_inner = []
 
             for fName in fname_list:
 
                 mfunc, L = modalsys_obj.DefineModeshapes(fName=fName,
                                                          saveAsAttr=False)
+                
+                # Evaluate to obtain maximum ordinates
+                m_vals = mfunc(numpy.linspace(0,L,num))
+                absmax_vals = numpy.max(numpy.abs(m_vals))
+                absmax_vals_list_inner.append(absmax_vals)
 
                 # Append to inner lists
                 Ltrack_list_inner.append(L)
@@ -898,12 +913,16 @@ class SteadyStateCrowdLoading():
             # Append to create list of lists
             Ltrack_list.append(Ltrack_list_inner)
             modeshapeFunc_list.append(modeshapeFunc_list_inner)
+            absmax_vals_list.append(absmax_vals_list_inner)
+
+        # Obtain overall max modeshape ordinate
+        max_ordinate = numpy.max(numpy.ravel(absmax_vals_list))
 
         # Convert lists to arrays
         Ltrack_list = numpy.array(Ltrack_list)
         modeshapeFunc_list = numpy.array(modeshapeFunc_list)
 
-        return modeshapeFunc_list, Ltrack_list
+        return modeshapeFunc_list, Ltrack_list, max_ordinate
         
     
     def calc_deck_area(self):
@@ -1053,6 +1072,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
     
         # Retrieve attributes    
         A = self.deck_area
+        max_modeshape = self.max_modeshape
         
         # Get crowd density according to bridgeClass
         # Crowd density, expressed in persons/m2
@@ -1078,10 +1098,10 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         # Effective number of pedestrians parameter, refer NA. 2.44.5(1)
         # To generalise to deck of variable width, use area ratio as Seff/S
         if calc_lambda:
-            Aeff = self.modal_areas[mode_index]
+            Aeff = self.modal_areas[mode_index] / (0.634 * max_modeshape)
             lambda_val = 0.634*Aeff/A
         else:
-            lambda_val = 1.0 # conservative
+            lambda_val = 1.0 # conservative according to text - but not always!
     
         # Calculate load intensity per NA.2.44.5(1)
         load_intensity = 1.8*(F0/A)*k*((gamma*N/lambda_val)**0.5)
@@ -1089,17 +1109,18 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         # Prepare markdown string of nicely formatted text
         md_txt = ""
         md_txt += "Key results from UK NA to BS EN 1991-2 load intensity calculation:"
-        md_txt += "\n" + "F0       = %.1f\t(N)" % F0
-        md_txt += "\n" + "A        = %.2f\t(m2)" % A
-        md_txt += "\n" + "Aeff     = %.2f\t(m2)" % Aeff
-        md_txt += "\n" + "rho      = %.2f" % crowd_density
-        md_txt += "\n" + "N        = %.1f" % N
-        md_txt += "\n" + "fv       = %.3f\t(Hz)" % fv
-        md_txt += "\n" + "k        = %.3f" % k
-        md_txt += "\n" + "log_dec  = %.3f" % log_dec
-        md_txt += "\n" + "gamma    = %.3f" % gamma
-        md_txt += "\n" + "lambda   = %.3f" % lambda_val
-        md_txt += "\n" + "w        = %.3f\t(N/m2)" % load_intensity
+        md_txt += "\n" + "F0        = %.1f\t(N)" % F0
+        md_txt += "\n" + "A         = %.2f\t(m2)" % A
+        md_txt += "\n" + "gamma_max = %.3f\t" % max_modeshape
+        md_txt += "\n" + "Aeff      = %.2f\t(m2)" % Aeff
+        md_txt += "\n" + "rho       = %.2f" % crowd_density
+        md_txt += "\n" + "N         = %.1f" % N
+        md_txt += "\n" + "fv        = %.3f\t(Hz)" % fv
+        md_txt += "\n" + "k         = %.3f" % k
+        md_txt += "\n" + "log_dec   = %.3f" % log_dec
+        md_txt += "\n" + "gamma     = %.3f" % gamma
+        md_txt += "\n" + "lambda    = %.3f" % lambda_val
+        md_txt += "\n" + "w         = %.3f\t(N/m2)" % load_intensity
         
         if verbose:
             print("\n" + md_txt + "\n")    

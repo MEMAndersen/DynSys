@@ -1,4 +1,4 @@
-Version: 1.2.0
+Version: 1.2.0_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1033,9 +1033,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -2487,7 +2484,7 @@ table {
 <span class="sd">        </span>
 <span class="sd">        ***</span>
 <span class="sd">        </span>
-<span class="sd">        Optional:</span>
+<span class="sd">        **Optional:**</span>
 <span class="sd">            </span>
 <span class="sd">        * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
 <span class="sd">        If `None` (default) then frequencies list will be obtained using </span>
@@ -2504,6 +2501,17 @@ table {
 <span class="sd">        and obtain frequency transfer matrix relating applied forces to </span>
 <span class="sd">        accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
 <span class="sd">        transfer matrix can be obtained in this way</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        </span>
+<span class="sd">        **Returns:**</span>
+<span class="sd">        </span>
+<span class="sd">        * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
+<span class="sd">        </span>
+<span class="sd">        * `G_f`, _ndarray_, usually of shape </span>
+<span class="sd">          (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
+<span class="sd">          i.e. at each frequency there is a matrix described the complex-valued </span>
+<span class="sd">          frequency transfer function mapping applied loads to outputs</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -5442,7 +5450,7 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">        </span>
 <span class="sd">        ***</span>
 <span class="sd">        </span>
-<span class="sd">        Optional:</span>
+<span class="sd">        **Optional:**</span>
 <span class="sd">            </span>
 <span class="sd">        * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
 <span class="sd">        If `None` (default) then frequencies list will be obtained using </span>
@@ -5459,6 +5467,17 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">        and obtain frequency transfer matrix relating applied forces to </span>
 <span class="sd">        accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
 <span class="sd">        transfer matrix can be obtained in this way</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        </span>
+<span class="sd">        **Returns:**</span>
+<span class="sd">        </span>
+<span class="sd">        * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
+<span class="sd">        </span>
+<span class="sd">        * `G_f`, _ndarray_, usually of shape </span>
+<span class="sd">          (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
+<span class="sd">          i.e. at each frequency there is a matrix described the complex-valued </span>
+<span class="sd">          frequency transfer function mapping applied loads to outputs</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -6446,7 +6465,7 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
 <a href="../references/Frequency response from state-space representation.pdf">derivation</a> 
 for the basis of the implementation.</p>
 <hr />
-<p>Optional:</p>
+<p><strong>Optional:</strong></p>
 <ul>
 <li>
 <p><code>fVals</code>: <em>array-like</em> of frequencies (Hz) to evaluate G(f) at.
@@ -6468,6 +6487,19 @@ and obtain frequency transfer matrix relating applied forces to
 accelerations of the DOFs. E.g. for modal systems, modal acceleration 
 transfer matrix can be obtained in this way</p>
 </li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<ul>
+<li>
+<p><code>f_vals</code>, <em>array</em> of frequency values to which <code>G_f</code> relates</p>
+</li>
+<li>
+<p><code>G_f</code>, <em>ndarray</em>, usually of shape 
+  (C.shape[0], B.shape[1], f_vals.shape[0]), 
+  i.e. at each frequency there is a matrix described the complex-valued 
+  frequency transfer function mapping applied loads to outputs</p>
+</li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.CalcFreqResponse', this);">Show source &equiv;</a></p>
@@ -6488,7 +6520,7 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    </span>
-<span class="sd">    Optional:</span>
+<span class="sd">    **Optional:**</span>
 <span class="sd">        </span>
 <span class="sd">    * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
 <span class="sd">    If `None` (default) then frequencies list will be obtained using </span>
@@ -6505,6 +6537,17 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    and obtain frequency transfer matrix relating applied forces to </span>
 <span class="sd">    accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
 <span class="sd">    transfer matrix can be obtained in this way</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">    </span>
+<span class="sd">    * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
+<span class="sd">    </span>
+<span class="sd">    * `G_f`, _ndarray_, usually of shape </span>
+<span class="sd">      (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
+<span class="sd">      i.e. at each frequency there is a matrix described the complex-valued </span>
+<span class="sd">      frequency transfer function mapping applied loads to outputs</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
