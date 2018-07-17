@@ -14,6 +14,9 @@ and this project adheres to:
 
 ### Added
 
+* `damper.py` module added; `TMD()` class defined within this module, to allow 
+  tuned mass damper systems to be conveniently defined
+
 ### Fixed
 
 ### Removed

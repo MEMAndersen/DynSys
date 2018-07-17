@@ -144,7 +144,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                  dt=None,
                  verbose=True,
                  calc_Seff=True,
-                 makePlot=True,
+                 makePlot=False,
                  **kwargs):
         """
         Initialisation function
@@ -241,7 +241,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                 
                 Seff, lambda_vals = Calc_Seff(modalsys_obj.modeshapeFunc,S=S,
                                               verbose=True,
-                                              makePlot=False)
+                                              makePlot=makePlot)
                 
                 # save to avoid recalculating
                 setattr(modalsys_obj,attrName,Seff) 
@@ -264,7 +264,8 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         loading_obj = UKNA_BSEN1991_2_walkers_joggers_loading(fv = f_d,
                                                               gamma=gamma,
                                                               N=N_to_use,
-                                                              analysis_type=analysis_type)
+                                                              analysis_type=analysis_type,
+                                                              makePlot=makePlot)
         
         # Determine reasonable time step to use
         if dt is None:

@@ -44,6 +44,7 @@ make_html("tstep_results")
 make_html("dyn_analysis")
 make_html("loading")
 make_html("ped_dyn")
+make_html("damper")
 
 #%%
 # List markdown files in root folder to be rendered

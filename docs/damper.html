@@ -4,9 +4,10 @@ Version: 1.2.0_dev
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 
-    <title>msd_chain API documentation</title>
-    <meta name="description" content="Class definition and test functions for msdChain, a class used to define
-a chain of SDOF mass-spring..." />
+    <title>damper API documentation</title>
+    <meta name="description" content="Class definitions and functions for definition of damper systems e.g. TMDs
+
+Damper systems are not u..." />
 
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
   
@@ -1045,47 +1046,40 @@ table {
     <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
       
   <ul>
-    <li class="mono"><a href="#msd_chain.currentVersion">currentVersion</a></li>
+    <li class="mono"><a href="#damper.currentVersion">currentVersion</a></li>
   </ul>
 
     </li>
 
-    <li class="set"><h3><a href="#header-functions">Functions</a></h3>
-      
-  <ul>
-    <li class="mono"><a href="#msd_chain.warburton_TMD">warburton_TMD</a></li>
-  </ul>
-
-    </li>
 
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
         <li class="mono">
-        <span class="class_name"><a href="#msd_chain.MSD_Chain">MSD_Chain</a></span>
+        <span class="class_name"><a href="#damper.TMD">TMD</a></span>
         
           
   <ul>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.__init__">__init__</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.AddConstraintEqns">AddConstraintEqns</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.AddOutputMtrx">AddOutputMtrx</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.AppendSystem">AppendSystem</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.CalcEigenproperties">CalcEigenproperties</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.CalcFreqResponse">CalcFreqResponse</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.CalcLoadMatrix">CalcLoadMatrix</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.CalcStateMatrix">CalcStateMatrix</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.CheckConstraints">CheckConstraints</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.CheckDOF">CheckDOF</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.CheckOutputMtrx">CheckOutputMtrx</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.EqnOfMotion">EqnOfMotion</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.GetLoadMatrix">GetLoadMatrix</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.GetStateMatrix">GetStateMatrix</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.GetSystemMatrices">GetSystemMatrices</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.PlotSystem">PlotSystem</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.PlotSystems_all">PlotSystems_all</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.PrintSystemMatrices">PrintSystemMatrices</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.freqVals">freqVals</a></li>
-    <li class="mono"><a href="#msd_chain.MSD_Chain.hasConstraints">hasConstraints</a></li>
+    <li class="mono"><a href="#damper.TMD.__init__">__init__</a></li>
+    <li class="mono"><a href="#damper.TMD.AddConstraintEqns">AddConstraintEqns</a></li>
+    <li class="mono"><a href="#damper.TMD.AddOutputMtrx">AddOutputMtrx</a></li>
+    <li class="mono"><a href="#damper.TMD.AppendSystem">AppendSystem</a></li>
+    <li class="mono"><a href="#damper.TMD.CalcEigenproperties">CalcEigenproperties</a></li>
+    <li class="mono"><a href="#damper.TMD.CalcFreqResponse">CalcFreqResponse</a></li>
+    <li class="mono"><a href="#damper.TMD.CalcLoadMatrix">CalcLoadMatrix</a></li>
+    <li class="mono"><a href="#damper.TMD.CalcStateMatrix">CalcStateMatrix</a></li>
+    <li class="mono"><a href="#damper.TMD.CheckConstraints">CheckConstraints</a></li>
+    <li class="mono"><a href="#damper.TMD.CheckDOF">CheckDOF</a></li>
+    <li class="mono"><a href="#damper.TMD.CheckOutputMtrx">CheckOutputMtrx</a></li>
+    <li class="mono"><a href="#damper.TMD.EqnOfMotion">EqnOfMotion</a></li>
+    <li class="mono"><a href="#damper.TMD.GetLoadMatrix">GetLoadMatrix</a></li>
+    <li class="mono"><a href="#damper.TMD.GetStateMatrix">GetStateMatrix</a></li>
+    <li class="mono"><a href="#damper.TMD.GetSystemMatrices">GetSystemMatrices</a></li>
+    <li class="mono"><a href="#damper.TMD.PlotSystem">PlotSystem</a></li>
+    <li class="mono"><a href="#damper.TMD.PlotSystems_all">PlotSystems_all</a></li>
+    <li class="mono"><a href="#damper.TMD.PrintSystemMatrices">PrintSystemMatrices</a></li>
+    <li class="mono"><a href="#damper.TMD.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
+    <li class="mono"><a href="#damper.TMD.freqVals">freqVals</a></li>
+    <li class="mono"><a href="#damper.TMD.hasConstraints">hasConstraints</a></li>
   </ul>
 
         </li>
@@ -1103,231 +1097,107 @@ table {
 
 
   <header id="section-intro">
-  <h1 class="title"><span class="name">msd_chain</span> module</h1>
-  <p>Class definition and test functions for msdChain, a class used to define
-a chain of SDOF mass-spring-dashpot systems</p>
+  <h1 class="title"><span class="name">damper</span> module</h1>
+  <p>Class definitions and functions for definition of damper systems e.g. TMDs</p>
+<p>Damper systems are not usually analysed in isolation; rather they would normally 
+be appended to another system (e.g. a modal system)</p>
   
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper', this);">Show source &equiv;</a></p>
+  <div id="source-damper" class="source">
     <div class="codehilite"><pre><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Class definition and test functions for msdChain, a class used to define</span>
-<span class="sd">a chain of SDOF mass-spring-dashpot systems</span>
+<span class="sd">Class definitions and functions for definition of damper systems e.g. TMDs</span>
+
+<span class="sd">Damper systems are not usually analysed in isolation; rather they would normally </span>
+<span class="sd">be appended to another system (e.g. a modal system)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__init__</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">currentVersion</span>
 
-<span class="c1"># Std library imports</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">npy</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">matplotlib.gridspec</span> <span class="kn">as</span> <span class="nn">gridspec</span>
+<span class="c1"># Standard imports</span>
 
-<span class="c1"># Other imports</span>
-<span class="kn">from</span> <span class="nn">dynsys</span> <span class="kn">import</span> <span class="n">DynSys</span>
-<span class="kn">from</span> <span class="nn">dynsys</span> <span class="kn">import</span> <span class="p">(</span><span class="n">angularFreq</span><span class="p">,</span>
-                    <span class="n">SDOF_stiffness</span><span class="p">,</span> 
-                    <span class="n">SDOF_dashpot</span><span class="p">,</span> 
-                    <span class="n">SDOF_dampingRatio</span><span class="p">,</span> 
-                    <span class="n">SDOF_frequency</span><span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">MSD_Chain</span><span class="p">(</span><span class="n">DynSys</span><span class="p">):</span>
+<span class="c1"># DynSys imports</span>
+<span class="kn">import</span> <span class="nn">msd_chain</span>
+<span class="kn">from</span> <span class="nn">dynsys</span> <span class="kn">import</span> <span class="n">SDOF_stiffness</span><span class="p">,</span> <span class="n">SDOF_dashpot</span>
+
+<span class="k">class</span> <span class="nc">TMD</span><span class="p">(</span><span class="n">msd_chain</span><span class="o">.</span><span class="n">MSD_Chain</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Defines a chain of SDOF mass-spring-dashpot systems</span>
+<span class="sd">    Defines a single-mass tuned mass damper system</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Mass-spring-dashpot chain system&quot;</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Tuned mass damper&quot;</span>
     
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">M_vals</span><span class="p">,</span>
-                 <span class="n">f_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">eta_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">K_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+                 <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialisation function</span>
-<span class="sd">        ***</span>
+<span class="sd">        Initialisation method</span>
 <span class="sd">        </span>
-<span class="sd">        All inputs are (in general) _array-like_ and relate to each </span>
-<span class="sd">        of the SDOF systems in the chain. All arguments are required to be of </span>
-<span class="sd">        the same shape (this is checked).</span>
+<span class="sd">        A 2DOF system will be initialised, the first freedom of which will</span>
+<span class="sd">        ordinarily be appended to another system (e.g. modal system)</span>
 <span class="sd">        </span>
 <span class="sd">        ***</span>
-<span class="sd">        Required:</span>
-<span class="sd">            </span>
-<span class="sd">        * `M_vals`, mass (kg) corresponding to each DOF</span>
+<span class="sd">        **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">        * `sprung_mass`, _float_, mass (in kg) of sprung mass component of TMD</span>
+<span class="sd">        </span>
+<span class="sd">        * `nat_freq`, _float_, undamped natural frequency (in Hz) of TMD system </span>
+<span class="sd">          in isolation</span>
 <span class="sd">        </span>
 <span class="sd">        ***</span>
-<span class="sd">        Optional:</span>
+<span class="sd">        **Optional:**</span>
 <span class="sd">        </span>
-<span class="sd">        * `f_vals`, undamped natural frequency (Hz)</span>
-<span class="sd">        </span>
-<span class="sd">        * `K_vals`, stiffness (N/m) applicable to the each DOF linkage</span>
-<span class="sd">        </span>
-<span class="sd">        Either `K_vals` or `f_vals` must be provided. If both are provided, </span>
-<span class="sd">        `K_vals` will be used.</span>
-<span class="sd">        </span>
-<span class="sd">        * `eta_vals`, damping ratio (1.0 = critical)</span>
-<span class="sd">        </span>
-<span class="sd">        * `C_vals`, dashpot rate (Ns/m) applicable to the each DOF linkage</span>
-<span class="sd">        </span>
-<span class="sd">        Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
-<span class="sd">        `C_vals` will be used.</span>
-<span class="sd">        </span>
+<span class="sd">        * `fixed_mass`, _float_, mass (in kg) of fixed part of TMD, which will </span>
+<span class="sd">          be treated as rigidly fixed to the structure to which the TMD system </span>
+<span class="sd">          is appended.</span>
+<span class="sd">          </span>
+<span class="sd">            * A zero value should be avoided, to avoid ill-conditioning of the </span>
+<span class="sd">              mass matrix. The support frames of most real TMDs will in any case </span>
+<span class="sd">              usually have a non-negligible mass.</span>
+<span class="sd">              </span>
+<span class="sd">            * If _None_ is provided (as per default argument) the fixed mass </span>
+<span class="sd">              will be assumed to be 1/100th of the sprung mass</span>
+<span class="sd">          </span>
+<span class="sd">        * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system </span>
+<span class="sd">          in isolation</span>
+<span class="sd">          </span>
 <span class="sd">        Additional keyword arguments may be provided; these will be passed to </span>
-<span class="sd">        `DynSys.__init__()` method; refer [docs](..\docs\dynsys.html) </span>
+<span class="sd">        `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) </span>
 <span class="sd">        for that class for further details</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="n">M_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`M_vals` cannot be &#39;None&#39;&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Flatten input and establish nDOFs</span>
-        <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
-        <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f_vals</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>    <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">K_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">K_vals</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">C_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">C_vals</span><span class="p">))</span>
+        <span class="c1"># Handle optional arguments</span>
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span>
         
-        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
         
-        <span class="c1"># Determine K matrix</span>
-        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
-                
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
-                <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
-                <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
-        
-        <span class="c1"># Determine C matrix</span>
-        <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
-                
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
-                    
-        <span class="c1"># Define system matrices</span>
-        
-        <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
-        <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
-        <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+        <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">]</span>
+        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
+        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
     
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="p">):</span>
-            
-            <span class="c1"># On diagonal terms</span>
-            <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            
-            <span class="c1"># Off diagonal and appended terms</span>
-            
-            <span class="k">if</span> <span class="n">n</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-                
-                <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=-</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=-</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                
-                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=-</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=-</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-    
-        <span class="c1"># ---- Write details into object as attributes -----</span>
+        <span class="c1"># Invoke msd_chain&#39;s init method</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         
-        <span class="c1"># Write details into object using parent init function</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">,</span><span class="n">C_mtrx</span><span class="p">,</span><span class="n">K_mtrx</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Add output matrix entry to compute relative displacement</span>
+        <span class="c1"># (as this is commonly of interest)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
+        
         
     
-    <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        
-        <span class="n">x_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span>
-        <span class="n">y_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span><span class="n">y_vals</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="s2">&quot;r.&quot;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>        
-        
-        <span class="n">x_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_vals</span><span class="p">,</span><span class="n">x_vals</span><span class="p">))</span>
-        <span class="n">y_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_vals</span><span class="p">),</span><span class="n">y_vals</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span><span class="n">y_vals</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="s2">&quot;b-&quot;</span><span class="p">)</span>
-        
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;DOF index&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement&quot;</span><span class="p">)</span>
-        
-        
-<span class="c1"># ******************* FUNCTIONS ************************</span>
-
-<span class="k">def</span> <span class="nf">warburton_TMD</span><span class="p">(</span><span class="n">m_M</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>       <span class="c1"># main mass (kg)</span>
-                  <span class="n">f_M</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>        <span class="c1"># system undamped natural freq (Hz)</span>
-                  <span class="n">mu</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>        <span class="c1"># mass ratio</span>
-                  <span class="n">f</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>          <span class="c1"># tuning ratio</span>
-                  <span class="n">gamma_M</span> <span class="o">=</span> <span class="mf">0.003</span><span class="p">,</span>  <span class="c1"># damping ratio of main system in isolation</span>
-                  <span class="n">gamma_A</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>   <span class="c1"># damping ratio of TMD system in isolation</span>
-                  <span class="n">fmax</span><span class="o">=</span><span class="mf">5.0</span>          <span class="c1"># max frequency to evaluate G_f at</span>
-                  <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Define a two-mass system as per Figure 1 of Warburton and Ayorinde (1980)</span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    Notation used in the implementation is as per paper:</span>
-<span class="sd">    [PDF](../references/Warburton and Ayorinde (1980).pdf)</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-            
-    <span class="c1"># Derive other terms required</span>
-    <span class="n">m_A</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">m_M</span>
-    <span class="n">omega_M</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_M</span><span class="p">)</span>
-    <span class="n">omega_A</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="n">omega_M</span>
-    <span class="n">f_A</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="n">f_M</span>
-    <span class="n">k_M</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">m_M</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_M</span><span class="p">)</span>
-    <span class="n">k_A</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">m_A</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_A</span><span class="p">)</span>
-    <span class="n">c_M</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">m_M</span><span class="p">,</span><span class="n">k_M</span><span class="p">,</span><span class="n">gamma_M</span><span class="p">)</span>
-    <span class="n">c_A</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">m_A</span><span class="p">,</span><span class="n">k_A</span><span class="p">,</span><span class="n">gamma_A</span><span class="p">)</span>
-    
-    <span class="c1"># Create object instqnce</span>
-    <span class="n">msd_sys</span> <span class="o">=</span> <span class="n">MSD_Chain</span><span class="p">(</span><span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">m_M</span><span class="p">,</span><span class="n">m_A</span><span class="p">],</span>
-                        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">k_M</span><span class="p">,</span><span class="n">k_A</span><span class="p">],</span>
-                        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_M</span><span class="p">,</span><span class="n">c_A</span><span class="p">]</span>
-                        <span class="p">)</span>
-    
-    <span class="c1"># Define frequency values to evaluate G_f at</span>
-    <span class="n">freqVals</span> <span class="o">=</span> <span class="n">msd_sys</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
-    <span class="n">omega</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">freqVals</span><span class="p">)</span>
-    
-    <span class="c1"># Define expected frequency response using eqns in Warburton&#39;s paper</span>
-    <span class="n">numerator</span> <span class="o">=</span> <span class="n">k_A</span> <span class="o">-</span> <span class="n">m_A</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">c_A</span>
-    <span class="n">denom_term_11</span> <span class="o">=</span> <span class="n">k_M</span> <span class="o">+</span> <span class="n">k_A</span> <span class="o">-</span> <span class="n">m_M</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="p">(</span><span class="n">c_M</span> <span class="o">+</span> <span class="n">c_A</span><span class="p">)</span>
-    <span class="n">denom_term_12</span> <span class="o">=</span> <span class="n">k_A</span> <span class="o">-</span> <span class="n">m_A</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">c_A</span>
-    <span class="n">denom_term_2</span> <span class="o">=</span> <span class="n">k_A</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">c_A</span>
-    <span class="n">H_f</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="p">(</span><span class="n">denom_term_11</span> <span class="o">*</span> <span class="n">denom_term_12</span> <span class="o">-</span> <span class="n">denom_term_2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-
-    <span class="c1"># Returns key variables as dict</span>
-    <span class="n">names</span><span class="o">=</span> <span class="p">[</span><span class="s1">&#39;m_M&#39;</span><span class="p">,</span> <span class="s1">&#39;m_A&#39;</span><span class="p">,</span> <span class="s1">&#39;k_M&#39;</span><span class="p">,</span> <span class="s1">&#39;k_A&#39;</span><span class="p">,</span> <span class="s1">&#39;c_M&#39;</span><span class="p">,</span> <span class="s1">&#39;c_A&#39;</span><span class="p">]</span>
-    <span class="n">items</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
-        <span class="n">d</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        
-    <span class="c1"># Return statement</span>
-    <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">msd_sys</span><span class="p">,</span> <span class="n">freqVals</span><span class="p">,</span> <span class="n">H_f</span>
-        
-        
-<span class="c1"># ********************** TEST ROUTINES ****************************************</span>
-<span class="c1"># (Only execute when running as a script / top level)</span>
+<span class="c1"># TEST ROUTINES</span>
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
-    <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">])</span>
-    <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
-    <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mf">0.03</span><span class="p">,</span><span class="mf">0.04</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.01</span><span class="p">])</span>
-
-    <span class="n">dynSys1</span> <span class="o">=</span> <span class="n">MSD_Chain</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">f_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">PrintSystemMatrices</span><span class="p">()</span>
+    <span class="n">my_tmd</span> <span class="o">=</span> <span class="n">TMD</span><span class="p">(</span><span class="n">sprung_mass</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="n">nat_freq</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span><span class="n">damping_ratio</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">)</span>
+    <span class="n">my_tmd</span><span class="o">.</span><span class="n">PrintSystemMatrices</span><span class="p">(</span><span class="n">printValues</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
-    <span class="c1"># Produce some nice plots</span>
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
-    <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Output matrix:</span><span class="se">\n</span><span class="s2">{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">my_tmd</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">))</span>
     
-    <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">dynSys1</span><span class="o">.</span><span class="n">PlotSystem</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.3</span><span class="p">,</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span><span class="o">-</span><span class="mf">0.2</span><span class="p">])</span>
 </pre></div>
 
   </div>
@@ -1337,7 +1207,7 @@ a chain of SDOF mass-spring-dashpot systems</p>
   <section id="section-items">
     <h2 class="section-title" id="header-variables">Module variables</h2>
       <div class="item">
-      <p id="msd_chain.currentVersion" class="name">var <span class="ident">currentVersion</span></p>
+      <p id="damper.currentVersion" class="name">var <span class="ident">currentVersion</span></p>
       
   
   <div class="source_cont">
@@ -1345,216 +1215,83 @@ a chain of SDOF mass-spring-dashpot systems</p>
 
       </div>
 
-    <h2 class="section-title" id="header-functions">Functions</h2>
-      
-  <div class="item">
-    <div class="name def" id="msd_chain.warburton_TMD">
-    <p>def <span class="ident">warburton_TMD</span>(</p><p>m_M=2000, f_M=1.0, mu=0.05, f=1.0, gamma_M=0.003, gamma_A=0.05, fmax=5.0)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Define a two-mass system as per Figure 1 of Warburton and Ayorinde (1980)</p>
-<hr />
-<p>Notation used in the implementation is as per paper:
-<a href="../references/Warburton and Ayorinde (1980).pdf">PDF</a></p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.warburton_TMD', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.warburton_TMD" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">warburton_TMD</span><span class="p">(</span><span class="n">m_M</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>       <span class="c1"># main mass (kg)</span>
-                  <span class="n">f_M</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>        <span class="c1"># system undamped natural freq (Hz)</span>
-                  <span class="n">mu</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>        <span class="c1"># mass ratio</span>
-                  <span class="n">f</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>          <span class="c1"># tuning ratio</span>
-                  <span class="n">gamma_M</span> <span class="o">=</span> <span class="mf">0.003</span><span class="p">,</span>  <span class="c1"># damping ratio of main system in isolation</span>
-                  <span class="n">gamma_A</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>   <span class="c1"># damping ratio of TMD system in isolation</span>
-                  <span class="n">fmax</span><span class="o">=</span><span class="mf">5.0</span>          <span class="c1"># max frequency to evaluate G_f at</span>
-                  <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Define a two-mass system as per Figure 1 of Warburton and Ayorinde (1980)</span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    Notation used in the implementation is as per paper:</span>
-<span class="sd">    [PDF](../references/Warburton and Ayorinde (1980).pdf)</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-            
-    <span class="c1"># Derive other terms required</span>
-    <span class="n">m_A</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">m_M</span>
-    <span class="n">omega_M</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_M</span><span class="p">)</span>
-    <span class="n">omega_A</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="n">omega_M</span>
-    <span class="n">f_A</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="n">f_M</span>
-    <span class="n">k_M</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">m_M</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_M</span><span class="p">)</span>
-    <span class="n">k_A</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">m_A</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_A</span><span class="p">)</span>
-    <span class="n">c_M</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">m_M</span><span class="p">,</span><span class="n">k_M</span><span class="p">,</span><span class="n">gamma_M</span><span class="p">)</span>
-    <span class="n">c_A</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">m_A</span><span class="p">,</span><span class="n">k_A</span><span class="p">,</span><span class="n">gamma_A</span><span class="p">)</span>
-    
-    <span class="c1"># Create object instqnce</span>
-    <span class="n">msd_sys</span> <span class="o">=</span> <span class="n">MSD_Chain</span><span class="p">(</span><span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">m_M</span><span class="p">,</span><span class="n">m_A</span><span class="p">],</span>
-                        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">k_M</span><span class="p">,</span><span class="n">k_A</span><span class="p">],</span>
-                        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_M</span><span class="p">,</span><span class="n">c_A</span><span class="p">]</span>
-                        <span class="p">)</span>
-    
-    <span class="c1"># Define frequency values to evaluate G_f at</span>
-    <span class="n">freqVals</span> <span class="o">=</span> <span class="n">msd_sys</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
-    <span class="n">omega</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">freqVals</span><span class="p">)</span>
-    
-    <span class="c1"># Define expected frequency response using eqns in Warburton&#39;s paper</span>
-    <span class="n">numerator</span> <span class="o">=</span> <span class="n">k_A</span> <span class="o">-</span> <span class="n">m_A</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">c_A</span>
-    <span class="n">denom_term_11</span> <span class="o">=</span> <span class="n">k_M</span> <span class="o">+</span> <span class="n">k_A</span> <span class="o">-</span> <span class="n">m_M</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="p">(</span><span class="n">c_M</span> <span class="o">+</span> <span class="n">c_A</span><span class="p">)</span>
-    <span class="n">denom_term_12</span> <span class="o">=</span> <span class="n">k_A</span> <span class="o">-</span> <span class="n">m_A</span> <span class="o">*</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">c_A</span>
-    <span class="n">denom_term_2</span> <span class="o">=</span> <span class="n">k_A</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">c_A</span>
-    <span class="n">H_f</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="p">(</span><span class="n">denom_term_11</span> <span class="o">*</span> <span class="n">denom_term_12</span> <span class="o">-</span> <span class="n">denom_term_2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-
-    <span class="c1"># Returns key variables as dict</span>
-    <span class="n">names</span><span class="o">=</span> <span class="p">[</span><span class="s1">&#39;m_M&#39;</span><span class="p">,</span> <span class="s1">&#39;m_A&#39;</span><span class="p">,</span> <span class="s1">&#39;k_M&#39;</span><span class="p">,</span> <span class="s1">&#39;k_A&#39;</span><span class="p">,</span> <span class="s1">&#39;c_M&#39;</span><span class="p">,</span> <span class="s1">&#39;c_A&#39;</span><span class="p">]</span>
-    <span class="n">items</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
-        <span class="n">d</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        
-    <span class="c1"># Return statement</span>
-    <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">msd_sys</span><span class="p">,</span> <span class="n">freqVals</span><span class="p">,</span> <span class="n">H_f</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
 
     <h2 class="section-title" id="header-classes">Classes</h2>
       
       <div class="item">
-      <p id="msd_chain.MSD_Chain" class="name">class <span class="ident">MSD_Chain</span></p>
+      <p id="damper.TMD" class="name">class <span class="ident">TMD</span></p>
       
   
-    <div class="desc"><p>Defines a chain of SDOF mass-spring-dashpot systems</p></div>
+    <div class="desc"><p>Defines a single-mass tuned mass damper system</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">MSD_Chain</span><span class="p">(</span><span class="n">DynSys</span><span class="p">):</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">TMD</span><span class="p">(</span><span class="n">msd_chain</span><span class="o">.</span><span class="n">MSD_Chain</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Defines a chain of SDOF mass-spring-dashpot systems</span>
+<span class="sd">    Defines a single-mass tuned mass damper system</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Mass-spring-dashpot chain system&quot;</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Tuned mass damper&quot;</span>
     
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">M_vals</span><span class="p">,</span>
-                 <span class="n">f_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">eta_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">K_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+                 <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialisation function</span>
-<span class="sd">        ***</span>
+<span class="sd">        Initialisation method</span>
 <span class="sd">        </span>
-<span class="sd">        All inputs are (in general) _array-like_ and relate to each </span>
-<span class="sd">        of the SDOF systems in the chain. All arguments are required to be of </span>
-<span class="sd">        the same shape (this is checked).</span>
+<span class="sd">        A 2DOF system will be initialised, the first freedom of which will</span>
+<span class="sd">        ordinarily be appended to another system (e.g. modal system)</span>
 <span class="sd">        </span>
 <span class="sd">        ***</span>
-<span class="sd">        Required:</span>
-<span class="sd">            </span>
-<span class="sd">        * `M_vals`, mass (kg) corresponding to each DOF</span>
+<span class="sd">        **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">        * `sprung_mass`, _float_, mass (in kg) of sprung mass component of TMD</span>
+<span class="sd">        </span>
+<span class="sd">        * `nat_freq`, _float_, undamped natural frequency (in Hz) of TMD system </span>
+<span class="sd">          in isolation</span>
 <span class="sd">        </span>
 <span class="sd">        ***</span>
-<span class="sd">        Optional:</span>
+<span class="sd">        **Optional:**</span>
 <span class="sd">        </span>
-<span class="sd">        * `f_vals`, undamped natural frequency (Hz)</span>
-<span class="sd">        </span>
-<span class="sd">        * `K_vals`, stiffness (N/m) applicable to the each DOF linkage</span>
-<span class="sd">        </span>
-<span class="sd">        Either `K_vals` or `f_vals` must be provided. If both are provided, </span>
-<span class="sd">        `K_vals` will be used.</span>
-<span class="sd">        </span>
-<span class="sd">        * `eta_vals`, damping ratio (1.0 = critical)</span>
-<span class="sd">        </span>
-<span class="sd">        * `C_vals`, dashpot rate (Ns/m) applicable to the each DOF linkage</span>
-<span class="sd">        </span>
-<span class="sd">        Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
-<span class="sd">        `C_vals` will be used.</span>
-<span class="sd">        </span>
+<span class="sd">        * `fixed_mass`, _float_, mass (in kg) of fixed part of TMD, which will </span>
+<span class="sd">          be treated as rigidly fixed to the structure to which the TMD system </span>
+<span class="sd">          is appended.</span>
+<span class="sd">          </span>
+<span class="sd">            * A zero value should be avoided, to avoid ill-conditioning of the </span>
+<span class="sd">              mass matrix. The support frames of most real TMDs will in any case </span>
+<span class="sd">              usually have a non-negligible mass.</span>
+<span class="sd">              </span>
+<span class="sd">            * If _None_ is provided (as per default argument) the fixed mass </span>
+<span class="sd">              will be assumed to be 1/100th of the sprung mass</span>
+<span class="sd">          </span>
+<span class="sd">        * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system </span>
+<span class="sd">          in isolation</span>
+<span class="sd">          </span>
 <span class="sd">        Additional keyword arguments may be provided; these will be passed to </span>
-<span class="sd">        `DynSys.__init__()` method; refer [docs](..\docs\dynsys.html) </span>
+<span class="sd">        `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) </span>
 <span class="sd">        for that class for further details</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="n">M_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`M_vals` cannot be &#39;None&#39;&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Flatten input and establish nDOFs</span>
-        <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
         
-        <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f_vals</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>    <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">K_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">K_vals</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">C_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">C_vals</span><span class="p">))</span>
+        <span class="c1"># Handle optional arguments</span>
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span>
         
-        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
         
-        <span class="c1"># Determine K matrix</span>
-        <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
-                
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
-                <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
-                <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
-        
-        <span class="c1"># Determine C matrix</span>
-        <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
-                
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
-                    
-        <span class="c1"># Define system matrices</span>
-        
-        <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
-        <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
-        <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+        <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">]</span>
+        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
+        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
     
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="p">):</span>
-            
-            <span class="c1"># On diagonal terms</span>
-            <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            
-            <span class="c1"># Off diagonal and appended terms</span>
-            
-            <span class="k">if</span> <span class="n">n</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-                
-                <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=-</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=-</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                
-                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=-</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=-</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-                <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-    
-        <span class="c1"># ---- Write details into object as attributes -----</span>
+        <span class="c1"># Invoke msd_chain&#39;s init method</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         
-        <span class="c1"># Write details into object using parent init function</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">,</span><span class="n">C_mtrx</span><span class="p">,</span><span class="n">K_mtrx</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        
-    
-    <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        
-        <span class="n">x_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span>
-        <span class="n">y_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span><span class="n">y_vals</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="s2">&quot;r.&quot;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>        
-        
-        <span class="n">x_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x_vals</span><span class="p">,</span><span class="n">x_vals</span><span class="p">))</span>
-        <span class="n">y_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_vals</span><span class="p">),</span><span class="n">y_vals</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span><span class="n">y_vals</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="s2">&quot;b-&quot;</span><span class="p">)</span>
-        
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;DOF index&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement&quot;</span><span class="p">)</span>
+        <span class="c1"># Add output matrix entry to compute relative displacement</span>
+        <span class="c1"># (as this is commonly of interest)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                           <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
 </pre></div>
 
   </div>
@@ -1564,13 +1301,14 @@ a chain of SDOF mass-spring-dashpot systems</p>
       <div class="class">
           <h3>Ancestors (in MRO)</h3>
           <ul class="class_list">
-          <li><a href="#msd_chain.MSD_Chain">MSD_Chain</a></li>
+          <li><a href="#damper.TMD">TMD</a></li>
+          <li>msd_chain.MSD_Chain</li>
           <li>dynsys.DynSys</li>
           <li>builtins.object</li>
           </ul>
           <h3>Class variables</h3>
             <div class="item">
-            <p id="msd_chain.MSD_Chain.description" class="name">var <span class="ident">description</span></p>
+            <p id="damper.TMD.description" class="name">var <span class="ident">description</span></p>
             
 
             
@@ -1582,150 +1320,116 @@ a chain of SDOF mass-spring-dashpot systems</p>
           <h3>Static methods</h3>
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, M_vals, f_vals=None, eta_vals=None, K_vals=None, C_vals=None, **kwargs)</p>
+    <div class="name def" id="damper.TMD.__init__">
+    <p>def <span class="ident">__init__</span>(</p><p>self, sprung_mass, nat_freq, fixed_mass=None, damping_ratio=0.0, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Initialisation function</p>
+    <div class="desc"><p>Initialisation method</p>
+<p>A 2DOF system will be initialised, the first freedom of which will
+ordinarily be appended to another system (e.g. modal system)</p>
 <hr />
-<p>All inputs are (in general) <em>array-like</em> and relate to each 
-of the SDOF systems in the chain. All arguments are required to be of 
-the same shape (this is checked).</p>
-<hr />
-<p>Required:</p>
-<ul>
-<li><code>M_vals</code>, mass (kg) corresponding to each DOF</li>
-</ul>
-<hr />
-<p>Optional:</p>
+<p><strong>Required:</strong></p>
 <ul>
 <li>
-<p><code>f_vals</code>, undamped natural frequency (Hz)</p>
+<p><code>sprung_mass</code>, <em>float</em>, mass (in kg) of sprung mass component of TMD</p>
 </li>
 <li>
-<p><code>K_vals</code>, stiffness (N/m) applicable to the each DOF linkage</p>
+<p><code>nat_freq</code>, <em>float</em>, undamped natural frequency (in Hz) of TMD system 
+  in isolation</p>
 </li>
 </ul>
-<p>Either <code>K_vals</code> or <code>f_vals</code> must be provided. If both are provided, 
-<code>K_vals</code> will be used.</p>
+<hr />
+<p><strong>Optional:</strong></p>
 <ul>
 <li>
-<p><code>eta_vals</code>, damping ratio (1.0 = critical)</p>
+<p><code>fixed_mass</code>, <em>float</em>, mass (in kg) of fixed part of TMD, which will 
+  be treated as rigidly fixed to the structure to which the TMD system 
+  is appended.</p>
+<ul>
+<li>
+<p>A zero value should be avoided, to avoid ill-conditioning of the 
+  mass matrix. The support frames of most real TMDs will in any case 
+  usually have a non-negligible mass.</p>
 </li>
 <li>
-<p><code>C_vals</code>, dashpot rate (Ns/m) applicable to the each DOF linkage</p>
+<p>If <em>None</em> is provided (as per default argument) the fixed mass 
+  will be assumed to be 1/100th of the sprung mass</p>
 </li>
 </ul>
-<p>Either <code>C_vals</code> or <code>eta_vals</code> must be provided. If both are provided, 
-<code>C_vals</code> will be used.</p>
+</li>
+<li>
+<p><code>damping_ratio</code>, <em>float</em>, damping ratio (1.0=critical) of TMD system 
+  in isolation</p>
+</li>
+</ul>
 <p>Additional keyword arguments may be provided; these will be passed to 
-<code>DynSys.__init__()</code> method; refer <a href="..\docs\dynsys.html">docs</a> 
+<code>MSD_Chain.__init__()</code> method; refer <a href="..\docs\msd_chain.html">docs</a> 
 for that class for further details</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.__init__', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">M_vals</span><span class="p">,</span>
-             <span class="n">f_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">eta_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">K_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.__init__" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
+             <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Initialisation function</span>
-<span class="sd">    ***</span>
+<span class="sd">    Initialisation method</span>
 <span class="sd">    </span>
-<span class="sd">    All inputs are (in general) _array-like_ and relate to each </span>
-<span class="sd">    of the SDOF systems in the chain. All arguments are required to be of </span>
-<span class="sd">    the same shape (this is checked).</span>
+<span class="sd">    A 2DOF system will be initialised, the first freedom of which will</span>
+<span class="sd">    ordinarily be appended to another system (e.g. modal system)</span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
-<span class="sd">    Required:</span>
-<span class="sd">        </span>
-<span class="sd">    * `M_vals`, mass (kg) corresponding to each DOF</span>
+<span class="sd">    **Required:**</span>
+<span class="sd">    </span>
+<span class="sd">    * `sprung_mass`, _float_, mass (in kg) of sprung mass component of TMD</span>
+<span class="sd">    </span>
+<span class="sd">    * `nat_freq`, _float_, undamped natural frequency (in Hz) of TMD system </span>
+<span class="sd">      in isolation</span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
-<span class="sd">    Optional:</span>
+<span class="sd">    **Optional:**</span>
 <span class="sd">    </span>
-<span class="sd">    * `f_vals`, undamped natural frequency (Hz)</span>
-<span class="sd">    </span>
-<span class="sd">    * `K_vals`, stiffness (N/m) applicable to the each DOF linkage</span>
-<span class="sd">    </span>
-<span class="sd">    Either `K_vals` or `f_vals` must be provided. If both are provided, </span>
-<span class="sd">    `K_vals` will be used.</span>
-<span class="sd">    </span>
-<span class="sd">    * `eta_vals`, damping ratio (1.0 = critical)</span>
-<span class="sd">    </span>
-<span class="sd">    * `C_vals`, dashpot rate (Ns/m) applicable to the each DOF linkage</span>
-<span class="sd">    </span>
-<span class="sd">    Either `C_vals` or `eta_vals` must be provided. If both are provided, </span>
-<span class="sd">    `C_vals` will be used.</span>
-<span class="sd">    </span>
+<span class="sd">    * `fixed_mass`, _float_, mass (in kg) of fixed part of TMD, which will </span>
+<span class="sd">      be treated as rigidly fixed to the structure to which the TMD system </span>
+<span class="sd">      is appended.</span>
+<span class="sd">      </span>
+<span class="sd">        * A zero value should be avoided, to avoid ill-conditioning of the </span>
+<span class="sd">          mass matrix. The support frames of most real TMDs will in any case </span>
+<span class="sd">          usually have a non-negligible mass.</span>
+<span class="sd">          </span>
+<span class="sd">        * If _None_ is provided (as per default argument) the fixed mass </span>
+<span class="sd">          will be assumed to be 1/100th of the sprung mass</span>
+<span class="sd">      </span>
+<span class="sd">    * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system </span>
+<span class="sd">      in isolation</span>
+<span class="sd">      </span>
 <span class="sd">    Additional keyword arguments may be provided; these will be passed to </span>
-<span class="sd">    `DynSys.__init__()` method; refer [docs](..\docs\dynsys.html) </span>
+<span class="sd">    `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) </span>
 <span class="sd">    for that class for further details</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">M_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`M_vals` cannot be &#39;None&#39;&quot;</span><span class="p">)</span>
-    <span class="c1"># Flatten input and establish nDOFs</span>
-    <span class="n">M_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
     
-    <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">f_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f_vals</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>    <span class="n">eta_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">K_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">K_vals</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>      <span class="n">C_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">C_vals</span><span class="p">))</span>
+    <span class="c1"># Handle optional arguments</span>
+    <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span>
     
-    <span class="n">nDOF</span> <span class="o">=</span> <span class="n">M_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
     
-    <span class="c1"># Determine K matrix</span>
-    <span class="k">if</span> <span class="n">K_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">f_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `f_vals` or `K_vals` is required&quot;</span><span class="p">)</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">f_vals</span> <span class="o">=</span> <span class="n">SDOF_frequency</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">)</span>
-            <span class="n">omega_vals</span> <span class="o">=</span> <span class="n">angularFreq</span><span class="p">(</span><span class="n">f_vals</span><span class="p">)</span>
-            <span class="n">K_vals</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="n">omega_vals</span><span class="p">)</span>                
-    
-    <span class="c1"># Determine C matrix</span>
-    <span class="k">if</span> <span class="n">C_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">eta_vals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `eta_vals` or `C_vals` is required&quot;</span><span class="p">)</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">C_vals</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">)</span>
-                
-    <span class="c1"># Define system matrices</span>
-    
-    <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M_vals</span><span class="p">))</span>
-    <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
-    <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">)</span>
+    <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">]</span>
+    <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
+    <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
 
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF</span><span class="p">):</span>
-        
-        <span class="c1"># On diagonal terms</span>
-        <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-        <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-        
-        <span class="c1"># Off diagonal and appended terms</span>
-        
-        <span class="k">if</span> <span class="n">n</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-            
-            <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=-</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=-</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="n">C_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=</span><span class="n">C_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            
-            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">=-</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=-</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="n">K_mtrx</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+=</span><span class="n">K_vals</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-
-    <span class="c1"># ---- Write details into object as attributes -----</span>
+    <span class="c1"># Invoke msd_chain&#39;s init method</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
-    <span class="c1"># Write details into object using parent init function</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_mtrx</span><span class="p">,</span><span class="n">C_mtrx</span><span class="p">,</span><span class="n">K_mtrx</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c1"># Add output matrix entry to compute relative displacement</span>
+    <span class="c1"># (as this is commonly of interest)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                       <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
 </pre></div>
 
   </div>
@@ -1735,7 +1439,7 @@ for that class for further details</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.AddConstraintEqns">
+    <div class="name def" id="damper.TMD.AddConstraintEqns">
     <p>def <span class="ident">AddConstraintEqns</span>(</p><p>self, Jnew, Jkey, checkConstraints=True)</p>
     </div>
     
@@ -1771,8 +1475,8 @@ constraints previously defined.</p>
 <p><code>CheckConstraints()</code> should be used to test whether constraint 
 equations are independent</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.AddConstraintEqns', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.AddConstraintEqns" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.AddConstraintEqns', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.AddConstraintEqns" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddConstraintEqns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Jnew</span><span class="p">,</span><span class="n">Jkey</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to append a constraint equation</span>
@@ -1827,7 +1531,7 @@ equations are independent</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.AddOutputMtrx">
+    <div class="name def" id="damper.TMD.AddOutputMtrx">
     <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, fName=&#39;outputs.csv&#39;, verbose=False)</p>
     </div>
     
@@ -1840,8 +1544,8 @@ equations are independent</p></div>
 (as denoted by <code>fName</code>)</p>
 <p><code>output_mtrx</code> can be a list of matrices; each will be appended in turn</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.AddOutputMtrx', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.AddOutputMtrx" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.AddOutputMtrx', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.AddOutputMtrx" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                   <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                   <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -1893,7 +1597,7 @@ equations are independent</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.AppendSystem">
+    <div class="name def" id="damper.TMD.AppendSystem">
     <p>def <span class="ident">AppendSystem</span>(</p><p>self, child_sys, J_key=None, Xpos_parent=None, modeshapes_parent=None, DOF_parent=None, Xpos_child=None, modeshapes_child=None, DOF_child=None)</p>
     </div>
     
@@ -1976,8 +1680,8 @@ with constant <code>M</code>, <code>C</code>, <code>K</code> system matrices.
 (This is checked: an exception will be raised if attempt is made to use 
 with nonlinear systems).</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.AppendSystem', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.AppendSystem" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.AppendSystem', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.AppendSystem" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">child_sys</span><span class="p">,</span>
                  <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -2148,7 +1852,7 @@ with nonlinear systems).</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.CalcEigenproperties">
+    <div class="name def" id="damper.TMD.CalcEigenproperties">
     <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, normaliseEigenvectors=True, verbose=False, makePlots=False, axarr=None)</p>
     </div>
     
@@ -2231,8 +1935,8 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
 </li>
 </ul></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcEigenproperties', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.CalcEigenproperties" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CalcEigenproperties', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.CalcEigenproperties" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                         <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                         <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
@@ -2389,7 +2093,7 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.CalcFreqResponse">
+    <div class="name def" id="damper.TMD.CalcFreqResponse">
     <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, fVals=None, fmax=None, A=None, B=None, C=None, D=None, force_accn=False, verbose=False)</p>
     </div>
     
@@ -2438,8 +2142,8 @@ transfer matrix can be obtained in this way</p>
 </li>
 </ul></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcFreqResponse', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.CalcFreqResponse" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CalcFreqResponse', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.CalcFreqResponse" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                      <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                      <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
@@ -2586,7 +2290,7 @@ transfer matrix can be obtained in this way</p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.CalcLoadMatrix">
+    <div class="name def" id="damper.TMD.CalcLoadMatrix">
     <p>def <span class="ident">CalcLoadMatrix</span>(</p><p>self, saveAsAttr=True, M=None)</p>
     </div>
     
@@ -2612,8 +2316,8 @@ class attributes will be used.</em></p>
 </li>
 </ul></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcLoadMatrix', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.CalcLoadMatrix" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CalcLoadMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.CalcLoadMatrix" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcLoadMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                    <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -2662,7 +2366,7 @@ class attributes will be used.</em></p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.CalcStateMatrix">
+    <div class="name def" id="damper.TMD.CalcStateMatrix">
     <p>def <span class="ident">CalcStateMatrix</span>(</p><p>self, saveAsAttr=True, M=None, C=None, K=None, nDOF=None)</p>
     </div>
     
@@ -2697,8 +2401,8 @@ class attributes will be used.</em></p>
 </li>
 </ul></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CalcStateMatrix', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.CalcStateMatrix" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CalcStateMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.CalcStateMatrix" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">saveAsAttr</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                     <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -2769,7 +2473,7 @@ class attributes will be used.</em></p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.CheckConstraints">
+    <div class="name def" id="damper.TMD.CheckConstraints">
     <p>def <span class="ident">CheckConstraints</span>(</p><p>self, J=None, verbose=True, raiseException=True)</p>
     </div>
     
@@ -2781,8 +2485,8 @@ class attributes will be used.</em></p>
 <p>Practically this is done by checking that the full <code>J_mtrx</code> of the 
 system, including any sub-systems, is full rank</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CheckConstraints', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.CheckConstraints" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CheckConstraints', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.CheckConstraints" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">raiseException</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check contraint equations are independent</span>
@@ -2839,7 +2543,7 @@ system, including any sub-systems, is full rank</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.CheckDOF">
+    <div class="name def" id="damper.TMD.CheckDOF">
     <p>def <span class="ident">CheckDOF</span>(</p><p>self, DOF)</p>
     </div>
     
@@ -2848,8 +2552,8 @@ system, including any sub-systems, is full rank</p></div>
   
     <div class="desc"><p>Function is used to check is a certain requested DOF index is valid</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CheckDOF', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.CheckDOF" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CheckDOF', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.CheckDOF" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckDOF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">DOF</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to check is a certain requested DOF index is valid</span>
@@ -2877,7 +2581,7 @@ system, including any sub-systems, is full rank</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.CheckOutputMtrx">
+    <div class="name def" id="damper.TMD.CheckOutputMtrx">
     <p>def <span class="ident">CheckOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, verbose=False)</p>
     </div>
     
@@ -2886,8 +2590,8 @@ system, including any sub-systems, is full rank</p></div>
   
     <div class="desc"><p>Checks that all defined output matrices are of the correct shape</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.CheckOutputMtrx', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.CheckOutputMtrx" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CheckOutputMtrx', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.CheckOutputMtrx" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                     <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -2942,7 +2646,7 @@ system, including any sub-systems, is full rank</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.EqnOfMotion">
+    <div class="name def" id="damper.TMD.EqnOfMotion">
     <p>def <span class="ident">EqnOfMotion</span>(</p><p>self, x, t, forceFunc, M, C, K, J, nDOF, isSparse, isLinear, hasConstraints)</p>
     </div>
     
@@ -2959,8 +2663,8 @@ following ODE:</p>
 <p>Dynamic systems may have constraint equations defined as follows:</p>
 <p>$$ J\ddot{y} = 0 $$</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.EqnOfMotion', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.EqnOfMotion" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.EqnOfMotion', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.EqnOfMotion" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">EqnOfMotion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span>
                 <span class="n">forceFunc</span><span class="p">,</span>
                 <span class="n">M</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">J</span><span class="p">,</span>
@@ -3081,7 +2785,7 @@ following ODE:</p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.GetLoadMatrix">
+    <div class="name def" id="damper.TMD.GetLoadMatrix">
     <p>def <span class="ident">GetLoadMatrix</span>(</p><p>self, recalculate=False)</p>
     </div>
     
@@ -3091,8 +2795,8 @@ following ODE:</p>
     <div class="desc"><p>Helper function to obtain load matrix, if already calculated 
 and held as attribute. Otherwise load matrix will be recalculated</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.GetLoadMatrix', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.GetLoadMatrix" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.GetLoadMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.GetLoadMatrix" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetLoadMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function to obtain load matrix, if already calculated </span>
@@ -3114,7 +2818,7 @@ and held as attribute. Otherwise load matrix will be recalculated</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.GetStateMatrix">
+    <div class="name def" id="damper.TMD.GetStateMatrix">
     <p>def <span class="ident">GetStateMatrix</span>(</p><p>self, recalculate=True)</p>
     </div>
     
@@ -3124,8 +2828,8 @@ and held as attribute. Otherwise load matrix will be recalculated</p></div>
     <div class="desc"><p>Helper function to obtain state matrix, if already calculated 
 and held as attribute. Otherwise state matrix will be recalculated</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.GetStateMatrix', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.GetStateMatrix" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.GetStateMatrix', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.GetStateMatrix" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function to obtain state matrix, if already calculated </span>
@@ -3147,7 +2851,7 @@ and held as attribute. Otherwise state matrix will be recalculated</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.GetSystemMatrices">
+    <div class="name def" id="damper.TMD.GetSystemMatrices">
     <p>def <span class="ident">GetSystemMatrices</span>(</p><p>self, createNewSystem=False)</p>
     </div>
     
@@ -3159,8 +2863,8 @@ be accessed directly, except by member functions</p>
 <hr />
 <p>A dict is used to return matrices</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.GetSystemMatrices', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.GetSystemMatrices" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.GetSystemMatrices', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.GetSystemMatrices" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">createNewSystem</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to retrieve system matrices, which are not usually to </span>
@@ -3286,7 +2990,7 @@ be accessed directly, except by member functions</p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.PlotSystem">
+    <div class="name def" id="damper.TMD.PlotSystem">
     <p>def <span class="ident">PlotSystem</span>(</p><p>self, ax, **kwargs)</p>
     </div>
     
@@ -3296,8 +3000,8 @@ be accessed directly, except by member functions</p>
     <div class="desc"><p>Generic plotter function to display current configuration of this 
 <code>dynSys</code> object</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.PlotSystem', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.PlotSystem" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.PlotSystem', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.PlotSystem" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     
     <span class="n">x_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span>
@@ -3319,7 +3023,7 @@ be accessed directly, except by member functions</p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.PlotSystems_all">
+    <div class="name def" id="damper.TMD.PlotSystems_all">
     <p>def <span class="ident">PlotSystems_all</span>(</p><p>self, ax, **kwargs)</p>
     </div>
     
@@ -3329,8 +3033,8 @@ be accessed directly, except by member functions</p>
     <div class="desc"><p>Generic plotter function to display current configuration of 
 all systems and subsystems</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.PlotSystems_all', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.PlotSystems_all" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.PlotSystems_all', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.PlotSystems_all" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generic plotter function to display current configuration of </span>
@@ -3346,7 +3050,7 @@ all systems and subsystems</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.PrintSystemMatrices">
+    <div class="name def" id="damper.TMD.PrintSystemMatrices">
     <p>def <span class="ident">PrintSystemMatrices</span>(</p><p>self, printShapes=True, printValues=False)</p>
     </div>
     
@@ -3357,8 +3061,8 @@ all systems and subsystems</p></div>
 <hr />
 <p>Useful for documentation and debugging</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.PrintSystemMatrices', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.PrintSystemMatrices" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.PrintSystemMatrices', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.PrintSystemMatrices" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PrintSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">printShapes</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">printValues</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to print system matrices to text window   </span>
@@ -3422,7 +3126,7 @@ all systems and subsystems</p></div>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.ReadOutputMtrxFromFile">
+    <div class="name def" id="damper.TMD.ReadOutputMtrxFromFile">
     <p>def <span class="ident">ReadOutputMtrxFromFile</span>(</p><p>self, fName=&#39;outputs.csv&#39;)</p>
     </div>
     
@@ -3437,8 +3141,8 @@ $$ x = [q,\dot{q},\ddot{q}]^{T} $$
 is the (extended) <em>state variable</em> vector_ and y is <em>output vector</em>. 
 C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</strong> to <em>outputs</em> <strong>y</strong>.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.ReadOutputMtrxFromFile', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.ReadOutputMtrxFromFile" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.ReadOutputMtrxFromFile', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.ReadOutputMtrxFromFile" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                             <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -3469,7 +3173,7 @@ C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</stro
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.freqVals">
+    <div class="name def" id="damper.TMD.freqVals">
     <p>def <span class="ident">freqVals</span>(</p><p>self, f_salient=None, nf_pad=400, fmax=None)</p>
     </div>
     
@@ -3489,8 +3193,8 @@ Define frequency values to evaluate frequency response G(f) at</p>
 </li>
 </ul></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.freqVals', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.freqVals" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.freqVals', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.freqVals" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">freqVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">f_salient</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">nf_pad</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span><span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;&quot;</span>
 <span class="sd">    Define frequency values to evaluate frequency response G(f) at</span>
@@ -3549,7 +3253,7 @@ Define frequency values to evaluate frequency response G(f) at</p>
   
             
   <div class="item">
-    <div class="name def" id="msd_chain.MSD_Chain.hasConstraints">
+    <div class="name def" id="damper.TMD.hasConstraints">
     <p>def <span class="ident">hasConstraints</span>(</p><p>self)</p>
     </div>
     
@@ -3558,8 +3262,8 @@ Define frequency values to evaluate frequency response G(f) at</p>
   
     <div class="desc"><p>Tests whether constraint equations are defined</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-msd_chain.MSD_Chain.hasConstraints', this);">Show source &equiv;</a></p>
-  <div id="source-msd_chain.MSD_Chain.hasConstraints" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.hasConstraints', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.hasConstraints" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">hasConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tests whether constraint equations are defined</span>
