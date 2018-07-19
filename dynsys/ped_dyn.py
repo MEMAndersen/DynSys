@@ -443,7 +443,7 @@ class SteadyStateCrowdLoading():
         ***
         **Required:**
             
-        * `mode_index`, _integer_, denotes the mode at which resonance is 
+        * `target_mode`, _integer_, denotes the mode at which resonance is 
           to be targeted
           
         ***
