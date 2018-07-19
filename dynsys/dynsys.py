@@ -397,7 +397,7 @@ class DynSys:
     
 
     def GetSystemMatrices(self,
-                          make_unconstrained:bool=False,
+                          unconstrained:bool=False,
                           createNewSystem:bool=False):
         """
         Function is used to retrieve system matrices, which are not usually to 
@@ -406,7 +406,7 @@ class DynSys:
         ***
         Optional:
             
-        * `make_unconstrained`, boolean, if True system matrices applicable to 
+        * `unconstrained`, boolean, if True system matrices applicable to 
           the _unconstrained problem_ are returned. Note: only applicable to 
           systems with constraint equations. Default value = False.
           Refer documentation for `transform_to_unconstrained()` for details.
@@ -486,7 +486,7 @@ class DynSys:
             full_J_mtrx = npy.hstack(tuple(J_list))            
             J_dict[key] =full_J_mtrx
             
-        # Assemble full matrix
+        # Assemble full constraints matrix
         if J_dict:
             J_mtrx = npy.vstack(list(J_dict.values()))
         else:
@@ -503,11 +503,14 @@ class DynSys:
         
         # Project system matrices onto null space of constraints matrix 
         # to transform to unconstrained problem
-        if make_unconstrained:
-            M_mtrx, C_mtrx, K_mtrx, Z = transform_to_unconstrained(M_mtrx,
-                                                                   C_mtrx,
-                                                                   K_mtrx,
-                                                                   J_mtrx)
+        if unconstrained and self.hasConstraints():
+            
+            mdict = transform_to_unconstrained(J=J_mtrx,M=M_mtrx,
+                                               C=C_mtrx,K=K_mtrx)
+            M_mtrx = mdict["M"]
+            C_mtrx = mdict["C"]
+            K_mtrx = mdict["K"]
+            Z_mtrx = mdict["Null_J"]
         
         # Populate dictionary
         d["nDOF"] = nDOF_new
@@ -522,8 +525,8 @@ class DynSys:
         d["isLinear"]=isLinear
         d["isSparse"]=isSparse
         
-        if make_unconstrained:
-            d["Null_J"]=Z
+        if unconstrained and self.hasConstraints():
+            d["Null_J"]=Z_mtrx
         
         # Create new system object, given system matrices
         if createNewSystem:
@@ -590,11 +593,12 @@ class DynSys:
             
             
     def CalcStateMatrix(self,
-                        saveAsAttr:bool=True,
                         M=None,
                         C=None,
                         K=None,
-                        nDOF=None):
+                        nDOF=None,
+                        unconstrained=False,
+                        saveAsAttr:bool=True):
         """
         Assembles the continous-time state matrix `A_mtrx` used in state-space 
         methods
@@ -619,6 +623,11 @@ class DynSys:
         * `C`, damping matrix
         
         * `K`, stiffness matrix
+        
+        * `unconstrained`, _boolean_; if True load matrix for the 
+          _unconstrained problem_ will be returned. Only applicable if 
+          constraint equations are defined. Refer documentation of 
+          `transform_to_unconstrained()` method for further details
                     
         * `saveAsAttr`: if `True` state matrix returned will also be saved as 
           an object instance attribute
@@ -626,7 +635,7 @@ class DynSys:
         """
         
         # Retrieve system matrices
-        d = self.GetSystemMatrices()
+        d = self.GetSystemMatrices(unconstrained=unconstrained)
         
         # Handle optional arguments
         if M is None: M = d["M_mtrx"]
@@ -639,7 +648,7 @@ class DynSys:
                                   C_mtrx=C,
                                   K_mtrx=K,
                                   checkConstraints=False,
-                                  nDOF=nDOF)
+                                  nDOF=M.shape[0])
         
         # Assemble state matrix
         A, Minv = calc_state_matrix(M=M,K=K,C=C,isSparse=self.isSparse)
@@ -648,27 +657,46 @@ class DynSys:
         if saveAsAttr:
             self._A_mtrx = A
             self._Minv = Minv
+            
+            if unconstrained:
+                self._Null_J = d["Null_J"]
         
         return A     
     
     
-    def GetStateMatrix(self,recalculate=True):
+    def GetStateMatrix(self,
+                       unconstrained=False,
+                       recalculate=True):
         """
         Helper function to obtain state matrix, if already calculated 
         and held as attribute. Otherwise state matrix will be recalculated
+        
+        ***
+        Optional:
+            
+        * `unconstrained`, _boolean_; if True load matrix for the 
+          _unconstrained problem_ will be returned. Only applicable if 
+          constraint equations are defined.
+          
+        * `recalculate`, _boolean_; if True load matrix will always be 
+          re-evaluated upon function call. Otherwise if load matrix has already 
+          been evaluated for system (and is held as attribute) then it will 
+          not be re-evaluated.
+        
         """
         
         attr = "_A_mtrx"
         
         if recalculate or not hasattr(self,attr):
-            return self.CalcStateMatrix()
+            return self.CalcStateMatrix(unconstrained=unconstrained)
         else:
             return getattr(self,attr)
     
     
     def CalcLoadMatrix(self,
-                       saveAsAttr=True,
-                       M=None):
+                       M=None,
+                       unconstrained=False,
+                       saveAsAttr=True):
         """
         Assembles the load matrix `B_mtrx` used in state-space methods
         ***
@@ -687,17 +715,55 @@ class DynSys:
             
         * `M`, mass matrix
         
+        * `unconstrained`, _boolean_; if True load matrix for the 
+          _unconstrained problem_ will be returned. Only applicable if 
+          constraint equations are defined. Refer documentation of 
+          `transform_to_unconstrained()` method for further details
+        
         * `saveAsAttr`: if `True` state matrix returned will also be saved as 
           an object instance attribute
         
         """
         
+        hasConstraints = self.hasConstraints()
+        
         # Retrieve system matrices
-        if M is None: M = self._M_mtrx
+        if M is None:
+            
+            mdict = self.GetSystemMatrices(unconstrained=unconstrained)
+            M = mdict["M_mtrx"]
+            
+            if hasConstraints and unconstrained:
+                J = mdict["J_mtrx"]
+                Z = mdict["Null_J"]
         
-        self._CheckSystemMatrices(M_mtrx=M)
+        else:
+            self._CheckSystemMatrices(M_mtrx=M)
         
-        B, Minv = calc_load_matrix(M=M,isSparse=self.isSparse)
+        # Convert to unconstrained problem, if applicable
+        if unconstrained and hasConstraints:
+
+            Minv = npy.linalg.inv(M)
+            Minv = Minv @ Z.T
+            B, Minv = calc_load_matrix(M=None,Minv=Minv,isSparse=False)
+            
+        else:
+            B, Minv = calc_load_matrix(M=M,isSparse=self.isSparse)
+            
+        # Check shape
+        nDOF = mdict["nDOF"]
+        
+        if B.shape[1]!=nDOF:
+            raise ValueError("Unexpected column dimension for 'B' matrix!")
+        
+        if unconstrained and hasConstraints:
+            if B.shape[0]!=2*(nDOF-J.shape[0]):
+                raise ValueError("Unexpected row dimension for 'B' matrix "+
+                                 "applicable to unconstrained problem")
+        
+        else:
+            if B.shape[0]!=2*nDOF:
+                raise ValueError("Unexpected row dimension for 'B' matrix")
         
         # Save as attribute
         if saveAsAttr:
@@ -707,19 +773,108 @@ class DynSys:
         return B
     
     
-    def GetLoadMatrix(self,recalculate=False):
+    def GetLoadMatrix(self,
+                      unconstrained:bool=False,
+                      recalculate:bool=False):
         """
         Helper function to obtain load matrix, if already calculated 
         and held as attribute. Otherwise load matrix will be recalculated
+        
+        ***
+        Optional:
+            
+        * `unconstrained`, _boolean_; if True load matrix for the _unconstrained 
+          problem_ will be returned. Only applicable if constraint equations 
+          are defined.
+          
+        * `recalculate`, _boolean_; if True load matrix will always be 
+          re-evaluated upon function call. Otherwise if load matrix has already 
+          been evaluated for system (and is held as attribute) then it will 
+          not be re-evaluated.
+            
         """
         
         attr = "_B_mtrx"
         
         if recalculate or not hasattr(self,attr):
-            return self.CalcLoadMatrix()
+            return self.CalcLoadMatrix(unconstrained=unconstrained)
         else:
             return getattr(self,attr)
+        
+        
+    def GetOutputMtrx(self,
+                      state_variables_only:bool=False,
+                      all_systems:bool=True):
+        """
+        Returns output matrix for overall system
+        
+        ***
+        Optional:
             
+        * `state_variables_only`, _boolean_, if True, only columns relating to state 
+          variables (i.e. displacements, velocities - but not accelerations)
+          will be returned
+          
+        * `all_systems`, _boolean_, if True output matrices for all subsystems 
+          will be arranged as block diagonal matrix, which represents the 
+          output matrix for the full system
+          
+        """
+        
+        # Define list over which to loop
+        if all_systems:
+            sys_list = self.DynSys_list
+        else:
+            sys_list = [self]
+        
+        # Assemble full output matrix by arranging as block diagonal matrix
+        #output_mtrx_list = [x.output_mtrx for x in sys_list]
+        #print(output_mtrx_list)
+        
+        #for x in output_mtrx_list:
+        #    print(x)
+        
+        disp_cols_list = []
+        vel_cols_list = []
+        accn_cols_list = []
+        output_names_list = []
+        
+        for x in sys_list:
+
+            nDOF = x.nDOF
+            output_mtrx = x.output_mtrx
+            output_names = x.output_names
+            
+            # Decompose into groups relating to (disp,vel,accn)
+            disp_cols = output_mtrx[:,:nDOF]
+            vel_cols = output_mtrx[:,nDOF:2*nDOF]
+            accn_cols = output_mtrx[:,2*nDOF:]
+            
+            # Append to lists
+            disp_cols_list.append(disp_cols)
+            vel_cols_list.append(vel_cols)
+            accn_cols_list.append(accn_cols)
+            output_names_list.append([x.name+" : "+y for y in output_names])
+            
+        # Assemble submatrices for full system
+        disp_cols_full = scipy.linalg.block_diag(*disp_cols_list)
+        vel_cols_full = scipy.linalg.block_diag(*vel_cols_list)
+        
+        if not state_variables_only:
+            accn_cols_full = scipy.linalg.block_diag(*accn_cols_list)
+        
+        # Concatenate to prepare output matrix for full system
+        output_mtrx_full = npy.hstack((disp_cols_full,vel_cols_full))
+        
+        if not state_variables_only:
+            output_mtrx_full = npy.hstack((output_mtrx_full,accn_cols_full))
+        
+        # Convert list of names to array format
+        output_names_arr = npy.ravel(output_names_list) 
+        
+        # Return matrix and row names for full system
+        return output_mtrx_full, output_names_arr
+    
     
     def EqnOfMotion(self,x, t,
                     forceFunc,
@@ -1423,9 +1578,10 @@ class DynSys:
         
         # Routine cannot (currently) handle systems with constraints
         # (this can be implemented in the near future though!)
-        if self.hasConstraints():
-            raise ValueError("Error: cannot run `CalcFreqResponse` method " + 
-                             "for systems with constraints!")
+        hasConstraints = self.hasConstraints()
+        #if hasConstraints:
+        #    raise ValueError("Error: cannot run `CalcFreqResponse` method " + 
+        #                     "for systems with constraints!")
         
         
         nDOF = self.nDOF
@@ -1437,15 +1593,18 @@ class DynSys:
         fVals = npy.ravel(fVals)
         
         if A is None:
-            A = self.GetStateMatrix(recalculate=True)
+            A = self.GetStateMatrix(unconstrained=hasConstraints,
+                                    recalculate=True)
             
         if B is None:
-            B = self.GetLoadMatrix(recalculate=True)
+            B = self.GetLoadMatrix(unconstrained=hasConstraints,
+                                   recalculate=True)
         
         # Get output matrices
         if C is None:
             
-            C = self.output_mtrx
+            C = self.GetOutputMtrx(all_systems=True,
+                                   state_variables_only=True)[0]
                     
         if C.shape[0]==0:
             if verbose:
@@ -1454,10 +1613,7 @@ class DynSys:
                       "displacements and velocities\n***")
             
             C = npy.identity(2*nDOF)
-            
-        # Retain only columns relating to state variables (disp, vel)
-        C = C[:,:2*nDOF]
-            
+                        
         # Override the above 
         if force_accn:
             
@@ -1476,17 +1632,29 @@ class DynSys:
         # Determine number of outputs
         No = C.shape[0]
         
+        # Get nullspace basis matrix (which will already have been calculated)
+        if hasConstraints:
+            Z = self._Null_J
+            zeros_mtrx = npy.zeros_like(Z)
+            Z2 = npy.vstack((npy.hstack((Z,zeros_mtrx)),
+                             npy.hstack((zeros_mtrx,Z))))
+        else:
+            Z2 = npy.identity(A.shape[0])
+        
         # Print shapes of all arrays
         if verbose:
             print("Shapes of A B C D matrices:")
             print("A: {0}".format(A.shape))
             print("B: {0}".format(B.shape))
             print("C: {0}".format(C.shape))
-        
+            
             if D is not None:
                 print("D: {0}".format(D.shape))
             else:
                 print("D: None")
+            
+            if hasConstraints:
+                print("Z2:{0}".format(Z2.shape))                
             
         # Define array to contain frequency response for each 
         G_f = npy.zeros((No,Ni,nf),dtype=complex)
@@ -1500,11 +1668,13 @@ class DynSys:
             # Define G(jw) at this frequency
             if not self.isSparse:
                 I = npy.identity(A.shape[0])
-                Gf = C * npy.linalg.inv(jw * I - A) * B
+                Gf = npy.linalg.inv(jw * I - A) @ B
                 
             else:
                 I = sparse.identity(A.shape[0])
-                Gf = C * sparse.linalg.inv(jw * I - A) * B
+                Gf = sparse.linalg.inv(jw * I - A) @ B
+                
+            Gf = C @ Z2 @ Gf
                 
             if D is not None:
                 Gf += D    
@@ -1750,7 +1920,7 @@ def calc_load_matrix(M,Minv=None,isSparse=False):
     ***
     Required:
                 
-    * `M`, mass matrix, shape [n x n]
+    * `M`, mass matrix, shape [n x n]. Unused if `Minv` provided.
     
     ***
     Optional:
@@ -1766,7 +1936,7 @@ def calc_load_matrix(M,Minv=None,isSparse=False):
     * `B`, load matrix, shape [2n x n]
     
     """
-
+    
     if not isSparse:
         if Minv is None:
             Minv = npy.linalg.inv(M)
@@ -1780,22 +1950,33 @@ def calc_load_matrix(M,Minv=None,isSparse=False):
     return B, Minv
 
 
-def transform_to_unconstrained(M,C,K,J):
+def transform_to_unconstrained(J,M=None,C=None,K=None):
     """
     Transforms a constrained problem with system matrices (`M`,`C`,`K`) 
     and constraints matrix `J` into a unconstrained problem by projecting 
     system matrices onto the nullspace basis of J
     """
     
+    dict_to_return={}
+    
     # Solve for null space of J
     Z = null_space(J)
+    dict_to_return["Null_J"]=Z
 
     # Compute modified M, C and K matrices
-    M = Z.T @ M @ Z
-    C = Z.T @ C @ Z
-    K = Z.T @ K @ Z
+    if M is not None:
+        M = Z.T @ M @ Z
+        dict_to_return["M"]=M
+        
+    if C is not None:
+        C = Z.T @ C @ Z
+        dict_to_return["C"]=C
+        
+    if K is not None:
+        K = Z.T @ K @ Z
+        dict_to_return["K"]=K
     
-    return M, C, K, Z
+    return dict_to_return
 
 
 def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
@@ -1844,8 +2025,12 @@ def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
     if constrained:
         
         # Convert to unconstrained problem 
-        M,C,K,Z = transform_to_unconstrained(M,C,K,J)
-    
+        mdict = transform_to_unconstrained(J=J,M=M,C=C,K=K)
+        Z = mdict["Null_J"]
+        M = mdict["M"]
+        C = mdict["C"]
+        K = mdict["K"]
+            
         if verbose: 
             print("Null(J)=Z:\n{0}\n".format(Z))
             print("M':\n{0}\n".format(M))
@@ -2078,13 +2263,24 @@ if __name__ == "__main__":
     
     d = sys1.GetSystemMatrices(createNewSystem=True)
     
+    J = d["J_mtrx"]
+    
     full_sys = d["DynSys_full"]
     full_sys.PrintSystemMatrices(printValues=True)
     
-    M_constrained = full_sys.GetSystemMatrices(make_unconstrained=False)["M_mtrx"]
-    M_unconstrained = full_sys.GetSystemMatrices(make_unconstrained=True)["M_mtrx"]
+    M_constrained = full_sys.GetSystemMatrices(unconstrained=False)["M_mtrx"]
+    M_unconstrained = full_sys.GetSystemMatrices(unconstrained=True)["M_mtrx"]
     print("M_constrained:\n{0}".format(M_constrained))
     print("M_unconstrained:\n{0}".format(M_unconstrained))
     
+    B_constrained = full_sys.CalcLoadMatrix(unconstrained=False)
+    B_unconstrained = full_sys.CalcLoadMatrix(unconstrained=True)
+    print("B_constrained:\n{0}".format(B_constrained.shape))
+    print("B_unconstrained:\n{0}".format(B_unconstrained.shape))
+    
+    A_constrained = full_sys.CalcStateMatrix(unconstrained=False)
+    A_unconstrained = full_sys.CalcStateMatrix(unconstrained=True)
+    print("A_constrained:\n{0}".format(A_constrained.shape))
+    print("A_unconstrained:\n{0}".format(A_unconstrained.shape))
     
     
