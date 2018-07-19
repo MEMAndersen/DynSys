@@ -10,6 +10,7 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import scipy.signal
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import timeit
 import pandas
 from datetime import datetime
@@ -274,7 +275,7 @@ class TStep_Results:
         """
         Produces a time series results plot
         """
-
+        
         lines = ax.plot(t_vals,data_vals)
         
         if titleStr is not None:
@@ -364,6 +365,7 @@ class TStep_Results:
 
             # Determine number of subplots required
             hasConstraints = obj.hasConstraints()
+            
             if hasConstraints:
                 nPltRows=5
             else:
@@ -385,39 +387,44 @@ class TStep_Results:
                 # All systems and subsystems are modal
                 sysStr = "Modal "
                 
-            # Get data to plot            
-            t,f,v,vdot,v2dot,f_constraint =self.GetResults(obj,
-                                                           ['t','f','v',
+            # Get data to plot   
+            t = self.t
+            f,v,vdot,v2dot,f_constraint =self.GetResults(obj,['f','v',
                                                             'vdot','v2dot',
                                                             'f_constraint'])
             
-            # Handle dofs2Plot in case of none
-            if dofs2Plot is None:
-                dofs2Plot = range(v.shape[1])
+            # Filter data according to dofs2Plot
+            if dofs2Plot is not None:
+                
+                f = f[:,dofs2Plot]
+                v = v[:,dofs2Plot]
+                vdot = vdot[:,dofs2Plot]
+                v2dot = v2dot[:,dofs2Plot]
             
             # Create time series plots
             self._TimePlot(ax=axarr[0],
                            t_vals=t,
-                           data_vals=f[:,dofs2Plot],
+                           data_vals=f,
                            xlim=xlim,
                            titleStr="Applied %sForces (N)" % sysStr)
             
             self._TimePlot(ax=axarr[1],
                            t_vals=t,
-                           data_vals=v[:,dofs2Plot],
+                           data_vals=v,
                            titleStr="%sDisplacements (m)" % sysStr)
             
             self._TimePlot(ax=axarr[2],
                            t_vals=t,
-                           data_vals=vdot[:,dofs2Plot],
+                           data_vals=vdot,
                            titleStr="%sVelocities (m/s)" % sysStr)
             
             self._TimePlot(ax=axarr[3],
                            t_vals=t,
-                           data_vals=v2dot[:,dofs2Plot],
+                           data_vals=v2dot,
                            titleStr="%sAccelerations ($m/s^2$)" % sysStr)
             
             if hasConstraints:
+                
                 self._TimePlot(ax=axarr[4],
                            t_vals=t,
                            data_vals=f_constraint,
@@ -732,49 +739,95 @@ class TStep_Results:
         return fig_list
     
         
-    def AnimateResults(self):
+    def PlotDeformed(self,timestep_index:int,dynsys_obj=None,ax=None,**kwargs):
+        """
+        Produce a plot of system in its deformed configuration, as per results 
+        at a given time step
         
-        ValueError("Unfinished - do not use!")
+        Additional keyword arguments are passed-down to `PlotSystem()` method 
+        of applicable system object
+        """
         
-        n = self.nDOF
+        # Get system to plot
+        if dynsys_obj is None:
+            dynsys_obj = self.tstep_obj.dynsys_obj
         
-        vmax = npy.max(npy.max(self.v))
-        vmin = npy.min(npy.min(self.v))
-        vabsmax = npy.max([vmax,vmin])
-        Ns=self.t.shape[0]
-        dt=self.dt
+        # Get results at applicable time step
+        t_val = npy.ravel(self.t)[timestep_index]
+        print(t_val)
+        v_vals = self.GetResults(dynsys_obj,['v'])[0][timestep_index,:]
         
-        fig = plt.figure()
-        ax = fig.add_subplot(111, autoscale_on=False, xlim=(0, n-1), ylim=(-vabsmax,vabsmax))
-        ax.grid()
-        
-        line, = ax.plot([], [], 'o-', lw=2)
-        time_template = 'time = %.1fs'
+        # Create figure and axes onto which to draw system, if not provided
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+            
+        # Plot system onto axes
+        line = dynsys_obj.PlotSystem(ax=ax,v=v_vals,**kwargs)
+    
+        # Overlay caption to 
         time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
+        time_text.set_text('Time = %.2fs' % t_val)
         
-        def init():
-            line.set_data([], [])
-            time_text.set_text('')
-            return line, time_text
+        return fig, line, time_text
+    
+    
+    def AnimateResults(self,dynsys_obj=None,**kwargs):
+        """
+        Produce animation of results, plotting deformed configuration of system 
+        at each time step
         
+        ***
+        **Required:**
         
-        def animate(i):
-            #print("frame{0}".format(i))
-            x = [npy.arange(n)]
-            #print(x)
-            y = [self.v[i,:]]
-            #print(y)
-            t_val = self.t[i,0]
-            #print(t_val)
+        (No arguments required)
+        
+        **Optional:**
+        
+        * `dynsys_obj`, instance of `DynSys()` class (or derived classes), 
+          defining the system to be plotted. If None (per default argument) the 
+          parent system will be plotted
+          
+        """
+        
+        # Get system to plot
+        if dynsys_obj is None:
+            dynsys_obj = self.tstep_obj.dynsys_obj
             
-            line.set_data(x, y)
-            time_text.set_text(time_template % t_val)
+        print("Producing animation of deformed configuration of '%s'" 
+              % dynsys_obj.name)
             
-            return line, time_text
+        t = self.t
+        dt = t[1] - t[0]    # time interval
+        Ns = t.shape[0]     # number of time-steps
         
-        ani = animation.FuncAnimation(fig, animate, npy.arange(0, Ns), interval=dt*1000,blit=False, init_func=init, repeat=False)
+        print("No time steps:\t%d" % Ns)
+        print("Time interval:\t%f" % dt)
+        
+        # Create figure and axes onto which to draw system
+        fig, ax = plt.subplots()
+        
+        # Define function for drawing each frame
+        fig, line, time_text = self.PlotDeformed(0,dynsys_obj=dynsys_obj,
+                                                     ax=ax,**kwargs)
+        
+        def draw_frame(i):
+            
+            print(i)
+#            line.set_data([0,i],[0,0])
+#            time_text.set_text(dt*i)
+#            
+#            return line, time_text
+        
+        ani = animation.FuncAnimation(fig, draw_frame, 
+                                      npy.arange(0, 40,10),
+                                      interval=dt*1000, # convert to ms
+                                      repeat=False)
         
         plt.show()
+        
+        
         
         
     def CalcResponses(self,

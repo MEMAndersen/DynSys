@@ -1483,20 +1483,31 @@ class DynSys:
         return fVals, G_f
     
     
-    def PlotSystems_all(self,ax,**kwargs):
+    def PlotSystems_all(self,ax_dict,**kwargs):
         """
         Generic plotter function to display current configuration of 
         all systems and subsystems
         """
-        return None
+        pass
     
     
-    def PlotSystem(self,ax,**kwargs):
+    def PlotSystem(self,ax,v,**kwargs):
         """
         Generic plotter function to display current configuration of this 
         `dynSys` object
+        
+        _Inheritance expected_
+        
+        ***
+        **Required:**
+        
+        * `ax`, axes object, onto which system will be plotted
+        
+        * `v`, _array_ of displacement results, defining the position of 
+          analysis freedoms
+        
         """
-        return None
+        raise ValueError("Use of overriding method expected!")
 
 
 # **************** FUNCTIONS *********************
