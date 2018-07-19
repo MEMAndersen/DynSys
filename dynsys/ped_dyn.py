@@ -481,6 +481,8 @@ class SteadyStateCrowdLoading():
         if load_intensity is None:
             load_intensity, d = self.calc_load_intensity(target_mode,
                                                          makePlot=makePlot)
+        else:
+            d = {}  # null dict
         
         self.load_intensity = load_intensity
         """
@@ -587,9 +589,7 @@ class SteadyStateCrowdLoading():
             nModes = G3_f.shape[1]
             
             fig, axarr = plt.subplots(G3_f.shape[0],sharex=True,sharey=True)
-            
-            if not isinstance(axarr,list):
-                axarr = [axarr] # convert to list
+            axarr = numpy.array(axarr) # convert to array if not already
             
             for m in range(G3_f.shape[0]):
                 
