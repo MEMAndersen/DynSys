@@ -8,6 +8,26 @@ and this project adheres to:
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+
+* New method `transform_to_unconstrained()` defined in `dynsys.py` module, to 
+  implement method for transforming a constrained system (i.e. a system with 
+  constraint equations) into an equivilent unconstrained one. [This is a key 
+  step in calculations such as complex eigensolution and evaluation of 
+  frequency transfer matrix.]. This method can be generally used - but the 
+  main motivation behind its implementation is to allow code reuse in multiple 
+  methods of the core `DynSys` class, e.g. `DynSys.CalcEigenproperties()`.
+
+### Fixed
+
+### Removed
+
+
+
 ## [1.2.2] - 2018-07-19 - RIHY
 
 ### Changed
