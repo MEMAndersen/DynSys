@@ -1393,6 +1393,13 @@ class DynSys:
         
         if verbose: print("Calculating frequency response matrices..")
         
+        # Routine cannot (currently) handle systems with constraints
+        # (this can be implemented in the near future though!)
+        if self.hasConstraints():
+            raise ValueError("Error: cannot run `CalcFreqResponse` method " + 
+                             "for systems with constraints!")
+        
+        
         nDOF = self.nDOF
         
         # Handle optional arguments

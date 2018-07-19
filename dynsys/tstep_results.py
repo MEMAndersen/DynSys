@@ -14,6 +14,7 @@ import matplotlib.animation as animation
 import timeit
 import pandas
 from datetime import datetime
+from collections import OrderedDict
 
 class TStep_Results:
     """
@@ -134,7 +135,7 @@ class TStep_Results:
         _Set using `CalcDOFStats()`_
         """
         
-        self.response_stats_dict={}
+        self.response_stats_dict=OrderedDict()
         """
         Dict of dict of statistics:
             
@@ -256,7 +257,10 @@ class TStep_Results:
             if hasattr(self,attr):
                 
                 vals = getattr(self,attr)             # for full system
-                vals = vals[:,startIndex:endIndex]    # for subsystem requested
+                
+                if attr != 't':
+                    vals = vals[:,startIndex:endIndex]    # for subsystem requested
+                
                 vals_list.append(vals)
                 
             else:
@@ -362,6 +366,8 @@ class TStep_Results:
         fig_list = []
         
         for obj in DynSys_list:
+            
+            print("   Plotting state results for '%s'..." % obj.name)
 
             # Determine number of subplots required
             hasConstraints = obj.hasConstraints()
@@ -392,10 +398,12 @@ class TStep_Results:
             f,v,vdot,v2dot,f_constraint =self.GetResults(obj,['f','v',
                                                             'vdot','v2dot',
                                                             'f_constraint'])
-            
-            # Filter data according to dofs2Plot
-            if dofs2Plot is not None:
-                
+
+            # Handle dofs2Plot if provided
+            # Note in this case the system to which dofs relate must also
+            # be defined!
+            if dofs2Plot is not None and dynsys_obj is not None:
+
                 f = f[:,dofs2Plot]
                 v = v[:,dofs2Plot]
                 vdot = vdot[:,dofs2Plot]
@@ -518,7 +526,7 @@ class TStep_Results:
                                                            responses_list,
                                                            response_names_list):
             
-            print("Plotting responses for '{0}'...".format(dynsys_obj.name))
+            print("   Plotting responses results for '{0}'...".format(dynsys_obj.name))
             
             # Get responses to plot
             if responses2plot is not None:
@@ -527,8 +535,7 @@ class TStep_Results:
         
             # Determine total number of responses to plot
             nResponses = _responses.shape[0]
-            if verbose: print("# responses to plot: {0}".format(nResponses))
-            
+                        
             if nResponses == 0:
                 errorstr = "nResponses=0, nothing to plot!"
                 if raiseErrors:
@@ -1000,7 +1007,7 @@ class TStep_Results:
                 print("calcResponseStats=False option set." + 
                       "Response statistics will not be computed.")
         
-        return stats_dict
+        return self.response_stats_dict
     
     
     def get_response_stats_df(self):

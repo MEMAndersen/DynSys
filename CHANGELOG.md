@@ -8,7 +8,28 @@ and this project adheres to:
 
 ***
 
-## Unreleased
+## [1.2.2] - 2018-07-19 - RIHY
+
+### Changed
+
+### Added
+
+### Fixed
+
+* Further fix associated with lambda fix at v1.2.1: when multiple modes 
+  included array of maximum modeshape ordinate now calculated and appropriate 
+  value used in calculations targeting specific mode. Previous behaviour was to 
+  obtain maximum ordinate across all modes, which is inaccurate when mode being 
+  considered does not have this ordinate.
+  
+* Minor fixes to iron-out runtime bugs in routines associated with steady-state 
+  crowd loading analysis. Bugs relates to plotting and results reporting, i.e. 
+  no impact on the accuracy of calculations made using previous versions.
+
+### Removed
+
+
+## [1.2.1] - 2018-07-17 - RIHY
 
 ### Changed
 
@@ -18,6 +39,9 @@ and this project adheres to:
   tuned mass damper systems to be conveniently defined
 
 ### Fixed
+
+* Bug associated with calculation of lambda factor for UK NA steady-state crowd 
+  loading analysis fixed.
 
 ### Removed
 

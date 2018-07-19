@@ -11,6 +11,7 @@ from __init__ import __version__ as currentVersion
 # Standard imports
 import numpy
 import matplotlib.pyplot as plt
+import pandas
 
 # DynSys imports
 import msd_chain
@@ -142,7 +143,85 @@ class TMD(msd_chain.MSD_Chain):
             
         return h
         
+# --------------- FUNCTIONS -------------------
+        
+def append_TMDs(modal_sys,
+                fname:str,
+                append:bool=True,
+                verbose:bool=True):
+    """
+    Define and append multiple TMDs to 'parent' modal system.
+    TMD 'child' systems are defined using inputs read-in from .csv file
     
+    ***
+    Required:
+        
+    * `modal_sys`, instance of `ModalSys` class; 'parent' modal system to which 
+      TMDs are to be appended
+      
+    * `fname`, _string_; filename of file in which TMD definitions are provided
+      
+    ***
+    Optional:
+        
+    * `append`, _boolean_; if False then TMD systems will only be defined, not 
+      appended to the parent modal system. In this case the `modal_sys` 
+      argument should be set as `None`.
+    
+    ***
+    Returns:
+        
+    List of `TMD()` instances i.e. objects created by this function
+    
+    """
+    
+    if verbose:
+        print("Defining TMD system using input provided in '%s'..." % fname)
+    
+    # Read in TMD defintions from datafile
+    TMD_defs = pandas.read_csv(fname)
+    
+    # Parse dataframe for specific details
+    M = TMD_defs["Mass (kg)"].values
+    f = TMD_defs["Freq (Hz)"].values
+    eta = TMD_defs["Damping ratio"].values
+    
+    #Xpos = TMD_defs["Chainage (m)"].values
+    modeshapes_TMD = TMD_defs.values[:,4:]
+    
+    # Loop through to define all TMD systems
+    sys_list = []
+    
+    for i, (_M, _f, _eta) in enumerate(zip(M,f,eta)):
+        
+        sys_list.append(TMD(sprung_mass=_M,
+                            nat_freq=_f,
+                            damping_ratio=_eta,
+                            name="TMD#%d" % (i+1)))    
+    
+    
+    nTMD = len(sys_list)
+    print("Number of TMDs defined: %d" % nTMD)  
+    
+    # Append TMDs to parent modal system
+    if append:
+        
+        # Check modalsys is as expected type
+        if modal_sys.__class__.__name__ != 'ModalSys':
+            raise ValueError("Error with `modal_sys` argument:" + 
+                             "must be instance of 'ModalSys' class!")
+            
+        # Loop over all new TMD systems to append
+        for i, TMD_sys in enumerate(sys_list):
+                        
+            modal_sys.AppendSystem(child_sys=TMD_sys,
+                                   modeshapes_parent=modeshapes_TMD[i,:],
+                                   DOF_child=0)
+                
+    # Return list of TMD system objects
+    return sys_list
+        
+ 
 # TEST ROUTINES
 if __name__ == "__main__":
     

@@ -1,4 +1,4 @@
-Version: 1.2.0_dev
+Version: 1.2.2_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1032,6 +1032,9 @@ table {
     }
   }
   </script>
+  
+  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1111,6 +1114,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="kn">import</span> <span class="nn">timeit</span>
 <span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 
 <span class="k">class</span> <span class="nc">TStep_Results</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1231,7 +1235,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="sd">        _Set using `CalcDOFStats()`_</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="o">=</span><span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">()</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dict of dict of statistics:</span>
 <span class="sd">            </span>
@@ -1353,7 +1357,10 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
                 
                 <span class="n">vals</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>             <span class="c1"># for full system</span>
-                <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[:,</span><span class="n">startIndex</span><span class="p">:</span><span class="n">endIndex</span><span class="p">]</span>    <span class="c1"># for subsystem requested</span>
+                
+                <span class="k">if</span> <span class="n">attr</span> <span class="o">!=</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span>
+                    <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[:,</span><span class="n">startIndex</span><span class="p">:</span><span class="n">endIndex</span><span class="p">]</span>    <span class="c1"># for subsystem requested</span>
+                
                 <span class="n">vals_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
                 
             <span class="k">else</span><span class="p">:</span>
@@ -1459,6 +1466,8 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
         
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;   Plotting state results for &#39;</span><span class="si">%s</span><span class="s2">&#39;...&quot;</span> <span class="o">%</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
             <span class="c1"># Determine number of subplots required</span>
             <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
@@ -1488,31 +1497,36 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                                                            <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
-            
-            <span class="c1"># Handle dofs2Plot in case of none</span>
-            <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">dofs2Plot</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                
+            <span class="c1"># Handle dofs2Plot if provided</span>
+            <span class="c1"># Note in this case the system to which dofs relate must also</span>
+            <span class="c1"># be defined!</span>
+            <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+                <span class="n">vdot</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+                <span class="n">v2dot</span> <span class="o">=</span> <span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
             
             <span class="c1"># Create time series plots</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
                            <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;Applied </span><span class="si">%s</span><span class="s2">Forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Displacements (m)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">vdot</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Velocities (m/s)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
@@ -1609,7 +1623,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                                                            <span class="n">responses_list</span><span class="p">,</span>
                                                            <span class="n">response_names_list</span><span class="p">):</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting responses for &#39;{0}&#39;...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;   Plotting responses results for &#39;{0}&#39;...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
             
             <span class="c1"># Get responses to plot</span>
             <span class="k">if</span> <span class="n">responses2plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -1618,8 +1632,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         
             <span class="c1"># Determine total number of responses to plot</span>
             <span class="n">nResponses</span> <span class="o">=</span> <span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;# responses to plot: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nResponses</span><span class="p">))</span>
-            
+                        
             <span class="k">if</span> <span class="n">nResponses</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">errorstr</span> <span class="o">=</span> <span class="s2">&quot;nResponses=0, nothing to plot!&quot;</span>
                 <span class="k">if</span> <span class="n">raiseErrors</span><span class="p">:</span>
@@ -2045,7 +2058,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set.&quot;</span> <span class="o">+</span> 
                       <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="n">stats_dict</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span>
     
     
     <span class="k">def</span> <span class="nf">get_response_stats_df</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2283,7 +2296,7 @@ analysis as carried out by <code>TStep</code></p></div>
 <span class="sd">        _Set using `CalcDOFStats()`_</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="o">=</span><span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">()</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dict of dict of statistics:</span>
 <span class="sd">            </span>
@@ -2405,7 +2418,10 @@ analysis as carried out by <code>TStep</code></p></div>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
                 
                 <span class="n">vals</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>             <span class="c1"># for full system</span>
-                <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[:,</span><span class="n">startIndex</span><span class="p">:</span><span class="n">endIndex</span><span class="p">]</span>    <span class="c1"># for subsystem requested</span>
+                
+                <span class="k">if</span> <span class="n">attr</span> <span class="o">!=</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span>
+                    <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[:,</span><span class="n">startIndex</span><span class="p">:</span><span class="n">endIndex</span><span class="p">]</span>    <span class="c1"># for subsystem requested</span>
+                
                 <span class="n">vals_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
                 
             <span class="k">else</span><span class="p">:</span>
@@ -2511,6 +2527,8 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
         
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;   Plotting state results for &#39;</span><span class="si">%s</span><span class="s2">&#39;...&quot;</span> <span class="o">%</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
             <span class="c1"># Determine number of subplots required</span>
             <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
@@ -2540,31 +2558,36 @@ analysis as carried out by <code>TStep</code></p></div>
                                                            <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
-            
-            <span class="c1"># Handle dofs2Plot in case of none</span>
-            <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">dofs2Plot</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                
+            <span class="c1"># Handle dofs2Plot if provided</span>
+            <span class="c1"># Note in this case the system to which dofs relate must also</span>
+            <span class="c1"># be defined!</span>
+            <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+                <span class="n">vdot</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+                <span class="n">v2dot</span> <span class="o">=</span> <span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
             
             <span class="c1"># Create time series plots</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
                            <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;Applied </span><span class="si">%s</span><span class="s2">Forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Displacements (m)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">vdot</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Velocities (m/s)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                           <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">,</span>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
@@ -2661,7 +2684,7 @@ analysis as carried out by <code>TStep</code></p></div>
                                                            <span class="n">responses_list</span><span class="p">,</span>
                                                            <span class="n">response_names_list</span><span class="p">):</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting responses for &#39;{0}&#39;...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;   Plotting responses results for &#39;{0}&#39;...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
             
             <span class="c1"># Get responses to plot</span>
             <span class="k">if</span> <span class="n">responses2plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -2670,8 +2693,7 @@ analysis as carried out by <code>TStep</code></p></div>
         
             <span class="c1"># Determine total number of responses to plot</span>
             <span class="n">nResponses</span> <span class="o">=</span> <span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;# responses to plot: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nResponses</span><span class="p">))</span>
-            
+                        
             <span class="k">if</span> <span class="n">nResponses</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">errorstr</span> <span class="o">=</span> <span class="s2">&quot;nResponses=0, nothing to plot!&quot;</span>
                 <span class="k">if</span> <span class="n">raiseErrors</span><span class="p">:</span>
@@ -3097,7 +3119,7 @@ analysis as carried out by <code>TStep</code></p></div>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set.&quot;</span> <span class="o">+</span> 
                       <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="n">stats_dict</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span>
     
     
     <span class="k">def</span> <span class="nf">get_response_stats_df</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -3356,7 +3378,7 @@ recomputed using <code>CalcResponses()</code> function</p></div>
 <span class="sd">    _Set using `CalcDOFStats()`_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="o">=</span><span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="o">=</span><span class="n">OrderedDict</span><span class="p">()</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dict of dict of statistics:</span>
 <span class="sd">        </span>
@@ -3617,7 +3639,7 @@ degree of freedom</p></div>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;calcResponseStats=False option set.&quot;</span> <span class="o">+</span> 
                   <span class="s2">&quot;Response statistics will not be computed.&quot;</span><span class="p">)</span>
     
-    <span class="k">return</span> <span class="n">stats_dict</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_stats_dict</span>
 </pre></div>
 
   </div>
@@ -3819,7 +3841,10 @@ subsystem of the parent system (this is checked)</p>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
             
             <span class="n">vals</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>             <span class="c1"># for full system</span>
-            <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[:,</span><span class="n">startIndex</span><span class="p">:</span><span class="n">endIndex</span><span class="p">]</span>    <span class="c1"># for subsystem requested</span>
+            
+            <span class="k">if</span> <span class="n">attr</span> <span class="o">!=</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[:,</span><span class="n">startIndex</span><span class="p">:</span><span class="n">endIndex</span><span class="p">]</span>    <span class="c1"># for subsystem requested</span>
+            
             <span class="n">vals_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span>
             
         <span class="k">else</span><span class="p">:</span>
@@ -4050,7 +4075,7 @@ plotted)</p>
                                                        <span class="n">responses_list</span><span class="p">,</span>
                                                        <span class="n">response_names_list</span><span class="p">):</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Plotting responses for &#39;{0}&#39;...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;   Plotting responses results for &#39;{0}&#39;...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
         
         <span class="c1"># Get responses to plot</span>
         <span class="k">if</span> <span class="n">responses2plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -4059,8 +4084,7 @@ plotted)</p>
     
         <span class="c1"># Determine total number of responses to plot</span>
         <span class="n">nResponses</span> <span class="o">=</span> <span class="n">_responses</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;# responses to plot: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nResponses</span><span class="p">))</span>
-        
+                    
         <span class="k">if</span> <span class="n">nResponses</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">errorstr</span> <span class="o">=</span> <span class="s2">&quot;nResponses=0, nothing to plot!&quot;</span>
             <span class="k">if</span> <span class="n">raiseErrors</span><span class="p">:</span>
@@ -4387,6 +4411,8 @@ plotted)</p>
     <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
     
     <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;   Plotting state results for &#39;</span><span class="si">%s</span><span class="s2">&#39;...&quot;</span> <span class="o">%</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="c1"># Determine number of subplots required</span>
         <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
@@ -4415,31 +4441,36 @@ plotted)</p>
                                                        <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
-        
-        <span class="c1"># Handle dofs2Plot in case of none</span>
-        <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">dofs2Plot</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            
+        <span class="c1"># Handle dofs2Plot if provided</span>
+        <span class="c1"># Note in this case the system to which dofs relate must also</span>
+        <span class="c1"># be defined!</span>
+        <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+            <span class="n">vdot</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
+            <span class="n">v2dot</span> <span class="o">=</span> <span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
         
         <span class="c1"># Create time series plots</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                        <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                       <span class="n">data_vals</span><span class="o">=</span><span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                       <span class="n">data_vals</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
                        <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span>
                        <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;Applied </span><span class="si">%s</span><span class="s2">Forces (N)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                        <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                       <span class="n">data_vals</span><span class="o">=</span><span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                       <span class="n">data_vals</span><span class="o">=</span><span class="n">v</span><span class="p">,</span>
                        <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Displacements (m)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
                        <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                       <span class="n">data_vals</span><span class="o">=</span><span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                       <span class="n">data_vals</span><span class="o">=</span><span class="n">vdot</span><span class="p">,</span>
                        <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Velocities (m/s)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
                        <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
-                       <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">],</span>
+                       <span class="n">data_vals</span><span class="o">=</span><span class="n">v2dot</span><span class="p">,</span>
                        <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
