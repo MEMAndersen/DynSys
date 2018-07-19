@@ -13,13 +13,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy
 
-import deprecation # not in anaconda distribution - obtain this from pip
+#import deprecation # not in anaconda distribution - obtain this from pip
 #@deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
 
 import scipy.sparse as sparse
 
 from scipy.linalg import block_diag
-from scipy.sparse import bmat
+#from scipy.sparse import bmat
 
 # Other imports
 
@@ -396,13 +396,29 @@ class DynSys:
                     print("")
     
 
-    def GetSystemMatrices(self,createNewSystem=False):
+    def GetSystemMatrices(self,
+                          make_unconstrained:bool=False,
+                          createNewSystem:bool=False):
         """
         Function is used to retrieve system matrices, which are not usually to 
         be accessed directly, except by member functions
         
         ***
-        A dict is used to return matrices
+        Optional:
+            
+        * `make_unconstrained`, boolean, if True system matrices applicable to 
+          the _unconstrained problem_ are returned. Note: only applicable to 
+          systems with constraint equations. Default value = False.
+          Refer documentation for `transform_to_unconstrained()` for details.
+          
+        * `createNewSystem`, boolean, if True a new `DynSys()` class instance 
+          is initialised, using the system matrices of the full system.
+          Default value = False.
+            
+        ***
+        Returns:
+            
+        Matrices (and other results) are returned as a dictionary
         """
         
         # Create empty dictionay
@@ -485,6 +501,14 @@ class DynSys:
         
         self.CheckConstraints(J=J_mtrx,verbose=False)
         
+        # Project system matrices onto null space of constraints matrix 
+        # to transform to unconstrained problem
+        if make_unconstrained:
+            M_mtrx, C_mtrx, K_mtrx, Z = transform_to_unconstrained(M_mtrx,
+                                                                   C_mtrx,
+                                                                   K_mtrx,
+                                                                   J_mtrx)
+        
         # Populate dictionary
         d["nDOF"] = nDOF_new
         
@@ -498,8 +522,12 @@ class DynSys:
         d["isLinear"]=isLinear
         d["isSparse"]=isSparse
         
+        if make_unconstrained:
+            d["Null_J"]=Z
+        
         # Create new system object, given system matrices
         if createNewSystem:
+            
             DynSys_full = DynSys(M=M_mtrx,
                                  C=C_mtrx,
                                  K=K_mtrx,
@@ -1752,6 +1780,24 @@ def calc_load_matrix(M,Minv=None,isSparse=False):
     return B, Minv
 
 
+def transform_to_unconstrained(M,C,K,J):
+    """
+    Transforms a constrained problem with system matrices (`M`,`C`,`K`) 
+    and constraints matrix `J` into a unconstrained problem by projecting 
+    system matrices onto the nullspace basis of J
+    """
+    
+    # Solve for null space of J
+    Z = null_space(J)
+
+    # Compute modified M, C and K matrices
+    M = Z.T @ M @ Z
+    C = Z.T @ C @ Z
+    K = Z.T @ K @ Z
+    
+    return M, C, K, Z
+
+
 def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
     """
     Solves for eigenproperties of _state matrix_ 'A', using scipy.linalg.eig() 
@@ -1795,21 +1841,16 @@ def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
     else:
         constrained=False
         
-        
     if constrained:
-    
-        # Solve for null space of J
-        Z = null_space(J)
-        if verbose: print("Null(J)=Z:\n{0}\n".format(Z))
-    
-        # Compute modified M, C and K matrices
-        M = Z.T @ M @ Z
-        C = Z.T @ C @ Z
-        K = Z.T @ K @ Z
         
-        if verbose: print("M':\n{0}\n".format(M))
-        if verbose: print("K':\n{0}\n".format(K))
-        if verbose: print("C':\n{0}\n".format(C))
+        # Convert to unconstrained problem 
+        M,C,K,Z = transform_to_unconstrained(M,C,K,J)
+    
+        if verbose: 
+            print("Null(J)=Z:\n{0}\n".format(Z))
+            print("M':\n{0}\n".format(M))
+            print("C':\n{0}\n".format(C))
+            print("K:\n{0}\n".format(K))
             
     # Get state matrix to compute eigenproperties of
     A, Minv = calc_state_matrix(M,K,C,isSparse=isSparse)
@@ -2035,8 +2076,15 @@ if __name__ == "__main__":
     sys1.AppendSystem(child_sys=sys3,J_key="sys1-3",DOF_parent=0,DOF_child=1)
     sys1.PrintSystemMatrices()
     
-    d = sys1.GetSystemMatrices()
+    d = sys1.GetSystemMatrices(createNewSystem=True)
     
     full_sys = d["DynSys_full"]
     full_sys.PrintSystemMatrices(printValues=True)
-    d = full_sys.GetSystemMatrices()
+    
+    M_constrained = full_sys.GetSystemMatrices(make_unconstrained=False)["M_mtrx"]
+    M_unconstrained = full_sys.GetSystemMatrices(make_unconstrained=True)["M_mtrx"]
+    print("M_constrained:\n{0}".format(M_constrained))
+    print("M_unconstrained:\n{0}".format(M_unconstrained))
+    
+    
+    
