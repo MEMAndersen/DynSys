@@ -376,16 +376,15 @@ class SteadyStateCrowdLoading():
         self._check_modeshapes_fname_arr(modeshapes_fname_arr,nRegions)
             
         # Read modeshape data from file, determine interpolation functions
-        mFunc_list, Ltrack_list, max_ordinate = self._read_modeshapes(modalsys_obj,
+        mFunc_list, Ltrack_list, max_ordinates = self._read_modeshapes(modalsys_obj,
                                                                       modeshapes_fname_arr)
         
-        self.max_modeshape = max_ordinate
+        self.max_modeshape = max_ordinates
         """
-        Maximum |modeshape ordinate| evaluated over all deck regions
+        Maximum |modeshape| ordinates, evaluated over all deck regions.
+        Array of length equal to number of modes considered
         """
         
-        print("Max modeshape: %.3f" % max_ordinate)
-                    
         # Define deck regions
         deck_regions_list = []
         
@@ -444,7 +443,7 @@ class SteadyStateCrowdLoading():
         ***
         **Required:**
             
-        * `mode_index`, _integer_, denotes the mode at which resonance is 
+        * `target_mode`, _integer_, denotes the mode at which resonance is 
           to be targeted
           
         ***
@@ -482,6 +481,8 @@ class SteadyStateCrowdLoading():
         if load_intensity is None:
             load_intensity, d = self.calc_load_intensity(target_mode,
                                                          makePlot=makePlot)
+        else:
+            d = {}  # null dict
         
         self.load_intensity = load_intensity
         """
@@ -518,7 +519,7 @@ class SteadyStateCrowdLoading():
         # Note: G(f) will in general be complex-valued; the should be 
         # intepreted to denote scaling and phase lag
         
-        target_f = self.f_d[target_mode]
+        target_f = numpy.abs(self.f_d[target_mode])
         self.target_f = target_f
         
         if verbose: print("Frequency for targeted mode: %.2f Hz" % target_f)
@@ -588,6 +589,7 @@ class SteadyStateCrowdLoading():
             nModes = G3_f.shape[1]
             
             fig, axarr = plt.subplots(G3_f.shape[0],sharex=True,sharey=True)
+            axarr = numpy.array(axarr) # convert to array if not already
             
             for m in range(G3_f.shape[0]):
                 
@@ -874,7 +876,7 @@ class SteadyStateCrowdLoading():
                                  " does not exist!")
 
 
-    def _read_modeshapes(self,modalsys_obj,modeshapes_fname_arr,num=100):
+    def _read_modeshapes(self,modalsys_obj,modeshapes_fname_arr,num=1000):
         """
         Reads modeshapes from file
 
@@ -903,8 +905,8 @@ class SteadyStateCrowdLoading():
                 
                 # Evaluate to obtain maximum ordinates
                 m_vals = mfunc(numpy.linspace(0,L,num))
-                absmax_vals = numpy.max(numpy.abs(m_vals))
-                absmax_vals_list_inner.append(absmax_vals)
+                absmax_vals = numpy.max(numpy.abs(m_vals),axis=0)
+                absmax_vals_list_inner.append(absmax_vals.tolist())
 
                 # Append to inner lists
                 Ltrack_list_inner.append(L)
@@ -916,7 +918,8 @@ class SteadyStateCrowdLoading():
             absmax_vals_list.append(absmax_vals_list_inner)
 
         # Obtain overall max modeshape ordinate
-        max_ordinate = numpy.max(numpy.ravel(absmax_vals_list))
+        absmax_vals_list = numpy.array(absmax_vals_list)
+        max_ordinate = numpy.max(absmax_vals_list,axis=(0,1))
 
         # Convert lists to arrays
         Ltrack_list = numpy.array(Ltrack_list)
@@ -1072,7 +1075,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
     
         # Retrieve attributes    
         A = self.deck_area
-        max_modeshape = self.max_modeshape
+        max_modeshape = self.max_modeshape[mode_index]
         
         # Get crowd density according to bridgeClass
         # Crowd density, expressed in persons/m2
