@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import timeit
 import pandas
 from datetime import datetime
+from collections import OrderedDict
 
 class TStep_Results:
     """
@@ -133,7 +134,7 @@ class TStep_Results:
         _Set using `CalcDOFStats()`_
         """
         
-        self.response_stats_dict={}
+        self.response_stats_dict=OrderedDict()
         """
         Dict of dict of statistics:
             
@@ -255,7 +256,10 @@ class TStep_Results:
             if hasattr(self,attr):
                 
                 vals = getattr(self,attr)             # for full system
-                vals = vals[:,startIndex:endIndex]    # for subsystem requested
+                
+                if attr != 't':
+                    vals = vals[:,startIndex:endIndex]    # for subsystem requested
+                
                 vals_list.append(vals)
                 
             else:
@@ -361,6 +365,8 @@ class TStep_Results:
         fig_list = []
         
         for obj in DynSys_list:
+            
+            print("   Plotting state results for '%s'..." % obj.name)
 
             # Determine number of subplots required
             hasConstraints = obj.hasConstraints()
@@ -390,31 +396,36 @@ class TStep_Results:
                                                            ['t','f','v',
                                                             'vdot','v2dot',
                                                             'f_constraint'])
-            
-            # Handle dofs2Plot in case of none
-            if dofs2Plot is None:
-                dofs2Plot = range(v.shape[1])
+                
+            # Handle dofs2Plot if provided
+            # Note in this case the system to which dofs relate must also
+            # be defined!
+            if dofs2Plot is not None and dynsys_obj is not None:
+                f = f[:,dofs2Plot]
+                v = v[:,dofs2Plot]
+                vdot = vdot[:,dofs2Plot]
+                v2dot = v2dot[:,dofs2Plot]
             
             # Create time series plots
             self._TimePlot(ax=axarr[0],
                            t_vals=t,
-                           data_vals=f[:,dofs2Plot],
+                           data_vals=f,
                            xlim=xlim,
                            titleStr="Applied %sForces (N)" % sysStr)
             
             self._TimePlot(ax=axarr[1],
                            t_vals=t,
-                           data_vals=v[:,dofs2Plot],
+                           data_vals=v,
                            titleStr="%sDisplacements (m)" % sysStr)
             
             self._TimePlot(ax=axarr[2],
                            t_vals=t,
-                           data_vals=vdot[:,dofs2Plot],
+                           data_vals=vdot,
                            titleStr="%sVelocities (m/s)" % sysStr)
             
             self._TimePlot(ax=axarr[3],
                            t_vals=t,
-                           data_vals=v2dot[:,dofs2Plot],
+                           data_vals=v2dot,
                            titleStr="%sAccelerations ($m/s^2$)" % sysStr)
             
             if hasConstraints:
@@ -511,7 +522,7 @@ class TStep_Results:
                                                            responses_list,
                                                            response_names_list):
             
-            print("Plotting responses for '{0}'...".format(dynsys_obj.name))
+            print("   Plotting responses results for '{0}'...".format(dynsys_obj.name))
             
             # Get responses to plot
             if responses2plot is not None:
@@ -520,8 +531,7 @@ class TStep_Results:
         
             # Determine total number of responses to plot
             nResponses = _responses.shape[0]
-            if verbose: print("# responses to plot: {0}".format(nResponses))
-            
+                        
             if nResponses == 0:
                 errorstr = "nResponses=0, nothing to plot!"
                 if raiseErrors:
@@ -947,7 +957,7 @@ class TStep_Results:
                 print("calcResponseStats=False option set." + 
                       "Response statistics will not be computed.")
         
-        return stats_dict
+        return self.response_stats_dict
     
     
     def get_response_stats_df(self):
