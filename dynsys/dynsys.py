@@ -1356,6 +1356,9 @@ class DynSys:
             * Alternatively `modeshapes_parent` can be used to directly 
               provide modeshape vector relevant to the point on the _parent 
               system_ at which the child system is to be attached
+              
+            If both are provided, `modeshapes_parent` is used to define 
+            modeshapes, i.e. take precedence.
             
         * Else:
             
@@ -1423,17 +1426,19 @@ class DynSys:
                 
                 if Xpos is not None:
                     
-                    attr = "modeshapeFunc"
-                    
-                    if hasattr(sys_obj,attr):
-                        modeshapes = getattr(sys_obj,attr)(Xpos)
-                    
-                    else:
-                        raise ValueError("`Xpos` argument provided but " + 
-                                         "{0} system '{1}'"
-                                         .format(sys_type,sys_obj.name) + 
-                                         "does not have function " + 
-                                         "attribute `%s'" % attr)    
+                    if modeshapes is None:
+                        
+                        attr = "modeshapeFunc"
+                        
+                        if hasattr(sys_obj,attr):
+                            modeshapes = getattr(sys_obj,attr)(Xpos)
+                        
+                        else:
+                            raise ValueError("`Xpos` argument provided but " + 
+                                             "{0} system '{1}'"
+                                             .format(sys_type,sys_obj.name) + 
+                                             "does not have function " + 
+                                             "attribute `%s'" % attr)    
                 
                     # Save as attributes
                     attr = "Xpos_attachedSystems"

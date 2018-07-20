@@ -278,16 +278,28 @@ class ModalSys(DynSys):
         else:
             fig = ax.gcf()
             
-        # Use Ltrack instead of L passed, if attribute defined
-        attr="Ltrack"
-        obj=self
-        if hasattr(obj,attr):
-            L=getattr(obj,attr)
-            
-        # Use interpolation function to obtain modeshapes at
-        x = npy.linspace(0,L,num,endpoint=True)
-        m = self.modeshapeFunc(x)
+        # Get ordinates to plot
+        modeshape_func = self.modeshapeFunc
         
+        if isinstance(modeshape_func,scipy.interpolate.interpolate.interp1d):
+            
+            # Retrieve modeshape ordinates defining interpolation function
+            x = modeshape_func.x
+            m = modeshape_func.y
+            L = x[-1]
+            
+        else:
+            
+            # Use Ltrack instead of L passed, if attribute defined
+            attr="Ltrack"
+            obj=self
+            if hasattr(obj,attr):
+                L=getattr(obj,attr)
+                
+            # Use interpolation function to obtain modeshapes at
+            x = npy.linspace(0,L,num,endpoint=True)
+            m = self.modeshapeFunc(x)
+            
         # Get mode IDs to use as labels
         if hasattr(self,"mode_IDs"):
             modeNames = self.mode_IDs
@@ -552,6 +564,40 @@ class ModalSys(DynSys):
         self.J_mtrx = npy.asmatrix(npy.zeros((0,nDOF)))
         self.output_mtrx = output_mtrx
         self.output_names = output_names
+        
+    def CalcModeshapeIntegral(self,track_length=None,num=1000,power:int=1):
+        """
+        Evaluates integral along modeshape
+        
+        Prior to integration, modeshape ordinates are raised to `power`. E.g. 
+        use `power=2` to evaluating integral of modeshape-squared (which is a 
+        common application for this method)
+        """
+        
+        modeshape_func = self.modeshapeFunc
+                    
+        # Evaluate modeshape ordinates
+        if isinstance(modeshape_func,scipy.interpolate.interpolate.interp1d):
+            
+            # Retrieve modeshape ordinates defining interpolation function
+            x = modeshape_func.x
+            vals = modeshape_func.y
+            
+        else:
+            
+            if track_length is None:
+                raise ValueError("`track_length` to be defined!")
+            
+            x = npy.linspace(0,track_length,num)
+            vals = modeshape_func(x)
+        
+        # Take square of modeshape
+        vals = vals**power
+        
+        # Integrate along track
+        integral = scipy.integrate.trapz(y=vals, x=x, axis=0)
+        
+        return integral
     
   
 # ********************** TEST ROUTINE ****************************************
