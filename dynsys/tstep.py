@@ -8,9 +8,16 @@ systems
 import numpy as npy
 import timeit
 import inspect
+import scipy
 from scipy.integrate import solve_ivp
+from pkg_resources import parse_version
 
 import tstep_results
+
+# Check Scipy version sufficient
+required_version = '1.0' # or later, to use solve_ivp method
+if parse_version(scipy.__version__) < parse_version(required_version):
+    raise ImportError("Scipy version > 1.0 required!")
     
 # ********************** CLASSES *********************************************
 

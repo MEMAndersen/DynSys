@@ -12,6 +12,7 @@ import numpy as npy
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy
+from pkg_resources import parse_version
 
 #import deprecation # not in anaconda distribution - obtain this from pip
 #@deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
@@ -1830,19 +1831,39 @@ def null_space(A, rcond=None):
     For now recreate here
     In future should just use Scipy function!
     """
-    u, s, vh = scipy.linalg.svd(A, full_matrices=True)
     
-    M, N = u.shape[0], vh.shape[1]
-    
-    if rcond is None:
-        rcond = npy.finfo(s.dtype).eps * max(M, N)
+    # Check whether Scipy method can be used
+    if parse_version(scipy.__version__) >= parse_version('1.1'):
         
-    tol = npy.amax(s) * rcond
+        # Use Scipy method
+        Q = scipy.linalg.null_space(A=A,rcond=rcond)
     
-    num = npy.sum(s > tol, dtype=int)
+    # Otherwise (when v1.0 or less being used) use this method
+    else:
+        """
+        Copy of source code from 
+        https://docs.scipy.org/doc/scipy/
+        reference/generated/scipy.linalg.null_space.html
+        
+        Included in Scipy v1.1.0
+        
+        For now recreate here
+        In future should just use Scipy function!
+        """
     
-    Q = vh[num:,:].T.conj()
-    
+        u, s, vh = scipy.linalg.svd(A, full_matrices=True)
+        
+        M, N = u.shape[0], vh.shape[1]
+        
+        if rcond is None:
+            rcond = npy.finfo(s.dtype).eps * max(M, N)
+            
+        tol = npy.amax(s) * rcond
+        
+        num = npy.sum(s > tol, dtype=int)
+        
+        Q = vh[num:,:].T.conj()
+        
     return Q
 
 
