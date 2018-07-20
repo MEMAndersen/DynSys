@@ -1818,6 +1818,7 @@ def SDOF_frequency(M,K):
     $$ \omega = \sqrt{K/M} $$
     $$ f = \omega / 2\pi $$
     """
+
     return freq_from_angularFreq((K/M)**0.5)
 
 
