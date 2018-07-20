@@ -12,7 +12,7 @@ import pandas as pd
 import scipy
 import matplotlib.pyplot as plt
 import warnings
-import deprecation # not in anaconda distribution - obtain this from pip
+#import deprecation # not in anaconda distribution - obtain this from pip
 
 # Other imports
 from dynsys import DynSys

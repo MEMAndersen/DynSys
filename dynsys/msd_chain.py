@@ -86,7 +86,7 @@ class MSD_Chain(DynSys):
                 raise ValueError("Either `f_vals` or `K_vals` is required")
                 
             else:
-                f_vals = SDOF_frequency(M_vals,K_vals)
+                #f_vals = SDOF_frequency(M_vals,K_vals)
                 omega_vals = angularFreq(f_vals)
                 K_vals = SDOF_stiffness(M_vals,omega=omega_vals)                
         

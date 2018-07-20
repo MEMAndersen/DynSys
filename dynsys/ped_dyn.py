@@ -433,7 +433,11 @@ class SteadyStateCrowdLoading():
                 
         
         
-    def run(self,target_mode:int,load_intensity:float=None,
+    def run(self,
+            target_mode:int,
+            load_intensity:float=None,
+            forcing_freq:float=None,
+            run_freq_method=True,
             run_tstep=False,tstep_kwargs:dict={},
             verbose=True, makePlot=False
             ):
@@ -452,6 +456,27 @@ class SteadyStateCrowdLoading():
         * `load_intensity`, _float_, denotes the load intensity (in N/m2) 
           to be applied. If _None_, `load_intensity` to be calculated 
           using `calc_load_intensity()` method function.
+          
+        * `forcing_freq`, _float_, defines forcing frequency (in Hz) at which 
+          response is to be determined. For ordinary modal systems with no 
+          added dampers this value should normally be set to equal the damped 
+          natural frequency for the mode given by `target_mode`, as this will 
+          ensure the worst-case resonance response is obtained. This is thus 
+          the default behaviour. However is some circumstances 
+          (e.g. systems with multiple TMDs appended) it is necessary to 
+          evaluate responses at various assumed forcing frequencies, 
+          hence why this optional input is provided to the user.
+          
+        * `run_freq_method`, _boolean_, if True the amplitude of modal and 
+          real-world responses at steady-state will be determine by frequency 
+          transfer matrix method. This is the default behaviour, as it allows 
+          the steady-state amplitudes of responses to be efficiently 
+          calculated. In some cases (e.g. for systems with constraints, for 
+          which the `DynSys.CalcFreqResponse()` method is not currently 
+          implemented), it may be desirable to carry out a time-stepping 
+          analysis instead. This can be done by setting `run_freq_method=False` 
+          and `run_tstep=True` (see documentation in next bullet for further 
+          details)
           
         * `run_tstep`, _boolean_, if True a time-stepping analysis will be run, 
           which can be used to verify the the steady-state resonance solution 
@@ -473,14 +498,29 @@ class SteadyStateCrowdLoading():
         self.target_mode = target_mode
         if verbose: print("Target mode index: %d" % target_mode)
         
+        # Define forcing frequency
+        if forcing_freq is None:
+            
+            # Set to be damped natural frequency of mode being targeted
+            forcing_freq = numpy.abs(self.f_d[target_mode])
+            
+        else: # where input value provided via optional arg
+            
+            # Check float type is provided
+            if not isinstance(forcing_freq,float):
+                raise ValueError("Error: float expected for `forcing_freq`")
+            
+        self.forcing_freq = forcing_freq
+        
         # Obtain area integrals over all deck strips
         modal_areas = self.calc_modal_areas(target_mode,makePlot=makePlot)
         self.modal_areas = modal_areas
         
         # Calculate load intensity, if not provided directly
         if load_intensity is None:
-            load_intensity, d = self.calc_load_intensity(target_mode,
-                                                         makePlot=makePlot)
+            load_intensity, d =self.calc_load_intensity(mode_index=target_mode,
+                                                        fv=forcing_freq,
+                                                        makePlot=makePlot)
         else:
             d = {}  # null dict
         
@@ -503,128 +543,144 @@ class SteadyStateCrowdLoading():
         modal_forces = self.load_intensity * modal_areas
         self.modal_forces = modal_forces
         
-        # Evaluate frequency transfer functions G(f) relating applied forces 
-        # (i.e. modal forces in this application) to DOF accelerations, 
-        # displacements and velocities
-        # (i.e. modal disp, vel, accn in this application)
-        #
-        # It is only necessary to evaluate G(f) at resonant frequency for mode 
-        # being targeted, although for validation / plotting it may be 
-        # advantageous to evaluate G(f) over a wider frequency range
-        #
-        # By definition, G(f1) is a matrix that can be used to relate 
-        # sinusoidal modal forces to sinusoidal modal accelerations, 
-        # given forcing frequency f1.
-        #
-        # Note: G(f) will in general be complex-valued; the should be 
-        # intepreted to denote scaling and phase lag
-        
-        target_f = numpy.abs(self.f_d[target_mode])
-        self.target_f = target_f
-        
-        if verbose: print("Frequency for targeted mode: %.2f Hz" % target_f)
-        
-        def Calc_G3(fVals):
-            """
-            Returns transfer matrix mapping applied loads to DOF acceleration
-            """
-            return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
-                                                      force_accn=True)
+        # For systems with constraints cannot currently use frequency domain
+        # method to compute responses at steady state. 
+        # In this case run time-domain analysis only
+        if self.modalsys_obj.hasConstraints():
+            run_freq_method = False
+            run_tstep = True
             
-        def Calc_G12(fVals):
-            """
-            Returns transfer matrix mapping applied loads to DOF displacements 
-            and velocities
-            """
-            return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
-                                                      C=numpy.zeros((0,)),
-                                                      verbose=False)
+        # Save settings used to determine which analyses run
+        self.run_freq_method = run_freq_method
+        self.run_tstep = run_tstep
+        
+        if verbose:
+            print("Forcing frequency: %.2f Hz" % forcing_freq)
+        
+        # Run frequency domain method to determine steady-state responses               
+        if run_freq_method:
             
-        f1, G12 = Calc_G12(target_f)
-        G12 = numpy.asmatrix(G12[:,:,0])
-    
-        f1, G3 = Calc_G3(target_f)
-        G3 = numpy.asmatrix(G3[:,:,0])
-        
-        G = numpy.vstack((G12,G3))
-        self.G = G
-        """
-        Transfer matrix mapping applied loads to modal freedoms
-        Row blocks correspond to {disp, vel, accn} freedoms
-        """
-        
-        # Calculate modal acceleration amplitudes using transfer matrix
-        modal_accn = numpy.ravel(G3 @ modal_forces)
-        self.modal_accn = modal_accn
-        
-        # Adjust phase such that acc for target mode has phase=0
-        z1 = 1.0 * numpy.exp(1j*numpy.angle(modal_accn[target_mode]))
-        modal_accn = modal_accn / z1
-        
-        # Get modal acceleration of targeted mode
-        # Note phase=0 due to above adjustment, hence ok to take real part only
-        modal_accn_target = numpy.real(modal_accn[target_mode])
-        self.modal_accn_target = modal_accn_target
-                       
-        # Calculate responses amplitudes using full transfer matrix
-        output_mtrx = self.modalsys_obj.output_mtrx
-        output_names = self.modalsys_obj.output_names
-        
-        if output_mtrx.shape[0]>0:
+            # Evaluate frequency transfer functions G(f) relating applied forces 
+            # (i.e. modal forces in this application) to DOF accelerations, 
+            # displacements and velocities
+            # (i.e. modal disp, vel, accn in this application)
+            #
+            # It is only necessary to evaluate G(f) at resonant frequency for mode 
+            # being targeted, although for validation / plotting it may be 
+            # advantageous to evaluate G(f) over a wider frequency range
+            #
+            # By definition, G(f1) is a matrix that can be used to relate 
+            # sinusoidal modal forces to sinusoidal modal accelerations, 
+            # given forcing frequency f1.
+            #
+            # Note: G(f) will in general be complex-valued; the should be 
+            # intepreted to denote scaling and phase lag
+            
+            
+            
+            def Calc_G3(fVals):
+                """
+                Returns transfer matrix mapping applied loads to DOF acceleration
+                """
+                return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
+                                                          force_accn=True)
                 
-            response_amplitudes = numpy.ravel(output_mtrx @ G @ modal_forces)
-            self.response_amplitudes = response_amplitudes
-            self.response_names = output_names
-            
-        else:
-            print("No output matrix provided. " + 
-                  "Real-world responses have not been evaluated")
-            
-        if makePlot:
-            
-            # ---- Plot full G3(f) function ----
-            
-            f, G3_f = Calc_G3(None)
-            
-            nModes = G3_f.shape[1]
-            
-            fig, axarr = plt.subplots(G3_f.shape[0],sharex=True,sharey=True)
-            axarr = numpy.array(axarr) # convert to array if not already
-            
-            for m in range(G3_f.shape[0]):
+            def Calc_G12(fVals):
+                """
+                Returns transfer matrix mapping applied loads to DOF displacements 
+                and velocities
+                """
+                return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
+                                                          C=numpy.zeros((0,)),
+                                                          verbose=False)
                 
-                ax = axarr[m]
-                
-                for j in range(G3_f.shape[1]):
-                    
-                    _G_f = G3_f[m,j,:]
-                    
-                    # Use function for plotting frequency responses
-                    # (this ensures good choice of f_vals)
-                    PlotFrequencyResponse(f,_G_f,
-                                          positive_f_only=True,
-                                          ax_magnitude=ax,
-                                          plotPhase=False)
-                    
-                # Override properties for ax
-                ax.set_title("")
-                ax.set_ylabel("Modal accn %d" % (m+1))
-                
-                if m != nModes:
-                    ax.set_xlabel("")
-                    
-                # Overlay values used in calculation
-                ax.plot(f1,numpy.abs(G3[m,:]),"r.")
-                ax.axvline(x=target_f,color='k',alpha=0.3)
-                    
-            fig.suptitle("Frequency response functions\n" + 
-                         "relating applied modal forces (N) " + 
-                         "to modal accelerations (m/$s^2$)")
-            
-            fig.set_size_inches((14,8))
-            fig.legend(ax.lines[:nModes],["Modal force %d" % (m+1)
-                                          for m in range(nModes)])
+            f1, G12 = Calc_G12(forcing_freq)
+            G12 = numpy.asmatrix(G12[:,:,0])
         
+            f1, G3 = Calc_G3(forcing_freq)
+            G3 = numpy.asmatrix(G3[:,:,0])
+            
+            G = numpy.vstack((G12,G3))
+            self.G = G
+            """
+            Transfer matrix mapping applied loads to modal freedoms
+            Row blocks correspond to {disp, vel, accn} freedoms
+            """
+            
+            # Calculate modal acceleration amplitudes using transfer matrix
+            modal_accn = numpy.ravel(G3 @ modal_forces)
+            self.modal_accn = modal_accn
+            
+            # Adjust phase such that acc for target mode has phase=0
+            z1 = 1.0 * numpy.exp(1j*numpy.angle(modal_accn[target_mode]))
+            modal_accn = modal_accn / z1
+            
+            # Get modal acceleration of targeted mode
+            # Note phase=0 due to above adjustment, hence ok to take real part only
+            modal_accn_target = numpy.real(modal_accn[target_mode])
+            self.modal_accn_target = modal_accn_target
+                           
+            # Calculate responses amplitudes using full transfer matrix
+            output_mtrx = self.modalsys_obj.output_mtrx
+            output_names = self.modalsys_obj.output_names
+            
+            if output_mtrx.shape[0]>0:
+                    
+                response_amplitudes = numpy.ravel(output_mtrx @ G @ modal_forces)
+                self.response_amplitudes = response_amplitudes
+                self.response_names = output_names
+                
+            else:
+                print("No output matrix provided. " + 
+                      "Real-world responses have not been evaluated")
+              
+            
+            if makePlot:
+                
+                # ---- Plot full G3(f) function ----
+                
+                f, G3_f = Calc_G3(None)
+                
+                nModes = G3_f.shape[1]
+                
+                fig, axarr = plt.subplots(G3_f.shape[0],sharex=True,sharey=True)
+                axarr = numpy.array(axarr) # convert to array if not already
+                
+                for m in range(G3_f.shape[0]):
+                    
+                    ax = axarr[m]
+                    
+                    for j in range(G3_f.shape[1]):
+                        
+                        _G_f = G3_f[m,j,:]
+                        
+                        # Use function for plotting frequency responses
+                        # (this ensures good choice of f_vals)
+                        PlotFrequencyResponse(f,_G_f,
+                                              positive_f_only=True,
+                                              ax_magnitude=ax,
+                                              plotPhase=False)
+                        
+                    # Override properties for ax
+                    ax.set_title("")
+                    ax.set_ylabel("Modal accn %d" % (m+1))
+                    
+                    if m != nModes:
+                        ax.set_xlabel("")
+                        
+                    # Overlay values used in calculation
+                    ax.plot(f1,numpy.abs(G3[m,:]),"r.")
+                    ax.axvline(x=forcing_freq,color='k',alpha=0.3)
+                        
+                fig.suptitle("Frequency response functions\n" + 
+                             "relating applied modal forces (N) " + 
+                             "to modal accelerations (m/$s^2$)")
+                
+                fig.set_size_inches((14,8))
+                fig.legend(ax.lines[:nModes],["Modal force %d" % (m+1)
+                                              for m in range(nModes)])
+        
+                    
         if verbose:
 
             self.print_results()
@@ -639,7 +695,7 @@ class SteadyStateCrowdLoading():
             
             # Define sinusoidal load function consistent with above
             def load_func(t):
-                return modal_forces * numpy.sin(2*numpy.pi*target_f*t)
+                return modal_forces * numpy.sin(2*numpy.pi*forcing_freq*t)
             
             load_func_dict = {self.modalsys_obj : load_func}
             
@@ -657,7 +713,7 @@ class SteadyStateCrowdLoading():
             
             print("***Time-stepping analysis complete!***")
 
-        return modal_accn_target
+
                 
     
     
@@ -700,13 +756,15 @@ class SteadyStateCrowdLoading():
         printcomplex(self.modal_forces)
         print("")
         
-        print("Modal accelerations (m/s2):")
-        printcomplex(self.modal_accn)
-        print("")
-        
-        print("Responses:")
-        print(self.response_names)
-        printcomplex(self.response_amplitudes)
+        if self.run_freq_method:
+            
+            print("Modal accelerations (m/s2):")
+            printcomplex(self.modal_accn)
+            print("")
+            
+            print("Responses:")
+            print(self.response_names)
+            printcomplex(self.response_amplitudes)
         
         
     def get_response_amplitudes(self,print_phase=False):
@@ -728,7 +786,43 @@ class SteadyStateCrowdLoading():
                               columns=columns_list)
         
         return df
+    
+    
+    def get_response_stats(self):
+        """
+        Returns response stats for time-stepping analysis carried out
+        """
         
+        if not self.run_tstep:
+            raise ValueError("Error: no time-stepping analysis run, " + 
+                             "cannot retrieve results!")
+        
+        # Get dict of dict of stats
+        stats_dict_dict = self.tstep_results.CalcResponseStats()
+        
+        # Loop over dict and return stats as list of pandas dataframes
+        df_list = []
+        
+        for sys_obj, stats_dict in stats_dict_dict.items():   
+            
+            sys_name = sys_obj.name
+            response_names = sys_obj.output_names
+            
+            df = pandas.DataFrame(data=stats_dict,
+                                  index=[sys_name + " - " + x
+                                         for x in response_names])
+            
+            df_list.append(df)
+        
+        # Merge pandas dataframes to return a single dataframe
+        # with all stats for all responses for all systems
+        df_merged = pandas.concat(df_list)
+        
+        # Transpose such that stats as indexes, responses as columns
+        df_merged = df_merged.transpose()
+                
+        return df_merged
+    
         
     def plot_results(self,overlay_val:float=None):
         """
@@ -759,63 +853,76 @@ class SteadyStateCrowdLoading():
         
         fig_list = []
         
-        fig, axarr = plt.subplots(2)
-        fig_list.append(fig)
-        
-        fig.suptitle("Steady-state pedestrian crowd loading analysis results\n"+
-                     "Target mode: %d" % self.target_mode)
-        fig.set_size_inches((14,8))
-        fig.subplots_adjust(hspace=0.3)
-        
-        # Produce bar plot of modal accelerations
-        ax = axarr[0]
-        
-        vals = self.modal_accn
-        ticks = ["Mode %d" % (i+1) for i in range(self.modalsys_obj.nDOF)]
-        ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
-        ax.tick_params(labelsize=8)
-        
-        ax.set_title("Steady-state modal acceleration amplitudes (m/$s^2$)")
-        
-        # Produce bar plot of outputs
-        ax = axarr[1]
-        
-        vals = self.response_amplitudes
-        ticks = self.response_names
-        ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
-        ax.tick_params(labelsize=8)
-        
-        ax.set_title("Steady-state response amplitudes")
-        
-        if overlay_val is not None:
-            ax.axvline(overlay_val,color='darkorange')
+        # Plot results of frequency domain analysis method, if avaliable
+        if self.run_freq_method:
+          
+            fig, axarr = plt.subplots(2)
+            fig_list.append(fig)
+            
+            fig.suptitle("Steady-state pedestrian crowd loading analysis results\n"+
+                         "Target mode: %d" % self.target_mode)
+            fig.set_size_inches((14,8))
+            fig.subplots_adjust(hspace=0.3)
+            
+            # Produce bar plot of modal accelerations
+            ax = axarr[0]
+            
+            vals = self.modal_accn
+            ticks = ["Mode %d" % (i+1) for i in range(self.modalsys_obj.nDOF)]
+            ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
+            ax.tick_params(labelsize=8)
+            
+            ax.set_title("Steady-state modal acceleration amplitudes (m/$s^2$)")
+            
+            # Produce bar plot of outputs
+            ax = axarr[1]
+            
+            vals = self.response_amplitudes
+            ticks = self.response_names
+            ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
+            ax.tick_params(labelsize=8)
+            
+            ax.set_title("Steady-state response amplitudes")
+            
+            if overlay_val is not None:
+                ax.axvline(overlay_val,color='darkorange')
         
         # Plot results of time-stepping analysis, if avaliable
-        if hasattr(self,"tstep_results"):
+        if self.run_tstep:
+            
+            # Handle overlay_val optional input
+            if overlay_val is not None:
+                overlay_val=[+overlay_val,-overlay_val]
+            else:
+                overlay_val=None
             
             tstep_fig_list = self.tstep_results.PlotResults(useCommonPlot=False,
                                                             useCommonScale=True,
-                                                            y_overlay=[+overlay_val,-overlay_val])
+                                                            y_overlay=overlay_val)
             fig_list += tstep_fig_list
             
-            # Overlay expected modal acceleration amplitudes
-            # (from steady-state analysis)
-            state_results_fig = fig_list[1][0]
-            response_results_fig = fig_list[2][0]
             
-            ax = state_results_fig.get_axes()[3] # plot of modal accelerations
-            accn_val = numpy.abs(self.modal_accn_target)    # value to overlay
-            ax.axhline(+accn_val,color='r',linestyle='--',alpha=0.3)
-            ax.axhline(-accn_val,color='r',linestyle='--',alpha=0.3)
+            if self.run_freq_method:
             
-            # Overlay expected response amplitudes 
-            # (from steady-state analysis)
-            axarr = response_results_fig.get_axes()
-            val2overlay = numpy.abs(self.response_amplitudes)
-
-            for ax, val in zip(axarr,val2overlay):
-                ax.axhline(+val,color='r',linestyle='--',alpha=0.3)
-                ax.axhline(-val,color='r',linestyle='--',alpha=0.3) 
+                # Overlay expected modal acceleration amplitudes
+                # (from steady-state analysis, if run)
+                
+                state_results_fig = fig_list[1][0]
+                response_results_fig = fig_list[2][0]
+                
+                ax = state_results_fig.get_axes()[3] # plot of modal accelerations
+                accn_val = numpy.abs(self.modal_accn_target)    # value to overlay
+                ax.axhline(+accn_val,color='r',linestyle='--',alpha=0.3)
+                ax.axhline(-accn_val,color='r',linestyle='--',alpha=0.3)
+                
+                # Overlay expected response amplitudes 
+                # (from steady-state analysis, if run)
+                axarr = response_results_fig.get_axes()
+                val2overlay = numpy.abs(self.response_amplitudes)
+    
+                for ax, val in zip(axarr,val2overlay):
+                    ax.axhline(+val,color='r',linestyle='--',alpha=0.3)
+                    ax.axhline(-val,color='r',linestyle='--',alpha=0.3) 
             
         return fig_list       
         
@@ -1061,8 +1168,12 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         return density
     
     
-    def calc_load_intensity(self,mode_index:int,calc_lambda=True,
-                            verbose=True,makePlot=True):
+    def calc_load_intensity(self,
+                            mode_index:int,
+                            fv:float=None,
+                            calc_lambda=True,
+                            verbose=True,
+                            makePlot=True):
         """
         Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
         
@@ -1088,7 +1199,10 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         F0 = 280.0 # N, refer Table NA.8
 
         # Derive adjustment factors
-        fv = numpy.abs(self.f_d[mode_index])
+        if fv is None:
+            # If not provided explicitly set to damped frequency of target mode
+            fv = numpy.abs(self.f_d[mode_index])
+            
         k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,analysis_type="walkers",
                                         makePlot=makePlot)
         

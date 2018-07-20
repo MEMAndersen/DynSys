@@ -12,6 +12,7 @@ import numpy
 
 # Modules to be tested
 import msd_chain
+import damper
 from dynsys import PlotFrequencyResponse
 
 #%%
@@ -24,7 +25,7 @@ fmax=3.0 # freq limit for plots
 m_M = 7344  #kg, mass of main system
 m_D = 640.0  #kg, mass of damper system
 f_M = 1.878 #Hz, nat freq of main system
-f_D = 1.640  #Hz, nat freq of damper
+f_D = 1.878  #Hz, nat freq of damper
 gamma_M = 0.005 # damping ratio, main system
 gamma_D = 0.180 # damping ratio, TMD system
 
@@ -62,8 +63,8 @@ plot_dict = PlotFrequencyResponse(f2,G_f2[0,0,:],
 print("Max |G_f|, system with TMDs: %.2e" % numpy.max(numpy.abs(G_f2[0,0,:])))
 
 # Edit line styles
-lines2edit = [plot_dict["ax_magnitude"].lines[1],
-              plot_dict["ax_phase"].lines[1]]
+lines2edit = [plot_dict["ax_magnitude"].lines[-1],
+              plot_dict["ax_phase"].lines[-1]]
 
 for line in lines2edit:
     line.set_linestyle("--")
@@ -99,6 +100,56 @@ PlotFrequencyResponse(f3,G_f3[0,0,:],
                       ax_magnitude=plot_dict["ax_magnitude"],
                       ax_phase=plot_dict["ax_phase"])
 
+#%%
+
+# Define damper mass as seperate system
+TMD_sys = damper.TMD(sprung_mass=m_D,nat_freq=f_D,damping_ratio=gamma_D)
+
+# Append to main system
+main_sys.AppendSystem(child_sys=TMD_sys,DOF_parent=0,DOF_child=0)
+
+# Calculate frequency response of combined system
+f4 , G_f4 = main_sys.CalcFreqResponse(fmax=fmax)
+
+# Overlay to compare frequency response
+PlotFrequencyResponse(f4,G_f4[0,0,:],
+                      label_str="Relative disp, using CalcFreqResponse(); " + 
+                                "TMD as appended system",
+                      ax_magnitude=plot_dict["ax_magnitude"],
+                      ax_phase=plot_dict["ax_phase"])
+
+# Edit line styles
+lines2edit = [plot_dict["ax_magnitude"].lines[-1],
+              plot_dict["ax_phase"].lines[-1]]
+
+for line in lines2edit:
+    line.set_linestyle("--")
+    
+#%%
+    
+# Define main system as a 2dof system but constraint dof0 to ground
+main_sys_constrained = damper.TMD(sprung_mass=m_M,
+                                  nat_freq=f_M,
+                                  damping_ratio=gamma_M)
+
+main_sys_constrained.AddConstraintEqns(Jnew=[1,0],Jkey="Constrain to ground")
+
+# Calculate frequency response of combined system
+f5 , G_f5 = main_sys_constrained.CalcFreqResponse(fmax=fmax)
+
+# Overlay to compare frequency response
+PlotFrequencyResponse(f5,G_f5[0,1,:],
+                      label_str="using CalcFreqResponse(), no TMD; " + 
+                                "2dof constrained system",
+                      ax_magnitude=plot_dict["ax_magnitude"],
+                      ax_phase=plot_dict["ax_phase"])
+
+# Edit line styles
+lines2edit = [plot_dict["ax_magnitude"].lines[-1],
+              plot_dict["ax_phase"].lines[-1]]
+
+for line in lines2edit:
+    line.set_linestyle("--")
 
 
                       
