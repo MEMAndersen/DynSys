@@ -10,6 +10,7 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import pandas as pd
 import scipy
+from scipy import interpolate
 import matplotlib.pyplot as plt
 import warnings
 #import deprecation # not in anaconda distribution - obtain this from pip
@@ -565,7 +566,8 @@ class ModalSys(DynSys):
         self.output_mtrx = output_mtrx
         self.output_names = output_names
         
-    def CalcModeshapeIntegral(self,track_length=None,num=1000,power:int=1):
+        
+    def CalcModeshapeIntegral(self,weighting_func=None,track_length=None,num=1000,power:int=1):
         """
         Evaluates integral along modeshape
         
@@ -594,10 +596,56 @@ class ModalSys(DynSys):
         # Take square of modeshape
         vals = vals**power
         
+        # Evaluate and multiply by weighting function, if defined:
+        if weighting_func is not None:
+            
+            if isinstance(weighting_func,float):
+                vals = vals * weighting_func
+            else:
+                weighting_vals = weighting_func(x)
+                vals = vals * weighting_vals
+        
         # Integrate along track
         integral = scipy.integrate.trapz(y=vals, x=x, axis=0)
         
         return integral
+    
+# --------------- FUNCTIONS ------------------
+        
+def MAC(x1,x2):
+    """
+    Modal assurance criterion for comparing two complex-valued vectors 
+    `x1` and `x2`
+    
+    ***
+    
+    $$ 
+    MAC = (x_{2}^{H}.x_{1} + x_{1}^{H}.x_{2})/
+    (x_{2}^{H}.x_{2} + x_{1}^{H}.x_{1}) 
+    $$
+    
+    MAC is a scalar _float_ in the range [0.0,1.0]:
+        
+    * MAC = 1.0 implies vectors are exactly the same
+    
+    * MAC = 0.0 implies vectors are othogonal i.e. have no shared component
+    
+    """
+       
+    x1 = npy.asmatrix(x1)
+    x2 = npy.asmatrix(x2)
+    
+    # Check dimensions are consistent
+    if x1.shape!=x2.shape:
+        raise ValueError("Error: x1 and x2 must be same shape!")
+    
+    # Calculate numerator and denominator of MAC function
+    num = x2.H * x1 * x1.H * x2
+    den = x2.H * x2 * x1.H * x1
+    MAC = num/den
+    MAC = npy.real(MAC)    # note should have negligible imag part anyway
+        
+    return MAC
     
   
 # ********************** TEST ROUTINE ****************************************

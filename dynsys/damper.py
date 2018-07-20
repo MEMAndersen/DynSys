@@ -25,7 +25,7 @@ class TMD(msd_chain.MSD_Chain):
     description="Tuned mass damper"
     
     def __init__(self,sprung_mass:float,nat_freq:float,
-                 fixed_mass:float=None,damping_ratio:float=0.0,
+                 fixed_mass:float=0.0,damping_ratio:float=0.0,
                  **kwargs):
         """
         Initialisation method
@@ -63,11 +63,7 @@ class TMD(msd_chain.MSD_Chain):
         for that class for further details
         
         """
-        
-        # Handle optional arguments
-        if fixed_mass is None:
-            fixed_mass = sprung_mass / 100
-        
+                
         # Define masses, stiffnesses and damping dashpot of msd_chain system
         K = SDOF_stiffness(M=sprung_mass,f=nat_freq)
         C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)

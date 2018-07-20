@@ -2018,6 +2018,31 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
     return k_fv
 
 
+def calc_modal_damping_latsync(modalsys,cp=300,num=1000):
+    """
+    Calculates modal damping matrix due to pedestrians, per the method 
+    presented in McRobie paper
+    """
+    
+    modeshape_func = modalsys.modeshapeFunc
+    
+    L = modalsys.Ltrack
+    dL = L/num
+    
+    # Evaluate modeshape ordinates
+    x = numpy.linspace(0,L,num,endpoint=False) + dL/2
+    phi = modeshape_func(x)
+        
+    # Evaluate matrix product of modeshape ordinate matrices
+    phi_product = phi.T @ phi
+    
+    # Return mode-generalised damping matrix
+    Cpa = cp * dL / L * phi_product
+    
+    return Cpa
+    
+    
+
 
 def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,
                                 groupType="pedestrian",
