@@ -8,6 +8,25 @@ and this project adheres to:
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+
+* Check added as to Scipy version when importing `tstep.py` module; v1.0 or 
+  greater required (an exception will be raised otherwise, as `solve_ivp()` 
+  method unavaliable in earlier versions.
+
+* `scipy.linalg.null_space()` method now used when possible (i.e. when Scipy 
+  v1.1 or greater is used), to save duplication of code in `null_space()` 
+  method with `dynsys.py` module. In the future the plan will be to use the 
+  Scipy method alone, to allow reduction in code.
+
+### Fixed
+
+### Removed
+
 ## [1.3.0] - 2018-07-20 - RIHY
 
 ### Changed
