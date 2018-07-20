@@ -1068,6 +1068,7 @@ table {
     <li class="mono"><a href="#tstep_results.TStep_Results.CalcResponses">CalcResponses</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.ClearResults">ClearResults</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.GetResults">GetResults</a></li>
+    <li class="mono"><a href="#tstep_results.TStep_Results.PlotDeformed">PlotDeformed</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.PlotResponsePSDs">PlotResponsePSDs</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.PlotResponseResults">PlotResponseResults</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.PlotResults">PlotResults</a></li>
@@ -1111,6 +1112,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">npy</span>
 <span class="kn">import</span> <span class="nn">scipy.signal</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.animation</span> <span class="kn">as</span> <span class="nn">animation</span>
 <span class="kn">import</span> <span class="nn">timeit</span>
 <span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
@@ -1379,7 +1381,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produces a time series results plot</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
+        
         <span class="n">lines</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_vals</span><span class="p">,</span><span class="n">data_vals</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">titleStr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -1471,6 +1473,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 
             <span class="c1"># Determine number of subplots required</span>
             <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+            
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="n">nPltRows</span><span class="o">=</span><span class="mi">5</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1492,16 +1495,17 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                 <span class="c1"># All systems and subsystems are modal</span>
                 <span class="n">sysStr</span> <span class="o">=</span> <span class="s2">&quot;Modal &quot;</span>
                 
-            <span class="c1"># Get data to plot            </span>
-            <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span>
-                                                           <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
+            <span class="c1"># Get data to plot   </span>
+            <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+            <span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,[</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
-                
+
             <span class="c1"># Handle dofs2Plot if provided</span>
             <span class="c1"># Note in this case the system to which dofs relate must also</span>
             <span class="c1"># be defined!</span>
             <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+
                 <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
                 <span class="n">vdot</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
@@ -1530,6 +1534,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+                
                 <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
                            <span class="n">data_vals</span><span class="o">=</span><span class="n">f_constraint</span><span class="p">,</span>
@@ -1843,49 +1848,95 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="k">return</span> <span class="n">fig_list</span>
     
         
-    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">PlotDeformed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timestep_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce a plot of system in its deformed configuration, as per results </span>
+<span class="sd">        at a given time step</span>
+<span class="sd">        </span>
+<span class="sd">        Additional keyword arguments are passed-down to `PlotSystem()` method </span>
+<span class="sd">        of applicable system object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unfinished - do not use!&quot;</span><span class="p">)</span>
+        <span class="c1"># Get system to plot</span>
+        <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
         
-        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+        <span class="c1"># Get results at applicable time step</span>
+        <span class="n">t_val</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)[</span><span class="n">timestep_index</span><span class="p">]</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">t_val</span><span class="p">)</span>
+        <span class="n">v_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="p">,[</span><span class="s1">&#39;v&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">timestep_index</span><span class="p">,:]</span>
         
-        <span class="n">vmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
-        <span class="n">vmin</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
-        <span class="n">vabsmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">vmax</span><span class="p">,</span><span class="n">vmin</span><span class="p">])</span>
-        <span class="n">Ns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">dt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
-        
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">autoscale_on</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">vabsmax</span><span class="p">,</span><span class="n">vabsmax</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-        
-        <span class="n">line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="s1">&#39;o-&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;time = </span><span class="si">%.1f</span><span class="s1">s&#39;</span>
+        <span class="c1"># Create figure and axes onto which to draw system, if not provided</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+            
+        <span class="c1"># Plot system onto axes</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+        <span class="c1"># Overlay caption to </span>
         <span class="n">time_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span> <span class="o">%</span> <span class="n">t_val</span><span class="p">)</span>
         
-        <span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
-            <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">([],</span> <span class="p">[])</span>
-            <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+    
+    
+    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce animation of results, plotting deformed configuration of system </span>
+<span class="sd">        at each time step</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">        (No arguments required)</span>
+<span class="sd">        </span>
+<span class="sd">        **Optional:**</span>
+<span class="sd">        </span>
+<span class="sd">        * `dynsys_obj`, instance of `DynSys()` class (or derived classes), </span>
+<span class="sd">          defining the system to be plotted. If None (per default argument) the </span>
+<span class="sd">          parent system will be plotted</span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
-        
-        <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-            <span class="c1">#print(&quot;frame{0}&quot;.format(i))</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
-            <span class="c1">#print(x)</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]]</span>
-            <span class="c1">#print(y)</span>
-            <span class="n">t_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
-            <span class="c1">#print(t_val)</span>
+        <span class="c1"># Get system to plot</span>
+        <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
             
-            <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-            <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="n">time_template</span> <span class="o">%</span> <span class="n">t_val</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Producing animation of deformed configuration of &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> 
+              <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             
-            <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># time interval</span>
+        <span class="n">Ns</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="c1"># number of time-steps</span>
         
-        <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Ns</span><span class="p">),</span> <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span><span class="n">blit</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">init_func</span><span class="o">=</span><span class="n">init</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;No time steps:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Ns</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time interval:</span><span class="se">\t</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="p">)</span>
+        
+        <span class="c1"># Create figure and axes onto which to draw system</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        
+        <span class="c1"># Define function for drawing each frame</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PlotDeformed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="n">dynsys_obj</span><span class="p">,</span>
+                                                     <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="k">def</span> <span class="nf">draw_frame</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="c1">#            line.set_data([0,i],[0,0])</span>
+<span class="c1">#            time_text.set_text(dt*i)</span>
+<span class="c1">#            </span>
+<span class="c1">#            return line, time_text</span>
+        
+        <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">draw_frame</span><span class="p">,</span> 
+                                      <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
+                                      <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># convert to ms</span>
+                                      <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+        
         
         
     <span class="k">def</span> <span class="nf">CalcResponses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -2440,7 +2491,7 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produces a time series results plot</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
+        
         <span class="n">lines</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_vals</span><span class="p">,</span><span class="n">data_vals</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">titleStr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -2532,6 +2583,7 @@ analysis as carried out by <code>TStep</code></p></div>
 
             <span class="c1"># Determine number of subplots required</span>
             <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+            
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="n">nPltRows</span><span class="o">=</span><span class="mi">5</span>
             <span class="k">else</span><span class="p">:</span>
@@ -2553,16 +2605,17 @@ analysis as carried out by <code>TStep</code></p></div>
                 <span class="c1"># All systems and subsystems are modal</span>
                 <span class="n">sysStr</span> <span class="o">=</span> <span class="s2">&quot;Modal &quot;</span>
                 
-            <span class="c1"># Get data to plot            </span>
-            <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span>
-                                                           <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
+            <span class="c1"># Get data to plot   </span>
+            <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+            <span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,[</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
-                
+
             <span class="c1"># Handle dofs2Plot if provided</span>
             <span class="c1"># Note in this case the system to which dofs relate must also</span>
             <span class="c1"># be defined!</span>
             <span class="k">if</span> <span class="n">dofs2Plot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+
                 <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
                 <span class="n">vdot</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[:,</span><span class="n">dofs2Plot</span><span class="p">]</span>
@@ -2591,6 +2644,7 @@ analysis as carried out by <code>TStep</code></p></div>
                            <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+                
                 <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
                            <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
                            <span class="n">data_vals</span><span class="o">=</span><span class="n">f_constraint</span><span class="p">,</span>
@@ -2904,49 +2958,95 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="k">return</span> <span class="n">fig_list</span>
     
         
-    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">PlotDeformed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timestep_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce a plot of system in its deformed configuration, as per results </span>
+<span class="sd">        at a given time step</span>
+<span class="sd">        </span>
+<span class="sd">        Additional keyword arguments are passed-down to `PlotSystem()` method </span>
+<span class="sd">        of applicable system object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unfinished - do not use!&quot;</span><span class="p">)</span>
+        <span class="c1"># Get system to plot</span>
+        <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
         
-        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+        <span class="c1"># Get results at applicable time step</span>
+        <span class="n">t_val</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)[</span><span class="n">timestep_index</span><span class="p">]</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">t_val</span><span class="p">)</span>
+        <span class="n">v_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="p">,[</span><span class="s1">&#39;v&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">timestep_index</span><span class="p">,:]</span>
         
-        <span class="n">vmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
-        <span class="n">vmin</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
-        <span class="n">vabsmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">vmax</span><span class="p">,</span><span class="n">vmin</span><span class="p">])</span>
-        <span class="n">Ns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">dt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
-        
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">autoscale_on</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">vabsmax</span><span class="p">,</span><span class="n">vabsmax</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-        
-        <span class="n">line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="s1">&#39;o-&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;time = </span><span class="si">%.1f</span><span class="s1">s&#39;</span>
+        <span class="c1"># Create figure and axes onto which to draw system, if not provided</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+            
+        <span class="c1"># Plot system onto axes</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+        <span class="c1"># Overlay caption to </span>
         <span class="n">time_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span> <span class="o">%</span> <span class="n">t_val</span><span class="p">)</span>
         
-        <span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
-            <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">([],</span> <span class="p">[])</span>
-            <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+        <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+    
+    
+    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce animation of results, plotting deformed configuration of system </span>
+<span class="sd">        at each time step</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">        (No arguments required)</span>
+<span class="sd">        </span>
+<span class="sd">        **Optional:**</span>
+<span class="sd">        </span>
+<span class="sd">        * `dynsys_obj`, instance of `DynSys()` class (or derived classes), </span>
+<span class="sd">          defining the system to be plotted. If None (per default argument) the </span>
+<span class="sd">          parent system will be plotted</span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
-        
-        <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-            <span class="c1">#print(&quot;frame{0}&quot;.format(i))</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
-            <span class="c1">#print(x)</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]]</span>
-            <span class="c1">#print(y)</span>
-            <span class="n">t_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
-            <span class="c1">#print(t_val)</span>
+        <span class="c1"># Get system to plot</span>
+        <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
             
-            <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-            <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="n">time_template</span> <span class="o">%</span> <span class="n">t_val</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Producing animation of deformed configuration of &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> 
+              <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             
-            <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># time interval</span>
+        <span class="n">Ns</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="c1"># number of time-steps</span>
         
-        <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Ns</span><span class="p">),</span> <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span><span class="n">blit</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">init_func</span><span class="o">=</span><span class="n">init</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;No time steps:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Ns</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time interval:</span><span class="se">\t</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="p">)</span>
+        
+        <span class="c1"># Create figure and axes onto which to draw system</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        
+        <span class="c1"># Define function for drawing each frame</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PlotDeformed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="n">dynsys_obj</span><span class="p">,</span>
+                                                     <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="k">def</span> <span class="nf">draw_frame</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="c1">#            line.set_data([0,i],[0,0])</span>
+<span class="c1">#            time_text.set_text(dt*i)</span>
+<span class="c1">#            </span>
+<span class="c1">#            return line, time_text</span>
+        
+        <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">draw_frame</span><span class="p">,</span> 
+                                      <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
+                                      <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># convert to ms</span>
+                                      <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+        
         
         
     <span class="k">def</span> <span class="nf">CalcResponses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -3418,56 +3518,77 @@ recomputed using <code>CalcResponses()</code> function</p></div>
             
   <div class="item">
     <div class="name def" id="tstep_results.TStep_Results.AnimateResults">
-    <p>def <span class="ident">AnimateResults</span>(</p><p>self)</p>
+    <p>def <span class="ident">AnimateResults</span>(</p><p>self, dynsys_obj=None, **kwargs)</p>
     </div>
     
 
     
   
+    <div class="desc"><p>Produce animation of results, plotting deformed configuration of system 
+at each time step</p>
+<hr />
+<p><strong>Required:</strong></p>
+<p>(No arguments required)</p>
+<p><strong>Optional:</strong></p>
+<ul>
+<li><code>dynsys_obj</code>, instance of <code>DynSys()</code> class (or derived classes), 
+  defining the system to be plotted. If None (per default argument) the 
+  parent system will be plotted</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.AnimateResults', this);">Show source &equiv;</a></p>
   <div id="source-tstep_results.TStep_Results.AnimateResults" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produce animation of results, plotting deformed configuration of system </span>
+<span class="sd">    at each time step</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Required:**</span>
+<span class="sd">    </span>
+<span class="sd">    (No arguments required)</span>
+<span class="sd">    </span>
+<span class="sd">    **Optional:**</span>
+<span class="sd">    </span>
+<span class="sd">    * `dynsys_obj`, instance of `DynSys()` class (or derived classes), </span>
+<span class="sd">      defining the system to be plotted. If None (per default argument) the </span>
+<span class="sd">      parent system will be plotted</span>
+<span class="sd">      </span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unfinished - do not use!&quot;</span><span class="p">)</span>
-    
-    <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-    
-    <span class="n">vmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
-    <span class="n">vmin</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">))</span>
-    <span class="n">vabsmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">vmax</span><span class="p">,</span><span class="n">vmin</span><span class="p">])</span>
-    <span class="n">Ns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">dt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
-    
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">autoscale_on</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">vabsmax</span><span class="p">,</span><span class="n">vabsmax</span><span class="p">))</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-    
-    <span class="n">line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="s1">&#39;o-&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;time = </span><span class="si">%.1f</span><span class="s1">s&#39;</span>
-    <span class="n">time_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
-    
-    <span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
-        <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">([],</span> <span class="p">[])</span>
-        <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
-    
-    
-    <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-        <span class="c1">#print(&quot;frame{0}&quot;.format(i))</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
-        <span class="c1">#print(x)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]]</span>
-        <span class="c1">#print(y)</span>
-        <span class="n">t_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
-        <span class="c1">#print(t_val)</span>
+    <span class="c1"># Get system to plot</span>
+    <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
         
-        <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="n">time_template</span> <span class="o">%</span> <span class="n">t_val</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Producing animation of deformed configuration of &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> 
+          <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         
-        <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># time interval</span>
+    <span class="n">Ns</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="c1"># number of time-steps</span>
     
-    <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Ns</span><span class="p">),</span> <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span><span class="n">blit</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">init_func</span><span class="o">=</span><span class="n">init</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;No time steps:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Ns</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time interval:</span><span class="se">\t</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="p">)</span>
+    
+    <span class="c1"># Create figure and axes onto which to draw system</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    
+    <span class="c1"># Define function for drawing each frame</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PlotDeformed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="n">dynsys_obj</span><span class="p">,</span>
+                                                 <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">draw_frame</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+         <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+         <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="n">dt</span><span class="o">*</span><span class="n">i</span><span class="p">)</span>
+         
+         <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+    
+    <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">draw_frame</span><span class="p">,</span> 
+                                  <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
+                                  <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># convert to ms</span>
+                                  <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -3851,6 +3972,61 @@ subsystem of the parent system (this is checked)</p>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not retrieve requested attribute &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">vals_list</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.TStep_Results.PlotDeformed">
+    <p>def <span class="ident">PlotDeformed</span>(</p><p>self, timestep_index, dynsys_obj=None, ax=None, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Produce a plot of system in its deformed configuration, as per results 
+at a given time step</p>
+<p>Additional keyword arguments are passed-down to <code>PlotSystem()</code> method 
+of applicable system object</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.PlotDeformed', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.TStep_Results.PlotDeformed" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotDeformed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timestep_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produce a plot of system in its deformed configuration, as per results </span>
+<span class="sd">    at a given time step</span>
+<span class="sd">    </span>
+<span class="sd">    Additional keyword arguments are passed-down to `PlotSystem()` method </span>
+<span class="sd">    of applicable system object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get system to plot</span>
+    <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
+    
+    <span class="c1"># Get results at applicable time step</span>
+    <span class="n">t_val</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)[</span><span class="n">timestep_index</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">t_val</span><span class="p">)</span>
+    <span class="n">v_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="p">,[</span><span class="s1">&#39;v&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">timestep_index</span><span class="p">,:]</span>
+    
+    <span class="c1"># Create figure and axes onto which to draw system, if not provided</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        
+    <span class="c1"># Plot system onto axes</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Overlay caption to </span>
+    <span class="n">time_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span> <span class="o">%</span> <span class="n">t_val</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
 </pre></div>
 
   </div>
@@ -4415,6 +4591,7 @@ plotted)</p>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;   Plotting state results for &#39;</span><span class="si">%s</span><span class="s2">&#39;...&quot;</span> <span class="o">%</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="c1"># Determine number of subplots required</span>
         <span class="n">hasConstraints</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+        
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
             <span class="n">nPltRows</span><span class="o">=</span><span class="mi">5</span>
         <span class="k">else</span><span class="p">:</span>
@@ -4436,12 +4613,11 @@ plotted)</p>
             <span class="c1"># All systems and subsystems are modal</span>
             <span class="n">sysStr</span> <span class="o">=</span> <span class="s2">&quot;Modal &quot;</span>
             
-        <span class="c1"># Get data to plot            </span>
-        <span class="n">t</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span>
-                                                       <span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
+        <span class="c1"># Get data to plot   </span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+        <span class="n">f</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">vdot</span><span class="p">,</span><span class="n">v2dot</span><span class="p">,</span><span class="n">f_constraint</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="n">obj</span><span class="p">,[</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;vdot&#39;</span><span class="p">,</span><span class="s1">&#39;v2dot&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;f_constraint&#39;</span><span class="p">])</span>
-            
         <span class="c1"># Handle dofs2Plot if provided</span>
         <span class="c1"># Note in this case the system to which dofs relate must also</span>
         <span class="c1"># be defined!</span>
@@ -4474,6 +4650,7 @@ plotted)</p>
                        <span class="n">titleStr</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">Accelerations ($m/s^2$)&quot;</span> <span class="o">%</span> <span class="n">sysStr</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+            
             <span class="bp">self</span><span class="o">.</span><span class="n">_TimePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
                        <span class="n">t_vals</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
                        <span class="n">data_vals</span><span class="o">=</span><span class="n">f_constraint</span><span class="p">,</span>

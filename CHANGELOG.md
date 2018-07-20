@@ -21,6 +21,10 @@ and this project adheres to:
   frequency transfer matrix.]. This method can be generally used - but the 
   main motivation behind its implementation is to allow code reuse in multiple 
   methods of the core `DynSys` class, e.g. `DynSys.CalcEigenproperties()`.
+  
+* `DynSys.CalcEigenproperties()` method will now work for systems with 
+  constraints. Accuracy of the implementation has been validated by extension 
+  of Warburton TMD validation script.
 
 ### Fixed
 

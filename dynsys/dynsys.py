@@ -1576,14 +1576,8 @@ class DynSys:
         
         if verbose: print("Calculating frequency response matrices..")
         
-        # Routine cannot (currently) handle systems with constraints
-        # (this can be implemented in the near future though!)
+        # Get key properties of system 
         hasConstraints = self.hasConstraints()
-        #if hasConstraints:
-        #    raise ValueError("Error: cannot run `CalcFreqResponse` method " + 
-        #                     "for systems with constraints!")
-        
-        
         nDOF = self.nDOF
         
         # Handle optional arguments
@@ -1607,6 +1601,7 @@ class DynSys:
                                    state_variables_only=True)[0]
                     
         if C.shape[0]==0:
+            
             if verbose:
                 print("***\nWarning: no output matrix defined. "+
                       "Output matrix Gf will hence relate to state " + 
@@ -1616,10 +1611,7 @@ class DynSys:
                         
         # Override the above 
         if force_accn:
-            
-            #print("`force_accn` invoked; frequency response function relates" + 
-            #      " applied forces to DOF accelerations")
-            
+                        
             # Get system matrices and output matrices
             nDOF = self.nDOF
             C = A[nDOF:2*nDOF,:] # rows relating to accelerations
@@ -1638,9 +1630,7 @@ class DynSys:
             zeros_mtrx = npy.zeros_like(Z)
             Z2 = npy.vstack((npy.hstack((Z,zeros_mtrx)),
                              npy.hstack((zeros_mtrx,Z))))
-        else:
-            Z2 = npy.identity(A.shape[0])
-        
+                    
         # Print shapes of all arrays
         if verbose:
             print("Shapes of A B C D matrices:")
@@ -1674,8 +1664,14 @@ class DynSys:
                 I = sparse.identity(A.shape[0])
                 Gf = sparse.linalg.inv(jw * I - A) @ B
                 
-            Gf = C @ Z2 @ Gf
+            # Convert to map loads to state variables of constrained problem
+            if hasConstraints:
+                Gf = Z2 @ Gf 
+            
+            # Adjust to map loads to outputs, not state variables
+            Gf = C @ Gf 
                 
+            # Adjust for direct mapping between loads and outputs
             if D is not None:
                 Gf += D    
             

@@ -5,6 +5,27 @@
 and this project adheres to: 
 <a href="http://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <hr />
+<h2>Unreleased</h2>
+<h3>Changed</h3>
+<h3>Added</h3>
+<ul>
+<li>
+<p>New method <code>transform_to_unconstrained()</code> defined in <code>dynsys.py</code> module, to 
+  implement method for transforming a constrained system (i.e. a system with 
+  constraint equations) into an equivilent unconstrained one. [This is a key 
+  step in calculations such as complex eigensolution and evaluation of 
+  frequency transfer matrix.]. This method can be generally used - but the 
+  main motivation behind its implementation is to allow code reuse in multiple 
+  methods of the core <code>DynSys</code> class, e.g. <code>DynSys.CalcEigenproperties()</code>.</p>
+</li>
+<li>
+<p><code>DynSys.CalcEigenproperties()</code> method will now work for systems with 
+  constraints. Accuracy of the implementation has been validated by extension 
+  of Warburton TMD validation script.</p>
+</li>
+</ul>
+<h3>Fixed</h3>
+<h3>Removed</h3>
 <h2>[1.2.2] - 2018-07-19 - RIHY</h2>
 <h3>Changed</h3>
 <h3>Added</h3>

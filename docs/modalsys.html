@@ -1077,6 +1077,7 @@ table {
     <li class="mono"><a href="#modalsys.ModalSys.DefineModeshapes">DefineModeshapes</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.EqnOfMotion">EqnOfMotion</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.GetLoadMatrix">GetLoadMatrix</a></li>
+    <li class="mono"><a href="#modalsys.ModalSys.GetOutputMtrx">GetOutputMtrx</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.GetStateMatrix">GetStateMatrix</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.PlotModeshapes">PlotModeshapes</a></li>
@@ -3314,13 +3315,8 @@ transfer matrix can be obtained in this way</p>
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
     
-    <span class="c1"># Routine cannot (currently) handle systems with constraints</span>
-    <span class="c1"># (this can be implemented in the near future though!)</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: cannot run `CalcFreqResponse` method &quot;</span> <span class="o">+</span> 
-                         <span class="s2">&quot;for systems with constraints!&quot;</span><span class="p">)</span>
-    
-    
+    <span class="c1"># Get key properties of system </span>
+    <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
     <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
     
     <span class="c1"># Handle optional arguments</span>
@@ -3330,33 +3326,31 @@ transfer matrix can be obtained in this way</p>
     <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
+                                <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
     <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
+                               <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
     <span class="c1"># Get output matrices</span>
     <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
-        <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                               <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 
     <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***</span><span class="se">\n</span><span class="s2">Warning: no output matrix defined. &quot;</span><span class="o">+</span>
                   <span class="s2">&quot;Output matrix Gf will hence relate to state &quot;</span> <span class="o">+</span> 
                   <span class="s2">&quot;displacements and velocities</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
         
         <span class="n">C</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">)</span>
-        
-    <span class="c1"># Retain only columns relating to state variables (disp, vel)</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="n">C</span><span class="p">[:,:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
-        
+                    
     <span class="c1"># Override the above </span>
     <span class="k">if</span> <span class="n">force_accn</span><span class="p">:</span>
-        
-        <span class="c1">#print(&quot;`force_accn` invoked; frequency response function relates&quot; + </span>
-        <span class="c1">#      &quot; applied forces to DOF accelerations&quot;)</span>
-        
+                    
         <span class="c1"># Get system matrices and output matrices</span>
         <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
         <span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
@@ -3369,17 +3363,27 @@ transfer matrix can be obtained in this way</p>
     <span class="c1"># Determine number of outputs</span>
     <span class="n">No</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     
+    <span class="c1"># Get nullspace basis matrix (which will already have been calculated)</span>
+    <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Null_J</span>
+        <span class="n">zeros_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+        <span class="n">Z2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span><span class="n">zeros_mtrx</span><span class="p">)),</span>
+                         <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">zeros_mtrx</span><span class="p">,</span><span class="n">Z</span><span class="p">))))</span>
+                
     <span class="c1"># Print shapes of all arrays</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Shapes of A B C D matrices:&quot;</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;A: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;B: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-    
+        
         <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: None&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Z2:{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Z2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>                
         
     <span class="c1"># Define array to contain frequency response for each </span>
     <span class="n">G_f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">No</span><span class="p">,</span><span class="n">Ni</span><span class="p">,</span><span class="n">nf</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
@@ -3393,12 +3397,20 @@ transfer matrix can be obtained in this way</p>
         <span class="c1"># Define G(jw) at this frequency</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
             <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="o">*</span> <span class="n">B</span>
+            <span class="n">Gf</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
             
         <span class="k">else</span><span class="p">:</span>
             <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="o">*</span> <span class="n">B</span>
+            <span class="n">Gf</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
             
+        <span class="c1"># Convert to map loads to state variables of constrained problem</span>
+        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+            <span class="n">Gf</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf</span> 
+        
+        <span class="c1"># Adjust to map loads to outputs, not state variables</span>
+        <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf</span> 
+            
+        <span class="c1"># Adjust for direct mapping between loads and outputs</span>
         <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">Gf</span> <span class="o">+=</span> <span class="n">D</span>    
         
@@ -3419,7 +3431,7 @@ transfer matrix can be obtained in this way</p>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.CalcLoadMatrix">
-    <p>def <span class="ident">CalcLoadMatrix</span>(</p><p>self, saveAsAttr=True, M=None)</p>
+    <p>def <span class="ident">CalcLoadMatrix</span>(</p><p>self, M=None, unconstrained=False, saveAsAttr=True)</p>
     </div>
     
 
@@ -3439,6 +3451,12 @@ class attributes will be used.</em></p>
 <p><code>M</code>, mass matrix</p>
 </li>
 <li>
+<p><code>unconstrained</code>, <em>boolean</em>; if True load matrix for the 
+  <em>unconstrained problem</em> will be returned. Only applicable if 
+  constraint equations are defined. Refer documentation of 
+  <code>transform_to_unconstrained()</code> method for further details</p>
+</li>
+<li>
 <p><code>saveAsAttr</code>: if <code>True</code> state matrix returned will also be saved as 
   an object instance attribute</p>
 </li>
@@ -3447,8 +3465,9 @@ class attributes will be used.</em></p>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.CalcLoadMatrix', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.CalcLoadMatrix" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcLoadMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                   <span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                   <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                   <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                   <span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                   <span class="n">saveAsAttr</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Assembles the load matrix `B_mtrx` used in state-space methods</span>
 <span class="sd">    ***</span>
@@ -3467,17 +3486,54 @@ class attributes will be used.</em></p>
 <span class="sd">        </span>
 <span class="sd">    * `M`, mass matrix</span>
 <span class="sd">    </span>
+<span class="sd">    * `unconstrained`, _boolean_; if True load matrix for the </span>
+<span class="sd">      _unconstrained problem_ will be returned. Only applicable if </span>
+<span class="sd">      constraint equations are defined. Refer documentation of </span>
+<span class="sd">      `transform_to_unconstrained()` method for further details</span>
+<span class="sd">    </span>
 <span class="sd">    * `saveAsAttr`: if `True` state matrix returned will also be saved as </span>
 <span class="sd">      an object instance attribute</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
+    <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+    
     <span class="c1"># Retrieve system matrices</span>
-    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M_mtrx</span>
+    <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="n">mdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">unconstrained</span><span class="p">)</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">hasConstraints</span> <span class="ow">and</span> <span class="n">unconstrained</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;Null_J&quot;</span><span class="p">]</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">M_mtrx</span><span class="o">=</span><span class="n">M</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">(</span><span class="n">M_mtrx</span><span class="o">=</span><span class="n">M</span><span class="p">)</span>
     
-    <span class="n">B</span><span class="p">,</span> <span class="n">Minv</span> <span class="o">=</span> <span class="n">calc_load_matrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">)</span>
+    <span class="c1"># Convert to unconstrained problem, if applicable</span>
+    <span class="k">if</span> <span class="n">unconstrained</span> <span class="ow">and</span> <span class="n">hasConstraints</span><span class="p">:</span>
+        <span class="n">Minv</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        <span class="n">Minv</span> <span class="o">=</span> <span class="n">Minv</span> <span class="err">@</span> <span class="n">Z</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">Minv</span> <span class="o">=</span> <span class="n">calc_load_matrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">Minv</span><span class="o">=</span><span class="n">Minv</span><span class="p">,</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">Minv</span> <span class="o">=</span> <span class="n">calc_load_matrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">)</span>
+        
+    <span class="c1"># Check shape</span>
+    <span class="n">nDOF</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="n">nDOF</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected column dimension for &#39;B&#39; matrix!&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">unconstrained</span> <span class="ow">and</span> <span class="n">hasConstraints</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected row dimension for &#39;B&#39; matrix &quot;</span><span class="o">+</span>
+                             <span class="s2">&quot;applicable to unconstrained problem&quot;</span><span class="p">)</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected row dimension for &#39;B&#39; matrix&quot;</span><span class="p">)</span>
     
     <span class="c1"># Save as attribute</span>
     <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
@@ -3618,7 +3674,7 @@ class attributes will be used.</em></p>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.CalcStateMatrix">
-    <p>def <span class="ident">CalcStateMatrix</span>(</p><p>self, saveAsAttr=True, M=None, C=None, K=None, nDOF=None)</p>
+    <p>def <span class="ident">CalcStateMatrix</span>(</p><p>self, M=None, C=None, K=None, nDOF=None, unconstrained=False, saveAsAttr=True)</p>
     </div>
     
 
@@ -3647,6 +3703,12 @@ class attributes will be used.</em></p>
 <p><code>K</code>, stiffness matrix</p>
 </li>
 <li>
+<p><code>unconstrained</code>, <em>boolean</em>; if True load matrix for the 
+  <em>unconstrained problem</em> will be returned. Only applicable if 
+  constraint equations are defined. Refer documentation of 
+  <code>transform_to_unconstrained()</code> method for further details</p>
+</li>
+<li>
 <p><code>saveAsAttr</code>: if <code>True</code> state matrix returned will also be saved as 
   an object instance attribute</p>
 </li>
@@ -3655,11 +3717,12 @@ class attributes will be used.</em></p>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.CalcStateMatrix', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.CalcStateMatrix" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">saveAsAttr</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                     <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                     <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                     <span class="n">K</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                    <span class="n">nDOF</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                    <span class="n">nDOF</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                    <span class="n">saveAsAttr</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Assembles the continous-time state matrix `A_mtrx` used in state-space </span>
 <span class="sd">    methods</span>
@@ -3684,6 +3747,11 @@ class attributes will be used.</em></p>
 <span class="sd">    * `C`, damping matrix</span>
 <span class="sd">    </span>
 <span class="sd">    * `K`, stiffness matrix</span>
+<span class="sd">    </span>
+<span class="sd">    * `unconstrained`, _boolean_; if True load matrix for the </span>
+<span class="sd">      _unconstrained problem_ will be returned. Only applicable if </span>
+<span class="sd">      constraint equations are defined. Refer documentation of </span>
+<span class="sd">      `transform_to_unconstrained()` method for further details</span>
 <span class="sd">                </span>
 <span class="sd">    * `saveAsAttr`: if `True` state matrix returned will also be saved as </span>
 <span class="sd">      an object instance attribute</span>
@@ -3691,7 +3759,7 @@ class attributes will be used.</em></p>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Retrieve system matrices</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">unconstrained</span><span class="p">)</span>
     
     <span class="c1"># Handle optional arguments</span>
     <span class="k">if</span> <span class="n">M</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
@@ -3704,7 +3772,7 @@ class attributes will be used.</em></p>
                               <span class="n">C_mtrx</span><span class="o">=</span><span class="n">C</span><span class="p">,</span>
                               <span class="n">K_mtrx</span><span class="o">=</span><span class="n">K</span><span class="p">,</span>
                               <span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                              <span class="n">nDOF</span><span class="o">=</span><span class="n">nDOF</span><span class="p">)</span>
+                              <span class="n">nDOF</span><span class="o">=</span><span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     
     <span class="c1"># Assemble state matrix</span>
     <span class="n">A</span><span class="p">,</span> <span class="n">Minv</span> <span class="o">=</span> <span class="n">calc_state_matrix</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">isSparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">)</span>
@@ -3713,6 +3781,9 @@ class attributes will be used.</em></p>
     <span class="k">if</span> <span class="n">saveAsAttr</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_A_mtrx</span> <span class="o">=</span> <span class="n">A</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Minv</span> <span class="o">=</span> <span class="n">Minv</span>
+        
+        <span class="k">if</span> <span class="n">unconstrained</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Null_J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Null_J&quot;</span><span class="p">]</span>
     
     <span class="k">return</span> <span class="n">A</span>     
 </pre></div>
@@ -4118,27 +4189,57 @@ following ODE:</p>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.GetLoadMatrix">
-    <p>def <span class="ident">GetLoadMatrix</span>(</p><p>self, recalculate=False)</p>
+    <p>def <span class="ident">GetLoadMatrix</span>(</p><p>self, unconstrained=False, recalculate=False)</p>
     </div>
     
 
     
   
     <div class="desc"><p>Helper function to obtain load matrix, if already calculated 
-and held as attribute. Otherwise load matrix will be recalculated</p></div>
+and held as attribute. Otherwise load matrix will be recalculated</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>unconstrained</code>, <em>boolean</em>; if True load matrix for the <em>unconstrained 
+  problem</em> will be returned. Only applicable if constraint equations 
+  are defined.</p>
+</li>
+<li>
+<p><code>recalculate</code>, <em>boolean</em>; if True load matrix will always be 
+  re-evaluated upon function call. Otherwise if load matrix has already 
+  been evaluated for system (and is held as attribute) then it will 
+  not be re-evaluated.</p>
+</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.GetLoadMatrix', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.GetLoadMatrix" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetLoadMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetLoadMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">unconstrained</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                  <span class="n">recalculate</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function to obtain load matrix, if already calculated </span>
 <span class="sd">    and held as attribute. Otherwise load matrix will be recalculated</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `unconstrained`, _boolean_; if True load matrix for the _unconstrained </span>
+<span class="sd">      problem_ will be returned. Only applicable if constraint equations </span>
+<span class="sd">      are defined.</span>
+<span class="sd">      </span>
+<span class="sd">    * `recalculate`, _boolean_; if True load matrix will always be </span>
+<span class="sd">      re-evaluated upon function call. Otherwise if load matrix has already </span>
+<span class="sd">      been evaluated for system (and is held as attribute) then it will </span>
+<span class="sd">      not be re-evaluated.</span>
+<span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;_B_mtrx&quot;</span>
     
     <span class="k">if</span> <span class="n">recalculate</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcLoadMatrix</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">unconstrained</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
 </pre></div>
@@ -4150,28 +4251,163 @@ and held as attribute. Otherwise load matrix will be recalculated</p></div>
   
             
   <div class="item">
+    <div class="name def" id="modalsys.ModalSys.GetOutputMtrx">
+    <p>def <span class="ident">GetOutputMtrx</span>(</p><p>self, state_variables_only=False, all_systems=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns output matrix for overall system</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>state_variables_only</code>, <em>boolean</em>, if True, only columns relating to state 
+  variables (i.e. displacements, velocities - but not accelerations)
+  will be returned</p>
+</li>
+<li>
+<p><code>all_systems</code>, <em>boolean</em>, if True output matrices for all subsystems 
+  will be arranged as block diagonal matrix, which represents the 
+  output matrix for the full system</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.GetOutputMtrx', this);">Show source &equiv;</a></p>
+  <div id="source-modalsys.ModalSys.GetOutputMtrx" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">state_variables_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                  <span class="n">all_systems</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns output matrix for overall system</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `state_variables_only`, _boolean_, if True, only columns relating to state </span>
+<span class="sd">      variables (i.e. displacements, velocities - but not accelerations)</span>
+<span class="sd">      will be returned</span>
+<span class="sd">      </span>
+<span class="sd">    * `all_systems`, _boolean_, if True output matrices for all subsystems </span>
+<span class="sd">      will be arranged as block diagonal matrix, which represents the </span>
+<span class="sd">      output matrix for the full system</span>
+<span class="sd">      </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Define list over which to loop</span>
+    <span class="k">if</span> <span class="n">all_systems</span><span class="p">:</span>
+        <span class="n">sys_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+    
+    <span class="c1"># Assemble full output matrix by arranging as block diagonal matrix</span>
+    <span class="c1">#output_mtrx_list = [x.output_mtrx for x in sys_list]</span>
+    <span class="c1">#print(output_mtrx_list)</span>
+    
+    <span class="c1">#for x in output_mtrx_list:</span>
+    <span class="c1">#    print(x)</span>
+    
+    <span class="n">disp_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">vel_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">accn_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">output_names_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sys_list</span><span class="p">:</span>
+        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">output_names</span>
+        
+        <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
+        <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
+        <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+        <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
+        
+        <span class="c1"># Append to lists</span>
+        <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
+        <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
+        <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
+        <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
+        
+    <span class="c1"># Assemble submatrices for full system</span>
+    <span class="n">disp_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">disp_cols_list</span><span class="p">)</span>
+    <span class="n">vel_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">vel_cols_list</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
+        <span class="n">accn_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">accn_cols_list</span><span class="p">)</span>
+    
+    <span class="c1"># Concatenate to prepare output matrix for full system</span>
+    <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">disp_cols_full</span><span class="p">,</span><span class="n">vel_cols_full</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
+        <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">output_mtrx_full</span><span class="p">,</span><span class="n">accn_cols_full</span><span class="p">))</span>
+    
+    <span class="c1"># Convert list of names to array format</span>
+    <span class="n">output_names_arr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">output_names_list</span><span class="p">)</span> 
+    
+    <span class="c1"># Return matrix and row names for full system</span>
+    <span class="k">return</span> <span class="n">output_mtrx_full</span><span class="p">,</span> <span class="n">output_names_arr</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="modalsys.ModalSys.GetStateMatrix">
-    <p>def <span class="ident">GetStateMatrix</span>(</p><p>self, recalculate=True)</p>
+    <p>def <span class="ident">GetStateMatrix</span>(</p><p>self, unconstrained=False, recalculate=True)</p>
     </div>
     
 
     
   
     <div class="desc"><p>Helper function to obtain state matrix, if already calculated 
-and held as attribute. Otherwise state matrix will be recalculated</p></div>
+and held as attribute. Otherwise state matrix will be recalculated</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>unconstrained</code>, <em>boolean</em>; if True load matrix for the 
+  <em>unconstrained problem</em> will be returned. Only applicable if 
+  constraint equations are defined.</p>
+</li>
+<li>
+<p><code>recalculate</code>, <em>boolean</em>; if True load matrix will always be 
+  re-evaluated upon function call. Otherwise if load matrix has already 
+  been evaluated for system (and is held as attribute) then it will 
+  not be re-evaluated.</p>
+</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.GetStateMatrix', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.GetStateMatrix" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetStateMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                   <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function to obtain state matrix, if already calculated </span>
 <span class="sd">    and held as attribute. Otherwise state matrix will be recalculated</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `unconstrained`, _boolean_; if True load matrix for the </span>
+<span class="sd">      _unconstrained problem_ will be returned. Only applicable if </span>
+<span class="sd">      constraint equations are defined.</span>
+<span class="sd">      </span>
+<span class="sd">    * `recalculate`, _boolean_; if True load matrix will always be </span>
+<span class="sd">      re-evaluated upon function call. Otherwise if load matrix has already </span>
+<span class="sd">      been evaluated for system (and is held as attribute) then it will </span>
+<span class="sd">      not be re-evaluated.</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;_A_mtrx&quot;</span>
     
     <span class="k">if</span> <span class="n">recalculate</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcStateMatrix</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">unconstrained</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
 </pre></div>
@@ -4184,7 +4420,7 @@ and held as attribute. Otherwise state matrix will be recalculated</p></div>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.GetSystemMatrices">
-    <p>def <span class="ident">GetSystemMatrices</span>(</p><p>self, createNewSystem=False)</p>
+    <p>def <span class="ident">GetSystemMatrices</span>(</p><p>self, unconstrained=False, createNewSystem=False)</p>
     </div>
     
 
@@ -4193,17 +4429,49 @@ and held as attribute. Otherwise state matrix will be recalculated</p></div>
     <div class="desc"><p>Function is used to retrieve system matrices, which are not usually to 
 be accessed directly, except by member functions</p>
 <hr />
-<p>A dict is used to return matrices</p></div>
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>unconstrained</code>, boolean, if True system matrices applicable to 
+  the <em>unconstrained problem</em> are returned. Note: only applicable to 
+  systems with constraint equations. Default value = False.
+  Refer documentation for <code>transform_to_unconstrained()</code> for details.</p>
+</li>
+<li>
+<p><code>createNewSystem</code>, boolean, if True a new <code>DynSys()</code> class instance 
+  is initialised, using the system matrices of the full system.
+  Default value = False.</p>
+</li>
+</ul>
+<hr />
+<p>Returns:</p>
+<p>Matrices (and other results) are returned as a dictionary</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.GetSystemMatrices', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.GetSystemMatrices" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">createNewSystem</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">unconstrained</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                      <span class="n">createNewSystem</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function is used to retrieve system matrices, which are not usually to </span>
 <span class="sd">    be accessed directly, except by member functions</span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
-<span class="sd">    A dict is used to return matrices</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `unconstrained`, boolean, if True system matrices applicable to </span>
+<span class="sd">      the _unconstrained problem_ are returned. Note: only applicable to </span>
+<span class="sd">      systems with constraint equations. Default value = False.</span>
+<span class="sd">      Refer documentation for `transform_to_unconstrained()` for details.</span>
+<span class="sd">      </span>
+<span class="sd">    * `createNewSystem`, boolean, if True a new `DynSys()` class instance </span>
+<span class="sd">      is initialised, using the system matrices of the full system.</span>
+<span class="sd">      Default value = False.</span>
+<span class="sd">        </span>
+<span class="sd">    ***</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        </span>
+<span class="sd">    Matrices (and other results) are returned as a dictionary</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Create empty dictionay</span>
@@ -4270,7 +4538,7 @@ be accessed directly, except by member functions</p>
         <span class="n">full_J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">J_list</span><span class="p">))</span>            
         <span class="n">J_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span><span class="n">full_J_mtrx</span>
         
-    <span class="c1"># Assemble full matrix</span>
+    <span class="c1"># Assemble full constraints matrix</span>
     <span class="k">if</span> <span class="n">J_dict</span><span class="p">:</span>
         <span class="n">J_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">J_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
     <span class="k">else</span><span class="p">:</span>
@@ -4285,6 +4553,17 @@ be accessed directly, except by member functions</p>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">CheckConstraints</span><span class="p">(</span><span class="n">J</span><span class="o">=</span><span class="n">J_mtrx</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     
+    <span class="c1"># Project system matrices onto null space of constraints matrix </span>
+    <span class="c1"># to transform to unconstrained problem</span>
+    <span class="k">if</span> <span class="n">unconstrained</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        
+        <span class="n">mdict</span> <span class="o">=</span> <span class="n">transform_to_unconstrained</span><span class="p">(</span><span class="n">J</span><span class="o">=</span><span class="n">J_mtrx</span><span class="p">,</span><span class="n">M</span><span class="o">=</span><span class="n">M_mtrx</span><span class="p">,</span>
+                                           <span class="n">C</span><span class="o">=</span><span class="n">C_mtrx</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K_mtrx</span><span class="p">)</span>
+        <span class="n">M_mtrx</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;M&quot;</span><span class="p">]</span>
+        <span class="n">C_mtrx</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">]</span>
+        <span class="n">K_mtrx</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;K&quot;</span><span class="p">]</span>
+        <span class="n">Z_mtrx</span> <span class="o">=</span> <span class="n">mdict</span><span class="p">[</span><span class="s2">&quot;Null_J&quot;</span><span class="p">]</span>
+    
     <span class="c1"># Populate dictionary</span>
     <span class="n">d</span><span class="p">[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nDOF_new</span>
     
@@ -4298,8 +4577,12 @@ be accessed directly, except by member functions</p>
     <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isLinear&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">isLinear</span>
     <span class="n">d</span><span class="p">[</span><span class="s2">&quot;isSparse&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">isSparse</span>
     
+    <span class="k">if</span> <span class="n">unconstrained</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Null_J&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">Z_mtrx</span>
+    
     <span class="c1"># Create new system object, given system matrices</span>
     <span class="k">if</span> <span class="n">createNewSystem</span><span class="p">:</span>
+        
         <span class="n">DynSys_full</span> <span class="o">=</span> <span class="n">DynSys</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M_mtrx</span><span class="p">,</span>
                              <span class="n">C</span><span class="o">=</span><span class="n">C_mtrx</span><span class="p">,</span>
                              <span class="n">K</span><span class="o">=</span><span class="n">K_mtrx</span><span class="p">,</span>
@@ -4452,23 +4735,46 @@ be accessed directly, except by member functions</p>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.PlotSystem">
-    <p>def <span class="ident">PlotSystem</span>(</p><p>self, ax, **kwargs)</p>
+    <p>def <span class="ident">PlotSystem</span>(</p><p>self, ax, v, **kwargs)</p>
     </div>
     
 
     
   
     <div class="desc"><p>Generic plotter function to display current configuration of this 
-<code>dynSys</code> object</p></div>
+<code>dynSys</code> object</p>
+<p><em>Inheritance expected</em></p>
+<hr />
+<p><strong>Required:</strong></p>
+<ul>
+<li>
+<p><code>ax</code>, axes object, onto which system will be plotted</p>
+</li>
+<li>
+<p><code>v</code>, <em>array</em> of displacement results, defining the position of 
+  analysis freedoms</p>
+</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.PlotSystem', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.PlotSystem" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generic plotter function to display current configuration of this </span>
 <span class="sd">    `dynSys` object</span>
+<span class="sd">    </span>
+<span class="sd">    _Inheritance expected_</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Required:**</span>
+<span class="sd">    </span>
+<span class="sd">    * `ax`, axes object, onto which system will be plotted</span>
+<span class="sd">    </span>
+<span class="sd">    * `v`, _array_ of displacement results, defining the position of </span>
+<span class="sd">      analysis freedoms</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use of overriding method expected!&quot;</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -4479,7 +4785,7 @@ be accessed directly, except by member functions</p>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.PlotSystems_all">
-    <p>def <span class="ident">PlotSystems_all</span>(</p><p>self, ax, **kwargs)</p>
+    <p>def <span class="ident">PlotSystems_all</span>(</p><p>self, ax_dict, **kwargs)</p>
     </div>
     
 
@@ -4490,12 +4796,12 @@ all systems and subsystems</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.PlotSystems_all', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.PlotSystems_all" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax_dict</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generic plotter function to display current configuration of </span>
 <span class="sd">    all systems and subsystems</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">pass</span>
 </pre></div>
 
   </div>
