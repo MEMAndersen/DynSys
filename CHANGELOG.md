@@ -23,6 +23,12 @@ and this project adheres to:
   method with `dynsys.py` module. In the future the plan will be to use the 
   Scipy method alone, to allow reduction in code.
 
+* `LatSync_McRobie()` class defined within `ped_dyn.py` module. Implements 
+  lateral synchorous vibration calculations per McRobie's Stockton on Tees 
+  footbridge paper (refer `/references`). See also validation script, which 
+  obtains excellent agreement with figures presented in McRobie's paper.
+
+
 ### Fixed
 
 ### Removed
