@@ -8,7 +8,23 @@ and this project adheres to:
 
 ***
 
-## [1.4.0] - 2018-07-20 - RIHY
+## [1.4.1] - 2018-07-23 - RIHY
+
+### Changed
+
+### Added
+
+* `calc_Np_crit()` method added to `LatSync_McRobie()` class, to allow 
+  critical number of pedestrians to cause lateral instability to be
+  considered. This method is also now called by LatSync_McRobie().run().
+
+* Improvements to related plotting routines; Np_crit overlaid onto plots
+
+### Fixed
+
+### Removed
+
+## [1.4.0] - 2018-07-23 - RIHY
 
 ### Changed
 

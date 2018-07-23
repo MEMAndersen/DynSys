@@ -1554,6 +1554,8 @@ class LatSync_McRobie():
           effective damping) varies with pedestrian numbers
          
         """
+        
+        print("Running lat sync eigenvalues analysis...")
     
         # Run analysis for various pedestrian numbers, as provided to function
         
@@ -1582,6 +1584,8 @@ class LatSync_McRobie():
             fd_vals.append(eig_props["f_d"])
             X_vals.append(eig_props["X"])
             
+        print("Analysis complete!")
+            
         # Restore with original bridge-only damping matrix
         modalsys._C_mtrx = C_p0
         
@@ -1592,7 +1596,11 @@ class LatSync_McRobie():
         self.eigenvectors = X_vals
         self.N_pedestrians = Np_vals
         
-        return s_vals
+        # Calculate critical number of pedestrians for onset on instability
+        Np_crit = self.calc_Np_crit()
+        self.Np_crit = Np_crit
+        
+        return Np_crit
     
     
     def plot_results(self):
@@ -1692,6 +1700,49 @@ class LatSync_McRobie():
         ax.set_ylabel("Effective damping ratio")
         ax.set_title("Effect of pedestrians on damping")
         
+        attr = "Np_crit"
+        if hasattr(self,attr):
+            Np_crit = getattr(self,attr)
+            ax.axvline(x=Np_crit,color='r',alpha=0.3)
+        
+    def calc_Np_crit(self,verbose=True):
+        """
+        Calculates from results the critical number of pedestrians for the 
+        onset of pedestrian-induced lateral instability
+        """
+        
+        print("Determining critical number of pedestrians " + 
+              "for onset on instability...")
+        
+        # Check that analysis has been run
+        if not hasattr(self,"N_pedestrians"):
+            raise ValueError("Analysis does not appear to have been run!" + 
+                             "Cannot calculate Np_crit")
+        else:
+            Np_vals = self.N_pedestrians
+                        
+        # Check that analysis has been run up to pedestrian numbers such that 
+        # the net effective damping in (at least) one mode has become <0.0
+        damping_ratios = numpy.array(self.damping_ratios)
+        
+        min_damping = numpy.min(damping_ratios)
+        if min_damping > 0.0:
+            raise ValueError("Analysis has not identified net damping < 0\n" + 
+                             "Extend range of `Np_vals` to larger numbers")
+            
+        # Determine minumum damping ratio across all modes for each Np value
+        min_damping = numpy.min(damping_ratios,axis=1)
+        
+        # Define interpolation function
+        Np_func = scipy.interpolate.interp1d(x=Np_vals, y=min_damping)
+                                      
+        # Use root finding function to obtain Np such that damping = 0.0
+        Np_crit = scipy.optimize.bisect(f=Np_func,a=Np_vals[0],b=Np_vals[-1])
+            
+        if verbose:
+            print("Np_crit: %.0f" % Np_crit)
+        
+        return Np_crit
 
     
 # ************* PRIVATE CLASSES (only to be used within module) *************    
