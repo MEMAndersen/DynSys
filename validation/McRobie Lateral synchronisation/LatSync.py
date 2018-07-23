@@ -44,13 +44,13 @@ fig.savefig('modeshapes.png')
 
 # Define and run lat sync analysis
 latsync_analysis = ped_dyn.LatSync_McRobie(bridge_sys)
-latsync_analysis.run(Np_vals=numpy.arange(0,2500,10))
+N_crit = latsync_analysis.run(Np_vals=numpy.arange(0,2500,10))
 
 #%%
 
 # Plot results
 fig = latsync_analysis.plot_results()
-fig.savefig('results_plots.png')
+
 
 #%%
 
@@ -65,4 +65,6 @@ ax.set_ylim([0.8,1.05])     # per McRobie paper
 ax=ax_list[1]
 ax.set_xlim([-1.2,+0.2])    # per McRobie paper
 ax.set_ylim([-8.0,+8.0])    # per McRobie paper
+
+fig.savefig('results_plots.png')
 
