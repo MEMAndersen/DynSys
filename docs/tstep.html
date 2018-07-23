@@ -1,4 +1,4 @@
-Version: 1.3
+Version: 1.4.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1045,6 +1045,13 @@ table {
   <div id="sidebar">
     <h1>Index</h1>
     <ul id="index">
+    <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
+      
+  <ul>
+    <li class="mono"><a href="#tstep.required_version">required_version</a></li>
+  </ul>
+
+    </li>
 
 
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
@@ -1089,9 +1096,16 @@ systems</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">npy</span>
 <span class="kn">import</span> <span class="nn">timeit</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
 <span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">solve_ivp</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">parse_version</span>
 
 <span class="kn">import</span> <span class="nn">tstep_results</span>
+
+<span class="c1"># Check Scipy version sufficient</span>
+<span class="n">required_version</span> <span class="o">=</span> <span class="s1">&#39;1.0&#39;</span> <span class="c1"># or later, to use solve_ivp method</span>
+<span class="k">if</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">required_version</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Scipy version &gt; 1.0 required!&quot;</span><span class="p">)</span>
     
 <span class="c1"># ********************** CLASSES *********************************************</span>
 
@@ -1683,6 +1697,15 @@ systems</p>
   </header>
 
   <section id="section-items">
+    <h2 class="section-title" id="header-variables">Module variables</h2>
+      <div class="item">
+      <p id="tstep.required_version" class="name">var <span class="ident">required_version</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
 
 
     <h2 class="section-title" id="header-classes">Classes</h2>

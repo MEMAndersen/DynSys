@@ -1,4 +1,4 @@
-Version: 1.3
+Version: 1.4.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1067,6 +1067,21 @@ table {
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
         <li class="mono">
+        <span class="class_name"><a href="#ped_dyn.LatSync_McRobie">LatSync_McRobie</a></span>
+        
+          
+  <ul>
+    <li class="mono"><a href="#ped_dyn.LatSync_McRobie.__init__">__init__</a></li>
+    <li class="mono"><a href="#ped_dyn.LatSync_McRobie.calc_pedestrians_damping">calc_pedestrians_damping</a></li>
+    <li class="mono"><a href="#ped_dyn.LatSync_McRobie.plot_damping_vs_freq">plot_damping_vs_freq</a></li>
+    <li class="mono"><a href="#ped_dyn.LatSync_McRobie.plot_damping_vs_pedestrians">plot_damping_vs_pedestrians</a></li>
+    <li class="mono"><a href="#ped_dyn.LatSync_McRobie.plot_poles">plot_poles</a></li>
+    <li class="mono"><a href="#ped_dyn.LatSync_McRobie.plot_results">plot_results</a></li>
+    <li class="mono"><a href="#ped_dyn.LatSync_McRobie.run">run</a></li>
+  </ul>
+
+        </li>
+        <li class="mono">
         <span class="class_name"><a href="#ped_dyn.PedestrianDynamics_transientAnalyses">PedestrianDynamics_transientAnalyses</a></span>
         
           
@@ -1179,6 +1194,7 @@ table {
 <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">FuncFormatter</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">isfunction</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span>
 
 <span class="c1"># DynSys package imports</span>
 <span class="kn">import</span> <span class="nn">dyn_analysis</span>
@@ -2630,8 +2646,231 @@ table {
                          <span class="n">fontsize</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
     
         <span class="k">return</span> <span class="n">fig_list</span>
+    
+
+
+<span class="k">class</span> <span class="nc">LatSync_McRobie</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class used to implement the multiple modes + multiple TMDs analysis method </span>
+<span class="sd">    used to consider the phenomenon of Lateral Synchronous crowd loading </span>
+<span class="sd">    response, per the following </span>
+<span class="sd">    [paper](../references/The Lateral Dynamic Stablity of Stockton Infinity </span>
+<span class="sd">    Footbridge using Complex Modes.pdf)    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">modalsys</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise analysis</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `modalsys`, instance of `ModalSys` class, defining the modal </span>
+<span class="sd">          system to be analysed. For situations where TMDs are present, it is </span>
+<span class="sd">          assumed that TMDs have already been appended to the parent modal </span>
+<span class="sd">          system, e.g. by use of the `append_TMDs()` method in `damper.py`.</span>
+<span class="sd">          </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * </span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span> <span class="o">=</span> <span class="n">modalsys</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modal system that form the basis of this analysis. May have subsystems </span>
+<span class="sd">        pre-appended (e.g. TMDs)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Evaluate modal damping matrix based on 1 person on bridge</span>
+        <span class="n">C_pa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_pedestrians_damping</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_pa</span> <span class="o">=</span> <span class="n">C_pa</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modal damping matrix based on 1 person on bridge</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">calc_pedestrians_damping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">cp</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates modal damping matrix due to pedestrians, per the method </span>
+<span class="sd">        presented in McRobie paper</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">modalsys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span>
+        
+        <span class="n">modeshape_func</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">modeshapeFunc</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">Ltrack</span>
+        
+        <span class="c1"># Evaluate modeshape ordinates at unif</span>
+        <span class="n">dL</span> <span class="o">=</span> <span class="n">L</span><span class="o">/</span><span class="n">num</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">num</span><span class="p">,</span><span class="n">endpoint</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">+</span> <span class="n">dL</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">modeshape_func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            
+        <span class="c1"># Evaluate matrix product of modeshape ordinate matrices</span>
+        <span class="n">phi_product</span> <span class="o">=</span> <span class="n">phi</span><span class="o">.</span><span class="n">T</span> <span class="err">@</span> <span class="n">phi</span>
+        
+        <span class="c1"># Return mode-generalised damping matrix</span>
+        <span class="n">C_pa</span> <span class="o">=</span> <span class="n">cp</span> <span class="o">*</span> <span class="n">dL</span> <span class="o">/</span> <span class="n">L</span> <span class="o">*</span> <span class="n">phi_product</span>
+        
+        <span class="k">return</span> <span class="n">C_pa</span>
         
     
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Np_vals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run analysis to explore eigenvalues of system state matrix for various </span>
+<span class="sd">        assumed pedestrian crowd densities</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `Np_vals`, _array-like_: each value defines total number of </span>
+<span class="sd">          pedestrians on bridge; a range of values will typically be provided, </span>
+<span class="sd">          to allow exploration of how system eigenproperties (in particular </span>
+<span class="sd">          effective damping) varies with pedestrian numbers</span>
+<span class="sd">         </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="c1"># Run analysis for various pedestrian numbers, as provided to function</span>
+        
+        <span class="n">modalsys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span>
+        <span class="n">C_pa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_pa</span>
+        
+        <span class="n">s_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">eta_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">fd_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">X_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Take copy of system damping matrix with no pedestrians</span>
+        <span class="n">C_p0</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">Np</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Np_vals</span><span class="p">):</span>
+            
+            <span class="c1"># Adjust bridge damping matrix</span>
+            <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span> <span class="o">=</span> <span class="n">C_p0</span> <span class="o">-</span> <span class="n">Np</span> <span class="o">*</span> <span class="n">C_pa</span>
+        
+            <span class="c1"># Carry out eigevalue analysis</span>
+            <span class="n">eig_props</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()</span>
+            
+            <span class="c1"># Record key results of interest</span>
+            <span class="n">s_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
+            <span class="n">eta_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">])</span>
+            <span class="n">fd_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">])</span>
+            <span class="n">X_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">])</span>
+            
+        <span class="c1"># Restore with original bridge-only damping matrix</span>
+        <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span> <span class="o">=</span> <span class="n">C_p0</span>
+        
+        <span class="c1"># Record key results as attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">s_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span> <span class="o">=</span> <span class="n">eta_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span> <span class="o">=</span> <span class="n">fd_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">X_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span> <span class="o">=</span> <span class="n">Np_vals</span>
+        
+        <span class="k">return</span> <span class="n">s_vals</span>
+    
+    
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots results from the above analysis</span>
+<span class="sd">        </span>
+<span class="sd">        N.b: Figures intentionally emulate the format of figures in </span>
+<span class="sd">        McRobie&#39;s paper, as these have been used to validate the above routine</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Define figure to provide summary of results</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        
+        <span class="c1"># Prepare subplots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_damping_vs_freq</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_poles</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_damping_vs_pedestrians</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_damping_vs_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;            </span>
+<span class="sd">        Plot damping ratio against damped natural frequency</span>
+<span class="sd">        (per Figure 5 in McRobie&#39;s paper)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        
+        <span class="n">eta_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span>
+        <span class="n">fd_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">,</span><span class="n">fd_vals</span><span class="p">,</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span><span class="n">fd_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span><span class="s1">&#39;ko&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">fd_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> <span class="c1"># denotes stability limit</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damped natural frequency (Hz)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Frequency vs Effective Damping</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_poles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot eigenvalues (poles) on complex plane</span>
+<span class="sd">        (per Figure 4 in paper)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        
+        <span class="n">s_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">),</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">]),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">]),</span><span class="s1">&#39;ko&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> <span class="c1"># stability limit</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># illustrates Im(z)=0 axis</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Real(s)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag(s)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues of system state matrix&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_damping_vs_pedestrians</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots effective damping ratio of poles against number of pedestrians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">Np_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span>
+        <span class="n">eta_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Np_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">,</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Number of pedestrians&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Effective damping ratio&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Effect of pedestrians on damping&quot;</span><span class="p">)</span>
+        
+
     
 <span class="c1"># ************* PRIVATE CLASSES (only to be used within module) *************    </span>
         
@@ -2984,7 +3223,7 @@ table {
     
 
 <span class="c1"># ********************** FUNCTIONS   ****************************************</span>
-        
+            
 <span class="k">def</span> <span class="nf">Calc_Seff</span><span class="p">(</span><span class="n">modeshapeFunc</span><span class="p">,</span><span class="n">S</span><span class="p">,</span>
               <span class="n">dx</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
               <span class="n">makePlot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
@@ -3180,6 +3419,10 @@ table {
     
     <span class="k">return</span> <span class="n">k_fv</span>
 
+
+
+    
+    
 
 
 <span class="k">def</span> <span class="nf">UKNA_BSEN1991_2_Figure_NA_9</span><span class="p">(</span><span class="n">logDec</span><span class="p">,</span><span class="n">Seff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -3718,6 +3961,640 @@ actions within groups and crowds.</p></div>
   
 
     <h2 class="section-title" id="header-classes">Classes</h2>
+      
+      <div class="item">
+      <p id="ped_dyn.LatSync_McRobie" class="name">class <span class="ident">LatSync_McRobie</span></p>
+      
+  
+    <div class="desc"><p>Class used to implement the multiple modes + multiple TMDs analysis method 
+used to consider the phenomenon of Lateral Synchronous crowd loading 
+response, per the following 
+<a href="../references/The Lateral Dynamic Stablity of Stockton Infinity 
+Footbridge using Complex Modes.pdf">paper</a></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">LatSync_McRobie</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class used to implement the multiple modes + multiple TMDs analysis method </span>
+<span class="sd">    used to consider the phenomenon of Lateral Synchronous crowd loading </span>
+<span class="sd">    response, per the following </span>
+<span class="sd">    [paper](../references/The Lateral Dynamic Stablity of Stockton Infinity </span>
+<span class="sd">    Footbridge using Complex Modes.pdf)    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">modalsys</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise analysis</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `modalsys`, instance of `ModalSys` class, defining the modal </span>
+<span class="sd">          system to be analysed. For situations where TMDs are present, it is </span>
+<span class="sd">          assumed that TMDs have already been appended to the parent modal </span>
+<span class="sd">          system, e.g. by use of the `append_TMDs()` method in `damper.py`.</span>
+<span class="sd">          </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * </span>
+<span class="sd">          </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span> <span class="o">=</span> <span class="n">modalsys</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modal system that form the basis of this analysis. May have subsystems </span>
+<span class="sd">        pre-appended (e.g. TMDs)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Evaluate modal damping matrix based on 1 person on bridge</span>
+        <span class="n">C_pa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_pedestrians_damping</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_pa</span> <span class="o">=</span> <span class="n">C_pa</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modal damping matrix based on 1 person on bridge</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">calc_pedestrians_damping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">cp</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates modal damping matrix due to pedestrians, per the method </span>
+<span class="sd">        presented in McRobie paper</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">modalsys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span>
+        
+        <span class="n">modeshape_func</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">modeshapeFunc</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">Ltrack</span>
+        
+        <span class="c1"># Evaluate modeshape ordinates at unif</span>
+        <span class="n">dL</span> <span class="o">=</span> <span class="n">L</span><span class="o">/</span><span class="n">num</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">num</span><span class="p">,</span><span class="n">endpoint</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">+</span> <span class="n">dL</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">modeshape_func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            
+        <span class="c1"># Evaluate matrix product of modeshape ordinate matrices</span>
+        <span class="n">phi_product</span> <span class="o">=</span> <span class="n">phi</span><span class="o">.</span><span class="n">T</span> <span class="err">@</span> <span class="n">phi</span>
+        
+        <span class="c1"># Return mode-generalised damping matrix</span>
+        <span class="n">C_pa</span> <span class="o">=</span> <span class="n">cp</span> <span class="o">*</span> <span class="n">dL</span> <span class="o">/</span> <span class="n">L</span> <span class="o">*</span> <span class="n">phi_product</span>
+        
+        <span class="k">return</span> <span class="n">C_pa</span>
+        
+    
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Np_vals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run analysis to explore eigenvalues of system state matrix for various </span>
+<span class="sd">        assumed pedestrian crowd densities</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `Np_vals`, _array-like_: each value defines total number of </span>
+<span class="sd">          pedestrians on bridge; a range of values will typically be provided, </span>
+<span class="sd">          to allow exploration of how system eigenproperties (in particular </span>
+<span class="sd">          effective damping) varies with pedestrian numbers</span>
+<span class="sd">         </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="c1"># Run analysis for various pedestrian numbers, as provided to function</span>
+        
+        <span class="n">modalsys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span>
+        <span class="n">C_pa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_pa</span>
+        
+        <span class="n">s_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">eta_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">fd_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">X_vals</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Take copy of system damping matrix with no pedestrians</span>
+        <span class="n">C_p0</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">Np</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Np_vals</span><span class="p">):</span>
+            
+            <span class="c1"># Adjust bridge damping matrix</span>
+            <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span> <span class="o">=</span> <span class="n">C_p0</span> <span class="o">-</span> <span class="n">Np</span> <span class="o">*</span> <span class="n">C_pa</span>
+        
+            <span class="c1"># Carry out eigevalue analysis</span>
+            <span class="n">eig_props</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()</span>
+            
+            <span class="c1"># Record key results of interest</span>
+            <span class="n">s_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
+            <span class="n">eta_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">])</span>
+            <span class="n">fd_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">])</span>
+            <span class="n">X_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">])</span>
+            
+        <span class="c1"># Restore with original bridge-only damping matrix</span>
+        <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span> <span class="o">=</span> <span class="n">C_p0</span>
+        
+        <span class="c1"># Record key results as attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">s_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span> <span class="o">=</span> <span class="n">eta_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span> <span class="o">=</span> <span class="n">fd_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">X_vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span> <span class="o">=</span> <span class="n">Np_vals</span>
+        
+        <span class="k">return</span> <span class="n">s_vals</span>
+    
+    
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots results from the above analysis</span>
+<span class="sd">        </span>
+<span class="sd">        N.b: Figures intentionally emulate the format of figures in </span>
+<span class="sd">        McRobie&#39;s paper, as these have been used to validate the above routine</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Define figure to provide summary of results</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        
+        <span class="c1"># Prepare subplots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_damping_vs_freq</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_poles</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_damping_vs_pedestrians</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_damping_vs_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;            </span>
+<span class="sd">        Plot damping ratio against damped natural frequency</span>
+<span class="sd">        (per Figure 5 in McRobie&#39;s paper)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        
+        <span class="n">eta_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span>
+        <span class="n">fd_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">,</span><span class="n">fd_vals</span><span class="p">,</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span><span class="n">fd_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span><span class="s1">&#39;ko&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">fd_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> <span class="c1"># denotes stability limit</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damped natural frequency (Hz)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Frequency vs Effective Damping</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_poles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot eigenvalues (poles) on complex plane</span>
+<span class="sd">        (per Figure 4 in paper)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+        
+        <span class="n">s_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">),</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">]),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">]),</span><span class="s1">&#39;ko&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> <span class="c1"># stability limit</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># illustrates Im(z)=0 axis</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Real(s)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag(s)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues of system state matrix&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_damping_vs_pedestrians</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots effective damping ratio of poles against number of pedestrians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">Np_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span>
+        <span class="n">eta_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Np_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">,</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Number of pedestrians&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Effective damping ratio&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Effect of pedestrians on damping&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+
+      <div class="class">
+          <h3>Ancestors (in MRO)</h3>
+          <ul class="class_list">
+          <li><a href="#ped_dyn.LatSync_McRobie">LatSync_McRobie</a></li>
+          <li>builtins.object</li>
+          </ul>
+          <h3>Static methods</h3>
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.LatSync_McRobie.__init__">
+    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Initialise analysis</p>
+<hr />
+<p>Required:</p>
+<ul>
+<li><code>modalsys</code>, instance of <code>ModalSys</code> class, defining the modal 
+  system to be analysed. For situations where TMDs are present, it is 
+  assumed that TMDs have already been appended to the parent modal 
+  system, e.g. by use of the <code>append_TMDs()</code> method in <code>damper.py</code>.</li>
+</ul>
+<hr />
+<p>Optional:</p>
+<p>*</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie.__init__" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">modalsys</span><span class="p">,</span>
+             <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialise analysis</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">        </span>
+<span class="sd">    * `modalsys`, instance of `ModalSys` class, defining the modal </span>
+<span class="sd">      system to be analysed. For situations where TMDs are present, it is </span>
+<span class="sd">      assumed that TMDs have already been appended to the parent modal </span>
+<span class="sd">      system, e.g. by use of the `append_TMDs()` method in `damper.py`.</span>
+<span class="sd">      </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * </span>
+<span class="sd">      </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span> <span class="o">=</span> <span class="n">modalsys</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modal system that form the basis of this analysis. May have subsystems </span>
+<span class="sd">    pre-appended (e.g. TMDs)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Evaluate modal damping matrix based on 1 person on bridge</span>
+    <span class="n">C_pa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_pedestrians_damping</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">C_pa</span> <span class="o">=</span> <span class="n">C_pa</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modal damping matrix based on 1 person on bridge</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.LatSync_McRobie.calc_pedestrians_damping">
+    <p>def <span class="ident">calc_pedestrians_damping</span>(</p><p>self, cp=300, num=1000)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates modal damping matrix due to pedestrians, per the method 
+presented in McRobie paper</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie.calc_pedestrians_damping', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie.calc_pedestrians_damping" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_pedestrians_damping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">cp</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates modal damping matrix due to pedestrians, per the method </span>
+<span class="sd">    presented in McRobie paper</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">modalsys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span>
+    
+    <span class="n">modeshape_func</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">modeshapeFunc</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">Ltrack</span>
+    
+    <span class="c1"># Evaluate modeshape ordinates at unif</span>
+    <span class="n">dL</span> <span class="o">=</span> <span class="n">L</span><span class="o">/</span><span class="n">num</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">num</span><span class="p">,</span><span class="n">endpoint</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">+</span> <span class="n">dL</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">modeshape_func</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        
+    <span class="c1"># Evaluate matrix product of modeshape ordinate matrices</span>
+    <span class="n">phi_product</span> <span class="o">=</span> <span class="n">phi</span><span class="o">.</span><span class="n">T</span> <span class="err">@</span> <span class="n">phi</span>
+    
+    <span class="c1"># Return mode-generalised damping matrix</span>
+    <span class="n">C_pa</span> <span class="o">=</span> <span class="n">cp</span> <span class="o">*</span> <span class="n">dL</span> <span class="o">/</span> <span class="n">L</span> <span class="o">*</span> <span class="n">phi_product</span>
+    
+    <span class="k">return</span> <span class="n">C_pa</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.LatSync_McRobie.plot_damping_vs_freq">
+    <p>def <span class="ident">plot_damping_vs_freq</span>(</p><p>self, ax=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plot damping ratio against damped natural frequency
+(per Figure 5 in McRobie's paper)</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie.plot_damping_vs_freq', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie.plot_damping_vs_freq" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_damping_vs_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;            </span>
+<span class="sd">    Plot damping ratio against damped natural frequency</span>
+<span class="sd">    (per Figure 5 in McRobie&#39;s paper)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    
+    <span class="n">eta_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span>
+    <span class="n">fd_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">,</span><span class="n">fd_vals</span><span class="p">,</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span><span class="n">fd_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span><span class="s1">&#39;ko&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eta_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">fd_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> <span class="c1"># denotes stability limit</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damped natural frequency (Hz)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Frequency vs Effective Damping</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">fig</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.LatSync_McRobie.plot_damping_vs_pedestrians">
+    <p>def <span class="ident">plot_damping_vs_pedestrians</span>(</p><p>self, ax=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plots effective damping ratio of poles against number of pedestrians</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie.plot_damping_vs_pedestrians', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie.plot_damping_vs_pedestrians" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_damping_vs_pedestrians</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots effective damping ratio of poles against number of pedestrians</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">Np_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span>
+    <span class="n">eta_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Np_vals</span><span class="p">,</span><span class="n">eta_vals</span><span class="p">,</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Number of pedestrians&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Effective damping ratio&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Effect of pedestrians on damping&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.LatSync_McRobie.plot_poles">
+    <p>def <span class="ident">plot_poles</span>(</p><p>self, ax=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plot eigenvalues (poles) on complex plane
+(per Figure 4 in paper)</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie.plot_poles', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie.plot_poles" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_poles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot eigenvalues (poles) on complex plane</span>
+<span class="sd">    (per Figure 4 in paper)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    
+    <span class="n">s_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">),</span><span class="s1">&#39;k.&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">]),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[::</span><span class="mi">10</span><span class="p">]),</span><span class="s1">&#39;ko&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="s1">&#39;bo&#39;</span><span class="p">,</span><span class="n">markersize</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> <span class="c1"># stability limit</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1"># illustrates Im(z)=0 axis</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Real(s)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag(s)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues of system state matrix&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">fig</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.LatSync_McRobie.plot_results">
+    <p>def <span class="ident">plot_results</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plots results from the above analysis</p>
+<p>N.b: Figures intentionally emulate the format of figures in 
+McRobie's paper, as these have been used to validate the above routine</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie.plot_results', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie.plot_results" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots results from the above analysis</span>
+<span class="sd">    </span>
+<span class="sd">    N.b: Figures intentionally emulate the format of figures in </span>
+<span class="sd">    McRobie&#39;s paper, as these have been used to validate the above routine</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Define figure to provide summary of results</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    
+    <span class="c1"># Prepare subplots</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_damping_vs_freq</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_poles</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_damping_vs_pedestrians</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">fig</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.LatSync_McRobie.run">
+    <p>def <span class="ident">run</span>(</p><p>self, Np_vals)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Run analysis to explore eigenvalues of system state matrix for various 
+assumed pedestrian crowd densities</p>
+<hr />
+<p>Required:</p>
+<ul>
+<li><code>Np_vals</code>, <em>array-like</em>: each value defines total number of 
+  pedestrians on bridge; a range of values will typically be provided, 
+  to allow exploration of how system eigenproperties (in particular 
+  effective damping) varies with pedestrian numbers</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.LatSync_McRobie.run', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.LatSync_McRobie.run" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Np_vals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run analysis to explore eigenvalues of system state matrix for various </span>
+<span class="sd">    assumed pedestrian crowd densities</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">        </span>
+<span class="sd">    * `Np_vals`, _array-like_: each value defines total number of </span>
+<span class="sd">      pedestrians on bridge; a range of values will typically be provided, </span>
+<span class="sd">      to allow exploration of how system eigenproperties (in particular </span>
+<span class="sd">      effective damping) varies with pedestrian numbers</span>
+<span class="sd">     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Run analysis for various pedestrian numbers, as provided to function</span>
+    
+    <span class="n">modalsys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modalsys</span>
+    <span class="n">C_pa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_pa</span>
+    
+    <span class="n">s_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">eta_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fd_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">X_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># Take copy of system damping matrix with no pedestrians</span>
+    <span class="n">C_p0</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">Np</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Np_vals</span><span class="p">):</span>
+        
+        <span class="c1"># Adjust bridge damping matrix</span>
+        <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span> <span class="o">=</span> <span class="n">C_p0</span> <span class="o">-</span> <span class="n">Np</span> <span class="o">*</span> <span class="n">C_pa</span>
+    
+        <span class="c1"># Carry out eigevalue analysis</span>
+        <span class="n">eig_props</span> <span class="o">=</span> <span class="n">modalsys</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()</span>
+        
+        <span class="c1"># Record key results of interest</span>
+        <span class="n">s_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
+        <span class="n">eta_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">])</span>
+        <span class="n">fd_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">])</span>
+        <span class="n">X_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">])</span>
+        
+    <span class="c1"># Restore with original bridge-only damping matrix</span>
+    <span class="n">modalsys</span><span class="o">.</span><span class="n">_C_mtrx</span> <span class="o">=</span> <span class="n">C_p0</span>
+    
+    <span class="c1"># Record key results as attributes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">s_vals</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span> <span class="o">=</span> <span class="n">eta_vals</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span> <span class="o">=</span> <span class="n">fd_vals</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">X_vals</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span> <span class="o">=</span> <span class="n">Np_vals</span>
+    
+    <span class="k">return</span> <span class="n">s_vals</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+          <h3>Instance variables</h3>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.C_pa" class="name">var <span class="ident">C_pa</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Modal damping matrix based on 1 person on bridge</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.modalsys" class="name">var <span class="ident">modalsys</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Modal system that form the basis of this analysis. May have subsystems 
+pre-appended (e.g. TMDs)</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+      </div>
+      </div>
       
       <div class="item">
       <p id="ped_dyn.PedestrianDynamics_transientAnalyses" class="name">class <span class="ident">PedestrianDynamics_transientAnalyses</span></p>

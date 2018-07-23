@@ -25,7 +25,7 @@ class TMD(msd_chain.MSD_Chain):
     description="Tuned mass damper"
     
     def __init__(self,sprung_mass:float,nat_freq:float,
-                 fixed_mass:float=None,damping_ratio:float=0.0,
+                 fixed_mass:float=0.0,damping_ratio:float=0.0,
                  **kwargs):
         """
         Initialisation method
@@ -63,11 +63,7 @@ class TMD(msd_chain.MSD_Chain):
         for that class for further details
         
         """
-        
-        # Handle optional arguments
-        if fixed_mass is None:
-            fixed_mass = sprung_mass / 100
-        
+                
         # Define masses, stiffnesses and damping dashpot of msd_chain system
         K = SDOF_stiffness(M=sprung_mass,f=nat_freq)
         C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
@@ -186,9 +182,12 @@ def append_TMDs(modal_sys,
     f = TMD_defs["Freq (Hz)"].values
     eta = TMD_defs["Damping ratio"].values
     
-    #Xpos = TMD_defs["Chainage (m)"].values
+    Xpos = TMD_defs["Chainage (m)"].values
     modeshapes_TMD = TMD_defs.values[:,4:]
     
+    if modeshapes_TMD.shape[1]==0:
+        modeshapes_TMD = None #' no input provided
+      
     # Loop through to define all TMD systems
     sys_list = []
     
@@ -213,9 +212,15 @@ def append_TMDs(modal_sys,
             
         # Loop over all new TMD systems to append
         for i, TMD_sys in enumerate(sys_list):
+            
+            if modeshapes_TMD is None:
+                mTMD = None
+            else:
+                mTMD = modeshapes_TMD[i,:]
                         
             modal_sys.AppendSystem(child_sys=TMD_sys,
-                                   modeshapes_parent=modeshapes_TMD[i,:],
+                                   Xpos_parent=Xpos[i],
+                                   modeshapes_parent=mTMD,
                                    DOF_child=0)
                 
     # Return list of TMD system objects

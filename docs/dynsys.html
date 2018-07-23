@@ -1,4 +1,4 @@
-Version: 1.3
+Version: 1.4.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1141,6 +1141,7 @@ table {
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">parse_version</span>
 
 <span class="c1">#import deprecation # not in anaconda distribution - obtain this from pip</span>
 <span class="c1">#@deprecation.deprecated(deprecated_in=&quot;0.1.0&quot;,current_version=currentVersion)</span>
@@ -2484,6 +2485,9 @@ table {
 <span class="sd">            * Alternatively `modeshapes_parent` can be used to directly </span>
 <span class="sd">              provide modeshape vector relevant to the point on the _parent </span>
 <span class="sd">              system_ at which the child system is to be attached</span>
+<span class="sd">              </span>
+<span class="sd">            If both are provided, `modeshapes_parent` is used to define </span>
+<span class="sd">            modeshapes, i.e. take precedence.</span>
 <span class="sd">            </span>
 <span class="sd">        * Else:</span>
 <span class="sd">            </span>
@@ -2551,17 +2555,19 @@ table {
                 
                 <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                     
-                    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
-                    
-                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                        <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
-                    
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
-                                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
+                    <span class="k">if</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        
+                        <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
+                        
+                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                            <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
+                        
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
+                                             <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
+                                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
+                                             <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
+                                             <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
                 
                     <span class="c1"># Save as attributes</span>
                     <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>
@@ -2959,19 +2965,39 @@ table {
 <span class="sd">    For now recreate here</span>
 <span class="sd">    In future should just use Scipy function!</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
-    <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    
-    <span class="k">if</span> <span class="n">rcond</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">rcond</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="c1"># Check whether Scipy method can be used</span>
+    <span class="k">if</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;1.1&#39;</span><span class="p">):</span>
         
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">rcond</span>
+        <span class="c1"># Use Scipy method</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">null_space</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="n">A</span><span class="p">,</span><span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">)</span>
     
-    <span class="n">num</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="c1"># Otherwise (when v1.0 or less being used) use this method</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copy of source code from </span>
+<span class="sd">        https://docs.scipy.org/doc/scipy/</span>
+<span class="sd">        reference/generated/scipy.linalg.null_space.html</span>
+<span class="sd">        </span>
+<span class="sd">        Included in Scipy v1.1.0</span>
+<span class="sd">        </span>
+<span class="sd">        For now recreate here</span>
+<span class="sd">        In future should just use Scipy function!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
     
-    <span class="n">Q</span> <span class="o">=</span> <span class="n">vh</span><span class="p">[</span><span class="n">num</span><span class="p">:,:]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
-    
+        <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">rcond</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">rcond</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+            
+        <span class="n">tol</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">rcond</span>
+        
+        <span class="n">num</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">vh</span><span class="p">[</span><span class="n">num</span><span class="p">:,:]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+        
     <span class="k">return</span> <span class="n">Q</span>
 
 
@@ -4194,19 +4220,39 @@ In future should just use Scipy function!</p></div>
 <span class="sd">    For now recreate here</span>
 <span class="sd">    In future should just use Scipy function!</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
-    <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    
-    <span class="k">if</span> <span class="n">rcond</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">rcond</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="c1"># Check whether Scipy method can be used</span>
+    <span class="k">if</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">parse_version</span><span class="p">(</span><span class="s1">&#39;1.1&#39;</span><span class="p">):</span>
         
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">rcond</span>
+        <span class="c1"># Use Scipy method</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">null_space</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="n">A</span><span class="p">,</span><span class="n">rcond</span><span class="o">=</span><span class="n">rcond</span><span class="p">)</span>
     
-    <span class="n">num</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="c1"># Otherwise (when v1.0 or less being used) use this method</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copy of source code from </span>
+<span class="sd">        https://docs.scipy.org/doc/scipy/</span>
+<span class="sd">        reference/generated/scipy.linalg.null_space.html</span>
+<span class="sd">        </span>
+<span class="sd">        Included in Scipy v1.1.0</span>
+<span class="sd">        </span>
+<span class="sd">        For now recreate here</span>
+<span class="sd">        In future should just use Scipy function!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
     
-    <span class="n">Q</span> <span class="o">=</span> <span class="n">vh</span><span class="p">[</span><span class="n">num</span><span class="p">:,:]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
-    
+        <span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="n">M</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">rcond</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">rcond</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+            
+        <span class="n">tol</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">rcond</span>
+        
+        <span class="n">num</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">vh</span><span class="p">[</span><span class="n">num</span><span class="p">:,:]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+        
     <span class="k">return</span> <span class="n">Q</span>
 </pre></div>
 
@@ -5758,6 +5804,9 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">            * Alternatively `modeshapes_parent` can be used to directly </span>
 <span class="sd">              provide modeshape vector relevant to the point on the _parent </span>
 <span class="sd">              system_ at which the child system is to be attached</span>
+<span class="sd">              </span>
+<span class="sd">            If both are provided, `modeshapes_parent` is used to define </span>
+<span class="sd">            modeshapes, i.e. take precedence.</span>
 <span class="sd">            </span>
 <span class="sd">        * Else:</span>
 <span class="sd">            </span>
@@ -5825,17 +5874,19 @@ required to characterise a generic dynamic (2nd order) system</p></div>
                 
                 <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                     
-                    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
-                    
-                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                        <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
-                    
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
-                                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
+                    <span class="k">if</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        
+                        <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
+                        
+                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                            <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
+                        
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
+                                             <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
+                                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
+                                             <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
+                                             <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
                 
                     <span class="c1"># Save as attributes</span>
                     <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>
@@ -6523,6 +6574,8 @@ and child systems, as follows:</p>
   system</em> at which the child system is to be attached</p>
 </li>
 </ul>
+<p>If both are provided, <code>modeshapes_parent</code> is used to define 
+modeshapes, i.e. take precedence.</p>
 </li>
 <li>
 <p>Else:</p>
@@ -6611,6 +6664,9 @@ with nonlinear systems).</p></div>
 <span class="sd">        * Alternatively `modeshapes_parent` can be used to directly </span>
 <span class="sd">          provide modeshape vector relevant to the point on the _parent </span>
 <span class="sd">          system_ at which the child system is to be attached</span>
+<span class="sd">          </span>
+<span class="sd">        If both are provided, `modeshapes_parent` is used to define </span>
+<span class="sd">        modeshapes, i.e. take precedence.</span>
 <span class="sd">        </span>
 <span class="sd">    * Else:</span>
 <span class="sd">        </span>
@@ -6678,17 +6734,19 @@ with nonlinear systems).</p></div>
             
             <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 
-                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
-                
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                    <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
-                
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
-                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
+                <span class="k">if</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    
+                    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
+                    
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                        <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
+                                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
             
                 <span class="c1"># Save as attributes</span>
                 <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>

@@ -5,6 +5,30 @@
 and this project adheres to: 
 <a href="http://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <hr />
+<h2>[1.4.0] - 2018-07-20 - RIHY</h2>
+<h3>Changed</h3>
+<h3>Added</h3>
+<ul>
+<li>
+<p>Check added as to Scipy version when importing <code>tstep.py</code> module; v1.0 or 
+  greater required (an exception will be raised otherwise, as <code>solve_ivp()</code> 
+  method unavaliable in earlier versions.</p>
+</li>
+<li>
+<p><code>scipy.linalg.null_space()</code> method now used when possible (i.e. when Scipy 
+  v1.1 or greater is used), to save duplication of code in <code>null_space()</code> 
+  method with <code>dynsys.py</code> module. In the future the plan will be to use the 
+  Scipy method alone, to allow reduction in code.</p>
+</li>
+<li>
+<p><code>LatSync_McRobie()</code> class defined within <code>ped_dyn.py</code> module. Implements 
+  lateral synchorous vibration calculations per McRobie's Stockton on Tees 
+  footbridge paper (refer <code>/references</code>). See also validation script, which 
+  obtains excellent agreement with figures presented in McRobie's paper.</p>
+</li>
+</ul>
+<h3>Fixed</h3>
+<h3>Removed</h3>
 <h2>[1.3.0] - 2018-07-20 - RIHY</h2>
 <h3>Changed</h3>
 <h3>Added</h3>

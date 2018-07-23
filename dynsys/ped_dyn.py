@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from mpl_toolkits.mplot3d import Axes3D
 from inspect import isfunction
+from numpy import real, imag
 
 # DynSys package imports
 import dyn_analysis
@@ -1467,8 +1468,231 @@ class PedestrianDynamics_transientAnalyses(dyn_analysis.Multiple):
                          fontsize=10.0)
     
         return fig_list
+    
+
+
+class LatSync_McRobie():
+    """
+    Class used to implement the multiple modes + multiple TMDs analysis method 
+    used to consider the phenomenon of Lateral Synchronous crowd loading 
+    response, per the following 
+    [paper](../references/The Lateral Dynamic Stablity of Stockton Infinity 
+    Footbridge using Complex Modes.pdf)    
+    """
+    
+    def __init__(self,
+                 modalsys,
+                 **kwargs):
+        """
+        Initialise analysis
+        
+        ***
+        Required:
+            
+        * `modalsys`, instance of `ModalSys` class, defining the modal 
+          system to be analysed. For situations where TMDs are present, it is 
+          assumed that TMDs have already been appended to the parent modal 
+          system, e.g. by use of the `append_TMDs()` method in `damper.py`.
+          
+        ***
+        Optional:
+            
+        * 
+          
+        """
+        
+        self.modalsys = modalsys
+        """
+        Modal system that form the basis of this analysis. May have subsystems 
+        pre-appended (e.g. TMDs)
+        """
+        
+        # Evaluate modal damping matrix based on 1 person on bridge
+        C_pa = self.calc_pedestrians_damping(**kwargs)
+        self.C_pa = C_pa
+        """
+        Modal damping matrix based on 1 person on bridge
+        """
+
+
+    def calc_pedestrians_damping(self,cp=300,num=1000):
+        """
+        Calculates modal damping matrix due to pedestrians, per the method 
+        presented in McRobie paper
+        """
+        
+        modalsys = self.modalsys
+        
+        modeshape_func = modalsys.modeshapeFunc
+        L = modalsys.Ltrack
+        
+        # Evaluate modeshape ordinates at unif
+        dL = L/num
+        x = numpy.linspace(0,L,num,endpoint=False) + dL/2
+        phi = modeshape_func(x)
+            
+        # Evaluate matrix product of modeshape ordinate matrices
+        phi_product = phi.T @ phi
+        
+        # Return mode-generalised damping matrix
+        C_pa = cp * dL / L * phi_product
+        
+        return C_pa
         
     
+    def run(self,Np_vals):
+        """
+        Run analysis to explore eigenvalues of system state matrix for various 
+        assumed pedestrian crowd densities
+        
+        ***
+        Required:
+            
+        * `Np_vals`, _array-like_: each value defines total number of 
+          pedestrians on bridge; a range of values will typically be provided, 
+          to allow exploration of how system eigenproperties (in particular 
+          effective damping) varies with pedestrian numbers
+         
+        """
+    
+        # Run analysis for various pedestrian numbers, as provided to function
+        
+        modalsys = self.modalsys
+        C_pa = self.C_pa
+        
+        s_vals = []
+        eta_vals = []
+        fd_vals = []
+        X_vals = []
+        
+        # Take copy of system damping matrix with no pedestrians
+        C_p0 = modalsys._C_mtrx
+        
+        for i, Np in enumerate(Np_vals):
+            
+            # Adjust bridge damping matrix
+            modalsys._C_mtrx = C_p0 - Np * C_pa
+        
+            # Carry out eigevalue analysis
+            eig_props = modalsys.CalcEigenproperties()
+            
+            # Record key results of interest
+            s_vals.append(eig_props["s"])
+            eta_vals.append(eig_props["eta"])
+            fd_vals.append(eig_props["f_d"])
+            X_vals.append(eig_props["X"])
+            
+        # Restore with original bridge-only damping matrix
+        modalsys._C_mtrx = C_p0
+        
+        # Record key results as attributes
+        self.eigenvalues = s_vals
+        self.damping_ratios = eta_vals
+        self.damped_freqs = fd_vals
+        self.eigenvectors = X_vals
+        self.N_pedestrians = Np_vals
+        
+        return s_vals
+    
+    
+    def plot_results(self):
+        """
+        Plots results from the above analysis
+        
+        N.b: Figures intentionally emulate the format of figures in 
+        McRobie's paper, as these have been used to validate the above routine
+        """
+        
+        # Define figure to provide summary of results
+        fig, axarr = plt.subplots(2,2)
+        fig.set_size_inches((14,7))
+        fig.subplots_adjust(hspace=0.5)
+        
+        # Prepare subplots
+        self.plot_damping_vs_freq(ax=axarr[0,0])
+        self.plot_poles(ax=axarr[0,1])
+        self.plot_damping_vs_pedestrians(ax=axarr[1,0])
+        axarr[1,1].set_visible(False)
+        
+        return fig
+        
+    
+    def plot_damping_vs_freq(self,ax=None):
+        """            
+        Plot damping ratio against damped natural frequency
+        (per Figure 5 in McRobie's paper)
+        """
+        
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+        
+        eta_vals = self.damping_ratios
+        fd_vals = self.damped_freqs
+
+        ax.plot(eta_vals,fd_vals,'k.',markersize=0.5)
+        ax.plot(eta_vals[::10],fd_vals[::10],'ko',markersize=1.5)
+        ax.plot(eta_vals[0],fd_vals[0],'bo',markersize=3.0)
+        
+        ax.axvline(x=0.0,color='r',alpha=0.3) # denotes stability limit
+        
+        ax.set_ylim([0.0,ax.get_ylim()[1]])
+        
+        ax.set_xlabel("Damping ratio")
+        ax.set_ylabel("Damped natural frequency (Hz)")
+        ax.set_title("Frequency vs Effective Damping\n")
+        
+        return fig
+        
+    
+    def plot_poles(self,ax=None):
+        """
+        Plot eigenvalues (poles) on complex plane
+        (per Figure 4 in paper)
+        """
+        
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+        
+        s_vals = self.eigenvalues
+
+        ax.plot(real(s_vals),imag(s_vals),'k.',markersize=0.5)
+        ax.plot(real(s_vals[::10]),imag(s_vals[::10]),'ko',markersize=1.5)
+        ax.plot(real(s_vals[0]),imag(s_vals[0]),'bo',markersize=3.0)
+        
+        ax.axvline(x=0.0,color='r',alpha=0.3) # stability limit
+        
+        ax.axhline(y=0.0,color='k',linewidth=0.5) # illustrates Im(z)=0 axis
+        
+        ax.set_xlabel("Real(s)")
+        ax.set_ylabel("Imag(s)")
+        ax.set_title("Eigenvalues of system state matrix")
+        
+        return fig
+        
+    
+    def plot_damping_vs_pedestrians(self,ax=None):
+        """
+        Plots effective damping ratio of poles against number of pedestrians
+        """
+        
+        Np_vals = self.N_pedestrians
+        eta_vals = self.damping_ratios
+        
+        ax.plot(Np_vals,eta_vals,'k.',markersize=0.5)
+        
+        ax.axhline(y=0.0,color='r',alpha=0.3)
+        
+        ax.set_xlim([0,ax.get_xlim()[1]])
+        
+        ax.set_xlabel("Number of pedestrians")
+        ax.set_ylabel("Effective damping ratio")
+        ax.set_title("Effect of pedestrians on damping")
+        
+
     
 # ************* PRIVATE CLASSES (only to be used within module) *************    
         
@@ -1821,7 +2045,7 @@ class _DeckStrip():
     
 
 # ********************** FUNCTIONS   ****************************************
-        
+            
 def Calc_Seff(modeshapeFunc,S,
               dx=2.0,
               makePlot=True,
@@ -2017,6 +2241,10 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
     
     return k_fv
 
+
+
+    
+    
 
 
 def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,

@@ -10,6 +10,7 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import pandas as pd
 import scipy
+from scipy import interpolate
 import matplotlib.pyplot as plt
 import warnings
 #import deprecation # not in anaconda distribution - obtain this from pip
@@ -278,16 +279,28 @@ class ModalSys(DynSys):
         else:
             fig = ax.gcf()
             
-        # Use Ltrack instead of L passed, if attribute defined
-        attr="Ltrack"
-        obj=self
-        if hasattr(obj,attr):
-            L=getattr(obj,attr)
-            
-        # Use interpolation function to obtain modeshapes at
-        x = npy.linspace(0,L,num,endpoint=True)
-        m = self.modeshapeFunc(x)
+        # Get ordinates to plot
+        modeshape_func = self.modeshapeFunc
         
+        if isinstance(modeshape_func,scipy.interpolate.interpolate.interp1d):
+            
+            # Retrieve modeshape ordinates defining interpolation function
+            x = modeshape_func.x
+            m = modeshape_func.y
+            L = x[-1]
+            
+        else:
+            
+            # Use Ltrack instead of L passed, if attribute defined
+            attr="Ltrack"
+            obj=self
+            if hasattr(obj,attr):
+                L=getattr(obj,attr)
+                
+            # Use interpolation function to obtain modeshapes at
+            x = npy.linspace(0,L,num,endpoint=True)
+            m = self.modeshapeFunc(x)
+            
         # Get mode IDs to use as labels
         if hasattr(self,"mode_IDs"):
             modeNames = self.mode_IDs
@@ -552,6 +565,87 @@ class ModalSys(DynSys):
         self.J_mtrx = npy.asmatrix(npy.zeros((0,nDOF)))
         self.output_mtrx = output_mtrx
         self.output_names = output_names
+        
+        
+    def CalcModeshapeIntegral(self,weighting_func=None,track_length=None,num=1000,power:int=1):
+        """
+        Evaluates integral along modeshape
+        
+        Prior to integration, modeshape ordinates are raised to `power`. E.g. 
+        use `power=2` to evaluating integral of modeshape-squared (which is a 
+        common application for this method)
+        """
+        
+        modeshape_func = self.modeshapeFunc
+                    
+        # Evaluate modeshape ordinates
+        if isinstance(modeshape_func,scipy.interpolate.interpolate.interp1d):
+            
+            # Retrieve modeshape ordinates defining interpolation function
+            x = modeshape_func.x
+            vals = modeshape_func.y
+            
+        else:
+            
+            if track_length is None:
+                raise ValueError("`track_length` to be defined!")
+            
+            x = npy.linspace(0,track_length,num)
+            vals = modeshape_func(x)
+        
+        # Take square of modeshape
+        vals = vals**power
+        
+        # Evaluate and multiply by weighting function, if defined:
+        if weighting_func is not None:
+            
+            if isinstance(weighting_func,float):
+                vals = vals * weighting_func
+            else:
+                weighting_vals = weighting_func(x)
+                vals = vals * weighting_vals
+        
+        # Integrate along track
+        integral = scipy.integrate.trapz(y=vals, x=x, axis=0)
+        
+        return integral
+    
+# --------------- FUNCTIONS ------------------
+        
+def MAC(x1,x2):
+    """
+    Modal assurance criterion for comparing two complex-valued vectors 
+    `x1` and `x2`
+    
+    ***
+    
+    $$ 
+    MAC = (x_{2}^{H}.x_{1} + x_{1}^{H}.x_{2})/
+    (x_{2}^{H}.x_{2} + x_{1}^{H}.x_{1}) 
+    $$
+    
+    MAC is a scalar _float_ in the range [0.0,1.0]:
+        
+    * MAC = 1.0 implies vectors are exactly the same
+    
+    * MAC = 0.0 implies vectors are othogonal i.e. have no shared component
+    
+    """
+       
+    x1 = npy.asmatrix(x1)
+    x2 = npy.asmatrix(x2)
+    
+    # Check dimensions are consistent
+    if x1.shape!=x2.shape:
+        raise ValueError("Error: x1 and x2 must be same shape!")
+    
+    # Calculate numerator and denominator of MAC function
+    num = x2.H * x1 * x1.H * x2
+    den = x2.H * x2 * x1.H * x1
+    MAC = num/den
+    MAC = npy.real(MAC)    # note should have negligible imag part anyway
+        
+    return MAC
     
   
 # ********************** TEST ROUTINE ****************************************
