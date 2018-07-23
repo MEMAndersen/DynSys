@@ -1476,7 +1476,7 @@ class LatSync_McRobie():
     Class used to implement the multiple modes + multiple TMDs analysis method 
     used to consider the phenomenon of Lateral Synchronous crowd loading 
     response, per the following 
-    [paper](.../references/The Lateral Dynamic Stablity of Stockton Infinity 
+    [paper](../references/The Lateral Dynamic Stablity of Stockton Infinity 
     Footbridge using Complex Modes.pdf)    
     """
     

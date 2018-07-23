@@ -1,4 +1,4 @@
-Version: 1.3
+Version: 1.4.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1142,7 +1142,7 @@ be appended to another system (e.g. a modal system)</p>
     <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Tuned mass damper&quot;</span>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
-                 <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation method</span>
@@ -1180,11 +1180,7 @@ be appended to another system (e.g. a modal system)</p>
 <span class="sd">        for that class for further details</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># Handle optional arguments</span>
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span>
-        
+                
         <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
         <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
         <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
@@ -1303,9 +1299,12 @@ be appended to another system (e.g. a modal system)</p>
     <span class="n">f</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Freq (Hz)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
     <span class="n">eta</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
     
-    <span class="c1">#Xpos = TMD_defs[&quot;Chainage (m)&quot;].values</span>
+    <span class="n">Xpos</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
     <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
     
+    <span class="k">if</span> <span class="n">modeshapes_TMD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1">#&#39; no input provided</span>
+      
     <span class="c1"># Loop through to define all TMD systems</span>
     <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[]</span>
     
@@ -1330,9 +1329,15 @@ be appended to another system (e.g. a modal system)</p>
             
         <span class="c1"># Loop over all new TMD systems to append</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">TMD_sys</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sys_list</span><span class="p">):</span>
+            
+            <span class="k">if</span> <span class="n">modeshapes_TMD</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">mTMD</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mTMD</span> <span class="o">=</span> <span class="n">modeshapes_TMD</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
                         
             <span class="n">modal_sys</span><span class="o">.</span><span class="n">AppendSystem</span><span class="p">(</span><span class="n">child_sys</span><span class="o">=</span><span class="n">TMD_sys</span><span class="p">,</span>
-                                   <span class="n">modeshapes_parent</span><span class="o">=</span><span class="n">modeshapes_TMD</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span>
+                                   <span class="n">Xpos_parent</span><span class="o">=</span><span class="n">Xpos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                   <span class="n">modeshapes_parent</span><span class="o">=</span><span class="n">mTMD</span><span class="p">,</span>
                                    <span class="n">DOF_child</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 
     <span class="c1"># Return list of TMD system objects</span>
@@ -1444,9 +1449,12 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
     <span class="n">f</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Freq (Hz)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
     <span class="n">eta</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
     
-    <span class="c1">#Xpos = TMD_defs[&quot;Chainage (m)&quot;].values</span>
+    <span class="n">Xpos</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
     <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
     
+    <span class="k">if</span> <span class="n">modeshapes_TMD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1">#&#39; no input provided</span>
+      
     <span class="c1"># Loop through to define all TMD systems</span>
     <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[]</span>
     
@@ -1471,9 +1479,15 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
             
         <span class="c1"># Loop over all new TMD systems to append</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">TMD_sys</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sys_list</span><span class="p">):</span>
+            
+            <span class="k">if</span> <span class="n">modeshapes_TMD</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">mTMD</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mTMD</span> <span class="o">=</span> <span class="n">modeshapes_TMD</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
                         
             <span class="n">modal_sys</span><span class="o">.</span><span class="n">AppendSystem</span><span class="p">(</span><span class="n">child_sys</span><span class="o">=</span><span class="n">TMD_sys</span><span class="p">,</span>
-                                   <span class="n">modeshapes_parent</span><span class="o">=</span><span class="n">modeshapes_TMD</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span>
+                                   <span class="n">Xpos_parent</span><span class="o">=</span><span class="n">Xpos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                   <span class="n">modeshapes_parent</span><span class="o">=</span><span class="n">mTMD</span><span class="p">,</span>
                                    <span class="n">DOF_child</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 
     <span class="c1"># Return list of TMD system objects</span>
@@ -1504,7 +1518,7 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
     <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Tuned mass damper&quot;</span>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
-                 <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation method</span>
@@ -1542,11 +1556,7 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
 <span class="sd">        for that class for further details</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># Handle optional arguments</span>
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span>
-        
+                
         <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
         <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
         <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
@@ -1650,7 +1660,7 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
             
   <div class="item">
     <div class="name def" id="damper.TMD.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, sprung_mass, nat_freq, fixed_mass=None, damping_ratio=0.0, **kwargs)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, sprung_mass, nat_freq, fixed_mass=0.0, damping_ratio=0.0, **kwargs)</p>
     </div>
     
 
@@ -1701,7 +1711,7 @@ for that class for further details</p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.__init__', this);">Show source &equiv;</a></p>
   <div id="source-damper.TMD.__init__" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
-             <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+             <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialisation method</span>
@@ -1739,11 +1749,7 @@ for that class for further details</p></div>
 <span class="sd">    for that class for further details</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Handle optional arguments</span>
-    <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span>
-    
+            
     <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
     <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
     <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
@@ -1972,6 +1978,8 @@ and child systems, as follows:</p>
   system</em> at which the child system is to be attached</p>
 </li>
 </ul>
+<p>If both are provided, <code>modeshapes_parent</code> is used to define 
+modeshapes, i.e. take precedence.</p>
 </li>
 <li>
 <p>Else:</p>
@@ -2060,6 +2068,9 @@ with nonlinear systems).</p></div>
 <span class="sd">        * Alternatively `modeshapes_parent` can be used to directly </span>
 <span class="sd">          provide modeshape vector relevant to the point on the _parent </span>
 <span class="sd">          system_ at which the child system is to be attached</span>
+<span class="sd">          </span>
+<span class="sd">        If both are provided, `modeshapes_parent` is used to define </span>
+<span class="sd">        modeshapes, i.e. take precedence.</span>
 <span class="sd">        </span>
 <span class="sd">    * Else:</span>
 <span class="sd">        </span>
@@ -2127,17 +2138,19 @@ with nonlinear systems).</p></div>
             
             <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 
-                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
-                
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                    <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
-                
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
-                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
+                <span class="k">if</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    
+                    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
+                    
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                        <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
+                                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
             
                 <span class="c1"># Save as attributes</span>
                 <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>

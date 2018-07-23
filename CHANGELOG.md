@@ -8,7 +8,7 @@ and this project adheres to:
 
 ***
 
-## Unreleased
+## [1.4.0] - 2018-07-20 - RIHY
 
 ### Changed
 
@@ -27,7 +27,6 @@ and this project adheres to:
   lateral synchorous vibration calculations per McRobie's Stockton on Tees 
   footbridge paper (refer `/references`). See also validation script, which 
   obtains excellent agreement with figures presented in McRobie's paper.
-
 
 ### Fixed
 

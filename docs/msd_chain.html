@@ -1,4 +1,4 @@
-Version: 1.3
+Version: 1.4.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1938,6 +1938,8 @@ and child systems, as follows:</p>
   system</em> at which the child system is to be attached</p>
 </li>
 </ul>
+<p>If both are provided, <code>modeshapes_parent</code> is used to define 
+modeshapes, i.e. take precedence.</p>
 </li>
 <li>
 <p>Else:</p>
@@ -2026,6 +2028,9 @@ with nonlinear systems).</p></div>
 <span class="sd">        * Alternatively `modeshapes_parent` can be used to directly </span>
 <span class="sd">          provide modeshape vector relevant to the point on the _parent </span>
 <span class="sd">          system_ at which the child system is to be attached</span>
+<span class="sd">          </span>
+<span class="sd">        If both are provided, `modeshapes_parent` is used to define </span>
+<span class="sd">        modeshapes, i.e. take precedence.</span>
 <span class="sd">        </span>
 <span class="sd">    * Else:</span>
 <span class="sd">        </span>
@@ -2093,17 +2098,19 @@ with nonlinear systems).</p></div>
             
             <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 
-                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
-                
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                    <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
-                
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
-                                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
-                                     <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
+                <span class="k">if</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    
+                    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
+                    
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                        <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
+                                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
             
                 <span class="c1"># Save as attributes</span>
                 <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>
