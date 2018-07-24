@@ -586,6 +586,7 @@ class SteadyStateCrowdLoading():
                 and velocities
                 """
                 return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
+                                                          C=numpy.zeros((0,)),
                                                           verbose=True)
                 
             f1, G12 = Calc_G12(forcing_freq)
