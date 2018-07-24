@@ -374,6 +374,7 @@ class SteadyStateCrowdLoading():
         """
             
         # Check `modeshapes_fname_arr` input
+        modeshapes_fname_arr = numpy.array(modeshapes_fname_arr)
         self._check_modeshapes_fname_arr(modeshapes_fname_arr,nRegions)
             
         # Read modeshape data from file, determine interpolation functions
@@ -412,12 +413,12 @@ class SteadyStateCrowdLoading():
         
         # Get damped natural frequencies for system
         eig_results = modalsys_obj.CalcEigenproperties()
-        self.f_d = eig_results["f_d"][1::2]
+        self.f_d = eig_results["f_d"][0::2]
         """
         Damped natural frequencies of system being analysed
         """
         
-        self.eta = eig_results["eta"][1::2]
+        self.eta = eig_results["eta"][0::2]
         """
         Damping ratios for system modes
         """
@@ -519,9 +520,9 @@ class SteadyStateCrowdLoading():
         
         # Calculate load intensity, if not provided directly
         if load_intensity is None:
-            load_intensity, d =self.calc_load_intensity(mode_index=target_mode,
-                                                        fv=forcing_freq,
-                                                        makePlot=makePlot)
+            load_intensity, d = self.calc_load_intensity(mode_index=target_mode,
+                                                         fv=forcing_freq,
+                                                         makePlot=makePlot)
         else:
             d = {}  # null dict
         
@@ -543,13 +544,6 @@ class SteadyStateCrowdLoading():
         # imply a force which is 180 degrees out of phase
         modal_forces = self.load_intensity * modal_areas
         self.modal_forces = modal_forces
-        
-        # For systems with constraints cannot currently use frequency domain
-        # method to compute responses at steady state. 
-        # In this case run time-domain analysis only
-        if self.modalsys_obj.hasConstraints():
-            run_freq_method = False
-            run_tstep = True
             
         # Save settings used to determine which analyses run
         self.run_freq_method = run_freq_method
@@ -592,14 +586,15 @@ class SteadyStateCrowdLoading():
                 and velocities
                 """
                 return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
-                                                          C=numpy.zeros((0,)),
-                                                          verbose=False)
+                                                          verbose=True)
                 
             f1, G12 = Calc_G12(forcing_freq)
             G12 = numpy.asmatrix(G12[:,:,0])
+            if verbose: print("G12.shape: {0}".format(G12.shape))
         
             f1, G3 = Calc_G3(forcing_freq)
             G3 = numpy.asmatrix(G3[:,:,0])
+            if verbose: print("G3.shape: {0}".format(G3.shape))
             
             G = numpy.vstack((G12,G3))
             self.G = G
@@ -622,8 +617,9 @@ class SteadyStateCrowdLoading():
             self.modal_accn_target = modal_accn_target
                            
             # Calculate responses amplitudes using full transfer matrix
-            output_mtrx = self.modalsys_obj.output_mtrx
-            output_names = self.modalsys_obj.output_names
+            output_mtrx, output_names = self.modalsys_obj.GetOutputMtrx(all_systems=True)
+            print(output_mtrx.shape)
+            print(output_names)
             
             if output_mtrx.shape[0]>0:
                     
@@ -1070,15 +1066,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
     to UK NA to BS EN1991-2
     """
     
-    def __init__(self,
-                 modalsys_obj,
-                 width_func_list=[3.0],
-                 modeshapes_fname_arr=["modeshapes_edge1.csv",
-                                        "modeshapes_edge2.csv"],
-                 name=None,
-                 bridgeClass='A',
-                 verbose=False,
-                 makePlot=False):
+    def __init__(self,bridgeClass='A',**kwargs):
         """
         Initialisation function
         
@@ -1123,13 +1111,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         """
                
         # Run parent init function
-        super().__init__(modalsys_obj = modalsys_obj,
-                         width_func_list = width_func_list,
-                         modeshapes_fname_arr = modeshapes_fname_arr,
-                         name = name,
-                         verbose = verbose,
-                         makePlot = makePlot
-                         )
+        super().__init__(**kwargs)
         
         
     def get_crowd_density(self,
@@ -1255,6 +1237,148 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
 
         return load_intensity, results_dict
     
+    
+class HIVOSS(SteadyStateCrowdLoading):
+    """
+    Implements HIVOSS rules for lateral vibration due to crowds
+    """
+    
+    def __init__(self,crowd_density:float,direction='Vertical',**kwargs):
+        """
+        Initialisation method
+        
+        ***
+        Required:
+        
+        * `crowd_density`, _float_ to denote crowd density, persons/m2
+        
+        * `direction`, _string_ to denote loading / response direction. 
+          Either 'Vertical' or 'Lateral' required.
+          
+        ***
+        Optional:
+            
+        Refer optional keyword arguments in parent class __init__() method
+        
+        """
+        
+        self.crowd_density = crowd_density
+        """
+        Crowd density for design situation consider, P/m2
+        """
+        
+        self.direction = direction
+        """
+        Direction of loading / response calculation
+        """
+        
+        # Run parent init function
+        super().__init__(**kwargs)
+        
+    
+    def calc_load_intensity(self,mode_index:int,fv:float,
+                            verbose=True,makePlot=True):
+        """
+        Function to calculate intensity of uniform deck load
+        according to HIVOSS guidance
+        
+        Note: overrides parent class method
+        """
+        
+        print("Calculating load intensity for mode %d " % mode_index +
+              "according to HIVOSS...")
+        
+        rslts_dict = {}
+        
+        d = self.crowd_density
+        S = self.deck_area
+        
+        rslts_dict["d"]=d
+        rslts_dict["S"]=S
+        
+        if verbose:
+            print("Area of loaded surface, S: %.1f" % S)
+        
+        # Calculate number of pedestrians on loaded surface
+        n = S * d
+        self.n = n
+        rslts_dict["n"] = n        
+        """
+        Number of pedestrians on loaded surface
+        """
+        
+        if verbose:
+            print("Number of pedestrians, n: %.1f" % n)
+            
+        # Get damping ratio applicable to mode being considered
+        eta = self.eta[mode_index]
+        rslts_dict["eta"]=eta
+        
+        if verbose:
+            print("Damping ratio for mode: %.4f" % eta)
+        
+        # Calculate effective number of pedestrians on loaded surface
+        if d < 1.0:
+            n_dash = 10.8 * (eta*n)**0.5 / S
+        else:
+            n_dash = 1.85 * (n)**0.5 / S
+            
+        self.n_dash = n_dash
+        """
+        Effective number of pedestrians on loaded surface, [1/m2]
+        """
+        
+        rslts_dict["n_dash"]=n_dash
+        
+        if verbose:
+            print("Effective number of pedestrians, n': %.1f" % n_dash)
+            
+        # Define reference load
+        # refer Table 4-7, HIVOSS guidelines
+        direction = self.direction
+        
+        rslts_dict["direction"]=direction
+        
+        if direction == 'Vertical':
+            P = 280
+        elif direction == 'Longitudinal':
+            P = 140
+        elif direction == 'Lateral':
+            P = 35
+        else:
+            raise ValueError("Invalid `direction`")
+            
+        self.P = P
+        """
+        Reference load, P [N]
+        """
+        
+        rslts_dict["P"]=P
+        
+        if verbose:
+            print("Reference load, P [N]': %.0f" % P)
+           
+        # Calculate reduction factor
+        rslt = calc_psi_HIVOSS(fv=3.05,direction='Vertical',makePlot=makePlot)
+        psi = rslt[0]
+        rslts_dict["psi"]=psi
+        
+        if verbose:
+            print("Reduction factor, psi': %.3f" % psi)
+        
+        # Calculate load intensity
+        load_intensity = P * n_dash * psi
+        self.load_intensity = load_intensity
+        """
+        Load intensity [N/m2] of UDL due to crowd loading
+        """
+        
+        if verbose:
+            print("Load intensity [N/m2]': %.2f" % load_intensity)
+        
+        return load_intensity, rslts_dict
+   
+        
 
 class PedestrianDynamics_transientAnalyses(dyn_analysis.Multiple):
     """
@@ -2428,13 +2552,67 @@ def UKNA_BSEN1991_2_Figure_NA_11(fn:float,makePlot=True):
         return D
 
 
+def calc_psi_HIVOSS(fv:float,direction:str,makePlot=True):
+        """
+        Calculate reduction coefficient per Table 4-6 of HIVOSS guidelines
+        """
+        
+        
+        if direction in ['Vertical','Longitudinal']:
+            
+            # Data defining phi variation with frequency
+            f_vals   = [0.0,1.25,1.7,2.1,2.3,2.5,3.40,4.20,4.6]
+            psi_vals = [0.0,0.00,1.0,1.0,0.0,0.0,0.25,0.25,0.0]
+            
+        elif direction == 'Lateral':
+            
+            # Data defining phi variation with frequency
+            f_vals   = [0.0,0.5,0.7,1.0,1.2,2.4]
+            psi_vals = [0.0,0.0,1.0,1.0,0.0,0.0]
+            
+        else:
+            raise ValueError("Unexpected `direction`") 
+        
+        # Define as interpolation function
+        psi_func = scipy.interpolate.interp1d(x=f_vals,y=psi_vals,
+                                              bounds_error=False,
+                                              fill_value=0.0)
+        
+        psi_fv = psi_func(fv)
+        
+        if makePlot:
+            
+            fig, ax = plt.subplots()
+            
+            ax.plot(f_vals,psi_vals,'k',linewidth=1.0)
+            
+            ax.axhline(y=psi_fv,color='r',alpha=0.3)
+            ax.axvline(x=fv,color='r',alpha=0.3)
+            
+            if direction == 'Lateral':
+                ax.set_xlim([0,2.4])
+            else:
+                ax.set_xlim([0,4.6])
+                
+            ax.set_xlabel("Frequency (Hz)")
+            ax.set_ylabel("$\psi$")
+            ax.set_title("Reduction coefficient $\psi$, HIVOSS\n"+
+                         "Loading direction: %s" % direction)
+        
+            return psi_fv, fig
+        
+        else:
+        
+            return psi_fv
+
+
 # ********************** TEST ROUTINES ****************************************
 
 if __name__ == "__main__":
     
     plt.close('all')
     
-    testRoutine=6
+    testRoutine=7
     
     if testRoutine==1:
         # Tests UKNA_BSEN1991_2_Figure_NA_9() function
@@ -2518,3 +2696,9 @@ if __name__ == "__main__":
         print("D1 = %.3f" % D1)
         D2, fig = UKNA_BSEN1991_2_Figure_NA_11(fn=0.30)
         print("D2 = %.3f" % D2)
+        
+        
+    if testRoutine == 7:
+        
+        psi1 = calc_psi_HIVOSS(fv=1.34,direction='Lateral',makePlot=True)
+        psi2 = calc_psi_HIVOSS(fv=3.05,direction='Vertical',makePlot=True)
