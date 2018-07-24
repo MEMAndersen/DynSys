@@ -8,6 +8,22 @@ and this project adheres to:
 
 ***
 
+
+
+## Unreleased
+
+### Changed
+
+### Added
+
+* `UKNA_BSEN1991_2_Figure_NA_11()` function added to define Figure NA.11 in 
+  UK NA to BS EN 1991-2:2003.
+
+### Fixed
+
+### Removed
+
+
 ## [1.4.1] - 2018-07-23 - RIHY
 
 ### Changed

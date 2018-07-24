@@ -2370,12 +2370,71 @@ def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,
     return gamma
 
 
+def UKNA_BSEN1991_2_Figure_NA_11(fn:float,makePlot=True):
+    """
+    Determine critical D factor according to Figure NA.11 of UK NA to BS EN 
+    1991-2:2003
+    """
+    
+    # Data to digitise figure in code
+    vals = [[0.165,2.00],[0.200,1.60],[0.250,1.30],[0.300,1.12],
+            [0.350,0.92],[0.400,0.79],[0.450,0.72],[0.500,0.67],
+            [0.600,0.58],[0.700,0.51],[0.800,0.45],[0.900,0.40],
+            [1.000,0.34],[1.100,0.29],[1.200,0.22],[1.300,0.16],
+            [1.400,0.11],[1.500,0.07],[1.600,0.03],[1.700,0.01],
+            [1.800,0.00]]
+    
+    vals = numpy.array(vals)
+    f_vals = vals[:,0]
+    D_vals = vals[:,1]
+    
+    # Define interpolation function
+    D_func = scipy.interpolate.interp1d(x=f_vals,y=D_vals,
+                                        bounds_error=True)
+
+    # Determine D by interpolation
+    if fn < 0.5:
+        print("***Warning: fn < 0.5 requested. Corresponds to dotted line " + 
+              "in Figure NA.11. Use D value with caution!***")
+    
+    D = D_func(fn)
+    
+    if makePlot:
+        
+        fig, ax = plt.subplots()
+        
+        fig.set_size_inches((6,6)) # similar aspect ratio to figure in code
+        
+        f1 = numpy.linspace(0.165,0.5,50)
+        f2 = numpy.linspace(0.5,1.8,50)
+        
+        ax.plot(f1,D_func(f1),'k--',linewidth=0.5)
+        ax.plot(f2,D_func(f2),'k',linewidth=0.5)
+        
+        ax.axhline(y=D,color='r',alpha=0.3)
+        ax.axvline(x=fn,color='r',alpha=0.3)
+        
+        ax.set_xlim([0.0,1.8]) # per figure in code
+        ax.set_ylim([0.0,2.0]) # per figure in code
+        
+        ax.set_xlabel("Frequency of lateral mode (Hz)")
+        ax.set_ylabel("D")
+        ax.set_title("Pedestrian mass damping parameter, D\n" + 
+                     "per Figure NA.11, UK NA to BS EN 1992-1:2003")
+        
+        return D, fig
+    
+    else:
+        return D
+
 
 # ********************** TEST ROUTINES ****************************************
 
 if __name__ == "__main__":
     
-    testRoutine=2
+    plt.close('all')
+    
+    testRoutine=6
     
     if testRoutine==1:
         # Tests UKNA_BSEN1991_2_Figure_NA_9() function
@@ -2451,3 +2510,11 @@ if __name__ == "__main__":
         
         for T in [Tn,2*Tn,3*Tn,10*Tn]:
             ax.axvline(T,color='r',alpha=0.3)
+            
+            
+    if testRoutine == 6:
+        
+        D1, fig = UKNA_BSEN1991_2_Figure_NA_11(fn=1.34)
+        print("D1 = %.3f" % D1)
+        D2, fig = UKNA_BSEN1991_2_Figure_NA_11(fn=0.30)
+        print("D2 = %.3f" % D2)
