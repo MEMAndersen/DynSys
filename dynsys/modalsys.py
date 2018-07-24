@@ -211,7 +211,7 @@ class ModalSys(DynSys):
             Mode_i:     Modeshape ordinates for given ModeID
         
         """
-    
+        
         # Read in data from .csv file
         df = pd.read_csv(fName,delimiter=',',header=0,index_col=0)
         
