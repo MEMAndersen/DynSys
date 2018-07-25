@@ -1537,6 +1537,7 @@ class DynSys:
                          fVals=None, fmax=None,
                          A=None, B=None, 
                          C=None, D=None,
+                         output_names:list=None,
                          force_accn:bool=False,
                          verbose=False
                          ):
@@ -1562,10 +1563,13 @@ class DynSys:
         If None, `output_mtrx` attribute will be used as `C` and `D` 
         will be ignored.
         
+        * `output_names`, _list_ of strings defining names of outputs
+        
         * `force_accn`, _boolean_,  can be set to override the above behaviour 
         and obtain frequency transfer matrix relating applied forces to 
-        accelerations of the DOFs. E.g. for modal systems, modal acceleration 
-        transfer matrix can be obtained in this way
+        _accelerations_ of the DOFs. E.g. for modal systems, transfer matrices 
+        relating modal forces to modal accelerations can be obtained in this 
+        way.
         
         ***
         
@@ -1580,17 +1584,19 @@ class DynSys:
         
         """
         
-        if verbose: print("Calculating frequency response matrices..")
+        print("Calculating frequency response matrices..")
         
         # Get key properties of system 
         hasConstraints = self.hasConstraints()
-        nDOF = self.nDOF
-        
+        nDOF_full = self.GetSystemMatrices(unconstrained=False)["nDOF"]
+                
         # Handle optional arguments
         if fVals is None:
             fVals = self.freqVals(fmax=fmax)
             
         fVals = npy.ravel(fVals)
+        
+
         
         if A is None:
             A = self.GetStateMatrix(unconstrained=hasConstraints,
@@ -1600,11 +1606,10 @@ class DynSys:
             B = self.GetLoadMatrix(unconstrained=hasConstraints,
                                    recalculate=True)
         
-        # Get output matrices
+        # Define 
         if C is None:
-            
-            C = self.GetOutputMtrx(all_systems=True,
-                                   state_variables_only=True)[0]
+            C, output_names = self.GetOutputMtrx(all_systems=True,
+                                                 state_variables_only=True)
                     
         if C.shape[0]==0:
             
@@ -1613,15 +1618,30 @@ class DynSys:
                       "Output matrix Gf will hence relate to state " + 
                       "displacements and velocities\n***")
             
-            C = npy.identity(2*nDOF)
+            C = npy.identity(2*nDOF_full)
+            
+            # Define names of outputs (i.e. state variables in this case)
+            output_names =  ["DIS #%d" % i for i in range(nDOF_full)]
+            output_names += ["VEL #%d" % i for i in range(nDOF_full)]
+            output_names = npy.array(output_names)
                         
         # Override the above 
         if force_accn:
                         
-            # Get system matrices and output matrices
-            nDOF = self.nDOF
-            C = A[nDOF:2*nDOF,:] # rows relating to accelerations
-            D = B[nDOF:2*nDOF,:] # rows relating to accelerations
+            # Obtain A and B matrices for the full system
+            # i.e. per the constrained problem
+            A_full = self.GetStateMatrix(unconstrained=False,
+                                         recalculate=True)
+            
+            B_full = self.GetLoadMatrix(unconstrained=False,
+                                        recalculate=True)
+            
+            # Define C and D matrices based on state accelerations rows
+            C = A_full[nDOF_full:,:] 
+            D = B_full[nDOF_full:,:]
+            
+            # Define names of outputs (i.e. state variables in this case)
+            output_names = npy.array(["ACC #%d" % i for i in range(nDOF_full)])
         
         # Determine number of inputs and frequencies
         Ni = B.shape[1]
@@ -1629,6 +1649,11 @@ class DynSys:
         
         # Determine number of outputs
         No = C.shape[0]
+        
+        # Provide default names to outputs, if not defined above
+        if output_names is None:
+            
+            output_names =  ["Output #%d" % i for i in range(C.shape[0])]
         
         # Get nullspace basis matrix (which will already have been calculated)
         if hasConstraints:
@@ -1683,11 +1708,14 @@ class DynSys:
             
             # Store in array
             G_f[:,:,i] = Gf
-            
-        print("Done!")
+                    
+        # Return values as dict
+        rslts_dict = {}
+        rslts_dict["f"] = fVals
+        rslts_dict["G_f"] = G_f
+        rslts_dict["output_names"] = output_names
         
-        # Return values
-        return fVals, G_f
+        return rslts_dict
     
     
     def PlotSystems_all(self,ax_dict,**kwargs):
@@ -1715,7 +1743,8 @@ class DynSys:
         
         """
         raise ValueError("Use of overriding method expected!")
-
+        
+     
 
 # **************** FUNCTIONS *********************
         
