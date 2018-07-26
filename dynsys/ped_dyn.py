@@ -2418,6 +2418,7 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
 
 
 def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,
+                                apply_PD6688_2_correction=True,
                                 groupType="pedestrian",
                                 makePlot=False):
     """
@@ -2428,28 +2429,44 @@ def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,
     actions within groups and crowds.
     """
     
+    
+    
     # Digitised data for Figure NA.9
     if groupType=="pedestrian":
         
         if Seff is None:
-            raise ValueError("`Seff` required!")
+                raise ValueError("`Seff` required!")
         
-        delta_vals = numpy.arange(0,0.21,0.02).tolist()
-        Seff_vals = [10,12,15,20,30,40,60,100,200,300]
+        if apply_PD6688_2_correction:
+            
+            raise ValueError("NOT YET IMPLEMENTED!")
+            
+        else:
+            
+            print("Warning: Figure NA.9 in UK NA to BS EN 1991-2 is known to "+
+                  "contain errors\n" + 
+                  "Cl. 3.20 of PD6688-2:2011 refers\n" + 
+                  "Figure 2 of PD6688-2:2011 should be used instead\n"
+                  "This can be done by setting `apply_PD6688_correction=True`")
         
-        gamma_vals=[[0.680,0.435,0.315,0.245,0.200,0.135,0.100,0.062,0.048,0.030],
-                    [0.692,0.462,0.345,0.283,0.240,0.180,0.150,0.117,0.103,0.093],
-                    [0.705,0.488,0.380,0.320,0.280,0.225,0.200,0.175,0.163,0.155],
-                    [0.716,0.512,0.410,0.350,0.315,0.267,0.248,0.230,0.218,0.215],
-                    [0.728,0.535,0.437,0.382,0.352,0.310,0.292,0.277,0.270,0.268],
-                    [0.738,0.556,0.465,0.415,0.385,0.350,0.335,0.322,0.320,0.320],
-                    [0.746,0.577,0.492,0.445,0.420,0.390,0.375,0.367,0.366,0.366],
-                    [0.755,0.597,0.518,0.473,0.451,0.426,0.415,0.408,0.408,0.408],
-                    [0.763,0.614,0.540,0.503,0.482,0.460,0.450,0.445,0.445,0.445],
-                    [0.774,0.632,0.565,0.530,0.513,0.496,0.485,0.480,0.480,0.480],
-                    [0.783,0.645,0.585,0.555,0.540,0.530,0.520,0.513,0.513,0.513]]
-        gamma_vals = numpy.array(gamma_vals).T
-    
+            # Manually digitised values per Figure NA.9 of UK NA
+            delta_vals = numpy.arange(0,0.21,0.02).tolist()
+            Seff_vals = [10,12,15,20,30,40,60,100,200,300]
+            
+            gamma_vals=[[0.680,0.435,0.315,0.245,0.200,0.135,0.100,0.062,0.048,0.030],
+                        [0.692,0.462,0.345,0.283,0.240,0.180,0.150,0.117,0.103,0.093],
+                        [0.705,0.488,0.380,0.320,0.280,0.225,0.200,0.175,0.163,0.155],
+                        [0.716,0.512,0.410,0.350,0.315,0.267,0.248,0.230,0.218,0.215],
+                        [0.728,0.535,0.437,0.382,0.352,0.310,0.292,0.277,0.270,0.268],
+                        [0.738,0.556,0.465,0.415,0.385,0.350,0.335,0.322,0.320,0.320],
+                        [0.746,0.577,0.492,0.445,0.420,0.390,0.375,0.367,0.366,0.366],
+                        [0.755,0.597,0.518,0.473,0.451,0.426,0.415,0.408,0.408,0.408],
+                        [0.763,0.614,0.540,0.503,0.482,0.460,0.450,0.445,0.445,0.445],
+                        [0.774,0.632,0.565,0.530,0.513,0.496,0.485,0.480,0.480,0.480],
+                        [0.783,0.645,0.585,0.555,0.540,0.530,0.520,0.513,0.513,0.513]]
+            gamma_vals = numpy.array(gamma_vals).T
+            
+        # Define 2D interpolation function using the above
         gamma_func = scipy.interpolate.interp2d(delta_vals,Seff_vals,gamma_vals,
                                                 bounds_error=True)
         
@@ -2461,21 +2478,33 @@ def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,
             
             fig, ax = plt.subplots()
             
+            # Plot all curves
             for Seff in Seff_vals:
                 
                 ax.plot(delta_vals,gamma_func(delta_vals,Seff),
                         label=("%.0f"%Seff))
             
+            # Plot cross of lines to denote value obtained using function
             ax.axvline(logDec,color='k',linestyle='--',alpha=0.3)
             ax.axhline(gamma,color='k',linestyle='--',alpha=0.3)
             
             ax.legend(loc='lower right',title="$S_{eff}$ (m)")
             
+            # Define axis limits
             ax.set_xlim([0,0.2]) # per Fig.NA.9
             ax.set_ylim([0,0.8]) # per Fig.NA.9
                 
-            ax.set_title("Reduction factor $\gamma$\n" + 
-                         "per Figure NA.9, UK NA to BS EN 1992-1:2003")
+            # Define title according to values used above
+            title_str = "Reduction factor $\gamma$\n"
+            
+            if apply_PD6688_2_correction:
+                title_str += "per Figure 2, PD6688-2:2011"
+            else:
+                title_str += "per Figure NA.9, UK NA to BS EN 1992-1:2003"
+            
+            ax.set_title(title_str)
+            
+            # Define axis labels
             ax.set_xlabel("Log decrement damping")
             ax.set_ylabel("$\gamma$")
         
@@ -2607,7 +2636,7 @@ if __name__ == "__main__":
     
     plt.close('all')
     
-    testRoutine=7
+    testRoutine=1
     
     if testRoutine==1:
         # Tests UKNA_BSEN1991_2_Figure_NA_9() function
