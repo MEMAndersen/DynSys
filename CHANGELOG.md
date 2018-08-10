@@ -14,6 +14,12 @@ and this project adheres to:
 
 ### Changed
 
+* Improvements to how `event_funcs` and `post_event_funcs` are implemented 
+  within `TStep()` class of `tstep.py`
+
+* Bounce sim example implemented (in conjunction with the above code 
+  updates)
+
 ### Added
 
 * `UKNA_BSEN1991_2_Figure_NA_11()` function added to define Figure NA.11 in 
