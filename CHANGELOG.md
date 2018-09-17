@@ -23,6 +23,11 @@ and this project adheres to:
 * `CalcFreqResponse()` method and function interface revised to give code 
   that is better structured and more generally applicable.
 
+* Minor improvements to lat sync analysis:
+    * Analysis is extended in case of not detecting net zero damping within range 
+      of pedestrian numbers originally specified
+    * User control over verbose output added
+
 ### Added
 
 * `UKNA_BSEN1991_2_Figure_NA_11()` function added to define Figure NA.11 in 
