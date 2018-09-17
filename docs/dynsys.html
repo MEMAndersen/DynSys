@@ -1,4 +1,4 @@
-Version: 1.4.1_dev
+Version: 1.4.2
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -2666,7 +2666,7 @@ table {
                          <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                          <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
                          <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">force_accn</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                          <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
                          <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2691,11 +2691,8 @@ table {
 <span class="sd">        If None, `output_mtrx` attribute will be used as `C` and `D` </span>
 <span class="sd">        will be ignored.</span>
 <span class="sd">        </span>
-<span class="sd">        * `force_accn`, _boolean_,  can be set to override the above behaviour </span>
-<span class="sd">        and obtain frequency transfer matrix relating applied forces to </span>
-<span class="sd">        accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
-<span class="sd">        transfer matrix can be obtained in this way</span>
-<span class="sd">        </span>
+<span class="sd">        * `output_names`, _list_ of strings defining names of outputs</span>
+<span class="sd">                </span>
 <span class="sd">        ***</span>
 <span class="sd">        </span>
 <span class="sd">        **Returns:**</span>
@@ -2709,31 +2706,38 @@ table {
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
         
         <span class="c1"># Get key properties of system </span>
         <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
-        <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-        
+        <span class="n">nDOF_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+                
         <span class="c1"># Handle optional arguments</span>
         <span class="k">if</span> <span class="n">fVals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">fVals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
             
         <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
         
+        <span class="c1"># Define state matrix, if not provided via input arg</span>
         <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
                                     <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
             
+        <span class="c1"># Define load matrix, if not provided via input arg</span>
         <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
                                    <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
-        <span class="c1"># Get output matrices</span>
+        <span class="c1"># Define output matrix, if not provided via input arg</span>
         <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
-            <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                   <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Get output matrix for full system, if defined</span>
+            <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                 <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            
+            <span class="c1"># Check shape</span>
+            <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: C matrix of unexpected shape!&quot;</span><span class="p">)</span>
                     
         <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
             
@@ -2742,23 +2746,36 @@ table {
                       <span class="s2">&quot;Output matrix Gf will hence relate to state &quot;</span> <span class="o">+</span> 
                       <span class="s2">&quot;displacements and velocities</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
             
-            <span class="n">C</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">)</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="bp">None</span>
+            
+        <span class="c1"># Define names of outputs </span>
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                
+            <span class="c1"># Outputs are (extended) state vector</span>
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+                
+        <span class="c1"># Provide default names to outputs, if not defined above</span>
+        <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span> 
+                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
                         
-        <span class="c1"># Override the above </span>
-        <span class="k">if</span> <span class="n">force_accn</span><span class="p">:</span>
-                        
-            <span class="c1"># Get system matrices and output matrices</span>
-            <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
-            <span class="n">D</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
+        <span class="c1"># Define C and D matrices required to compute transfer matrices</span>
+        <span class="c1"># relating applied loads to state accelerations</span>
         
-        <span class="c1"># Determine number of inputs and frequencies</span>
-        <span class="n">Ni</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
+        <span class="c1"># Obtain A and B matrices for the full system</span>
+        <span class="n">A_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                     <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
-        <span class="c1"># Determine number of outputs</span>
-        <span class="n">No</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        
+        <span class="n">B_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                    <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            
+        <span class="c1"># Define C and D matrices based on rows relating to state accelerations</span>
+        <span class="n">C_acc</span> <span class="o">=</span> <span class="n">A_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span> 
+        <span class="n">D_acc</span> <span class="o">=</span> <span class="n">B_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span>
+    
         <span class="c1"># Get nullspace basis matrix (which will already have been calculated)</span>
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Null_J</span>
@@ -2771,20 +2788,26 @@ table {
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Shapes of A B C D matrices:&quot;</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;A: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;B: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: None&quot;</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: None&quot;</span><span class="p">)</span>
+                
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Z2:{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Z2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>                
             
-        <span class="c1"># Define array to contain frequency response for each </span>
-        <span class="n">G_f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">No</span><span class="p">,</span><span class="n">Ni</span><span class="p">,</span><span class="n">nf</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
-        
         <span class="c1"># Loop through frequencies</span>
+        <span class="n">Gf_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)):</span>
             
             <span class="c1"># Define jw</span>
@@ -2793,30 +2816,52 @@ table {
             <span class="c1"># Define G(jw) at this frequency</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
                 <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="n">Gf</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+                <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
                 
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="n">Gf</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+                <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
                 
             <span class="c1"># Convert to map loads to state variables of constrained problem</span>
+            <span class="c1"># i.e. full set of freedoms</span>
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
-                <span class="n">Gf</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf</span> 
-            
-            <span class="c1"># Adjust to map loads to outputs, not state variables</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf</span> 
+                <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf_states</span>
                 
-            <span class="c1"># Adjust for direct mapping between loads and outputs</span>
-            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">Gf</span> <span class="o">+=</span> <span class="n">D</span>    
+            <span class="c1"># Compute matrix to map applied loads to state acceleration</span>
+            <span class="n">Gf_acc</span> <span class="o">=</span> <span class="n">C_acc</span> <span class="err">@</span> <span class="n">Gf_states</span> <span class="o">+</span> <span class="n">D_acc</span>
             
+            <span class="c1"># Stack to obtain matrix mapping applied loads to states {disp,vel}</span>
+            <span class="c1"># plus state acceletation</span>
+            <span class="n">Gf_states_extended</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Gf_states</span><span class="p">,</span><span class="n">Gf_acc</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                
+                 <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_states_extended</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                
+                <span class="c1"># Compute matrix to map applied loads to outputs</span>
+                <span class="n">Gf_outputs</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf_states_extended</span>
+                
+                <span class="c1"># Adjust for direct mapping between loads and outputs</span>
+                <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">Gf_outputs</span> <span class="o">+=</span> <span class="n">D</span>    
+            
+                <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_outputs</span>
+                
             <span class="c1"># Store in array</span>
-            <span class="n">G_f</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf</span>
+            <span class="n">Gf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Gf_rslt</span><span class="p">)</span>
             
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+        <span class="c1"># Convert to numpy ndarray format</span>
+        <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
+                    
+        <span class="c1"># Return values as dict</span>
+        <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
+        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
+        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
         
-        <span class="c1"># Return values</span>
-        <span class="k">return</span> <span class="n">fVals</span><span class="p">,</span> <span class="n">G_f</span>
+        <span class="k">return</span> <span class="n">rslts_dict</span>
     
     
     <span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax_dict</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -2844,7 +2889,8 @@ table {
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use of overriding method expected!&quot;</span><span class="p">)</span>
-
+        
+     
 
 <span class="c1"># **************** FUNCTIONS *********************</span>
         
@@ -5985,7 +6031,7 @@ required to characterise a generic dynamic (2nd order) system</p></div>
                          <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                          <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
                          <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">force_accn</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                          <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
                          <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -6010,11 +6056,8 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">        If None, `output_mtrx` attribute will be used as `C` and `D` </span>
 <span class="sd">        will be ignored.</span>
 <span class="sd">        </span>
-<span class="sd">        * `force_accn`, _boolean_,  can be set to override the above behaviour </span>
-<span class="sd">        and obtain frequency transfer matrix relating applied forces to </span>
-<span class="sd">        accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
-<span class="sd">        transfer matrix can be obtained in this way</span>
-<span class="sd">        </span>
+<span class="sd">        * `output_names`, _list_ of strings defining names of outputs</span>
+<span class="sd">                </span>
 <span class="sd">        ***</span>
 <span class="sd">        </span>
 <span class="sd">        **Returns:**</span>
@@ -6028,31 +6071,38 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
         
         <span class="c1"># Get key properties of system </span>
         <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
-        <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-        
+        <span class="n">nDOF_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+                
         <span class="c1"># Handle optional arguments</span>
         <span class="k">if</span> <span class="n">fVals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">fVals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
             
         <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
         
+        <span class="c1"># Define state matrix, if not provided via input arg</span>
         <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
                                     <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
             
+        <span class="c1"># Define load matrix, if not provided via input arg</span>
         <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
                                    <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
-        <span class="c1"># Get output matrices</span>
+        <span class="c1"># Define output matrix, if not provided via input arg</span>
         <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
-            <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                   <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Get output matrix for full system, if defined</span>
+            <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                 <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            
+            <span class="c1"># Check shape</span>
+            <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: C matrix of unexpected shape!&quot;</span><span class="p">)</span>
                     
         <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
             
@@ -6061,23 +6111,36 @@ required to characterise a generic dynamic (2nd order) system</p></div>
                       <span class="s2">&quot;Output matrix Gf will hence relate to state &quot;</span> <span class="o">+</span> 
                       <span class="s2">&quot;displacements and velocities</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
             
-            <span class="n">C</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">)</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="bp">None</span>
+            
+        <span class="c1"># Define names of outputs </span>
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                
+            <span class="c1"># Outputs are (extended) state vector</span>
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+                
+        <span class="c1"># Provide default names to outputs, if not defined above</span>
+        <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span> 
+                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
                         
-        <span class="c1"># Override the above </span>
-        <span class="k">if</span> <span class="n">force_accn</span><span class="p">:</span>
-                        
-            <span class="c1"># Get system matrices and output matrices</span>
-            <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
-            <span class="n">D</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
+        <span class="c1"># Define C and D matrices required to compute transfer matrices</span>
+        <span class="c1"># relating applied loads to state accelerations</span>
         
-        <span class="c1"># Determine number of inputs and frequencies</span>
-        <span class="n">Ni</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
+        <span class="c1"># Obtain A and B matrices for the full system</span>
+        <span class="n">A_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                     <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
-        <span class="c1"># Determine number of outputs</span>
-        <span class="n">No</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        
+        <span class="n">B_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                    <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            
+        <span class="c1"># Define C and D matrices based on rows relating to state accelerations</span>
+        <span class="n">C_acc</span> <span class="o">=</span> <span class="n">A_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span> 
+        <span class="n">D_acc</span> <span class="o">=</span> <span class="n">B_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span>
+    
         <span class="c1"># Get nullspace basis matrix (which will already have been calculated)</span>
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
             <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Null_J</span>
@@ -6090,20 +6153,26 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Shapes of A B C D matrices:&quot;</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;A: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;B: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: None&quot;</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: None&quot;</span><span class="p">)</span>
+                
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Z2:{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Z2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>                
             
-        <span class="c1"># Define array to contain frequency response for each </span>
-        <span class="n">G_f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">No</span><span class="p">,</span><span class="n">Ni</span><span class="p">,</span><span class="n">nf</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
-        
         <span class="c1"># Loop through frequencies</span>
+        <span class="n">Gf_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)):</span>
             
             <span class="c1"># Define jw</span>
@@ -6112,30 +6181,52 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             <span class="c1"># Define G(jw) at this frequency</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
                 <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="n">Gf</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+                <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
                 
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="n">Gf</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+                <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
                 
             <span class="c1"># Convert to map loads to state variables of constrained problem</span>
+            <span class="c1"># i.e. full set of freedoms</span>
             <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
-                <span class="n">Gf</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf</span> 
-            
-            <span class="c1"># Adjust to map loads to outputs, not state variables</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf</span> 
+                <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf_states</span>
                 
-            <span class="c1"># Adjust for direct mapping between loads and outputs</span>
-            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">Gf</span> <span class="o">+=</span> <span class="n">D</span>    
+            <span class="c1"># Compute matrix to map applied loads to state acceleration</span>
+            <span class="n">Gf_acc</span> <span class="o">=</span> <span class="n">C_acc</span> <span class="err">@</span> <span class="n">Gf_states</span> <span class="o">+</span> <span class="n">D_acc</span>
             
+            <span class="c1"># Stack to obtain matrix mapping applied loads to states {disp,vel}</span>
+            <span class="c1"># plus state acceletation</span>
+            <span class="n">Gf_states_extended</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Gf_states</span><span class="p">,</span><span class="n">Gf_acc</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                
+                 <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_states_extended</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                
+                <span class="c1"># Compute matrix to map applied loads to outputs</span>
+                <span class="n">Gf_outputs</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf_states_extended</span>
+                
+                <span class="c1"># Adjust for direct mapping between loads and outputs</span>
+                <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">Gf_outputs</span> <span class="o">+=</span> <span class="n">D</span>    
+            
+                <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_outputs</span>
+                
             <span class="c1"># Store in array</span>
-            <span class="n">G_f</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf</span>
+            <span class="n">Gf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Gf_rslt</span><span class="p">)</span>
             
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+        <span class="c1"># Convert to numpy ndarray format</span>
+        <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
+                    
+        <span class="c1"># Return values as dict</span>
+        <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
+        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
+        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
         
-        <span class="c1"># Return values</span>
-        <span class="k">return</span> <span class="n">fVals</span><span class="p">,</span> <span class="n">G_f</span>
+        <span class="k">return</span> <span class="n">rslts_dict</span>
     
     
     <span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax_dict</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -7037,7 +7128,7 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
             
   <div class="item">
     <div class="name def" id="dynsys.DynSys.CalcFreqResponse">
-    <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, fVals=None, fmax=None, A=None, B=None, C=None, D=None, force_accn=False, verbose=False)</p>
+    <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, fVals=None, fmax=None, A=None, B=None, C=None, D=None, output_names=None, verbose=False)</p>
     </div>
     
 
@@ -7065,10 +7156,7 @@ If None, <code>output_mtrx</code> attribute will be used as <code>C</code> and <
 will be ignored.</p>
 </li>
 <li>
-<p><code>force_accn</code>, <em>boolean</em>,  can be set to override the above behaviour 
-and obtain frequency transfer matrix relating applied forces to 
-accelerations of the DOFs. E.g. for modal systems, modal acceleration 
-transfer matrix can be obtained in this way</p>
+<p><code>output_names</code>, <em>list</em> of strings defining names of outputs</p>
 </li>
 </ul>
 <hr />
@@ -7091,7 +7179,7 @@ transfer matrix can be obtained in this way</p>
                      <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                      <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
                      <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">force_accn</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                     <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                      <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
                      <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -7116,11 +7204,8 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    If None, `output_mtrx` attribute will be used as `C` and `D` </span>
 <span class="sd">    will be ignored.</span>
 <span class="sd">    </span>
-<span class="sd">    * `force_accn`, _boolean_,  can be set to override the above behaviour </span>
-<span class="sd">    and obtain frequency transfer matrix relating applied forces to </span>
-<span class="sd">    accelerations of the DOFs. E.g. for modal systems, modal acceleration </span>
-<span class="sd">    transfer matrix can be obtained in this way</span>
-<span class="sd">    </span>
+<span class="sd">    * `output_names`, _list_ of strings defining names of outputs</span>
+<span class="sd">            </span>
 <span class="sd">    ***</span>
 <span class="sd">    </span>
 <span class="sd">    **Returns:**</span>
@@ -7134,31 +7219,38 @@ transfer matrix can be obtained in this way</p>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
     
     <span class="c1"># Get key properties of system </span>
     <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
-    <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-    
+    <span class="n">nDOF_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+            
     <span class="c1"># Handle optional arguments</span>
     <span class="k">if</span> <span class="n">fVals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">fVals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
         
     <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
     
+    <span class="c1"># Define state matrix, if not provided via input arg</span>
     <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
                                 <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
+    <span class="c1"># Define load matrix, if not provided via input arg</span>
     <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
                                <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
-    <span class="c1"># Get output matrices</span>
+    <span class="c1"># Define output matrix, if not provided via input arg</span>
     <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
-        <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                               <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Get output matrix for full system, if defined</span>
+        <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                             <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Check shape</span>
+        <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: C matrix of unexpected shape!&quot;</span><span class="p">)</span>
                 
     <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
         
@@ -7167,23 +7259,36 @@ transfer matrix can be obtained in this way</p>
                   <span class="s2">&quot;Output matrix Gf will hence relate to state &quot;</span> <span class="o">+</span> 
                   <span class="s2">&quot;displacements and velocities</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
         
-        <span class="n">C</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="c1"># Define names of outputs </span>
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+        <span class="c1"># Outputs are (extended) state vector</span>
+        <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+        <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+        <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+            
+    <span class="c1"># Provide default names to outputs, if not defined above</span>
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span> 
+                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
                     
-    <span class="c1"># Override the above </span>
-    <span class="k">if</span> <span class="n">force_accn</span><span class="p">:</span>
-                    
-        <span class="c1"># Get system matrices and output matrices</span>
-        <span class="n">nDOF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-        <span class="n">C</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
-        <span class="n">D</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">,:]</span> <span class="c1"># rows relating to accelerations</span>
+    <span class="c1"># Define C and D matrices required to compute transfer matrices</span>
+    <span class="c1"># relating applied loads to state accelerations</span>
     
-    <span class="c1"># Determine number of inputs and frequencies</span>
-    <span class="n">Ni</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
+    <span class="c1"># Obtain A and B matrices for the full system</span>
+    <span class="n">A_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                 <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
-    <span class="c1"># Determine number of outputs</span>
-    <span class="n">No</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    
+    <span class="n">B_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+    <span class="c1"># Define C and D matrices based on rows relating to state accelerations</span>
+    <span class="n">C_acc</span> <span class="o">=</span> <span class="n">A_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span> 
+    <span class="n">D_acc</span> <span class="o">=</span> <span class="n">B_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span>
+
     <span class="c1"># Get nullspace basis matrix (which will already have been calculated)</span>
     <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Null_J</span>
@@ -7196,20 +7301,26 @@ transfer matrix can be obtained in this way</p>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Shapes of A B C D matrices:&quot;</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;A: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;B: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: None&quot;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: None&quot;</span><span class="p">)</span>
+            
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Z2:{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Z2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>                
         
-    <span class="c1"># Define array to contain frequency response for each </span>
-    <span class="n">G_f</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">No</span><span class="p">,</span><span class="n">Ni</span><span class="p">,</span><span class="n">nf</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
-    
     <span class="c1"># Loop through frequencies</span>
+    <span class="n">Gf_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)):</span>
         
         <span class="c1"># Define jw</span>
@@ -7218,30 +7329,52 @@ transfer matrix can be obtained in this way</p>
         <span class="c1"># Define G(jw) at this frequency</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
             <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
             
         <span class="k">else</span><span class="p">:</span>
             <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
             
         <span class="c1"># Convert to map loads to state variables of constrained problem</span>
+        <span class="c1"># i.e. full set of freedoms</span>
         <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
-            <span class="n">Gf</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf</span> 
-        
-        <span class="c1"># Adjust to map loads to outputs, not state variables</span>
-        <span class="n">Gf</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf</span> 
+            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf_states</span>
             
-        <span class="c1"># Adjust for direct mapping between loads and outputs</span>
-        <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">Gf</span> <span class="o">+=</span> <span class="n">D</span>    
+        <span class="c1"># Compute matrix to map applied loads to state acceleration</span>
+        <span class="n">Gf_acc</span> <span class="o">=</span> <span class="n">C_acc</span> <span class="err">@</span> <span class="n">Gf_states</span> <span class="o">+</span> <span class="n">D_acc</span>
         
+        <span class="c1"># Stack to obtain matrix mapping applied loads to states {disp,vel}</span>
+        <span class="c1"># plus state acceletation</span>
+        <span class="n">Gf_states_extended</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Gf_states</span><span class="p">,</span><span class="n">Gf_acc</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+             <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_states_extended</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="c1"># Compute matrix to map applied loads to outputs</span>
+            <span class="n">Gf_outputs</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf_states_extended</span>
+            
+            <span class="c1"># Adjust for direct mapping between loads and outputs</span>
+            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">Gf_outputs</span> <span class="o">+=</span> <span class="n">D</span>    
+        
+            <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_outputs</span>
+            
         <span class="c1"># Store in array</span>
-        <span class="n">G_f</span><span class="p">[:,:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf</span>
+        <span class="n">Gf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Gf_rslt</span><span class="p">)</span>
         
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+    <span class="c1"># Convert to numpy ndarray format</span>
+    <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
+                
+    <span class="c1"># Return values as dict</span>
+    <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
+    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
+    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
     
-    <span class="c1"># Return values</span>
-    <span class="k">return</span> <span class="n">fVals</span><span class="p">,</span> <span class="n">G_f</span>
+    <span class="k">return</span> <span class="n">rslts_dict</span>
 </pre></div>
 
   </div>
