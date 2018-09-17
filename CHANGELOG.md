@@ -10,7 +10,7 @@ and this project adheres to:
 
 
 
-## Unreleased
+## [1.4.2] - 2018-09-17 - RIHY
 
 ### Changed
 
