@@ -5,7 +5,58 @@
 and this project adheres to: 
 <a href="http://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <hr />
-<h2>[1.4.0] - 2018-07-20 - RIHY</h2>
+<h2>[1.4.2] - 2018-09-17 - RIHY</h2>
+<h3>Changed</h3>
+<ul>
+<li>
+<p>Improvements to how <code>event_funcs</code> and <code>post_event_funcs</code> are implemented 
+  within <code>TStep()</code> class of <code>tstep.py</code></p>
+</li>
+<li>
+<p>Bounce sim example implemented (in conjunction with the above code 
+  updates)</p>
+</li>
+<li>
+<p><code>CalcFreqResponse()</code> method and function interface revised to give code 
+  that is better structured and more generally applicable.</p>
+</li>
+<li>
+<p>Minor improvements to lat sync analysis:</p>
+<ul>
+<li>Analysis is extended in case of not detecting net zero damping within range 
+  of pedestrian numbers originally specified</li>
+<li>User control over verbose output added</li>
+</ul>
+</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li><code>UKNA_BSEN1991_2_Figure_NA_11()</code> function added to define Figure NA.11 in 
+  UK NA to BS EN 1991-2:2003.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Correction to Figure NA.9 in UK NA to BS EN 1991-2, as defined in PD6688-2
+  has been implemented. Option added to select values according to each 
+  standard, but default behaviour is to use the PD6688-2 correction.</li>
+</ul>
+<h3>Removed</h3>
+<h2>[1.4.1] - 2018-07-23 - RIHY</h2>
+<h3>Changed</h3>
+<h3>Added</h3>
+<ul>
+<li>
+<p><code>calc_Np_crit()</code> method added to <code>LatSync_McRobie()</code> class, to allow 
+  critical number of pedestrians to cause lateral instability to be
+  considered. This method is also now called by LatSync_McRobie().run().</p>
+</li>
+<li>
+<p>Improvements to related plotting routines; Np_crit overlaid onto plots</p>
+</li>
+</ul>
+<h3>Fixed</h3>
+<h3>Removed</h3>
+<h2>[1.4.0] - 2018-07-23 - RIHY</h2>
 <h3>Changed</h3>
 <h3>Added</h3>
 <ul>

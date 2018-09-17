@@ -8,6 +8,40 @@ and this project adheres to:
 
 ***
 
+
+
+## [1.4.2] - 2018-09-17 - RIHY
+
+### Changed
+
+* Improvements to how `event_funcs` and `post_event_funcs` are implemented 
+  within `TStep()` class of `tstep.py`
+
+* Bounce sim example implemented (in conjunction with the above code 
+  updates)
+
+* `CalcFreqResponse()` method and function interface revised to give code 
+  that is better structured and more generally applicable.
+
+* Minor improvements to lat sync analysis:
+    * Analysis is extended in case of not detecting net zero damping within range 
+      of pedestrian numbers originally specified
+    * User control over verbose output added
+
+### Added
+
+* `UKNA_BSEN1991_2_Figure_NA_11()` function added to define Figure NA.11 in 
+  UK NA to BS EN 1991-2:2003.
+
+### Fixed
+
+* Correction to Figure NA.9 in UK NA to BS EN 1991-2, as defined in PD6688-2
+  has been implemented. Option added to select values according to each 
+  standard, but default behaviour is to use the PD6688-2 correction.
+
+### Removed
+
+
 ## [1.4.1] - 2018-07-23 - RIHY
 
 ### Changed

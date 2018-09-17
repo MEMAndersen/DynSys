@@ -36,7 +36,7 @@ class ModalSys(DynSys):
                  output_mtrx=None,
                  output_names=None,
                  fLimit=None,
-                 ):
+                 **kwargs):
         """
         Initialisation function used to define decoupled (diagonalised) system
         
@@ -87,7 +87,8 @@ class ModalSys(DynSys):
                          isLinear=True,
                          isModal=True,
                          isSparse=isSparse,
-                         name=name)
+                         name=name,
+                         **kwargs)
     
         self.mode_IDs = mode_IDs
         """
@@ -211,7 +212,7 @@ class ModalSys(DynSys):
             Mode_i:     Modeshape ordinates for given ModeID
         
         """
-    
+        
         # Read in data from .csv file
         df = pd.read_csv(fName,delimiter=',',header=0,index_col=0)
         

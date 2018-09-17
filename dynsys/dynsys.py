@@ -1537,7 +1537,7 @@ class DynSys:
                          fVals=None, fmax=None,
                          A=None, B=None, 
                          C=None, D=None,
-                         force_accn:bool=False,
+                         output_names:list=None,
                          verbose=False
                          ):
         """
@@ -1562,11 +1562,8 @@ class DynSys:
         If None, `output_mtrx` attribute will be used as `C` and `D` 
         will be ignored.
         
-        * `force_accn`, _boolean_,  can be set to override the above behaviour 
-        and obtain frequency transfer matrix relating applied forces to 
-        accelerations of the DOFs. E.g. for modal systems, modal acceleration 
-        transfer matrix can be obtained in this way
-        
+        * `output_names`, _list_ of strings defining names of outputs
+                
         ***
         
         **Returns:**
@@ -1580,31 +1577,38 @@ class DynSys:
         
         """
         
-        if verbose: print("Calculating frequency response matrices..")
+        print("Calculating frequency response matrices..")
         
         # Get key properties of system 
         hasConstraints = self.hasConstraints()
-        nDOF = self.nDOF
-        
+        nDOF_full = self.GetSystemMatrices(unconstrained=False)["nDOF"]
+                
         # Handle optional arguments
         if fVals is None:
             fVals = self.freqVals(fmax=fmax)
             
         fVals = npy.ravel(fVals)
         
+        # Define state matrix, if not provided via input arg
         if A is None:
             A = self.GetStateMatrix(unconstrained=hasConstraints,
                                     recalculate=True)
             
+        # Define load matrix, if not provided via input arg
         if B is None:
             B = self.GetLoadMatrix(unconstrained=hasConstraints,
                                    recalculate=True)
         
-        # Get output matrices
+        # Define output matrix, if not provided via input arg
         if C is None:
             
-            C = self.GetOutputMtrx(all_systems=True,
-                                   state_variables_only=True)[0]
+            # Get output matrix for full system, if defined
+            C, output_names = self.GetOutputMtrx(all_systems=True,
+                                                 state_variables_only=False)
+            
+            # Check shape
+            if C.shape[1]!=3*nDOF_full:
+                raise ValueError("Error: C matrix of unexpected shape!")
                     
         if C.shape[0]==0:
             
@@ -1613,23 +1617,36 @@ class DynSys:
                       "Output matrix Gf will hence relate to state " + 
                       "displacements and velocities\n***")
             
-            C = npy.identity(2*nDOF)
+            C = None
+            
+        # Define names of outputs 
+        if C is None:
+                
+            # Outputs are (extended) state vector
+            output_names =  ["DIS #%d" % i for i in range(nDOF_full)]
+            output_names += ["VEL #%d" % i for i in range(nDOF_full)]
+            output_names += ["ACC #%d" % i for i in range(nDOF_full)]
+            output_names = npy.array(output_names)
+                
+        # Provide default names to outputs, if not defined above
+        if output_names is None:
+            output_names =  ["(Unnamed output #%d)" % i 
+                             for i in range(C.shape[0])]
                         
-        # Override the above 
-        if force_accn:
-                        
-            # Get system matrices and output matrices
-            nDOF = self.nDOF
-            C = A[nDOF:2*nDOF,:] # rows relating to accelerations
-            D = B[nDOF:2*nDOF,:] # rows relating to accelerations
+        # Define C and D matrices required to compute transfer matrices
+        # relating applied loads to state accelerations
         
-        # Determine number of inputs and frequencies
-        Ni = B.shape[1]
-        nf = len(fVals)
+        # Obtain A and B matrices for the full system
+        A_full = self.GetStateMatrix(unconstrained=False,
+                                     recalculate=True)
         
-        # Determine number of outputs
-        No = C.shape[0]
-        
+        B_full = self.GetLoadMatrix(unconstrained=False,
+                                    recalculate=True)
+            
+        # Define C and D matrices based on rows relating to state accelerations
+        C_acc = A_full[nDOF_full:,:] 
+        D_acc = B_full[nDOF_full:,:]
+    
         # Get nullspace basis matrix (which will already have been calculated)
         if hasConstraints:
             Z = self._Null_J
@@ -1642,20 +1659,26 @@ class DynSys:
             print("Shapes of A B C D matrices:")
             print("A: {0}".format(A.shape))
             print("B: {0}".format(B.shape))
-            print("C: {0}".format(C.shape))
+            
+            if C is not None:
+                print("C: {0}".format(C.shape))
+            else:
+                print("C: None")
             
             if D is not None:
                 print("D: {0}".format(D.shape))
             else:
                 print("D: None")
+                
+            print("C_acc: {0}".format(C_acc.shape))
+            print("D_acc: {0}".format(D_acc.shape))
             
             if hasConstraints:
                 print("Z2:{0}".format(Z2.shape))                
             
-        # Define array to contain frequency response for each 
-        G_f = npy.zeros((No,Ni,nf),dtype=complex)
-        
         # Loop through frequencies
+        Gf_list = []
+        
         for i in range(len(fVals)):
             
             # Define jw
@@ -1664,30 +1687,52 @@ class DynSys:
             # Define G(jw) at this frequency
             if not self.isSparse:
                 I = npy.identity(A.shape[0])
-                Gf = npy.linalg.inv(jw * I - A) @ B
+                Gf_states = npy.linalg.inv(jw * I - A) @ B
                 
             else:
                 I = sparse.identity(A.shape[0])
-                Gf = sparse.linalg.inv(jw * I - A) @ B
+                Gf_states = sparse.linalg.inv(jw * I - A) @ B
                 
             # Convert to map loads to state variables of constrained problem
+            # i.e. full set of freedoms
             if hasConstraints:
-                Gf = Z2 @ Gf 
-            
-            # Adjust to map loads to outputs, not state variables
-            Gf = C @ Gf 
+                Gf_states = Z2 @ Gf_states
                 
-            # Adjust for direct mapping between loads and outputs
-            if D is not None:
-                Gf += D    
+            # Compute matrix to map applied loads to state acceleration
+            Gf_acc = C_acc @ Gf_states + D_acc
             
+            # Stack to obtain matrix mapping applied loads to states {disp,vel}
+            # plus state acceletation
+            Gf_states_extended = npy.vstack((Gf_states,Gf_acc))
+            
+            if C is None:
+                
+                 Gf_rslt = Gf_states_extended
+                
+            else:
+                
+                # Compute matrix to map applied loads to outputs
+                Gf_outputs = C @ Gf_states_extended
+                
+                # Adjust for direct mapping between loads and outputs
+                if D is not None:
+                    Gf_outputs += D    
+            
+                Gf_rslt = Gf_outputs
+                
             # Store in array
-            G_f[:,:,i] = Gf
+            Gf_list.append(Gf_rslt)
             
-        print("Done!")
+        # Convert to numpy ndarray format
+        Gf_list = npy.asarray(Gf_list)
+                    
+        # Return values as dict
+        rslts_dict = {}
+        rslts_dict["f"] = fVals
+        rslts_dict["G_f"] = Gf_list
+        rslts_dict["output_names"] = output_names
         
-        # Return values
-        return fVals, G_f
+        return rslts_dict
     
     
     def PlotSystems_all(self,ax_dict,**kwargs):
@@ -1715,7 +1760,8 @@ class DynSys:
         
         """
         raise ValueError("Use of overriding method expected!")
-
+        
+     
 
 # **************** FUNCTIONS *********************
         
