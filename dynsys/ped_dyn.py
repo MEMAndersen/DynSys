@@ -1659,7 +1659,7 @@ class LatSync_McRobie():
         return C_pa
         
     
-    def run(self,Np_vals):
+    def run(self,Np_vals,verbose=True,append_rslts=False):
         """
         Run analysis to explore eigenvalues of system state matrix for various 
         assumed pedestrian crowd densities
@@ -1674,8 +1674,23 @@ class LatSync_McRobie():
          
         """
         
-        print("Running lat sync eigenvalues analysis...")
+        if verbose:
+            print("Running lat sync eigenvalues analysis...")
     
+        # Run analysis 
+        self._run_analysis(Np_vals,append_rslts)
+        
+        # Calculate critical number of pedestrians for onset on instability
+        Np_crit = self.calc_Np_crit(verbose=verbose)
+        self.Np_crit = Np_crit
+        
+        if verbose:
+            print("Analysis complete!")
+        
+        return Np_crit
+    
+    def _run_analysis(self,Np_vals,append_rslts):
+        
         # Run analysis for various pedestrian numbers, as provided to function
         
         modalsys = self.modalsys
@@ -1703,25 +1718,38 @@ class LatSync_McRobie():
             fd_vals.append(eig_props["f_d"])
             X_vals.append(eig_props["X"])
             
-        print("Analysis complete!")
-            
+        # Convert nested lists to array type
+        s_vals = numpy.array(s_vals)
+        eta_vals = numpy.array(eta_vals)
+        fd_vals = numpy.array(fd_vals)
+        X_vals = numpy.array(X_vals)
+        
         # Restore with original bridge-only damping matrix
         modalsys._C_mtrx = C_p0
         
-        # Record key results as attributes
-        self.eigenvalues = s_vals
-        self.damping_ratios = eta_vals
-        self.damped_freqs = fd_vals
-        self.eigenvectors = X_vals
-        self.N_pedestrians = Np_vals
+        # Check to see if previous results exist
+        if not hasattr(self,'eigenvalues'):
+            append_rslts = False # no previous results avaliable
         
-        # Calculate critical number of pedestrians for onset on instability
-        Np_crit = self.calc_Np_crit()
-        self.Np_crit = Np_crit
-        
-        return Np_crit
-    
-    
+        # Record key results as attributes, or append to previous results
+        if not append_rslts:
+            
+            self.eigenvalues = s_vals
+            self.damping_ratios = eta_vals
+            self.damped_freqs = fd_vals
+            self.eigenvectors = X_vals
+            self.N_pedestrians = Np_vals
+            
+        if append_rslts:
+            
+            self.eigenvalues = numpy.vstack((self.eigenvalues,s_vals))
+            self.damping_ratios = numpy.vstack((self.damping_ratios,eta_vals))
+            self.damped_freqs = numpy.vstack((self.damped_freqs,fd_vals))
+            self.eigenvectors = numpy.vstack((self.eigenvectors,X_vals))
+            
+            self.N_pedestrians = numpy.hstack((self.N_pedestrians,Np_vals))
+            
+            
     def plot_results(self):
         """
         Plots results from the above analysis
@@ -1824,36 +1852,56 @@ class LatSync_McRobie():
             Np_crit = getattr(self,attr)
             ax.axvline(x=Np_crit,color='r',alpha=0.3)
         
-    def calc_Np_crit(self,verbose=True):
+        
+    def calc_Np_crit(self,rerun_factor=2.0,verbose=True):
         """
         Calculates from results the critical number of pedestrians for the 
         onset of pedestrian-induced lateral instability
         """
         
-        print("Determining critical number of pedestrians " + 
-              "for onset on instability...")
+        if verbose:
+            print("Determining critical number of pedestrians " + 
+                  "for onset on instability...")
         
         # Check that analysis has been run
         if not hasattr(self,"N_pedestrians"):
             raise ValueError("Analysis does not appear to have been run!" + 
                              "Cannot calculate Np_crit")
-        else:
-            Np_vals = self.N_pedestrians
-                        
+                                
         # Check that analysis has been run up to pedestrian numbers such that 
         # the net effective damping in (at least) one mode has become <0.0
         damping_ratios = numpy.array(self.damping_ratios)
-        
         min_damping = numpy.min(damping_ratios)
-        if min_damping > 0.0:
-            raise ValueError("Analysis has not identified net damping < 0\n" + 
-                             "Extend range of `Np_vals` to larger numbers")
+        
+        while min_damping >= 0.0:
+                 
+            if verbose:
+                print("Analysis has not identified net damping < 0\n" + 
+                      "Analysis will be extended to larger pedestrian numbers")
+            
+            # Get key details of Np analysed last time around
+            Np_max = numpy.max(self.N_pedestrians) # max from last run
+            Np_min = numpy.min(self.N_pedestrians) # min from last run
+            Np_step = (Np_max - Np_min) / (len(self.N_pedestrians))
+            
+            # Define Np_vals for new analysis
+            new_Np_vals = numpy.arange(Np_max+1,Np_max*rerun_factor,Np_step)
+            
+            # Rerun analysis
+            self._run_analysis(new_Np_vals,append_rslts=True)
+            
+            # Recalculate minimum damping
+            damping_ratios = numpy.array(self.damping_ratios)
+            min_damping = numpy.min(damping_ratios)
             
         # Determine minumum damping ratio across all modes for each Np value
         min_damping = numpy.min(damping_ratios,axis=1)
         
         # Define interpolation function
-        Np_func = scipy.interpolate.interp1d(x=Np_vals, y=min_damping)
+        Np_vals = self.N_pedestrians
+        
+        Np_func = scipy.interpolate.interp1d(x=Np_vals,
+                                             y=min_damping)
                                       
         # Use root finding function to obtain Np such that damping = 0.0
         Np_crit = scipy.optimize.bisect(f=Np_func,a=Np_vals[0],b=Np_vals[-1])
