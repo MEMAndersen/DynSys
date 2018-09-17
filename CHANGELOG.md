@@ -14,6 +14,12 @@ and this project adheres to:
 
 ### Changed
 
+* Improvements to how `event_funcs` and `post_event_funcs` are implemented 
+  within `TStep()` class of `tstep.py`
+
+* Bounce sim example implemented (in conjunction with the above code 
+  updates)
+
 * `CalcFreqResponse()` method and function interface revised to give code 
   that is better structured and more generally applicable.
 

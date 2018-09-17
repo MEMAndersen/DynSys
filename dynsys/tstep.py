@@ -12,6 +12,8 @@ import scipy
 from scipy.integrate import solve_ivp
 from pkg_resources import parse_version
 
+import time
+
 import tstep_results
 
 # Check Scipy version sufficient
@@ -47,8 +49,9 @@ class TStep:
                  responsePlot_kwargs={},
                  x0=None,
                  force_func_dict:dict={},
-                 event_funcs:callable=None,
-                 post_event_funcs:callable=None,
+                 event_funcs:list=None,
+                 post_event_funcs:list=None,
+                 max_events=None
                  ):
         """
         Initialises time-stepping analysis
@@ -88,6 +91,8 @@ class TStep:
           execute immediately after `event_funcs` have resolved. If list, 
           length must correspond to length of `event_funcs`.
           
+        * `max_events`, _integer_ limit on number of events
+          
           [Scipy documentation]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp
         
         Note one of `x0` or `force_func` must be provided (this is checked) 
@@ -111,6 +116,13 @@ class TStep:
         """
         Time denoting end of analysis
         """
+        
+        if dt is not None and event_funcs is not None:
+            print("'dt' argument provided for analysis with events\n" +
+                  "This is not recommended; better to control max time " + 
+                  "step using 'max_dt'")
+            max_dt = dt
+            dt = None
         
         self.dt = dt
         """
@@ -178,6 +190,11 @@ class TStep:
         self.post_event_funcs = self._check_post_event_funcs(post_event_funcs)
         """
         List of functions to execute directly after the occurence of _events_
+        """
+        
+        self.max_events = max_events
+        """
+        _Integer_ upper limit on number of events
         """
         
         self.writeResults2File = writeResults2File
@@ -263,8 +280,13 @@ class TStep:
         
     def _check_event_funcs(self,event_funcs):
         """
-        Function checks that `event_funcs` as supplied in TStep __init__() function 
-        are appropriate
+        Function checks that `event_funcs` as supplied in TStep __init__() 
+        function are appropriate
+        
+        ***
+        Function to take the form f(t,y)
+        Event is defined as t when f(t,y)=0
+        
         """
         
         # Handle None case
@@ -285,24 +307,26 @@ class TStep:
             # Check _event_func has the right form: f(t,y) is required
             sig = inspect.signature(_event_func)
             
-            if str(sig.parameters[0])!='t':
+            if 't' not in sig.parameters:#str(sig.parameters[0])!='t':
                 raise ValueError("1st argument of events_funcs[{0}] " + 
                                  "must be `t`\n".format(i) + 
                                  "Event functions must take the form " +
                                  "f(t,y)")
                 
-            if str(sig.parameters[0])!='y':
+            if 'y' not in sig.parameters:
                 raise ValueError("2nd argument of events_funcs[{0}] " + 
                                  "must be `y`\n".format(i) + 
                                  "Event functions must take the form " +
                                  "f(t,y)")
                 
             # Check dimension of vector returned by force_func is float
-            val  = _event_func(0.0,npy.zeros())
-            if type(val) is not float:
-                raise ValueError("events_funcs[{0}] must return float".format(i) + 
-                                 "Events are defined at the time t* when event function " + 
-                                 "f(t*,y)=0")
+            nDOF = self.dynsys_obj.nDOF
+            val = _event_func(0.0,npy.zeros((2*nDOF,)))
+            
+            if not isinstance(val, float):
+                raise ValueError("events_funcs[%d] must return float" % i + 
+                                 "Events are defined at the time t* " + 
+                                 "when event function f(t*,y)=0")
             
             i += 1
             
@@ -333,9 +357,13 @@ class TStep:
             
             # Check _event_func is a function
             if not inspect.isfunction(_func):
-                raise ValueError("post_events_funcs[{0}] is not a function!".format(i))
+                if _func is not None:
+                    raise ValueError("post_events_funcs[%d] is not a function!"
+                                     % i)
         
             i += 1
+            
+        return post_event_funcs
         
 
     def run(self,method='RK45',verbose=True):
@@ -474,6 +502,9 @@ class TStep:
             
             # Run solution
             print("Solving using Scipy's `solve_ivp()` function:")
+            print("t_span: [%.5f,%.5f]" % (tmin,tmax))
+            print("y0: {0}".format(y0))
+            time.sleep(1)
             sol = solve_ivp(fun=ODE_func, t_span=[tmin,tmax], y0=y0, **kwargs)
             print("Solution complete!")
             sol_list.append(sol)
@@ -510,20 +541,44 @@ class TStep:
             
             # Handle solver status 
             if sol.status == 1:
-                # termination event occurred
+                # terminal event occurred
                 
                 # Register new event
                 eventcount += 1
+                
+                              
+                # Determine which terminal event triggered
+                last_event_index = [i for i, x in enumerate(self.event_funcs) 
+                                   if x.terminal][0]
+                
+                t_last_event = sol.t_events[last_event_index][-1]
+                
                 if eventcount == 1:
-                    t_events = sol.t_events[0]
+                    
+                    # Initialise variable to log times for each event type
+                    t_events = sol.t_events
+                    
                 else:
-                    t_events = npy.append(t_events,sol.t_events[0])
+                    
+                    # Log times for all events
+                    for e, _t_events in enumerate(sol.t_events):
+                        t_events[e] = npy.append(t_events[e],sol.t_events[e])
+                    
+                results_obj.t_events = t_events
                 
                 # Set new initial conditions
-                # Run post-event function
-                t_current = t_events[-1]
-                y_current= sol.y[:,-1]
-                t, y = self.post_event_funcs[0](t_current,y_current)
+                tmin = t_last_event
+                y0 = sol.y[:,-1]
+                
+                # Run post-event functions
+                if self.post_event_funcs is not None:
+                    
+                    y0 = self.post_event_funcs[last_event_index](tmin,y0)
+                    
+                # Break if upper limit exceeded
+                if self.max_events is not None:
+                    if eventcount == self.max_events:
+                        terminateSolver = True                    
             
             elif sol.status == 0:
                 # The solver successfully reached the interval end
@@ -531,6 +586,8 @@ class TStep:
                 terminateSolver = True
                 if verbose: print("Analysis complete!")
                 if verbose: print(sol.message) 
+                
+                #results_obj.t_events = t_events
                 
             else:
                 
