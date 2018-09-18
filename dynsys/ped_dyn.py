@@ -17,6 +17,8 @@ from matplotlib.ticker import FuncFormatter
 from mpl_toolkits.mplot3d import Axes3D
 from inspect import isfunction
 from numpy import real, imag
+import itertools
+
 
 # DynSys package imports
 import dyn_analysis
@@ -543,6 +545,7 @@ class SteadyStateCrowdLoading():
         # (although here they will be real-valued) whereby negative values 
         # imply a force which is 180 degrees out of phase
         modal_forces = self.load_intensity * modal_areas
+        
         self.modal_forces = modal_forces
             
         # Save settings used to determine which analyses run
@@ -571,41 +574,31 @@ class SteadyStateCrowdLoading():
             # Note: G(f) will in general be complex-valued; the should be 
             # intepreted to denote scaling and phase lag
             
+            # Calculate matrix mapping applied loads to state DOFs
+            def Calc_Gf(f):
+                rslts = self.modalsys_obj.CalcFreqResponse(fVals=f,
+                                                           C=numpy.zeros((0,)),
+                                                           verbose=verbose)
+                f = rslts["f"]
+                G_f = rslts["G_f"]
+                return f, G_f
             
+            G_state_vars = Calc_Gf(forcing_freq)[1]
+            G_state_vars = G_state_vars[0,:,:]
             
-            def Calc_G3(fVals):
-                """
-                Returns transfer matrix mapping applied loads to DOF acceleration
-                """
-                return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
-                                                          force_accn=True)
-                
-            def Calc_G12(fVals):
-                """
-                Returns transfer matrix mapping applied loads to DOF displacements 
-                and velocities
-                """
-                return self.modalsys_obj.CalcFreqResponse(fVals=fVals,
-                                                          C=numpy.zeros((0,)),
-                                                          verbose=True)
-                
-            f1, G12 = Calc_G12(forcing_freq)
-            G12 = numpy.asmatrix(G12[:,:,0])
-            if verbose: print("G12.shape: {0}".format(G12.shape))
-        
-            f1, G3 = Calc_G3(forcing_freq)
-            G3 = numpy.asmatrix(G3[:,:,0])
-            if verbose: print("G3.shape: {0}".format(G3.shape))
+            # Retain only submatrix mapping modal forces to state DOFs
+            nModes = len(modal_forces)
+            G_state_vars = G_state_vars[:,:nModes]
             
-            G = numpy.vstack((G12,G3))
-            self.G = G
-            """
-            Transfer matrix mapping applied loads to modal freedoms
-            Row blocks correspond to {disp, vel, accn} freedoms
-            """
+            # Get submatrix mapping applied forces to DOF accelerations
+            nDOF = int(G_state_vars.shape[0]/3)
+            G_acc = G_state_vars[2*nDOF:,:]
+            
+            # Get submatrix mapping modal forces to m accelerations
+            G_modalacc = G_acc[:nModes,:nModes]
             
             # Calculate modal acceleration amplitudes using transfer matrix
-            modal_accn = numpy.ravel(G3 @ modal_forces)
+            modal_accn = numpy.ravel(G_modalacc @ modal_forces)
             self.modal_accn = modal_accn
             
             # Adjust phase such that acc for target mode has phase=0
@@ -619,12 +612,11 @@ class SteadyStateCrowdLoading():
                            
             # Calculate responses amplitudes using full transfer matrix
             output_mtrx, output_names = self.modalsys_obj.GetOutputMtrx(all_systems=True)
-            print(output_mtrx.shape)
-            print(output_names)
+            nResponses = output_mtrx.shape[0]
             
-            if output_mtrx.shape[0]>0:
+            if nResponses>0:
                     
-                response_amplitudes = numpy.ravel(output_mtrx @ G @ modal_forces)
+                response_amplitudes = numpy.ravel(output_mtrx @ G_state_vars @ modal_forces)
                 self.response_amplitudes = response_amplitudes
                 self.response_names = output_names
                 
@@ -634,14 +626,12 @@ class SteadyStateCrowdLoading():
               
             
             if makePlot:
-                
-                # ---- Plot full G3(f) function ----
-                
-                f, G3_f = Calc_G3(None)
+            
+                f, G3_f = Calc_Gf(None)
                 
                 nModes = G3_f.shape[1]
                 
-                fig, axarr = plt.subplots(G3_f.shape[0],sharex=True,sharey=True)
+                fig, axarr = plt.subplots(nResponses,sharex=True,sharey=True)
                 axarr = numpy.array(axarr) # convert to array if not already
                 
                 for m in range(G3_f.shape[0]):
@@ -895,7 +885,7 @@ class SteadyStateCrowdLoading():
                 overlay_val=None
             
             tstep_fig_list = self.tstep_results.PlotResults(useCommonPlot=False,
-                                                            useCommonScale=True,
+                                                            useCommonScale=False,
                                                             y_overlay=overlay_val)
             fig_list += tstep_fig_list
             
@@ -906,7 +896,7 @@ class SteadyStateCrowdLoading():
                 # (from steady-state analysis, if run)
                 
                 state_results_fig = fig_list[1][0]
-                response_results_fig = fig_list[2][0]
+                
                 
                 ax = state_results_fig.get_axes()[3] # plot of modal accelerations
                 accn_val = numpy.abs(self.modal_accn_target)    # value to overlay
@@ -915,7 +905,11 @@ class SteadyStateCrowdLoading():
                 
                 # Overlay expected response amplitudes 
                 # (from steady-state analysis, if run)
-                axarr = response_results_fig.get_axes()
+                response_results_fig_list = fig_list[2]
+                
+                axarr = [x.get_axes() for x in response_results_fig_list]
+                axarr = list(itertools.chain(*axarr)) # flatten list
+
                 val2overlay = numpy.abs(self.response_amplitudes)
     
                 for ax, val in zip(axarr,val2overlay):
