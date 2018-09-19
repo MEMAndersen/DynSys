@@ -10,7 +10,7 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import scipy.signal
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation
 import timeit
 import pandas
 from datetime import datetime
@@ -798,41 +798,24 @@ class TStep_Results:
           
         """
         
-        # Get system to plot
-        if dynsys_obj is None:
-            dynsys_obj = self.tstep_obj.dynsys_obj
-            
-        print("Producing animation of deformed configuration of '%s'" 
-              % dynsys_obj.name)
-            
-        t = self.t
-        dt = t[1] - t[0]    # time interval
-        Ns = t.shape[0]     # number of time-steps
-        
-        print("No time steps:\t%d" % Ns)
-        print("Time interval:\t%f" % dt)
-        
-        # Create figure and axes onto which to draw system
+        # Create figure to plot to
         fig, ax = plt.subplots()
+        fig.set_size_inches((10,6))
         
-        # Define function for drawing each frame
-        fig, line, time_text = self.PlotDeformed(0,dynsys_obj=dynsys_obj,
-                                                     ax=ax,**kwargs)
+        # Create class to faciliate animation production
+        sys_plot_obj = _SysPlot(ax,results_obj=self)
         
-        def draw_frame(i):
-            
-            print(i)
-#            line.set_data([0,i],[0,0])
-#            time_text.set_text(dt*i)
-#            
-#            return line, time_text
+        # Get tstep data
+        dt = self.tstep_obj.dt
+        nResults = self.nResults
         
-        ani = animation.FuncAnimation(fig, draw_frame, 
-                                      npy.arange(0, 40,10),
-                                      interval=dt*1000, # convert to ms
-                                      repeat=False)
+        # Create animation
+        anim = FuncAnimation(fig, sys_plot_obj.update,
+                             frames=npy.arange(0,nResults),
+                             interval=1000*dt,
+                             repeat=False)
         
-        plt.show()
+        return anim
         
         
         
@@ -1239,3 +1222,77 @@ class TStep_Results:
                     header=header)
         
         print("Time-series results written to `{0}`".format(output_fName))
+        
+        
+
+class _SysPlot():
+    """
+    Class to faciliate animation of displacement results 
+    as held in `tstep_results`
+    """
+    
+    def __init__(self, ax, results_obj, text_loc=(0.85, 0.95)):
+        """
+        Animation plot initialisation method
+        
+        ***
+        Required:
+            
+        * `ax`, axes to plot to
+        
+        * `results_obj`, instance of `tstep_results` class
+        
+        ***
+        Optional:
+        
+        * `text_loc`, location of time label within axes window
+        
+        """
+        
+        # Get objects
+        self.results_obj = results_obj
+        
+        # Get dynamic system object
+        tstep_obj = results_obj.tstep_obj
+        dynsys_obj = tstep_obj.dynsys_obj
+        self.dynsys_obj = dynsys_obj
+        
+        # Call plot initialisation method of dynsys object
+        dynsys_obj.PlotSystem_init_plot(ax)
+        
+        # Determine required y scale for plot
+        v = results_obj.v
+        y_max = 1.2*npy.max(v)
+        y_min = 1.2*npy.min(v)
+        y_absmax = npy.max([y_max,y_min])
+        ax.set_ylim([-y_absmax,+y_absmax])
+        
+        # ----------------------------------------------------------
+        
+        ax.set_title("Displacement results\n" + 
+                     "Analysis: '%s'\n" % tstep_obj.name + 
+                     "System: '%s'" % dynsys_obj.name)
+        
+        self.time_template = 'Time = %.1fs'
+        self.time_text = ax.text(*text_loc, '',
+                                 fontsize=8,transform=ax.transAxes)
+        
+        ax.legend(loc='lower right')
+        
+
+    def update(self, i):
+        """
+        Animation plot update method, for results time step (frame) `i`
+        """
+        
+        # Get results applicable to this time increment
+        t = self.results_obj.t[i,0]
+        v = self.results_obj.v[i,:]
+        
+        # Call plot update method of dynsys object
+        lines = self.dynsys_obj.PlotSystem_update_plot(t=t,v=v)
+            
+        self.time_text.set_text(self.time_template % (t))
+        
+        return lines
+
