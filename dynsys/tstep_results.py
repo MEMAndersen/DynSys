@@ -1002,6 +1002,10 @@ class TStep_Results:
             KE = self.KE
             PE = self.PE
             ExtWork = self.ExtWork
+            
+        # Back-calculate energy dissipated
+        E0 = PE[0] + KE[0]              # energy of system at t=0
+        ED = ExtWork - (PE+KE) + E0     # energy dissipated since t=0
                         
         # Get time values for plots
         t = npy.ravel(self.t)
@@ -1018,9 +1022,10 @@ class TStep_Results:
         ax = axarr[0]
         ax.plot(t,ExtWork,label='External work done')
         ax.plot(t,(KE+PE),label='Conserved energy, $E=T+V$')
-        ax.plot(t,(KE-PE),label='Lagrangian, $L=T-V$')
+        ax.plot(t,ED,label='Energy dissipated (from energy balance)')
+        ax.plot(t,(KE-PE),color='k',alpha=0.3,label='Lagrangian, $L=T-V$')
         ax.set_title("External/Internal work done",fontsize=fontsize_titles)
-        ax.legend()
+        ax.legend(fontsize=8)
         
         ax = axarr[1]
         ax.plot(t,KE)
