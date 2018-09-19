@@ -502,9 +502,6 @@ class TStep:
             
             # Run solution
             print("Solving using Scipy's `solve_ivp()` function:")
-            print("t_span: [%.5f,%.5f]" % (tmin,tmax))
-            print("y0: {0}".format(y0))
-            time.sleep(1)
             sol = solve_ivp(fun=ODE_func, t_span=[tmin,tmax], y0=y0, **kwargs)
             print("Solution complete!")
             sol_list.append(sol)
@@ -654,8 +651,9 @@ if __name__ == "__main__":
                     max_dt=0.01)
     myTStep.run()
     res = myTStep.results_obj
+    
     res.PlotStateResults()
-    
-
-    
     res.PlotResponseResults()
+    
+    #%%
+    anim = res.AnimateResults()

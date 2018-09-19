@@ -10,7 +10,7 @@ from __init__ import __version__ as currentVersion
 import numpy as npy
 import scipy.signal
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation
 import timeit
 import pandas
 from datetime import datetime
@@ -798,41 +798,30 @@ class TStep_Results:
           
         """
         
-        # Get system to plot
-        if dynsys_obj is None:
-            dynsys_obj = self.tstep_obj.dynsys_obj
-            
-        print("Producing animation of deformed configuration of '%s'" 
-              % dynsys_obj.name)
-            
-        t = self.t
-        dt = t[1] - t[0]    # time interval
-        Ns = t.shape[0]     # number of time-steps
-        
-        print("No time steps:\t%d" % Ns)
-        print("Time interval:\t%f" % dt)
-        
-        # Create figure and axes onto which to draw system
+        # Create figure to plot to
         fig, ax = plt.subplots()
+        fig.set_size_inches((10,6))
         
-        # Define function for drawing each frame
-        fig, line, time_text = self.PlotDeformed(0,dynsys_obj=dynsys_obj,
-                                                     ax=ax,**kwargs)
+        # Create class to faciliate animation production
+        sys_plot_obj = _SysPlot(ax,results_obj=self)
         
-        def draw_frame(i):
-            
-            print(i)
-#            line.set_data([0,i],[0,0])
-#            time_text.set_text(dt*i)
-#            
-#            return line, time_text
+        # Get tstep data
+        nResults = self.nResults
         
-        ani = animation.FuncAnimation(fig, draw_frame, 
-                                      npy.arange(0, 40,10),
-                                      interval=dt*1000, # convert to ms
-                                      repeat=False)
+        # Get time step between frames
+        dt = self.tstep_obj.dt
         
-        plt.show()
+        if dt is None:
+            # Compute average time step
+            dt = (self.t[-1]-self.t[0])/nResults
+        
+        # Create animation
+        anim = FuncAnimation(fig, sys_plot_obj.update,
+                             frames=npy.arange(0,nResults),
+                             interval=1000*dt,
+                             repeat=False)
+        
+        return anim
         
         
         
@@ -901,7 +890,149 @@ class TStep_Results:
             del self.responses_list
             del self.response_names_list
         
+    
+    def CalcKineticEnergy(self):
+        """
+        Calculates total kinetic energy of system at each time step:
         
+        $$ T = \dot{y}^{T} M \dot{y} $$
+        
+        where $\dot{y}$ is vector of DOF velocities at time t and M is the 
+        time-invariant mass matrix of the system
+        """
+        
+        nResults = self.nResults
+        
+        M = self.tstep_obj.dynsys_obj.GetSystemMatrices()["M_mtrx"]
+        vdot = self.vdot
+        
+        KE = npy.empty((nResults,))
+        
+        for i in range(nResults):
+        
+            KE[i] = vdot[i,:] @ M @ vdot[i,:].T
+            
+        self.KE = KE
+        return KE
+    
+    
+    def CalcPotentialEnergy(self):
+        """
+        Calculates total potential energy of system at each time step:
+        
+        $$ V = y^{T} K y $$
+        
+        where y is vector of DOF displacements at time t and K is the 
+        time-invariant stiffness matrix of the system
+        """
+        
+        nResults = self.nResults
+        
+        K = self.tstep_obj.dynsys_obj.GetSystemMatrices()["K_mtrx"]
+        v = self.v
+        
+        PE = npy.empty((nResults,))
+        
+        for i in range(nResults):
+        
+            PE[i] = v[i,:] @ K @ v[i,:].T
+            
+        self.PE = PE
+        return PE
+   
+    
+    def CalcExternalWorkPower(self):
+        """
+        Calculates power of work done by external forces at each time step:
+            
+        %% P = f.\dot{v} $$
+    
+        where f is vector of external forces applied to each DOF 
+        and $\dot{v}$ is vector of DOF velocities
+        """
+        
+        nResults = self.nResults
+        
+        f = self.f
+        vdot = self.vdot
+        
+        ExtWork_Power = npy.empty((nResults,))
+        
+        for i in range(nResults):
+        
+            ExtWork_Power[i] = f[i,:] @ vdot[i,:].T
+            
+        self.ExtWork_Power = ExtWork_Power
+        return ExtWork_Power
+    
+    
+    def CalcExternalWorkDone(self):
+        """
+        Calculates work done by external forces since t=0
+        """
+        
+        t = npy.ravel(self.t)
+        ExtWork_power = self.CalcExternalWorkPower()
+        
+        # Integrate power of external work to get total external work from t=0
+        ExtWork = scipy.integrate.cumtrapz(y=ExtWork_power, x=t, initial=0.0)
+        
+        self.ExtWork = ExtWork
+        return ExtWork
+    
+    
+    def PlotEnergyResults(self,recalculate=True):
+        
+        if recalculate:
+            KE = self.CalcKineticEnergy()
+            PE = self.CalcPotentialEnergy()
+            ExtWork = self.CalcExternalWorkDone()
+        else:
+            KE = self.KE
+            PE = self.PE
+            ExtWork = self.ExtWork
+            
+        # Back-calculate energy dissipated
+        E0 = PE[0] + KE[0]              # energy of system at t=0
+        ED = ExtWork - (PE+KE) + E0     # energy dissipated since t=0
+                        
+        # Get time values for plots
+        t = npy.ravel(self.t)
+        
+        tstep_obj = self.tstep_obj
+
+        # Create new figure for plots
+        fig,axarr = plt.subplots(3,1,sharex=True)
+        fig.set_size_inches((10,7))
+        fig.suptitle("Energy results\nAnalysis: '%s'" % tstep_obj.name)
+        fontsize_titles = 10
+        
+        # Define individual subplots
+        ax = axarr[0]
+        ax.plot(t,ExtWork,label='External work done')
+        ax.plot(t,(KE+PE),label='Conserved energy, $E=T+V$')
+        ax.plot(t,ED,label='Energy dissipated (from energy balance)')
+        ax.plot(t,(KE-PE),color='k',alpha=0.3,label='Lagrangian, $L=T-V$')
+        ax.set_title("External/Internal work done",fontsize=fontsize_titles)
+        ax.legend(fontsize=8)
+        
+        ax = axarr[1]
+        ax.plot(t,KE)
+        ax.set_title("Kinetic energy: T(t) = $\dot{y}(t)^{T}M\dot{y}(t)$",
+                     fontsize=fontsize_titles)
+        
+        ax = axarr[2]
+        ax.plot(t,PE)
+        ax.set_title("Potential energy: V(t) = $y(t)^{T}Ky(t)$",
+                     fontsize=fontsize_titles)
+        
+        # Set details for shared x-axis
+        ax.set_xlim([tstep_obj.tStart,tstep_obj.tEnd])
+        ax.set_xlabel("Time $t$ (secs)")
+        
+        return fig
+        
+    
         
     def CalcDOFStats(self,verbose=True):
         """
@@ -1097,3 +1228,77 @@ class TStep_Results:
                     header=header)
         
         print("Time-series results written to `{0}`".format(output_fName))
+        
+        
+
+class _SysPlot():
+    """
+    Class to faciliate animation of displacement results 
+    as held in `tstep_results`
+    """
+    
+    def __init__(self, ax, results_obj, text_loc=(0.85, 0.95)):
+        """
+        Animation plot initialisation method
+        
+        ***
+        Required:
+            
+        * `ax`, axes to plot to
+        
+        * `results_obj`, instance of `tstep_results` class
+        
+        ***
+        Optional:
+        
+        * `text_loc`, location of time label within axes window
+        
+        """
+        
+        # Get objects
+        self.results_obj = results_obj
+        
+        # Get dynamic system object
+        tstep_obj = results_obj.tstep_obj
+        dynsys_obj = tstep_obj.dynsys_obj
+        self.dynsys_obj = dynsys_obj
+        
+        # Call plot initialisation method of dynsys object
+        dynsys_obj.PlotSystem_init_plot(ax)
+        
+        # Determine required y scale for plot
+        v = results_obj.v
+        y_max = 1.2*npy.max(v)
+        y_min = 1.2*npy.min(v)
+        y_absmax = npy.max([y_max,y_min])
+        ax.set_ylim([-y_absmax,+y_absmax])
+        
+        # ----------------------------------------------------------
+        
+        ax.set_title("Displacement results\n" + 
+                     "Analysis: '%s'\n" % tstep_obj.name + 
+                     "System: '%s'" % dynsys_obj.name)
+        
+        self.time_template = 'Time = %.1fs'
+        self.time_text = ax.text(*text_loc, '',
+                                 fontsize=8,transform=ax.transAxes)
+        
+        ax.legend(loc='lower right')
+        
+
+    def update(self, i):
+        """
+        Animation plot update method, for results time step (frame) `i`
+        """
+        
+        # Get results applicable to this time increment
+        t = self.results_obj.t[i,0]
+        v = self.results_obj.v[i,:]
+        
+        # Call plot update method of dynsys object
+        lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
+            
+        self.time_text.set_text(self.time_template % (t))
+        
+        return lines
+

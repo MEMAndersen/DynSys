@@ -8,6 +8,21 @@ and this project adheres to:
 
 ***
 
+## [1.5.0] - 2018-09-19 - RIHY
+
+### Changed
+
+### Added
+
+* `AnimateResults()` method implemented properly (in a generalised fashion) for 
+  the first time. System-specific plot methods defined for common system types
+
+* `PlotEnergyResults()` and related calculation methods added to `TStep_results`
+  class
+
+### Fixed
+
+### Removed
 
 
 ## [1.4.2] - 2018-09-17 - RIHY

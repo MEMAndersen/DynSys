@@ -12,7 +12,6 @@ import numpy as npy
 # Other imports
 import dynsys
 
-
 class hanging1DChain(dynsys.DynSys):
     """
     Chain hanging vertically under self-weight
@@ -41,6 +40,9 @@ class hanging1DChain(dynsys.DynSys):
         `nDOF=0` denotes the top of the chain. By default `nDOF=0` is 
         constrained to not displace.
         """    
+        
+        self.mass_per_length = mass_per_length
+        self.length = length
         
         # Define mass matrix
         M_vals = mass_per_length*length / (nDOF-1) * npy.ones((nDOF,))
@@ -90,13 +92,90 @@ class hanging1DChain(dynsys.DynSys):
             Jrow[0,0]=1
         else:
             Jrow = npy.asmatrix(npy.zeros((0,self.nDOF)))
-        self.AddConstraintEqns(Jrow,checkConstraints=False)
+        
+        self.AddConstraintEqns(Jnew=Jrow,Jkey='0',checkConstraints=False)
         
         
+    def PlotSystem_init_plot(self,ax,plot_env=True):
+        """
+        Method for initialising system displacement plot
+        ***
+        (Will usually be overriden by derived class methods)
+        """
+                
+        # Variables used to generate plot data
+        self.x = npy.arange(self.nDOF)/(self.nDOF-1) * self.length
+        self.v_env_max = npy.zeros((self.nDOF,))
+        self.v_env_min = npy.zeros_like(self.v_env_max)
+
+        # Define drawing artists
+        self.lines = {}
+        
+        self.lines['v'] = ax.plot([], [],'ko-',label='$v(t)$')[0]
+    
+        self.plot_env = plot_env
+        if plot_env:        
+            
+            self.lines['v_env_max'] = ax.plot(self.x,
+                                              self.v_env_max,
+                                              color='r',alpha=0.3,
+                                              label='$v_{max}$')[0]
+            
+            self.lines['v_env_min'] = ax.plot(self.x,
+                                              self.v_env_min,
+                                              color='b',alpha=0.3,
+                                              label='$v_{min}$')[0]
+        
+        # Set up plot parameters
+        ax.grid(axis='x')
+        ax.axhline(0.0,color='k')
+        ax.set_xlim(0,self.length)
+        ax.set_xticks(self.x)
+        ax.set_xlabel("Distance along chain")
+        ax.set_ylabel("Displacement (m)")
+        
+    
+    def PlotSystem_update_plot(self,v):
+        """
+        Method for updating system displacement plot given displacements `v`
+        ***
+        (Will usually be overriden by derived class methods)
+        """
+        
+        # Update envelopes
+        self.v_env_max = npy.maximum(v,self.v_env_max)
+        self.v_env_min = npy.minimum(v,self.v_env_min)       
+        
+        # Update plot data
+        self.lines['v'].set_data(self.x,v)
+        
+        if self.plot_env:
+            self.lines['v_env_max'].set_data(self.x,self.v_env_max)
+            self.lines['v_env_min'].set_data(self.x,self.v_env_min)
+        
+        return self.lines
+        
+        
+
         
 # ********************** TEST ROUTINES ****************************************
 # (Only execute when running as a script / top level)
 if __name__ == "__main__":
     
-    dynSys1 = hanging1DChain(7,60,12)
+    import tstep
+    
+    nDOF = 21
+    mass_per_length = 60
+    length = 10
+    
+    dynSys1 = hanging1DChain(nDOF,mass_per_length,length)
     dynSys1.PrintSystemMatrices()
+    
+    x0 = npy.ravel([npy.sin(npy.pi*(npy.arange(nDOF)/nDOF)),npy.zeros((nDOF,))])
+    my_results = tstep.TStep(dynSys1,x0=x0).run()
+    
+    #my_results.PlotStateResults()
+    
+    anim = my_results.AnimateResults()
+    #%%
+    #my_results.PlotEnergyResults()

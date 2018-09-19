@@ -148,6 +148,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                  verbose=True,
                  calc_Seff=True,
                  makePlot=False,
+                 dt_factor=20,
                  **kwargs):
         """
         Initialisation function
@@ -164,12 +165,18 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         Optional:
             
         * `dt`, time step to be used for results evaluation. If _None_ then 
-          a reasonable time step to use will be determined, based on the 
-          frequency of the forcing function
+          a suitable `dt` to use will be determined according to 
+          `dt_factor` (see below)
+          
+        * `dt_factor`, factor to apply to damped natural frequency `f_d` of 
+          mode under consideration, for the purpose of determining 
+          appropriate `dt` value (see above):
+          `dt = 1 / (dt_factor * f_d)`.
+          Note only used if `dt=None`
         
         * calc_Seff`, _boolean_, dictates whether effective span will be 
           computed according to Figure NA.7. If False, overall span will be 
-          used (conservative).
+          used (conservative)
         
         Additional keyword arguments can be defined. These should relate 
         the `__init__()` function of the `MovingLoadAnalysis` class 
@@ -273,7 +280,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         # Determine reasonable time step to use
         if dt is None:
             # Rule of thumb - 10x frequency under consideration
-            fs = 10 * f_d
+            fs = dt_factor * f_d
             dt = 1 / fs  
         
         # Run parent init

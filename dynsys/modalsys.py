@@ -611,6 +611,73 @@ class ModalSys(DynSys):
         
         return integral
     
+    
+    def PlotSystem(self,ax,v):
+        """
+        Plot system in deformed configuration as given by `v`
+        """
+        
+        self.PlotSystem_init_plot(ax)
+        self.PlotSystem_update_plot(v)
+        
+    
+    def PlotSystem_init_plot(self,ax,plot_env=True):
+        """
+        Method for initialising system displacement plot
+        """
+                
+        # Get modeshape function and salient x coordinates to use
+        self.x = self.modeshapeFunc.x
+
+        # Variables used to generate plot data
+        self.y_env_max = 0.0 * self.x
+        self.y_env_min = 0.0 * self.x
+
+        # Define drawing artists
+        self.lines = {}
+        
+        self.lines['y_res'] = ax.plot([], [],'k-',label='y(t)')[0]
+        
+        self.plot_env = plot_env
+        if plot_env:        
+            
+            self.lines['y_env_max'] = ax.plot(self.x,
+                                              self.y_env_max,
+                                              color='r',alpha=0.3,
+                                              label='$y_{max}$')[0]
+            
+            self.lines['y_env_min'] = ax.plot(self.x,
+                                              self.y_env_min,
+                                              color='b',alpha=0.3,
+                                              label='$y_{min}$')[0]
+        
+        # Set up plot parameters
+        ax.set_xlim(0, self.Ltrack)
+        ax.set_xlabel("Chainage (m)")
+        ax.set_ylabel("Displacement (m)")
+        
+    
+    def PlotSystem_update_plot(self,v):
+        """
+        Method for updating system displacement plot given displacements `v`
+        """
+        
+        # Calculate displacements along structure at time t, given modal disp v
+        y = v @ self.modeshapeFunc(self.x).T
+
+        # Update envelopes
+        self.y_env_max = npy.maximum(y,self.y_env_max)
+        self.y_env_min = npy.minimum(y,self.y_env_min)       
+        
+        # Update plot data
+        self.lines['y_res'].set_data(self.x,y)
+        
+        if self.plot_env:
+            self.lines['y_env_max'].set_data(self.x,self.y_env_max)
+            self.lines['y_env_min'].set_data(self.x,self.y_env_min)
+        
+        return self.lines
+    
 # --------------- FUNCTIONS ------------------
         
 def MAC(x1,x2):
