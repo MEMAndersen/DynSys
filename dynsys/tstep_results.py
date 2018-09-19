@@ -806,8 +806,14 @@ class TStep_Results:
         sys_plot_obj = _SysPlot(ax,results_obj=self)
         
         # Get tstep data
-        dt = self.tstep_obj.dt
         nResults = self.nResults
+        
+        # Get time step between frames
+        dt = self.tstep_obj.dt
+        
+        if dt is None:
+            # Compute average time step
+            dt = (self.t[-1]-self.t[0])/nResults
         
         # Create animation
         anim = FuncAnimation(fig, sys_plot_obj.update,
@@ -1290,7 +1296,7 @@ class _SysPlot():
         v = self.results_obj.v[i,:]
         
         # Call plot update method of dynsys object
-        lines = self.dynsys_obj.PlotSystem_update_plot(t=t,v=v)
+        lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
             
         self.time_text.set_text(self.time_template % (t))
         

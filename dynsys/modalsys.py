@@ -611,8 +611,21 @@ class ModalSys(DynSys):
         
         return integral
     
-    def PlotSystem_init_plot(self,ax,plot_env=True):
+    
+    def PlotSystem(self,ax,v):
+        """
+        Plot system in deformed configuration as given by `v`
+        """
         
+        self.PlotSystem_init_plot(ax)
+        self.PlotSystem_update_plot(v)
+        
+    
+    def PlotSystem_init_plot(self,ax,plot_env=True):
+        """
+        Method for initialising system displacement plot
+        """
+                
         # Get modeshape function and salient x coordinates to use
         self.x = self.modeshapeFunc.x
 
@@ -644,7 +657,10 @@ class ModalSys(DynSys):
         ax.set_ylabel("Displacement (m)")
         
     
-    def PlotSystem_update_plot(self,t,v):
+    def PlotSystem_update_plot(self,v):
+        """
+        Method for updating system displacement plot given displacements `v`
+        """
         
         # Calculate displacements along structure at time t, given modal disp v
         y = v @ self.modeshapeFunc(self.x).T

@@ -1734,34 +1734,86 @@ class DynSys:
         
         return rslts_dict
     
-    
-    def PlotSystems_all(self,ax_dict,**kwargs):
-        """
-        Generic plotter function to display current configuration of 
-        all systems and subsystems
-        """
-        pass
-    
-    
+            
     def PlotSystem(self,ax,v,**kwargs):
         """
-        Generic plotter function to display current configuration of this 
-        `dynSys` object
+        Plot system in deformed configuration
         
-        _Inheritance expected_
-        
-        ***
         **Required:**
         
         * `ax`, axes object, onto which system will be plotted
         
-        * `v`, _array_ of displacement results, defining the position of 
-          analysis freedoms
-        
+        * `v`, _array_ of displacement results, defining the position of DOFs
+          
+        Any additional keyword arguments will be passed to 
+        PlotSystem_init_plot() method
         """
-        raise ValueError("Use of overriding method expected!")
         
-     
+        self.PlotSystem_init_plot(ax,**kwargs)
+        self.PlotSystem_update_plot(v)
+        
+    
+    def PlotSystem_init_plot(self,ax,plot_env=True):
+        """
+        Method for initialising system displacement plot
+        ***
+        (Will usually be overriden by derived class methods)
+        """
+                
+        # Variables used to generate plot data
+        self.x = npy.arange(self.nDOF)
+        self.v_env_max = npy.zeros((self.nDOF,))
+        self.v_env_min = npy.zeros_like(self.v_env_max)
+
+        # Define drawing artists
+        self.lines = {}
+        
+        self.lines['v'] = ax.plot([], [],'ro',label='$v(t)$')[0]
+    
+        self.plot_env = plot_env
+        if plot_env:        
+            
+            self.lines['v_env_max'] = ax.plot(self.x,
+                                              self.v_env_max,
+                                              color='r',alpha=0.3,
+                                              label='$v_{max}$')[0]
+            
+            self.lines['v_env_min'] = ax.plot(self.x,
+                                              self.v_env_min,
+                                              color='b',alpha=0.3,
+                                              label='$v_{min}$')[0]
+        
+        # Set up plot parameters
+        ax.grid(axis='x')
+        ax.axhline(0.0,color='k')
+        ax.set_xlim(-0.2, self.nDOF-1+0.2)
+        ax.set_xticks(self.x)
+        ax.set_xlabel("DOF index")
+        ax.set_ylabel("Displacement (m)")
+        
+    
+    def PlotSystem_update_plot(self,v):
+        """
+        Method for updating system displacement plot given displacements `v`
+        ***
+        (Will usually be overriden by derived class methods)
+        """
+        
+        # Update envelopes
+        self.v_env_max = npy.maximum(v,self.v_env_max)
+        self.v_env_min = npy.minimum(v,self.v_env_min)       
+        
+        # Update plot data
+        self.lines['v'].set_data(self.x,v)
+        
+        if self.plot_env:
+            self.lines['v_env_max'].set_data(self.x,self.v_env_max)
+            self.lines['v_env_min'].set_data(self.x,self.v_env_min)
+        
+        return self.lines
+        
+        
+        
 
 # **************** FUNCTIONS *********************
         
