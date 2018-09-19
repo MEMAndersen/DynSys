@@ -901,7 +901,144 @@ class TStep_Results:
             del self.responses_list
             del self.response_names_list
         
+    
+    def CalcKineticEnergy(self):
+        """
+        Calculates total kinetic energy of system at each time step:
         
+        $$ T = \dot{y}^{T} M \dot{y} $$
+        
+        where $\dot{y}$ is vector of DOF velocities at time t and M is the 
+        time-invariant mass matrix of the system
+        """
+        
+        nResults = self.nResults
+        
+        M = self.tstep_obj.dynsys_obj.GetSystemMatrices()["M_mtrx"]
+        vdot = self.vdot
+        
+        KE = npy.empty((nResults,))
+        
+        for i in range(nResults):
+        
+            KE[i] = vdot[i,:] @ M @ vdot[i,:].T
+            
+        self.KE = KE
+        return KE
+    
+    
+    def CalcPotentialEnergy(self):
+        """
+        Calculates total potential energy of system at each time step:
+        
+        $$ V = y^{T} K y $$
+        
+        where y is vector of DOF displacements at time t and K is the 
+        time-invariant stiffness matrix of the system
+        """
+        
+        nResults = self.nResults
+        
+        K = self.tstep_obj.dynsys_obj.GetSystemMatrices()["K_mtrx"]
+        v = self.v
+        
+        PE = npy.empty((nResults,))
+        
+        for i in range(nResults):
+        
+            PE[i] = v[i,:] @ K @ v[i,:].T
+            
+        self.PE = PE
+        return PE
+   
+    
+    def CalcExternalWorkPower(self):
+        """
+        Calculates power of work done by external forces at each time step:
+            
+        %% P = f.\dot{v} $$
+    
+        where f is vector of external forces applied to each DOF 
+        and $\dot{v}$ is vector of DOF velocities
+        """
+        
+        nResults = self.nResults
+        
+        f = self.f
+        vdot = self.vdot
+        
+        ExtWork_Power = npy.empty((nResults,))
+        
+        for i in range(nResults):
+        
+            ExtWork_Power[i] = f[i,:] @ vdot[i,:].T
+            
+        self.ExtWork_Power = ExtWork_Power
+        return ExtWork_Power
+    
+    
+    def CalcExternalWorkDone(self):
+        """
+        Calculates work done by external forces since t=0
+        """
+        
+        t = npy.ravel(self.t)
+        ExtWork_power = self.CalcExternalWorkPower()
+        
+        # Integrate power of external work to get total external work from t=0
+        ExtWork = scipy.integrate.cumtrapz(y=ExtWork_power, x=t, initial=0.0)
+        
+        self.ExtWork = ExtWork
+        return ExtWork
+    
+    
+    def PlotEnergyResults(self,recalculate=True):
+        
+        if recalculate:
+            KE = self.CalcKineticEnergy()
+            PE = self.CalcPotentialEnergy()
+            ExtWork = self.CalcExternalWorkDone()
+        else:
+            KE = self.KE
+            PE = self.PE
+            ExtWork = self.ExtWork
+                        
+        # Get time values for plots
+        t = npy.ravel(self.t)
+        
+        tstep_obj = self.tstep_obj
+
+        # Create new figure for plots
+        fig,axarr = plt.subplots(3,1,sharex=True)
+        fig.set_size_inches((10,7))
+        fig.suptitle("Energy results\nAnalysis: '%s'" % tstep_obj.name)
+        fontsize_titles = 10
+        
+        # Define individual subplots
+        ax = axarr[0]
+        ax.plot(t,ExtWork,label='External work done')
+        ax.plot(t,(KE+PE),label='Conserved energy, $E=T+V$')
+        ax.plot(t,(KE-PE),label='Lagrangian, $L=T-V$')
+        ax.set_title("External/Internal work done",fontsize=fontsize_titles)
+        ax.legend()
+        
+        ax = axarr[1]
+        ax.plot(t,KE)
+        ax.set_title("Kinetic energy: T(t) = $\dot{y}(t)^{T}M\dot{y}(t)$",
+                     fontsize=fontsize_titles)
+        
+        ax = axarr[2]
+        ax.plot(t,PE)
+        ax.set_title("Potential energy: V(t) = $y(t)^{T}Ky(t)$",
+                     fontsize=fontsize_titles)
+        
+        # Set details for shared x-axis
+        ax.set_xlim([tstep_obj.tStart,tstep_obj.tEnd])
+        ax.set_xlabel("Time $t$ (secs)")
+        
+        return fig
+        
+    
         
     def CalcDOFStats(self,verbose=True):
         """
