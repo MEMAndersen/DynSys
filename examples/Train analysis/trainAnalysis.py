@@ -21,7 +21,7 @@ Determine reasonable time step to use for results presentation
 Note: only influences time interval at which results are output
 Scipy's solver determines its own time step for solving ODEs
 """
-max_fn = numpy.max(bridge_sys.fn)
+max_fn = numpy.max(bridge_sys.modalParams_dict['Freq'])
 dt_reqd = 0.01#(1/max_fn)/2 # sampling freq to be 10x maximum modal freq - rule of thumb for accurately capturing peaks
 
 #%%

@@ -772,6 +772,9 @@ def ResponseSpectrum(accFunc,
 
         period_str = "Period %.2fs" % _T
         
+        if i % 10 == 0:
+            print("    Period %d of %d" % (i,len(T_vals)))
+        
         # Define SDOF oscillator
         SDOF_sys = msd_chain.MSD_Chain(name=period_str,
                                        M_vals = M,
@@ -790,18 +793,18 @@ def ResponseSpectrum(accFunc,
         # Define time-stepping analysis
         tstep_obj = tstep.TStep(SDOF_sys,
                                 tStart=0, tEnd=tResponse,
-                                force_func=forceFunc,
+                                force_func_dict={SDOF_sys:forceFunc},
                                 retainResponseTimeSeries=True)
         
         # Run time-stepping analysis and append results
-        results_list.append(tstep_obj.run(showMsgs=False))
+        results_obj = tstep_obj.run(verbose=False)
+        results_list.append(results_obj)
         
         # Obtain absolute acceleration by adding back in ground motion
-        results_obj = tstep_obj.results_obj
-        results_obj.responses[2,:] += accFunc(results_obj.t.T)
+        results_obj.responses_list[0][2,:] += accFunc(results_obj.t.T)
         
         # Recalculate statistics
-        results_obj.CalcResponseStats(showMsgs=False)
+        results_obj.CalcResponseStats(verbose=False)
         
         # Tidy up
         del SDOF_sys

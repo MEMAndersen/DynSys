@@ -51,8 +51,8 @@ class TStep:
                  force_func_dict:dict={},
                  event_funcs:list=None,
                  post_event_funcs:list=None,
-                 max_events=None
-                 ):
+                 max_events=None,
+                 **kwargs):
         """
         Initialises time-stepping analysis
         
@@ -99,7 +99,7 @@ class TStep:
         otherwise the dynamic system in question will not do anything!
         
         """
-  
+          
         # Write basic details to object   
         
         self.name = name
@@ -501,9 +501,9 @@ class TStep:
             tic=timeit.default_timer()
             
             # Run solution
-            print("Solving using Scipy's `solve_ivp()` function:")
+            if verbose: print("Solving using Scipy's `solve_ivp()` function:")
             sol = solve_ivp(fun=ODE_func, t_span=[tmin,tmax], y0=y0, **kwargs)
-            print("Solution complete!")
+            if verbose: print("Solution complete!")
             sol_list.append(sol)
             solvecount += 1
             

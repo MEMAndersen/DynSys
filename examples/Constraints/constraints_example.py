@@ -38,15 +38,18 @@ output_mtrx, output_names = my_modal_sys.GetOutputMtrx(state_variables_only=True
 
 #%%
 # Determine frequency response matrices
-f, Gf = my_modal_sys.CalcFreqResponse(verbose=True)
+rslts = my_modal_sys.CalcFreqResponse(verbose=True)
+f = rslts['f']
+Gf = rslts['G_f']
 
+#%%
 fig_list = []
 for j in range(7):
     
     for i in [0,1,3,5]:
         
         if i==0:
-            plt_dict = PlotFrequencyResponse(f,Gf[i,j,:])
+            plt_dict = PlotFrequencyResponse(f,Gf[:,i,j])
             fig = plt_dict["fig"]
             fig_list.append(fig)
             fig.suptitle("Gf[%d,%d]" % (i,j))
@@ -54,7 +57,7 @@ for j in range(7):
             ax_phase = plt_dict["ax_phase"]
     
         else:
-            PlotFrequencyResponse(f,Gf[i,j,:],
+            PlotFrequencyResponse(f,Gf[:,i,j],
                                   ax_magnitude=ax_magnitude,
                                   ax_phase=ax_phase)
 
