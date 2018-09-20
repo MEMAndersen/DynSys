@@ -35,11 +35,20 @@ Applications include (but are not limited to):
     * For systems with *non-proportional* damping
     
 * TMD design and analysis
-
-    * Proper account of non-proportional damping, which generally occurs when 
-      TMDs are appended to MDOF systems
       
 * Response spectrum analysis of ground motion time series data
+
+* Pedestrian response analyses:
+
+    * Transient response per UK NA to BS EN 1992-1 approach (walkers/joggers)
+
+    * Steady-state crowd loading:
+
+	* UK NA to BS EN 1992-1 approach (vertical response)
+
+	* HiVoSS approach (vertical and lateral responses)
+
+    * Lateral instability under crowd loading
 
 ## Benefits
 
