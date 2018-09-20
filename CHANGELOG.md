@@ -8,6 +8,23 @@ and this project adheres to:
 
 ***
 
+## [1.5.1] - 2018-09-20 - RIHY
+
+### Changed
+
+* `AnimateResults()` API updated to allow optional keywords to be passed down to
+  methods called within, e.g. to customise plots/animations produced
+
+* Train analysis example updated to illustrate usage of `AnimateResults()` with 
+  animation customisation
+
+### Added
+
+### Fixed
+
+### Removed
+
+
 ## [1.5.0] - 2018-09-19 - RIHY
 
 ### Changed

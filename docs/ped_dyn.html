@@ -1,4 +1,4 @@
-Version: 1.4.2
+Version: 1.5.1
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1347,6 +1347,7 @@ table {
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">dt_factor</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation function</span>
@@ -1363,12 +1364,18 @@ table {
 <span class="sd">        Optional:</span>
 <span class="sd">            </span>
 <span class="sd">        * `dt`, time step to be used for results evaluation. If _None_ then </span>
-<span class="sd">          a reasonable time step to use will be determined, based on the </span>
-<span class="sd">          frequency of the forcing function</span>
+<span class="sd">          a suitable `dt` to use will be determined according to </span>
+<span class="sd">          `dt_factor` (see below)</span>
+<span class="sd">          </span>
+<span class="sd">        * `dt_factor`, factor to apply to damped natural frequency `f_d` of </span>
+<span class="sd">          mode under consideration, for the purpose of determining </span>
+<span class="sd">          appropriate `dt` value (see above):</span>
+<span class="sd">          `dt = 1 / (dt_factor * f_d)`.</span>
+<span class="sd">          Note only used if `dt=None`</span>
 <span class="sd">        </span>
 <span class="sd">        * calc_Seff`, _boolean_, dictates whether effective span will be </span>
 <span class="sd">          computed according to Figure NA.7. If False, overall span will be </span>
-<span class="sd">          used (conservative).</span>
+<span class="sd">          used (conservative)</span>
 <span class="sd">        </span>
 <span class="sd">        Additional keyword arguments can be defined. These should relate </span>
 <span class="sd">        the `__init__()` function of the `MovingLoadAnalysis` class </span>
@@ -1472,7 +1479,7 @@ table {
         <span class="c1"># Determine reasonable time step to use</span>
         <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="c1"># Rule of thumb - 10x frequency under consideration</span>
-            <span class="n">fs</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">f_d</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="n">dt_factor</span> <span class="o">*</span> <span class="n">f_d</span>
             <span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fs</span>  
         
         <span class="c1"># Run parent init</span>
@@ -10244,6 +10251,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                 <span class="n">dt_factor</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialisation function</span>
@@ -10260,12 +10268,18 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
 <span class="sd">        Optional:</span>
 <span class="sd">            </span>
 <span class="sd">        * `dt`, time step to be used for results evaluation. If _None_ then </span>
-<span class="sd">          a reasonable time step to use will be determined, based on the </span>
-<span class="sd">          frequency of the forcing function</span>
+<span class="sd">          a suitable `dt` to use will be determined according to </span>
+<span class="sd">          `dt_factor` (see below)</span>
+<span class="sd">          </span>
+<span class="sd">        * `dt_factor`, factor to apply to damped natural frequency `f_d` of </span>
+<span class="sd">          mode under consideration, for the purpose of determining </span>
+<span class="sd">          appropriate `dt` value (see above):</span>
+<span class="sd">          `dt = 1 / (dt_factor * f_d)`.</span>
+<span class="sd">          Note only used if `dt=None`</span>
 <span class="sd">        </span>
 <span class="sd">        * calc_Seff`, _boolean_, dictates whether effective span will be </span>
 <span class="sd">          computed according to Figure NA.7. If False, overall span will be </span>
-<span class="sd">          used (conservative).</span>
+<span class="sd">          used (conservative)</span>
 <span class="sd">        </span>
 <span class="sd">        Additional keyword arguments can be defined. These should relate </span>
 <span class="sd">        the `__init__()` function of the `MovingLoadAnalysis` class </span>
@@ -10369,7 +10383,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
         <span class="c1"># Determine reasonable time step to use</span>
         <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="c1"># Rule of thumb - 10x frequency under consideration</span>
-            <span class="n">fs</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">f_d</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="n">dt_factor</span> <span class="o">*</span> <span class="n">f_d</span>
             <span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fs</span>  
         
         <span class="c1"># Run parent init</span>
@@ -10410,7 +10424,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
             
   <div class="item">
     <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, dt=None, verbose=True, calc_Seff=True, makePlot=False, **kwargs)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, dt=None, verbose=True, calc_Seff=True, makePlot=False, dt_factor=20, **kwargs)</p>
     </div>
     
 
@@ -10433,13 +10447,20 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
 <ul>
 <li>
 <p><code>dt</code>, time step to be used for results evaluation. If <em>None</em> then 
-  a reasonable time step to use will be determined, based on the 
-  frequency of the forcing function</p>
+  a suitable <code>dt</code> to use will be determined according to 
+  <code>dt_factor</code> (see below)</p>
+</li>
+<li>
+<p><code>dt_factor</code>, factor to apply to damped natural frequency <code>f_d</code> of 
+  mode under consideration, for the purpose of determining 
+  appropriate <code>dt</code> value (see above):
+  <code>dt = 1 / (dt_factor * f_d)</code>.
+  Note only used if <code>dt=None</code></p>
 </li>
 <li>
 <p>calc_Seff`, <em>boolean</em>, dictates whether effective span will be 
   computed according to Figure NA.7. If False, overall span will be 
-  used (conservative).</p>
+  used (conservative)</p>
 </li>
 </ul>
 <p>Additional keyword arguments can be defined. These should relate 
@@ -10457,6 +10478,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
              <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
              <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
              <span class="n">makePlot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+             <span class="n">dt_factor</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialisation function</span>
@@ -10473,12 +10495,18 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
 <span class="sd">    Optional:</span>
 <span class="sd">        </span>
 <span class="sd">    * `dt`, time step to be used for results evaluation. If _None_ then </span>
-<span class="sd">      a reasonable time step to use will be determined, based on the </span>
-<span class="sd">      frequency of the forcing function</span>
+<span class="sd">      a suitable `dt` to use will be determined according to </span>
+<span class="sd">      `dt_factor` (see below)</span>
+<span class="sd">      </span>
+<span class="sd">    * `dt_factor`, factor to apply to damped natural frequency `f_d` of </span>
+<span class="sd">      mode under consideration, for the purpose of determining </span>
+<span class="sd">      appropriate `dt` value (see above):</span>
+<span class="sd">      `dt = 1 / (dt_factor * f_d)`.</span>
+<span class="sd">      Note only used if `dt=None`</span>
 <span class="sd">    </span>
 <span class="sd">    * calc_Seff`, _boolean_, dictates whether effective span will be </span>
 <span class="sd">      computed according to Figure NA.7. If False, overall span will be </span>
-<span class="sd">      used (conservative).</span>
+<span class="sd">      used (conservative)</span>
 <span class="sd">    </span>
 <span class="sd">    Additional keyword arguments can be defined. These should relate </span>
 <span class="sd">    the `__init__()` function of the `MovingLoadAnalysis` class </span>
@@ -10582,7 +10610,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
     <span class="c1"># Determine reasonable time step to use</span>
     <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="c1"># Rule of thumb - 10x frequency under consideration</span>
-        <span class="n">fs</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">f_d</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="n">dt_factor</span> <span class="o">*</span> <span class="n">f_d</span>
         <span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fs</span>  
     
     <span class="c1"># Run parent init</span>

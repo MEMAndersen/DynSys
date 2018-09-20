@@ -1,4 +1,4 @@
-Version: 1.4.2
+Version: 1.5.1
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1090,7 +1090,8 @@ table {
     <li class="mono"><a href="#modalsys.ModalSys.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.PlotModeshapes">PlotModeshapes</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.PlotSystem">PlotSystem</a></li>
-    <li class="mono"><a href="#modalsys.ModalSys.PlotSystems_all">PlotSystems_all</a></li>
+    <li class="mono"><a href="#modalsys.ModalSys.PlotSystem_init_plot">PlotSystem_init_plot</a></li>
+    <li class="mono"><a href="#modalsys.ModalSys.PlotSystem_update_plot">PlotSystem_update_plot</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.PrintSystemMatrices">PrintSystemMatrices</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.freqVals">freqVals</a></li>
@@ -1730,6 +1731,73 @@ a second order dynamic system via its (usually truncated) modal properties</p>
         <span class="n">integral</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">vals</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">integral</span>
+    
+    
+    <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot system in deformed configuration as given by `v`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">PlotSystem_init_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">plot_env</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for initialising system displacement plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="c1"># Get modeshape function and salient x coordinates to use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1"># Variables used to generate plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1"># Define drawing artists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_res&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span><span class="s1">&#39;k-&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;y(t)&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span> <span class="o">=</span> <span class="n">plot_env</span>
+        <span class="k">if</span> <span class="n">plot_env</span><span class="p">:</span>        
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$y_{max}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$y_{min}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># Set up plot parameters</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement (m)&quot;</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">PlotSystem_update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for updating system displacement plot given displacements `v`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Calculate displacements along structure at time t, given modal disp v</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">v</span> <span class="err">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># Update envelopes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">)</span>       
+        
+        <span class="c1"># Update plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_res&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_max&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_min&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span>
     
 <span class="c1"># --------------- FUNCTIONS ------------------</span>
         
@@ -2466,6 +2534,73 @@ $$</p>
         <span class="n">integral</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">vals</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">integral</span>
+    
+    
+    <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot system in deformed configuration as given by `v`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">PlotSystem_init_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">plot_env</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for initialising system displacement plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="c1"># Get modeshape function and salient x coordinates to use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1"># Variables used to generate plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1"># Define drawing artists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_res&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span><span class="s1">&#39;k-&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;y(t)&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span> <span class="o">=</span> <span class="n">plot_env</span>
+        <span class="k">if</span> <span class="n">plot_env</span><span class="p">:</span>        
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$y_{max}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$y_{min}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># Set up plot parameters</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement (m)&quot;</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">PlotSystem_update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for updating system displacement plot given displacements `v`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Calculate displacements along structure at time t, given modal disp v</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">v</span> <span class="err">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># Update envelopes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">)</span>       
+        
+        <span class="c1"># Update plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_res&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_max&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_min&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span>
 </pre></div>
 
   </div>
@@ -5092,46 +5227,23 @@ be accessed directly, except by member functions</p>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.PlotSystem">
-    <p>def <span class="ident">PlotSystem</span>(</p><p>self, ax, v, **kwargs)</p>
+    <p>def <span class="ident">PlotSystem</span>(</p><p>self, ax, v)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Generic plotter function to display current configuration of this 
-<code>dynSys</code> object</p>
-<p><em>Inheritance expected</em></p>
-<hr />
-<p><strong>Required:</strong></p>
-<ul>
-<li>
-<p><code>ax</code>, axes object, onto which system will be plotted</p>
-</li>
-<li>
-<p><code>v</code>, <em>array</em> of displacement results, defining the position of 
-  analysis freedoms</p>
-</li>
-</ul></div>
+    <div class="desc"><p>Plot system in deformed configuration as given by <code>v</code></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.PlotSystem', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.PlotSystem" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generic plotter function to display current configuration of this </span>
-<span class="sd">    `dynSys` object</span>
-<span class="sd">    </span>
-<span class="sd">    _Inheritance expected_</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Required:**</span>
-<span class="sd">    </span>
-<span class="sd">    * `ax`, axes object, onto which system will be plotted</span>
-<span class="sd">    </span>
-<span class="sd">    * `v`, _array_ of displacement results, defining the position of </span>
-<span class="sd">      analysis freedoms</span>
-<span class="sd">    </span>
+<span class="sd">    Plot system in deformed configuration as given by `v`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use of overriding method expected!&quot;</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -5141,24 +5253,88 @@ be accessed directly, except by member functions</p>
   
             
   <div class="item">
-    <div class="name def" id="modalsys.ModalSys.PlotSystems_all">
-    <p>def <span class="ident">PlotSystems_all</span>(</p><p>self, ax_dict, **kwargs)</p>
+    <div class="name def" id="modalsys.ModalSys.PlotSystem_init_plot">
+    <p>def <span class="ident">PlotSystem_init_plot</span>(</p><p>self, ax, plot_env=True)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Generic plotter function to display current configuration of 
-all systems and subsystems</p></div>
+    <div class="desc"><p>Method for initialising system displacement plot</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.PlotSystems_all', this);">Show source &equiv;</a></p>
-  <div id="source-modalsys.ModalSys.PlotSystems_all" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax_dict</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.PlotSystem_init_plot', this);">Show source &equiv;</a></p>
+  <div id="source-modalsys.ModalSys.PlotSystem_init_plot" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem_init_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">plot_env</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generic plotter function to display current configuration of </span>
-<span class="sd">    all systems and subsystems</span>
+<span class="sd">    Method for initialising system displacement plot</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">pass</span>
+            
+    <span class="c1"># Get modeshape function and salient x coordinates to use</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="o">.</span><span class="n">x</span>
+    <span class="c1"># Variables used to generate plot data</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+    <span class="c1"># Define drawing artists</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_res&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span><span class="s1">&#39;k-&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;y(t)&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span> <span class="o">=</span> <span class="n">plot_env</span>
+    <span class="k">if</span> <span class="n">plot_env</span><span class="p">:</span>        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">,</span>
+                                          <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                          <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$y_{max}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">,</span>
+                                          <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                          <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$y_{min}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># Set up plot parameters</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ltrack</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement (m)&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="modalsys.ModalSys.PlotSystem_update_plot">
+    <p>def <span class="ident">PlotSystem_update_plot</span>(</p><p>self, v)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Method for updating system displacement plot given displacements <code>v</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.PlotSystem_update_plot', this);">Show source &equiv;</a></p>
+  <div id="source-modalsys.ModalSys.PlotSystem_update_plot" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem_update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method for updating system displacement plot given displacements `v`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Calculate displacements along structure at time t, given modal disp v</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">v</span> <span class="err">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeshapeFunc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="c1"># Update envelopes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">)</span>       
+    
+    <span class="c1"># Update plot data</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_res&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_max&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;y_env_min&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">y_env_min</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span>
 </pre></div>
 
   </div>

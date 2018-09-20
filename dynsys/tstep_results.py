@@ -15,6 +15,7 @@ import timeit
 import pandas
 from datetime import datetime
 from collections import OrderedDict
+#from deprecation import deprecated
 
 class TStep_Results:
     """
@@ -745,7 +746,7 @@ class TStep_Results:
         
         return fig_list
     
-        
+
     def PlotDeformed(self,timestep_index:int,dynsys_obj=None,ax=None,**kwargs):
         """
         Produce a plot of system in its deformed configuration, as per results 
@@ -780,7 +781,11 @@ class TStep_Results:
         return fig, line, time_text
     
     
-    def AnimateResults(self,dynsys_obj=None,**kwargs):
+    def AnimateResults(self,
+                       dynsys_obj=None,
+                       ax=None,
+                       SysPlot_kwargs={},
+                       FuncAnimation_kwargs={}):
         """
         Produce animation of results, plotting deformed configuration of system 
         at each time step
@@ -798,12 +803,18 @@ class TStep_Results:
           
         """
         
-        # Create figure to plot to
-        fig, ax = plt.subplots()
-        fig.set_size_inches((10,6))
+        # Define axes to plot to
+        if ax is None:
+            
+            fig, ax = plt.subplots()
+            fig.set_size_inches((10,6))
+            
+        else:
+            
+            fig = ax.get_figure()
         
         # Create class to faciliate animation production
-        sys_plot_obj = _SysPlot(ax,results_obj=self)
+        sys_plot_obj = SysPlot(ax,results_obj=self,**SysPlot_kwargs)
         
         # Get tstep data
         nResults = self.nResults
@@ -815,11 +826,18 @@ class TStep_Results:
             # Compute average time step
             dt = (self.t[-1]-self.t[0])/nResults
         
+        # Define default kwargs to pass to FuncAnimation
+        FuncAnimation_kwargs_0 = {'frames':npy.arange(0,nResults),
+                                  'interval':1000*dt,
+                                  'repeat':False}
+        
+        # Merge with any passed kwargs: n.b passed kwargs override defaults
+        FuncAnimation_kwargs = {**FuncAnimation_kwargs_0,
+                                **FuncAnimation_kwargs}
+        
         # Create animation
         anim = FuncAnimation(fig, sys_plot_obj.update,
-                             frames=npy.arange(0,nResults),
-                             interval=1000*dt,
-                             repeat=False)
+                             **FuncAnimation_kwargs)
         
         return anim
         
@@ -895,10 +913,8 @@ class TStep_Results:
         """
         Calculates total kinetic energy of system at each time step:
         
-        $$ T = \dot{y}^{T} M \dot{y} $$
+        $$ T(t) = \dot{y}(t)^{T} M \dot{y}(t) $$
         
-        where $\dot{y}$ is vector of DOF velocities at time t and M is the 
-        time-invariant mass matrix of the system
         """
         
         nResults = self.nResults
@@ -920,10 +936,8 @@ class TStep_Results:
         """
         Calculates total potential energy of system at each time step:
         
-        $$ V = y^{T} K y $$
-        
-        where y is vector of DOF displacements at time t and K is the 
-        time-invariant stiffness matrix of the system
+        $$ V(t) = y(t)^{T} K y(t) $$
+
         """
         
         nResults = self.nResults
@@ -945,10 +959,8 @@ class TStep_Results:
         """
         Calculates power of work done by external forces at each time step:
             
-        %% P = f.\dot{v} $$
-    
-        where f is vector of external forces applied to each DOF 
-        and $\dot{v}$ is vector of DOF velocities
+        $$ P(t) = f(t)^{T} \dot{v}(t) $$
+        
         """
         
         nResults = self.nResults
@@ -969,6 +981,11 @@ class TStep_Results:
     def CalcExternalWorkDone(self):
         """
         Calculates work done by external forces since t=0
+        
+        ***
+        _Practically this is done by integrating the power of work done by 
+        external forces as calculated by `CalcExternalWorkPower()` method. 
+        Note integration is approximate; trapezium rule is used_
         """
         
         t = npy.ravel(self.t)
@@ -982,6 +999,10 @@ class TStep_Results:
     
     
     def PlotEnergyResults(self,recalculate=True):
+        """
+        Produce figure with subplots to show key energy results of analysis
+        e.g. external work done, kinetic & potential energies
+        """
         
         if recalculate:
             KE = self.CalcKineticEnergy()
@@ -1231,13 +1252,16 @@ class TStep_Results:
         
         
 
-class _SysPlot():
+class SysPlot():
     """
     Class to faciliate animation of displacement results 
     as held in `tstep_results`
     """
     
-    def __init__(self, ax, results_obj, text_loc=(0.85, 0.95)):
+    def __init__(self, ax, results_obj,
+                 y_lim=None,
+                 time_template = 'Time = %.2fs',
+                 time_text_loc=(0.85, 0.95),):
         """
         Animation plot initialisation method
         
@@ -1251,7 +1275,9 @@ class _SysPlot():
         ***
         Optional:
         
-        * `text_loc`, location of time label within axes window
+        * `time_text_loc`, tuple, defines location of time caption
+        
+        * `time_template`, string, text for time caption
         
         """
         
@@ -1266,12 +1292,17 @@ class _SysPlot():
         # Call plot initialisation method of dynsys object
         dynsys_obj.PlotSystem_init_plot(ax)
         
-        # Determine required y scale for plot
-        v = results_obj.v
-        y_max = 1.2*npy.max(v)
-        y_min = 1.2*npy.min(v)
-        y_absmax = npy.max([y_max,y_min])
-        ax.set_ylim([-y_absmax,+y_absmax])
+        # Set y scale for plot
+        if  y_lim is None:
+            
+            # Attempt to determine appropriate y limits
+            v = results_obj.v
+            y_max = 1.2*npy.max(v)
+            y_min = 1.2*npy.min(v)
+            y_absmax = npy.max([y_max,y_min])
+            y_lim = (-y_absmax,+y_absmax)
+            
+        ax.set_ylim(y_lim)
         
         # ----------------------------------------------------------
         
@@ -1279,8 +1310,8 @@ class _SysPlot():
                      "Analysis: '%s'\n" % tstep_obj.name + 
                      "System: '%s'" % dynsys_obj.name)
         
-        self.time_template = 'Time = %.1fs'
-        self.time_text = ax.text(*text_loc, '',
+        self.time_template = time_template
+        self.time_text = ax.text(*time_text_loc, '',
                                  fontsize=8,transform=ax.transAxes)
         
         ax.legend(loc='lower right')
@@ -1298,6 +1329,7 @@ class _SysPlot():
         # Call plot update method of dynsys object
         lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
             
+        # Update time caption
         self.time_text.set_text(self.time_template % (t))
         
         return lines

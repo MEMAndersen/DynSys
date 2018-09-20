@@ -56,6 +56,12 @@ results_fig = results_obj.PlotStateResults()
 results_fig = results_obj.PlotResponseResults()
 
 #%%
+# Produce animation of displacement results
+anim = results_obj.AnimateResults(SysPlot_kwargs={'y_lim':(-0.005,0.005)},
+                                  FuncAnimation_kwargs={'repeat':True,
+                                                        'repeat_delay':1000})
+
+#%%
 # Plot periodogram (power spectral density estimate) of results
 results_obj.PlotResponsePSDs()
 

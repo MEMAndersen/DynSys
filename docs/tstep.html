@@ -1,4 +1,4 @@
-Version: 1.4.2
+Version: 1.5.1
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1590,9 +1590,6 @@ systems</p>
             
             <span class="c1"># Run solution</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;t_span: [</span><span class="si">%.5f</span><span class="s2">,</span><span class="si">%.5f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;y0: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y0</span><span class="p">))</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
             <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
@@ -1742,11 +1739,12 @@ systems</p>
                     <span class="n">max_dt</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
     <span class="n">myTStep</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">myTStep</span><span class="o">.</span><span class="n">results_obj</span>
+    
     <span class="n">res</span><span class="o">.</span><span class="n">PlotStateResults</span><span class="p">()</span>
-    
-
-    
     <span class="n">res</span><span class="o">.</span><span class="n">PlotResponseResults</span><span class="p">()</span>
+    
+    <span class="c1">#%%</span>
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">AnimateResults</span><span class="p">()</span>
 </pre></div>
 
   </div>
@@ -2260,9 +2258,6 @@ for further details:</p></div>
             
             <span class="c1"># Run solution</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;t_span: [</span><span class="si">%.5f</span><span class="s2">,</span><span class="si">%.5f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;y0: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y0</span><span class="p">))</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
             <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
@@ -2807,9 +2802,6 @@ and methods avaliable.</p></div>
         
         <span class="c1"># Run solution</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;t_span: [</span><span class="si">%.5f</span><span class="s2">,</span><span class="si">%.5f</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;y0: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y0</span><span class="p">))</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
         <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
