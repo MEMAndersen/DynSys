@@ -780,7 +780,11 @@ class TStep_Results:
         return fig, line, time_text
     
     
-    def AnimateResults(self,dynsys_obj=None,**kwargs):
+    def AnimateResults(self,
+                       dynsys_obj=None,
+                       ax=None,
+                       SysPlot_kwargs={},
+                       FuncAnimation_kwargs={}):
         """
         Produce animation of results, plotting deformed configuration of system 
         at each time step
@@ -798,12 +802,18 @@ class TStep_Results:
           
         """
         
-        # Create figure to plot to
-        fig, ax = plt.subplots()
-        fig.set_size_inches((10,6))
+        # Define axes to plot to
+        if ax is None:
+            
+            fig, ax = plt.subplots()
+            fig.set_size_inches((10,6))
+            
+        else:
+            
+            fig = ax.get_figure()
         
         # Create class to faciliate animation production
-        sys_plot_obj = _SysPlot(ax,results_obj=self)
+        sys_plot_obj = SysPlot(ax,results_obj=self,**SysPlot_kwargs)
         
         # Get tstep data
         nResults = self.nResults
@@ -815,11 +825,18 @@ class TStep_Results:
             # Compute average time step
             dt = (self.t[-1]-self.t[0])/nResults
         
+        # Define default kwargs to pass to FuncAnimation
+        FuncAnimation_kwargs_0 = {'frames':npy.arange(0,nResults),
+                                  'interval':1000*dt,
+                                  'repeat':False}
+        
+        # Merge with any passed kwargs: n.b passed kwargs override defaults
+        FuncAnimation_kwargs = {**FuncAnimation_kwargs_0,
+                                **FuncAnimation_kwargs}
+        
         # Create animation
         anim = FuncAnimation(fig, sys_plot_obj.update,
-                             frames=npy.arange(0,nResults),
-                             interval=1000*dt,
-                             repeat=False)
+                             **FuncAnimation_kwargs)
         
         return anim
         
@@ -1231,13 +1248,16 @@ class TStep_Results:
         
         
 
-class _SysPlot():
+class SysPlot():
     """
     Class to faciliate animation of displacement results 
     as held in `tstep_results`
     """
     
-    def __init__(self, ax, results_obj, text_loc=(0.85, 0.95)):
+    def __init__(self, ax, results_obj,
+                 y_lim=None,
+                 time_template = 'Time = %.2fs',
+                 time_text_loc=(0.85, 0.95),):
         """
         Animation plot initialisation method
         
@@ -1251,7 +1271,9 @@ class _SysPlot():
         ***
         Optional:
         
-        * `text_loc`, location of time label within axes window
+        * `time_text_loc`, tuple, defines location of time caption
+        
+        * `time_template`, string, text for time caption
         
         """
         
@@ -1266,12 +1288,17 @@ class _SysPlot():
         # Call plot initialisation method of dynsys object
         dynsys_obj.PlotSystem_init_plot(ax)
         
-        # Determine required y scale for plot
-        v = results_obj.v
-        y_max = 1.2*npy.max(v)
-        y_min = 1.2*npy.min(v)
-        y_absmax = npy.max([y_max,y_min])
-        ax.set_ylim([-y_absmax,+y_absmax])
+        # Set y scale for plot
+        if  y_lim is None:
+            
+            # Attempt to determine appropriate y limits
+            v = results_obj.v
+            y_max = 1.2*npy.max(v)
+            y_min = 1.2*npy.min(v)
+            y_absmax = npy.max([y_max,y_min])
+            y_lim = (-y_absmax,+y_absmax)
+            
+        ax.set_ylim(y_lim)
         
         # ----------------------------------------------------------
         
@@ -1279,8 +1306,8 @@ class _SysPlot():
                      "Analysis: '%s'\n" % tstep_obj.name + 
                      "System: '%s'" % dynsys_obj.name)
         
-        self.time_template = 'Time = %.1fs'
-        self.time_text = ax.text(*text_loc, '',
+        self.time_template = time_template
+        self.time_text = ax.text(*time_text_loc, '',
                                  fontsize=8,transform=ax.transAxes)
         
         ax.legend(loc='lower right')
@@ -1298,6 +1325,7 @@ class _SysPlot():
         # Call plot update method of dynsys object
         lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
             
+        # Update time caption
         self.time_text.set_text(self.time_template % (t))
         
         return lines
