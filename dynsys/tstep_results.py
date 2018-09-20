@@ -15,6 +15,7 @@ import timeit
 import pandas
 from datetime import datetime
 from collections import OrderedDict
+#from deprecation import deprecated
 
 class TStep_Results:
     """
@@ -745,7 +746,7 @@ class TStep_Results:
         
         return fig_list
     
-        
+
     def PlotDeformed(self,timestep_index:int,dynsys_obj=None,ax=None,**kwargs):
         """
         Produce a plot of system in its deformed configuration, as per results 
@@ -912,10 +913,8 @@ class TStep_Results:
         """
         Calculates total kinetic energy of system at each time step:
         
-        $$ T = \dot{y}^{T} M \dot{y} $$
+        $$ T(t) = \dot{y}(t)^{T} M \dot{y}(t) $$
         
-        where $\dot{y}$ is vector of DOF velocities at time t and M is the 
-        time-invariant mass matrix of the system
         """
         
         nResults = self.nResults
@@ -937,10 +936,8 @@ class TStep_Results:
         """
         Calculates total potential energy of system at each time step:
         
-        $$ V = y^{T} K y $$
-        
-        where y is vector of DOF displacements at time t and K is the 
-        time-invariant stiffness matrix of the system
+        $$ V(t) = y(t)^{T} K y(t) $$
+
         """
         
         nResults = self.nResults
@@ -962,10 +959,8 @@ class TStep_Results:
         """
         Calculates power of work done by external forces at each time step:
             
-        %% P = f.\dot{v} $$
-    
-        where f is vector of external forces applied to each DOF 
-        and $\dot{v}$ is vector of DOF velocities
+        $$ P(t) = f(t)^{T} \dot{v}(t) $$
+        
         """
         
         nResults = self.nResults
@@ -986,6 +981,11 @@ class TStep_Results:
     def CalcExternalWorkDone(self):
         """
         Calculates work done by external forces since t=0
+        
+        ***
+        _Practically this is done by integrating the power of work done by 
+        external forces as calculated by `CalcExternalWorkPower()` method. 
+        Note integration is approximate; trapezium rule is used_
         """
         
         t = npy.ravel(self.t)
@@ -999,6 +999,10 @@ class TStep_Results:
     
     
     def PlotEnergyResults(self,recalculate=True):
+        """
+        Produce figure with subplots to show key energy results of analysis
+        e.g. external work done, kinetic & potential energies
+        """
         
         if recalculate:
             KE = self.CalcKineticEnergy()

@@ -1,4 +1,4 @@
-Version: 1.4.2
+Version: 1.5.1
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1078,7 +1078,8 @@ table {
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetStateMatrix">GetStateMatrix</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystem">PlotSystem</a></li>
-    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystems_all">PlotSystems_all</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystem_init_plot">PlotSystem_init_plot</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystem_update_plot">PlotSystem_update_plot</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PrintSystemMatrices">PrintSystemMatrices</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.freqVals">freqVals</a></li>
@@ -1120,7 +1121,6 @@ a chain hanging vertically under self-weight</p>
 <span class="c1"># Other imports</span>
 <span class="kn">import</span> <span class="nn">dynsys</span>
 
-
 <span class="k">class</span> <span class="nc">hanging1DChain</span><span class="p">(</span><span class="n">dynsys</span><span class="o">.</span><span class="n">DynSys</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Chain hanging vertically under self-weight</span>
@@ -1149,6 +1149,9 @@ a chain hanging vertically under self-weight</p>
 <span class="sd">        `nDOF=0` denotes the top of the chain. By default `nDOF=0` is </span>
 <span class="sd">        constrained to not displace.</span>
 <span class="sd">        &quot;&quot;&quot;</span>    
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass_per_length</span> <span class="o">=</span> <span class="n">mass_per_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">length</span>
         
         <span class="c1"># Define mass matrix</span>
         <span class="n">M_vals</span> <span class="o">=</span> <span class="n">mass_per_length</span><span class="o">*</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,))</span>
@@ -1198,16 +1201,93 @@ a chain hanging vertically under self-weight</p>
             <span class="n">Jrow</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jrow</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jnew</span><span class="o">=</span><span class="n">Jrow</span><span class="p">,</span><span class="n">Jkey</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
         
+    <span class="k">def</span> <span class="nf">PlotSystem_init_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">plot_env</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for initialising system displacement plot</span>
+<span class="sd">        ***</span>
+<span class="sd">        (Will usually be overriden by derived class methods)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="c1"># Variables used to generate plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">,))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+
+        <span class="c1"># Define drawing artists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span><span class="s1">&#39;ko-&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v(t)$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span> <span class="o">=</span> <span class="n">plot_env</span>
+        <span class="k">if</span> <span class="n">plot_env</span><span class="p">:</span>        
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v_{max}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v_{min}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># Set up plot parameters</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Distance along chain&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement (m)&quot;</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">PlotSystem_update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for updating system displacement plot given displacements `v`</span>
+<span class="sd">        ***</span>
+<span class="sd">        (Will usually be overriden by derived class methods)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Update envelopes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">)</span>       
+        
+        <span class="c1"># Update plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_max&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_min&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span>
+        
+        
+
         
 <span class="c1"># ********************** TEST ROUTINES ****************************************</span>
 <span class="c1"># (Only execute when running as a script / top level)</span>
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
-    <span class="n">dynSys1</span> <span class="o">=</span> <span class="n">hanging1DChain</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">tstep</span>
+    
+    <span class="n">nDOF</span> <span class="o">=</span> <span class="mi">21</span>
+    <span class="n">mass_per_length</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="mi">10</span>
+    
+    <span class="n">dynSys1</span> <span class="o">=</span> <span class="n">hanging1DChain</span><span class="p">(</span><span class="n">nDOF</span><span class="p">,</span><span class="n">mass_per_length</span><span class="p">,</span><span class="n">length</span><span class="p">)</span>
     <span class="n">dynSys1</span><span class="o">.</span><span class="n">PrintSystemMatrices</span><span class="p">()</span>
+    
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">([</span><span class="n">npy</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nDOF</span><span class="p">)</span><span class="o">/</span><span class="n">nDOF</span><span class="p">)),</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,))])</span>
+    <span class="n">my_results</span> <span class="o">=</span> <span class="n">tstep</span><span class="o">.</span><span class="n">TStep</span><span class="p">(</span><span class="n">dynSys1</span><span class="p">,</span><span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    
+    <span class="c1">#my_results.PlotStateResults()</span>
+    
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">my_results</span><span class="o">.</span><span class="n">AnimateResults</span><span class="p">()</span>
+    <span class="c1">#%%</span>
+    <span class="c1">#my_results.PlotEnergyResults()</span>
 </pre></div>
 
   </div>
@@ -1268,6 +1348,9 @@ a chain hanging vertically under self-weight</p>
 <span class="sd">        constrained to not displace.</span>
 <span class="sd">        &quot;&quot;&quot;</span>    
         
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass_per_length</span> <span class="o">=</span> <span class="n">mass_per_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">length</span>
+        
         <span class="c1"># Define mass matrix</span>
         <span class="n">M_vals</span> <span class="o">=</span> <span class="n">mass_per_length</span><span class="o">*</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,))</span>
         <span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>               <span class="c1"># halve first mass to account for half-length</span>
@@ -1316,7 +1399,68 @@ a chain hanging vertically under self-weight</p>
             <span class="n">Jrow</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jrow</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jnew</span><span class="o">=</span><span class="n">Jrow</span><span class="p">,</span><span class="n">Jkey</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">PlotSystem_init_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">plot_env</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for initialising system displacement plot</span>
+<span class="sd">        ***</span>
+<span class="sd">        (Will usually be overriden by derived class methods)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="c1"># Variables used to generate plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">,))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+
+        <span class="c1"># Define drawing artists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span><span class="s1">&#39;ko-&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v(t)$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span> <span class="o">=</span> <span class="n">plot_env</span>
+        <span class="k">if</span> <span class="n">plot_env</span><span class="p">:</span>        
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v_{max}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">,</span>
+                                              <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                              <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v_{min}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># Set up plot parameters</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Distance along chain&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement (m)&quot;</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">PlotSystem_update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for updating system displacement plot given displacements `v`</span>
+<span class="sd">        ***</span>
+<span class="sd">        (Will usually be overriden by derived class methods)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Update envelopes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">)</span>       
+        
+        <span class="c1"># Update plot data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_max&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_min&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span>
 </pre></div>
 
   </div>
@@ -1388,6 +1532,9 @@ constrained to not displace.</p></div>
 <span class="sd">    constrained to not displace.</span>
 <span class="sd">    &quot;&quot;&quot;</span>    
     
+    <span class="bp">self</span><span class="o">.</span><span class="n">mass_per_length</span> <span class="o">=</span> <span class="n">mass_per_length</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">length</span>
+    
     <span class="c1"># Define mass matrix</span>
     <span class="n">M_vals</span> <span class="o">=</span> <span class="n">mass_per_length</span><span class="o">*</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">npy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nDOF</span><span class="p">,))</span>
     <span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">M_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>               <span class="c1"># halve first mass to account for half-length</span>
@@ -1436,7 +1583,8 @@ constrained to not displace.</p></div>
         <span class="n">Jrow</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">Jrow</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jrow</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">Jnew</span><span class="o">=</span><span class="n">Jrow</span><span class="p">,</span><span class="n">Jkey</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -3342,40 +3490,37 @@ be accessed directly, except by member functions</p>
 
     
   
-    <div class="desc"><p>Generic plotter function to display current configuration of this 
-<code>dynSys</code> object</p>
-<p><em>Inheritance expected</em></p>
-<hr />
+    <div class="desc"><p>Plot system in deformed configuration</p>
 <p><strong>Required:</strong></p>
 <ul>
 <li>
 <p><code>ax</code>, axes object, onto which system will be plotted</p>
 </li>
 <li>
-<p><code>v</code>, <em>array</em> of displacement results, defining the position of 
-  analysis freedoms</p>
+<p><code>v</code>, <em>array</em> of displacement results, defining the position of DOFs</p>
 </li>
-</ul></div>
+</ul>
+<p>Any additional keyword arguments will be passed to 
+PlotSystem_init_plot() method</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.PlotSystem', this);">Show source &equiv;</a></p>
   <div id="source-hanging_1d_chain.hanging1DChain.PlotSystem" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generic plotter function to display current configuration of this </span>
-<span class="sd">    `dynSys` object</span>
+<span class="sd">    Plot system in deformed configuration</span>
 <span class="sd">    </span>
-<span class="sd">    _Inheritance expected_</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
 <span class="sd">    **Required:**</span>
 <span class="sd">    </span>
 <span class="sd">    * `ax`, axes object, onto which system will be plotted</span>
 <span class="sd">    </span>
-<span class="sd">    * `v`, _array_ of displacement results, defining the position of </span>
-<span class="sd">      analysis freedoms</span>
-<span class="sd">    </span>
+<span class="sd">    * `v`, _array_ of displacement results, defining the position of DOFs</span>
+<span class="sd">      </span>
+<span class="sd">    Any additional keyword arguments will be passed to </span>
+<span class="sd">    PlotSystem_init_plot() method</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use of overriding method expected!&quot;</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -3385,24 +3530,96 @@ be accessed directly, except by member functions</p>
   
             
   <div class="item">
-    <div class="name def" id="hanging_1d_chain.hanging1DChain.PlotSystems_all">
-    <p>def <span class="ident">PlotSystems_all</span>(</p><p>self, ax_dict, **kwargs)</p>
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.PlotSystem_init_plot">
+    <p>def <span class="ident">PlotSystem_init_plot</span>(</p><p>self, ax, plot_env=True)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Generic plotter function to display current configuration of 
-all systems and subsystems</p></div>
+    <div class="desc"><p>Method for initialising system displacement plot</p>
+<hr />
+<p>(Will usually be overriden by derived class methods)</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.PlotSystems_all', this);">Show source &equiv;</a></p>
-  <div id="source-hanging_1d_chain.hanging1DChain.PlotSystems_all" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystems_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax_dict</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.PlotSystem_init_plot', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.PlotSystem_init_plot" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem_init_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">plot_env</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generic plotter function to display current configuration of </span>
-<span class="sd">    all systems and subsystems</span>
+<span class="sd">    Method for initialising system displacement plot</span>
+<span class="sd">    ***</span>
+<span class="sd">    (Will usually be overriden by derived class methods)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">pass</span>
+            
+    <span class="c1"># Variables used to generate plot data</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span><span class="p">,))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+    <span class="c1"># Define drawing artists</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span><span class="s1">&#39;ko-&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v(t)$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span> <span class="o">=</span> <span class="n">plot_env</span>
+    <span class="k">if</span> <span class="n">plot_env</span><span class="p">:</span>        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">,</span>
+                                          <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                          <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v_{max}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">,</span>
+                                          <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                                          <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$v_{min}$&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># Set up plot parameters</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Distance along chain&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Displacement (m)&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.PlotSystem_update_plot">
+    <p>def <span class="ident">PlotSystem_update_plot</span>(</p><p>self, v)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Method for updating system displacement plot given displacements <code>v</code></p>
+<hr />
+<p>(Will usually be overriden by derived class methods)</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.PlotSystem_update_plot', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.PlotSystem_update_plot" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotSystem_update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method for updating system displacement plot given displacements `v`</span>
+<span class="sd">    ***</span>
+<span class="sd">    (Will usually be overriden by derived class methods)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Update envelopes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">)</span>       
+    
+    <span class="c1"># Update plot data</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_env</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_max&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;v_env_min&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">v_env_min</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span>
 </pre></div>
 
   </div>
@@ -3642,6 +3859,27 @@ Define frequency values to evaluate frequency response G(f) at</p>
 
   </div>
   
+          <h3>Instance variables</h3>
+            <div class="item">
+            <p id="hanging_1d_chain.hanging1DChain.length" class="name">var <span class="ident">length</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="hanging_1d_chain.hanging1DChain.mass_per_length" class="name">var <span class="ident">mass_per_length</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
       </div>
       </div>
 

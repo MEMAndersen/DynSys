@@ -1,4 +1,4 @@
-Version: 1.4.2
+Version: 1.5.1
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1057,6 +1057,16 @@ table {
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
         <li class="mono">
+        <span class="class_name"><a href="#tstep_results.SysPlot">SysPlot</a></span>
+        
+          
+  <ul>
+    <li class="mono"><a href="#tstep_results.SysPlot.__init__">__init__</a></li>
+    <li class="mono"><a href="#tstep_results.SysPlot.update">update</a></li>
+  </ul>
+
+        </li>
+        <li class="mono">
         <span class="class_name"><a href="#tstep_results.TStep_Results">TStep_Results</a></span>
         
           
@@ -1064,11 +1074,16 @@ table {
     <li class="mono"><a href="#tstep_results.TStep_Results.__init__">__init__</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.AnimateResults">AnimateResults</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.CalcDOFStats">CalcDOFStats</a></li>
+    <li class="mono"><a href="#tstep_results.TStep_Results.CalcExternalWorkDone">CalcExternalWorkDone</a></li>
+    <li class="mono"><a href="#tstep_results.TStep_Results.CalcExternalWorkPower">CalcExternalWorkPower</a></li>
+    <li class="mono"><a href="#tstep_results.TStep_Results.CalcKineticEnergy">CalcKineticEnergy</a></li>
+    <li class="mono"><a href="#tstep_results.TStep_Results.CalcPotentialEnergy">CalcPotentialEnergy</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.CalcResponseStats">CalcResponseStats</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.CalcResponses">CalcResponses</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.ClearResults">ClearResults</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.GetResults">GetResults</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.PlotDeformed">PlotDeformed</a></li>
+    <li class="mono"><a href="#tstep_results.TStep_Results.PlotEnergyResults">PlotEnergyResults</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.PlotResponsePSDs">PlotResponsePSDs</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.PlotResponseResults">PlotResponseResults</a></li>
     <li class="mono"><a href="#tstep_results.TStep_Results.PlotResults">PlotResults</a></li>
@@ -1112,11 +1127,12 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">npy</span>
 <span class="kn">import</span> <span class="nn">scipy.signal</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">matplotlib.animation</span> <span class="kn">as</span> <span class="nn">animation</span>
+<span class="kn">from</span> <span class="nn">matplotlib.animation</span> <span class="kn">import</span> <span class="n">FuncAnimation</span>
 <span class="kn">import</span> <span class="nn">timeit</span>
 <span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="c1">#from deprecation import deprecated</span>
 
 <span class="k">class</span> <span class="nc">TStep_Results</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1847,7 +1863,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         
         <span class="k">return</span> <span class="n">fig_list</span>
     
-        
+
     <span class="k">def</span> <span class="nf">PlotDeformed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timestep_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce a plot of system in its deformed configuration, as per results </span>
@@ -1882,7 +1898,11 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
     
     
-    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">SysPlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
+                       <span class="n">FuncAnimation_kwargs</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce animation of results, plotting deformed configuration of system </span>
 <span class="sd">        at each time step</span>
@@ -1900,41 +1920,43 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="sd">          </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="c1"># Get system to plot</span>
-        <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
+        <span class="c1"># Define axes to plot to</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Producing animation of deformed configuration of &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> 
-              <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
             
-        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
-        <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># time interval</span>
-        <span class="n">Ns</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="c1"># number of time-steps</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;No time steps:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Ns</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time interval:</span><span class="se">\t</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="p">)</span>
-        
-        <span class="c1"># Create figure and axes onto which to draw system</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        
-        <span class="c1"># Define function for drawing each frame</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PlotDeformed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="n">dynsys_obj</span><span class="p">,</span>
-                                                     <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        
-        <span class="k">def</span> <span class="nf">draw_frame</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="k">else</span><span class="p">:</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-<span class="c1">#            line.set_data([0,i],[0,0])</span>
-<span class="c1">#            time_text.set_text(dt*i)</span>
-<span class="c1">#            </span>
-<span class="c1">#            return line, time_text</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
         
-        <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">draw_frame</span><span class="p">,</span> 
-                                      <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
-                                      <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># convert to ms</span>
-                                      <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="c1"># Create class to faciliate animation production</span>
+        <span class="n">sys_plot_obj</span> <span class="o">=</span> <span class="n">SysPlot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="n">results_obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">SysPlot_kwargs</span><span class="p">)</span>
         
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="c1"># Get tstep data</span>
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="c1"># Get time step between frames</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dt</span>
+        
+        <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c1"># Compute average time step</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">nResults</span>
+        
+        <span class="c1"># Define default kwargs to pass to FuncAnimation</span>
+        <span class="n">FuncAnimation_kwargs_0</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;frames&#39;</span><span class="p">:</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nResults</span><span class="p">),</span>
+                                  <span class="s1">&#39;interval&#39;</span><span class="p">:</span><span class="mi">1000</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span>
+                                  <span class="s1">&#39;repeat&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">}</span>
+        
+        <span class="c1"># Merge with any passed kwargs: n.b passed kwargs override defaults</span>
+        <span class="n">FuncAnimation_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">FuncAnimation_kwargs_0</span><span class="p">,</span>
+                                <span class="o">**</span><span class="n">FuncAnimation_kwargs</span><span class="p">}</span>
+        
+        <span class="c1"># Create animation</span>
+        <span class="n">anim</span> <span class="o">=</span> <span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">sys_plot_obj</span><span class="o">.</span><span class="n">update</span><span class="p">,</span>
+                             <span class="o">**</span><span class="n">FuncAnimation_kwargs</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">anim</span>
         
         
         
@@ -2003,7 +2025,152 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses_list</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_names_list</span>
         
+    
+    <span class="k">def</span> <span class="nf">CalcKineticEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates total kinetic energy of system at each time step:</span>
+<span class="sd">        </span>
+<span class="sd">        $$ T(t) = \dot{y}(t)^{T} M \dot{y}(t) $$</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">vdot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
+        
+        <span class="n">KE</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+        
+            <span class="n">KE</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">M</span> <span class="err">@</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">KE</span> <span class="o">=</span> <span class="n">KE</span>
+        <span class="k">return</span> <span class="n">KE</span>
+    
+    
+    <span class="k">def</span> <span class="nf">CalcPotentialEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates total potential energy of system at each time step:</span>
+<span class="sd">        </span>
+<span class="sd">        $$ V(t) = y(t)^{T} K y(t) $$</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span>
+        
+        <span class="n">PE</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+        
+            <span class="n">PE</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">K</span> <span class="err">@</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">PE</span> <span class="o">=</span> <span class="n">PE</span>
+        <span class="k">return</span> <span class="n">PE</span>
+   
+    
+    <span class="k">def</span> <span class="nf">CalcExternalWorkPower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates power of work done by external forces at each time step:</span>
+<span class="sd">            </span>
+<span class="sd">        $$ P(t) = f(t)^{T} \dot{v}(t) $$</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">vdot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
+        
+        <span class="n">ExtWork_Power</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+        
+            <span class="n">ExtWork_Power</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork_Power</span> <span class="o">=</span> <span class="n">ExtWork_Power</span>
+        <span class="k">return</span> <span class="n">ExtWork_Power</span>
+    
+    
+    <span class="k">def</span> <span class="nf">CalcExternalWorkDone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates work done by external forces since t=0</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        _Practically this is done by integrating the power of work done by </span>
+<span class="sd">        external forces as calculated by `CalcExternalWorkPower()` method. </span>
+<span class="sd">        Note integration is approximate; trapezium rule is used_</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">t</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">ExtWork_power</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcExternalWorkPower</span><span class="p">()</span>
+        
+        <span class="c1"># Integrate power of external work to get total external work from t=0</span>
+        <span class="n">ExtWork</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">cumtrapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">ExtWork_power</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork</span> <span class="o">=</span> <span class="n">ExtWork</span>
+        <span class="k">return</span> <span class="n">ExtWork</span>
+    
+    
+    <span class="k">def</span> <span class="nf">PlotEnergyResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce figure with subplots to show key energy results of analysis</span>
+<span class="sd">        e.g. external work done, kinetic &amp; potential energies</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">recalculate</span><span class="p">:</span>
+            <span class="n">KE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcKineticEnergy</span><span class="p">()</span>
+            <span class="n">PE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcPotentialEnergy</span><span class="p">()</span>
+            <span class="n">ExtWork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcExternalWorkDone</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">KE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KE</span>
+            <span class="n">PE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PE</span>
+            <span class="n">ExtWork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork</span>
+            
+        <span class="c1"># Back-calculate energy dissipated</span>
+        <span class="n">E0</span> <span class="o">=</span> <span class="n">PE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">KE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>              <span class="c1"># energy of system at t=0</span>
+        <span class="n">ED</span> <span class="o">=</span> <span class="n">ExtWork</span> <span class="o">-</span> <span class="p">(</span><span class="n">PE</span><span class="o">+</span><span class="n">KE</span><span class="p">)</span> <span class="o">+</span> <span class="n">E0</span>     <span class="c1"># energy dissipated since t=0</span>
+                        
+        <span class="c1"># Get time values for plots</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+        
+        <span class="n">tstep_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span>
+
+        <span class="c1"># Create new figure for plots</span>
+        <span class="n">fig</span><span class="p">,</span><span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Energy results</span><span class="se">\n</span><span class="s2">Analysis: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">fontsize_titles</span> <span class="o">=</span> <span class="mi">10</span>
+        
+        <span class="c1"># Define individual subplots</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">ExtWork</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;External work done&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,(</span><span class="n">KE</span><span class="o">+</span><span class="n">PE</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Conserved energy, $E=T+V$&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">ED</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Energy dissipated (from energy balance)&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,(</span><span class="n">KE</span><span class="o">-</span><span class="n">PE</span><span class="p">),</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Lagrangian, $L=T-V$&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;External/Internal work done&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">KE</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Kinetic energy: T(t) = $\dot{y}(t)^{T}M\dot{y}(t)$&quot;</span><span class="p">,</span>
+                     <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">PE</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Potential energy: V(t) = $y(t)^{T}Ky(t)$&quot;</span><span class="p">,</span>
+                     <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+        
+        <span class="c1"># Set details for shared x-axis</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time $t$ (secs)&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
         
     <span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2199,6 +2366,90 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
                     <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span>
         
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time-series results written to `{0}`&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_fName</span><span class="p">))</span>
+        
+        
+
+<span class="k">class</span> <span class="nc">SysPlot</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to faciliate animation of displacement results </span>
+<span class="sd">    as held in `tstep_results`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
+                 <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
+                 <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Animation plot initialisation method</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `ax`, axes to plot to</span>
+<span class="sd">        </span>
+<span class="sd">        * `results_obj`, instance of `tstep_results` class</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">        </span>
+<span class="sd">        * `time_text_loc`, tuple, defines location of time caption</span>
+<span class="sd">        </span>
+<span class="sd">        * `time_template`, string, text for time caption</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span> <span class="o">=</span> <span class="n">results_obj</span>
+        
+        <span class="c1"># Get dynamic system object</span>
+        <span class="n">tstep_obj</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">tstep_obj</span>
+        <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">dynsys_obj</span>
+        
+        <span class="c1"># Call plot initialisation method of dynsys object</span>
+        <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        
+        <span class="c1"># Set y scale for plot</span>
+        <span class="k">if</span>  <span class="n">y_lim</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+            <span class="c1"># Attempt to determine appropriate y limits</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">v</span>
+            <span class="n">y_max</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">y_min</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_max</span><span class="p">,</span><span class="n">y_min</span><span class="p">])</span>
+            <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">)</span>
+            
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">)</span>
+        
+        <span class="c1"># ----------------------------------------------------------</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Displacement results</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                     <span class="s2">&quot;Analysis: &#39;</span><span class="si">%s</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> 
+                     <span class="s2">&quot;System: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">=</span> <span class="n">time_template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">*</span><span class="n">time_text_loc</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                 <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span><span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+        
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Animation plot update method, for results time step (frame) `i`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get results applicable to this time increment</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+        
+        <span class="c1"># Call plot update method of dynsys object</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+            
+        <span class="c1"># Update time caption</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="n">lines</span>
 </pre></div>
 
   </div>
@@ -2218,6 +2469,286 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 
 
     <h2 class="section-title" id="header-classes">Classes</h2>
+      
+      <div class="item">
+      <p id="tstep_results.SysPlot" class="name">class <span class="ident">SysPlot</span></p>
+      
+  
+    <div class="desc"><p>Class to faciliate animation of displacement results 
+as held in <code>tstep_results</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.SysPlot', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.SysPlot" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">SysPlot</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to faciliate animation of displacement results </span>
+<span class="sd">    as held in `tstep_results`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
+                 <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
+                 <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Animation plot initialisation method</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `ax`, axes to plot to</span>
+<span class="sd">        </span>
+<span class="sd">        * `results_obj`, instance of `tstep_results` class</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">        </span>
+<span class="sd">        * `time_text_loc`, tuple, defines location of time caption</span>
+<span class="sd">        </span>
+<span class="sd">        * `time_template`, string, text for time caption</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span> <span class="o">=</span> <span class="n">results_obj</span>
+        
+        <span class="c1"># Get dynamic system object</span>
+        <span class="n">tstep_obj</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">tstep_obj</span>
+        <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">dynsys_obj</span>
+        
+        <span class="c1"># Call plot initialisation method of dynsys object</span>
+        <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        
+        <span class="c1"># Set y scale for plot</span>
+        <span class="k">if</span>  <span class="n">y_lim</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+            <span class="c1"># Attempt to determine appropriate y limits</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">v</span>
+            <span class="n">y_max</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">y_min</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_max</span><span class="p">,</span><span class="n">y_min</span><span class="p">])</span>
+            <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">)</span>
+            
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">)</span>
+        
+        <span class="c1"># ----------------------------------------------------------</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Displacement results</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                     <span class="s2">&quot;Analysis: &#39;</span><span class="si">%s</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> 
+                     <span class="s2">&quot;System: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">=</span> <span class="n">time_template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">*</span><span class="n">time_text_loc</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                 <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span><span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+        
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Animation plot update method, for results time step (frame) `i`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get results applicable to this time increment</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+        
+        <span class="c1"># Call plot update method of dynsys object</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+            
+        <span class="c1"># Update time caption</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="n">lines</span>
+</pre></div>
+
+  </div>
+</div>
+
+
+      <div class="class">
+          <h3>Ancestors (in MRO)</h3>
+          <ul class="class_list">
+          <li><a href="#tstep_results.SysPlot">SysPlot</a></li>
+          <li>builtins.object</li>
+          </ul>
+          <h3>Static methods</h3>
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.SysPlot.__init__">
+    <p>def <span class="ident">__init__</span>(</p><p>self, ax, results_obj, y_lim=None, time_template=&#39;Time = %.2fs&#39;, time_text_loc=(0.85, 0.95))</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Animation plot initialisation method</p>
+<hr />
+<p>Required:</p>
+<ul>
+<li>
+<p><code>ax</code>, axes to plot to</p>
+</li>
+<li>
+<p><code>results_obj</code>, instance of <code>tstep_results</code> class</p>
+</li>
+</ul>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>time_text_loc</code>, tuple, defines location of time caption</p>
+</li>
+<li>
+<p><code>time_template</code>, string, text for time caption</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.SysPlot.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.SysPlot.__init__" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
+             <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
+             <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Animation plot initialisation method</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">        </span>
+<span class="sd">    * `ax`, axes to plot to</span>
+<span class="sd">    </span>
+<span class="sd">    * `results_obj`, instance of `tstep_results` class</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">    </span>
+<span class="sd">    * `time_text_loc`, tuple, defines location of time caption</span>
+<span class="sd">    </span>
+<span class="sd">    * `time_template`, string, text for time caption</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get objects</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span> <span class="o">=</span> <span class="n">results_obj</span>
+    
+    <span class="c1"># Get dynamic system object</span>
+    <span class="n">tstep_obj</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">tstep_obj</span>
+    <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">dynsys_obj</span>
+    
+    <span class="c1"># Call plot initialisation method of dynsys object</span>
+    <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="c1"># Set y scale for plot</span>
+    <span class="k">if</span>  <span class="n">y_lim</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="c1"># Attempt to determine appropriate y limits</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">v</span>
+        <span class="n">y_max</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">y_min</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_max</span><span class="p">,</span><span class="n">y_min</span><span class="p">])</span>
+        <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">)</span>
+        
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">)</span>
+    
+    <span class="c1"># ----------------------------------------------------------</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Displacement results</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                 <span class="s2">&quot;Analysis: &#39;</span><span class="si">%s</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> 
+                 <span class="s2">&quot;System: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">=</span> <span class="n">time_template</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">*</span><span class="n">time_text_loc</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                             <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span><span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.SysPlot.update">
+    <p>def <span class="ident">update</span>(</p><p>self, i)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Animation plot update method, for results time step (frame) <code>i</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.SysPlot.update', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.SysPlot.update" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Animation plot update method, for results time step (frame) `i`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get results applicable to this time increment</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+    
+    <span class="c1"># Call plot update method of dynsys object</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+        
+    <span class="c1"># Update time caption</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">lines</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+          <h3>Instance variables</h3>
+            <div class="item">
+            <p id="tstep_results.SysPlot.dynsys_obj" class="name">var <span class="ident">dynsys_obj</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="tstep_results.SysPlot.results_obj" class="name">var <span class="ident">results_obj</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="tstep_results.SysPlot.time_template" class="name">var <span class="ident">time_template</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="tstep_results.SysPlot.time_text" class="name">var <span class="ident">time_text</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+      </div>
+      </div>
       
       <div class="item">
       <p id="tstep_results.TStep_Results" class="name">class <span class="ident">TStep_Results</span></p>
@@ -2957,7 +3488,7 @@ analysis as carried out by <code>TStep</code></p></div>
         
         <span class="k">return</span> <span class="n">fig_list</span>
     
-        
+
     <span class="k">def</span> <span class="nf">PlotDeformed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timestep_index</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce a plot of system in its deformed configuration, as per results </span>
@@ -2992,7 +3523,11 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
     
     
-    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">SysPlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
+                       <span class="n">FuncAnimation_kwargs</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce animation of results, plotting deformed configuration of system </span>
 <span class="sd">        at each time step</span>
@@ -3010,41 +3545,43 @@ analysis as carried out by <code>TStep</code></p></div>
 <span class="sd">          </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="c1"># Get system to plot</span>
-        <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
+        <span class="c1"># Define axes to plot to</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Producing animation of deformed configuration of &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> 
-              <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
             
-        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
-        <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># time interval</span>
-        <span class="n">Ns</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="c1"># number of time-steps</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;No time steps:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Ns</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time interval:</span><span class="se">\t</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="p">)</span>
-        
-        <span class="c1"># Create figure and axes onto which to draw system</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        
-        <span class="c1"># Define function for drawing each frame</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PlotDeformed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="n">dynsys_obj</span><span class="p">,</span>
-                                                     <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        
-        <span class="k">def</span> <span class="nf">draw_frame</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="k">else</span><span class="p">:</span>
             
-            <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-<span class="c1">#            line.set_data([0,i],[0,0])</span>
-<span class="c1">#            time_text.set_text(dt*i)</span>
-<span class="c1">#            </span>
-<span class="c1">#            return line, time_text</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
         
-        <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">draw_frame</span><span class="p">,</span> 
-                                      <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
-                                      <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># convert to ms</span>
-                                      <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="c1"># Create class to faciliate animation production</span>
+        <span class="n">sys_plot_obj</span> <span class="o">=</span> <span class="n">SysPlot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="n">results_obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">SysPlot_kwargs</span><span class="p">)</span>
         
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="c1"># Get tstep data</span>
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="c1"># Get time step between frames</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dt</span>
+        
+        <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c1"># Compute average time step</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">nResults</span>
+        
+        <span class="c1"># Define default kwargs to pass to FuncAnimation</span>
+        <span class="n">FuncAnimation_kwargs_0</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;frames&#39;</span><span class="p">:</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nResults</span><span class="p">),</span>
+                                  <span class="s1">&#39;interval&#39;</span><span class="p">:</span><span class="mi">1000</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span>
+                                  <span class="s1">&#39;repeat&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">}</span>
+        
+        <span class="c1"># Merge with any passed kwargs: n.b passed kwargs override defaults</span>
+        <span class="n">FuncAnimation_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">FuncAnimation_kwargs_0</span><span class="p">,</span>
+                                <span class="o">**</span><span class="n">FuncAnimation_kwargs</span><span class="p">}</span>
+        
+        <span class="c1"># Create animation</span>
+        <span class="n">anim</span> <span class="o">=</span> <span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">sys_plot_obj</span><span class="o">.</span><span class="n">update</span><span class="p">,</span>
+                             <span class="o">**</span><span class="n">FuncAnimation_kwargs</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">anim</span>
         
         
         
@@ -3113,7 +3650,152 @@ analysis as carried out by <code>TStep</code></p></div>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">responses_list</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_names_list</span>
         
+    
+    <span class="k">def</span> <span class="nf">CalcKineticEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates total kinetic energy of system at each time step:</span>
+<span class="sd">        </span>
+<span class="sd">        $$ T(t) = \dot{y}(t)^{T} M \dot{y}(t) $$</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">vdot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
+        
+        <span class="n">KE</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+        
+            <span class="n">KE</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">M</span> <span class="err">@</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">KE</span> <span class="o">=</span> <span class="n">KE</span>
+        <span class="k">return</span> <span class="n">KE</span>
+    
+    
+    <span class="k">def</span> <span class="nf">CalcPotentialEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates total potential energy of system at each time step:</span>
+<span class="sd">        </span>
+<span class="sd">        $$ V(t) = y(t)^{T} K y(t) $$</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span>
+        
+        <span class="n">PE</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+        
+            <span class="n">PE</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">K</span> <span class="err">@</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">PE</span> <span class="o">=</span> <span class="n">PE</span>
+        <span class="k">return</span> <span class="n">PE</span>
+   
+    
+    <span class="k">def</span> <span class="nf">CalcExternalWorkPower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates power of work done by external forces at each time step:</span>
+<span class="sd">            </span>
+<span class="sd">        $$ P(t) = f(t)^{T} \dot{v}(t) $$</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+        
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">vdot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
+        
+        <span class="n">ExtWork_Power</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+        
+            <span class="n">ExtWork_Power</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork_Power</span> <span class="o">=</span> <span class="n">ExtWork_Power</span>
+        <span class="k">return</span> <span class="n">ExtWork_Power</span>
+    
+    
+    <span class="k">def</span> <span class="nf">CalcExternalWorkDone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates work done by external forces since t=0</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        _Practically this is done by integrating the power of work done by </span>
+<span class="sd">        external forces as calculated by `CalcExternalWorkPower()` method. </span>
+<span class="sd">        Note integration is approximate; trapezium rule is used_</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">t</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">ExtWork_power</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcExternalWorkPower</span><span class="p">()</span>
+        
+        <span class="c1"># Integrate power of external work to get total external work from t=0</span>
+        <span class="n">ExtWork</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">cumtrapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">ExtWork_power</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork</span> <span class="o">=</span> <span class="n">ExtWork</span>
+        <span class="k">return</span> <span class="n">ExtWork</span>
+    
+    
+    <span class="k">def</span> <span class="nf">PlotEnergyResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce figure with subplots to show key energy results of analysis</span>
+<span class="sd">        e.g. external work done, kinetic &amp; potential energies</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">recalculate</span><span class="p">:</span>
+            <span class="n">KE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcKineticEnergy</span><span class="p">()</span>
+            <span class="n">PE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcPotentialEnergy</span><span class="p">()</span>
+            <span class="n">ExtWork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcExternalWorkDone</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">KE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KE</span>
+            <span class="n">PE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PE</span>
+            <span class="n">ExtWork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork</span>
+            
+        <span class="c1"># Back-calculate energy dissipated</span>
+        <span class="n">E0</span> <span class="o">=</span> <span class="n">PE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">KE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>              <span class="c1"># energy of system at t=0</span>
+        <span class="n">ED</span> <span class="o">=</span> <span class="n">ExtWork</span> <span class="o">-</span> <span class="p">(</span><span class="n">PE</span><span class="o">+</span><span class="n">KE</span><span class="p">)</span> <span class="o">+</span> <span class="n">E0</span>     <span class="c1"># energy dissipated since t=0</span>
+                        
+        <span class="c1"># Get time values for plots</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+        
+        <span class="n">tstep_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span>
+
+        <span class="c1"># Create new figure for plots</span>
+        <span class="n">fig</span><span class="p">,</span><span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Energy results</span><span class="se">\n</span><span class="s2">Analysis: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">fontsize_titles</span> <span class="o">=</span> <span class="mi">10</span>
+        
+        <span class="c1"># Define individual subplots</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">ExtWork</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;External work done&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,(</span><span class="n">KE</span><span class="o">+</span><span class="n">PE</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Conserved energy, $E=T+V$&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">ED</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Energy dissipated (from energy balance)&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,(</span><span class="n">KE</span><span class="o">-</span><span class="n">PE</span><span class="p">),</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Lagrangian, $L=T-V$&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;External/Internal work done&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">KE</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Kinetic energy: T(t) = $\dot{y}(t)^{T}M\dot{y}(t)$&quot;</span><span class="p">,</span>
+                     <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">PE</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Potential energy: V(t) = $y(t)^{T}Ky(t)$&quot;</span><span class="p">,</span>
+                     <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+        
+        <span class="c1"># Set details for shared x-axis</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time $t$ (secs)&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fig</span>
+        
+    
         
     <span class="k">def</span> <span class="nf">CalcDOFStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -3518,7 +4200,7 @@ recomputed using <code>CalcResponses()</code> function</p></div>
             
   <div class="item">
     <div class="name def" id="tstep_results.TStep_Results.AnimateResults">
-    <p>def <span class="ident">AnimateResults</span>(</p><p>self, dynsys_obj=None, **kwargs)</p>
+    <p>def <span class="ident">AnimateResults</span>(</p><p>self, dynsys_obj=None, ax=None, SysPlot_kwargs={}, FuncAnimation_kwargs={})</p>
     </div>
     
 
@@ -3538,7 +4220,11 @@ at each time step</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.AnimateResults', this);">Show source &equiv;</a></p>
   <div id="source-tstep_results.TStep_Results.AnimateResults" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                   <span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                   <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                   <span class="n">SysPlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
+                   <span class="n">FuncAnimation_kwargs</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Produce animation of results, plotting deformed configuration of system </span>
 <span class="sd">    at each time step</span>
@@ -3556,41 +4242,43 @@ at each time step</p>
 <span class="sd">      </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="c1"># Get system to plot</span>
-    <span class="k">if</span> <span class="n">dynsys_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">dynsys_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span>
+    <span class="c1"># Define axes to plot to</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Producing animation of deformed configuration of &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> 
-          <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
         
-    <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
-    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    <span class="c1"># time interval</span>
-    <span class="n">Ns</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>     <span class="c1"># number of time-steps</span>
-    
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;No time steps:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Ns</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Time interval:</span><span class="se">\t</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dt</span><span class="p">)</span>
-    
-    <span class="c1"># Create figure and axes onto which to draw system</span>
-    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-    
-    <span class="c1"># Define function for drawing each frame</span>
-    <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PlotDeformed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dynsys_obj</span><span class="o">=</span><span class="n">dynsys_obj</span><span class="p">,</span>
-                                                 <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    
-    <span class="k">def</span> <span class="nf">draw_frame</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="k">else</span><span class="p">:</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-         <span class="n">line</span><span class="o">.</span><span class="n">set_data</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
-         <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="n">dt</span><span class="o">*</span><span class="n">i</span><span class="p">)</span>
-         
-         <span class="k">return</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
     
-    <span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">draw_frame</span><span class="p">,</span> 
-                                  <span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
-                                  <span class="n">interval</span><span class="o">=</span><span class="n">dt</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># convert to ms</span>
-                                  <span class="n">repeat</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c1"># Create class to faciliate animation production</span>
+    <span class="n">sys_plot_obj</span> <span class="o">=</span> <span class="n">SysPlot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="n">results_obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">SysPlot_kwargs</span><span class="p">)</span>
     
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="c1"># Get tstep data</span>
+    <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+    
+    <span class="c1"># Get time step between frames</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dt</span>
+    
+    <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Compute average time step</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">nResults</span>
+    
+    <span class="c1"># Define default kwargs to pass to FuncAnimation</span>
+    <span class="n">FuncAnimation_kwargs_0</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;frames&#39;</span><span class="p">:</span><span class="n">npy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nResults</span><span class="p">),</span>
+                              <span class="s1">&#39;interval&#39;</span><span class="p">:</span><span class="mi">1000</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span>
+                              <span class="s1">&#39;repeat&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">}</span>
+    
+    <span class="c1"># Merge with any passed kwargs: n.b passed kwargs override defaults</span>
+    <span class="n">FuncAnimation_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">FuncAnimation_kwargs_0</span><span class="p">,</span>
+                            <span class="o">**</span><span class="n">FuncAnimation_kwargs</span><span class="p">}</span>
+    
+    <span class="c1"># Create animation</span>
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">sys_plot_obj</span><span class="o">.</span><span class="n">update</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">FuncAnimation_kwargs</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">anim</span>
 </pre></div>
 
   </div>
@@ -3701,6 +4389,173 @@ degree of freedom</p></div>
                   <span class="s2">&quot;DOF statistics will not be computed.&quot;</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">stats</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.TStep_Results.CalcExternalWorkDone">
+    <p>def <span class="ident">CalcExternalWorkDone</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates work done by external forces since t=0</p>
+<hr />
+<p><em>Practically this is done by integrating the power of work done by 
+external forces as calculated by <code>CalcExternalWorkPower()</code> method. 
+Note integration is approximate; trapezium rule is used</em></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.CalcExternalWorkDone', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.TStep_Results.CalcExternalWorkDone" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcExternalWorkDone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates work done by external forces since t=0</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    _Practically this is done by integrating the power of work done by </span>
+<span class="sd">    external forces as calculated by `CalcExternalWorkPower()` method. </span>
+<span class="sd">    Note integration is approximate; trapezium rule is used_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">t</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">ExtWork_power</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcExternalWorkPower</span><span class="p">()</span>
+    
+    <span class="c1"># Integrate power of external work to get total external work from t=0</span>
+    <span class="n">ExtWork</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">cumtrapz</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">ExtWork_power</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork</span> <span class="o">=</span> <span class="n">ExtWork</span>
+    <span class="k">return</span> <span class="n">ExtWork</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.TStep_Results.CalcExternalWorkPower">
+    <p>def <span class="ident">CalcExternalWorkPower</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates power of work done by external forces at each time step:</p>
+<p>$$ P(t) = f(t)^{T} \dot{v}(t) $$</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.CalcExternalWorkPower', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.TStep_Results.CalcExternalWorkPower" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcExternalWorkPower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates power of work done by external forces at each time step:</span>
+<span class="sd">        </span>
+<span class="sd">    $$ P(t) = f(t)^{T} \dot{v}(t) $$</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+    
+    <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+    <span class="n">vdot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
+    
+    <span class="n">ExtWork_Power</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+    
+        <span class="n">ExtWork_Power</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+        
+    <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork_Power</span> <span class="o">=</span> <span class="n">ExtWork_Power</span>
+    <span class="k">return</span> <span class="n">ExtWork_Power</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.TStep_Results.CalcKineticEnergy">
+    <p>def <span class="ident">CalcKineticEnergy</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates total kinetic energy of system at each time step:</p>
+<p>$$ T(t) = \dot{y}(t)^{T} M \dot{y}(t) $$</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.CalcKineticEnergy', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.TStep_Results.CalcKineticEnergy" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcKineticEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates total kinetic energy of system at each time step:</span>
+<span class="sd">    </span>
+<span class="sd">    $$ T(t) = \dot{y}(t)^{T} M \dot{y}(t) $$</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+    
+    <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">vdot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vdot</span>
+    
+    <span class="n">KE</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+    
+        <span class="n">KE</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">M</span> <span class="err">@</span> <span class="n">vdot</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+        
+    <span class="bp">self</span><span class="o">.</span><span class="n">KE</span> <span class="o">=</span> <span class="n">KE</span>
+    <span class="k">return</span> <span class="n">KE</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.TStep_Results.CalcPotentialEnergy">
+    <p>def <span class="ident">CalcPotentialEnergy</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates total potential energy of system at each time step:</p>
+<p>$$ V(t) = y(t)^{T} K y(t) $$</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.CalcPotentialEnergy', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.TStep_Results.CalcPotentialEnergy" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcPotentialEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates total potential energy of system at each time step:</span>
+<span class="sd">    </span>
+<span class="sd">    $$ V(t) = y(t)^{T} K y(t) $$</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">nResults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span>
+    
+    <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span>
+    
+    <span class="n">PE</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nResults</span><span class="p">,))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nResults</span><span class="p">):</span>
+    
+        <span class="n">PE</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="err">@</span> <span class="n">K</span> <span class="err">@</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span><span class="o">.</span><span class="n">T</span>
+        
+    <span class="bp">self</span><span class="o">.</span><span class="n">PE</span> <span class="o">=</span> <span class="n">PE</span>
+    <span class="k">return</span> <span class="n">PE</span>
 </pre></div>
 
   </div>
@@ -4027,6 +4882,80 @@ of applicable system object</p></div>
     <span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span> <span class="o">%</span> <span class="n">t_val</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">time_text</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tstep_results.TStep_Results.PlotEnergyResults">
+    <p>def <span class="ident">PlotEnergyResults</span>(</p><p>self, recalculate=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Produce figure with subplots to show key energy results of analysis
+e.g. external work done, kinetic &amp; potential energies</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.TStep_Results.PlotEnergyResults', this);">Show source &equiv;</a></p>
+  <div id="source-tstep_results.TStep_Results.PlotEnergyResults" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotEnergyResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produce figure with subplots to show key energy results of analysis</span>
+<span class="sd">    e.g. external work done, kinetic &amp; potential energies</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">recalculate</span><span class="p">:</span>
+        <span class="n">KE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcKineticEnergy</span><span class="p">()</span>
+        <span class="n">PE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcPotentialEnergy</span><span class="p">()</span>
+        <span class="n">ExtWork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcExternalWorkDone</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">KE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KE</span>
+        <span class="n">PE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PE</span>
+        <span class="n">ExtWork</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ExtWork</span>
+        
+    <span class="c1"># Back-calculate energy dissipated</span>
+    <span class="n">E0</span> <span class="o">=</span> <span class="n">PE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">KE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>              <span class="c1"># energy of system at t=0</span>
+    <span class="n">ED</span> <span class="o">=</span> <span class="n">ExtWork</span> <span class="o">-</span> <span class="p">(</span><span class="n">PE</span><span class="o">+</span><span class="n">KE</span><span class="p">)</span> <span class="o">+</span> <span class="n">E0</span>     <span class="c1"># energy dissipated since t=0</span>
+                    
+    <span class="c1"># Get time values for plots</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+    
+    <span class="n">tstep_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span>
+    <span class="c1"># Create new figure for plots</span>
+    <span class="n">fig</span><span class="p">,</span><span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Energy results</span><span class="se">\n</span><span class="s2">Analysis: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">fontsize_titles</span> <span class="o">=</span> <span class="mi">10</span>
+    
+    <span class="c1"># Define individual subplots</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">ExtWork</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;External work done&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,(</span><span class="n">KE</span><span class="o">+</span><span class="n">PE</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Conserved energy, $E=T+V$&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">ED</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Energy dissipated (from energy balance)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,(</span><span class="n">KE</span><span class="o">-</span><span class="n">PE</span><span class="p">),</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Lagrangian, $L=T-V$&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;External/Internal work done&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">KE</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Kinetic energy: T(t) = $\dot{y}(t)^{T}M\dot{y}(t)$&quot;</span><span class="p">,</span>
+                 <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">PE</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Potential energy: V(t) = $y(t)^{T}Ky(t)$&quot;</span><span class="p">,</span>
+                 <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize_titles</span><span class="p">)</span>
+    
+    <span class="c1"># Set details for shared x-axis</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tStart</span><span class="p">,</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">tEnd</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Time $t$ (secs)&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">fig</span>
 </pre></div>
 
   </div>
