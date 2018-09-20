@@ -34,6 +34,7 @@ tstep_obj = results_obj.tstep_obj
 results_obj.PlotStateResults()
 results_obj.PlotResponseResults(responses2plot=[0,1])
 results_obj.PlotResponseResults(responses2plot=[2,3])
+results_obj.AnimateResults()
 
 #%%
 

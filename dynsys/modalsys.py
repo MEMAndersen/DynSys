@@ -29,51 +29,78 @@ class ModalSys(DynSys):
     description="Modal dynamic system"
     
     def __init__(self,
-                 name=None,
-                 isSparse=False,
-                 fname_modalParams="modalParams.csv",
-                 fname_modeshapes="modeshapes.csv",
+                 name:str=None,
+                 isSparse:bool=False,
+                 fname_modalParams:str="modalParams.csv",
+                 fname_modeshapes:str="modeshapes.csv",
+                 modalParams_dict:dict=None,
+                 modeshapeFunc=None,
+                 Ltrack:float=None,
                  output_mtrx=None,
-                 output_names=None,
-                 fLimit=None,
+                 output_names:list=None,
+                 fLimit:float=None,
                  **kwargs):
         """
         Initialisation function used to define decoupled (diagonalised) system
         
-        
-        
-        Optional arguments:
+        ***
+        Optional:
         
         * `isSparse`, denotes whether sparse matrix representation should be 
           used for system matrices and numerical operations.
+                  
+        * `fname_modalParams`, string, defines .csv file containing modal 
+          parameter definitions. Refer docs for `ReadModalParams()` method for 
+          expected file format
+          
+        * `fname_modeshapes`, string, defines .csv file containing modeshape 
+          data, describing how modeshape ordinates vary with chainage along 
+          loading track. Refer docs for `DefineModeshapes()` method for 
+          expected file format
+          
+        * `modeshapeFunc`, function, used to define how modeshape varies with 
+          chainage. Expected form is f(x), where x denotes chainage. `Ltrack` 
+          must be supplied also (see below)
+          
+        * `Ltrack`, float, defines overall chainage along `modeshapeFunc`
+          
+        * `output_mtrx`, matrix, used when calculating responses
         
-        * `outputsList`, list of output matrices
+        * `output_names`, list, defines names of responses defined by rows of
+          `output_mtrx`
         
         * `fLimit`, maximum natural frequency for modes: modes with fn in 
           excess of this value will not be included in analysis
-        
-        
-        An _output matrix_ defines a linear mapping between modal results 
-        (displacements, velocities, accelerations) and real-world outputs, 
-        which need not be displacements. For example real-world displacements, 
-        forces/moments, reactions etc. may all be obtained by linear 
-        combination of modal displacement results. Similarly real-world 
-        velocities and accelerations relate linearly to modal velocities and 
-        accelerations.
-        
-        
-        For a system with _n_ degrees of freedom, the required shape of 
-        each listed output matrix is _[mx3n]_, where _m_ is the number of 
-        outputs defined. The output matrix consists of horiztonally-stacked 
-        submatrices, each of shape _[Oxn]_, which are used to pre-multiply 
-        modal displacements, velocities and accelerations respectively.
-        
+          
         """
         
-        # Import data from input files
-        d = self._DefineModalParams(fName=fname_modalParams,fLimit=fLimit)
+        if modalParams_dict is None:
+            
+            # Import data from input files
+            modalParams_dict = self.ReadModalParams(fName=fname_modalParams)
+            
+        # Define mode IDs, if not already provided
+        if not 'ModeIDs' in modalParams_dict.keys():
+            nModes = len(modalParams_dict['Mass'])
+            mode_IDs = ["Mode %d" % (i+1) for i in range(nModes)]
+            modalParams_dict['ModeIDs'] = mode_IDs
+            
+        self.modalParams_dict = modalParams_dict
+        """
+        _Dict_ containing modal parameters used to define system
+        """
         
-        mode_IDs = d["mode_IDs"]
+        self.mode_IDs = modalParams_dict['ModeIDs']
+        """
+        Labels to describe modal dofs
+        """
+            
+        # Filter according to frequency
+        if fLimit is not None:
+            self._FilterByFreq(fLimit)
+        
+        # Calculate system matrices
+        d = self._CalcSystemMatrices()
         M_mtrx = d["M_mtrx"]
         C_mtrx = d["C_mtrx"]
         K_mtrx = d["K_mtrx"]
@@ -90,19 +117,33 @@ class ModalSys(DynSys):
                          name=name,
                          **kwargs)
     
-        self.mode_IDs = mode_IDs
+        # Define modeshapes
+        if modeshapeFunc is None:
+            if fname_modeshapes is not None:
+                
+                # Read data from file
+                modeshapeFunc, Ltrack = self.DefineModeshapes(fname_modeshapes)
+            
+        else:
+            
+            if Ltrack is None:
+                raise ValueError("As `modeshapeFunc` has been supplied "+ 
+                                 "`Ltrack` must be provided also")
+            
+        self.modeshapeFunc = modeshapeFunc
         """
-        Labels to describe modal dofs
+        Function defining how modeshapes vary with chainage
         """
         
-        # Read modeshape data
-        if fname_modeshapes is not None:
-            self.DefineModeshapes(fname_modeshapes)
-        
-        
-    def _DefineModalParams(self,fName='modalParams.csv', fLimit=None):
+        self.Ltrack = Ltrack
         """
-        It is generally most convenient to define modal parameters by reading
+        Defines overall chainage
+        """
+        
+        
+    def ReadModalParams(self,fName='modalParams.csv'):
+        """
+        It is often most convenient to define modal parameters by reading
         data in from .csv file. Comma-delimited data in the following table
         format is expected:
             | ModeID | Frequency | Mass | Damping ratio |
@@ -123,62 +164,81 @@ class ModalSys(DynSys):
         f_vals      = npy.asarray(modalParams["Frequency"])       
         M_vals      = npy.asarray(modalParams["Mass"]) 
         eta_vals    = npy.asarray(modalParams["Damping ratio"]) 
+        
+        # Return as dict
+        d = {}
+        d['Mass'] = M_vals
+        d['Freq'] = f_vals
+        d['DampingRatio'] = eta_vals
+        d['ModeIDs'] = mode_IDs
+        return d
+    
+    
+    def _CheckModalParams(self,modalParams_dict=None):
+        
+        # Bring modal parameters dict into function
+        if modalParams_dict is None:
+            modalParams_dict = self.modalParams_dict
+            
+        M_vals = modalParams_dict['Mass']
         nDOF = M_vals.shape[0]
         
-        
-        
-        # Only define for modes with f < fLimit, if specified
-        if fLimit is not None:
-            
-            # Sort input into ascending frequency order
-            indexs = npy.argsort(f_vals)
-            mode_IDs = mode_IDs[indexs]
-            f_vals = f_vals[indexs]
-            M_vals = M_vals[indexs]
-            eta_vals = eta_vals[indexs]
-            
-            # Only retain entries with f_vals < fLimit
-            Nm = npy.searchsorted(f_vals,fLimit,side='right')
-            f_vals = f_vals[:Nm]
-            M_vals = M_vals[:Nm]
-            eta_vals = eta_vals[:Nm]
-            nDOF_full = nDOF
-            nDOF = M_vals.shape[0]
-            
-            print("fLimit = %.2f specified. " % fLimit + 
-                  "Only the first #%d of #%d modes " % (Nm+1,nDOF_full+1) + 
-                  "will be included.")
-            
-        # Check required input is valid and consistent
-        if f_vals.shape[0]!=nDOF:
-            raise ValueError("Error: length of f_vals " + 
-                             "does not agree with expected nDOF!")
-        if eta_vals.shape[0]!=nDOF:
-            raise ValueError("Error: length of eta_vals " + 
+        if modalParams_dict['Freq'].shape[0]!=nDOF:
+            raise ValueError("Error: length of 'Freq' list " + 
                              "does not agree with expected nDOF!")
             
+        if modalParams_dict['DampingRatio'].shape[0]!=nDOF:
+            raise ValueError("Error: length of 'DampingRatio' list " + 
+                             "does not agree with expected nDOF!")
+                
+    
+    def _FilterByFreq(fLimit,modalParams_dict=None):
+        """
+        Use to filter modalParams dict for only those modes with f < fLimit
+        """
+        
+        # Bring modal parameters dict into function
+        if modalParams_dict is None:
+            modalParams_dict = self.modalParams_dict
+            
+        # Check how many modes included prior to filtering
+        nModes_before = len(modalParams_dict['Mass'])
+            
+        # Convert dict to pandas dataframe and filter
+        df = pd.DataFrame(modalParams_dict)
+        df = df.loc[(df['Freq'] <= fLimit)]
+        modalParams_dict = df.to_dict(orient='list')
+        self.modalParams_dict
+        
+        # Check how many modes included after filtering
+        nModes = len(modalParams_dict['Mass'])
+            
+        print("fLimit = %.2f specified. " % fLimit + 
+              "Only #%d of #%d modes defined" % (nModes,nModes_before) + 
+              "will be included.")
+    
+        return modalParams_dict
+    
+    
+    def _CalcSystemMatrices(self,modalParams_dict=None):
+        """
+        Calculates diagonal system matrices from modal parameters
+        """
+        
+        # Bring modal parameters dict into function
+        if modalParams_dict is None:
+            modalParams_dict = self.modalParams_dict
+            
+        M_vals = modalParams_dict['Mass']
+        f_vals = modalParams_dict['Freq']
+        eta_vals = modalParams_dict['DampingRatio']
+        
         # Calculate circular natural freqs
         omega_vals = angularFreq(f_vals)
         
         # Calculate SDOF stiffnesses and dashpot constants
         K_vals = SDOF_stiffness(M_vals,omega=omega_vals)
         C_vals = SDOF_dashpot(M_vals,K_vals,eta_vals)
-        
-        # Store modal properties no longer required as attributes anyway
-        self.M_generalised = M_vals
-        """
-        Mode-generalised mass (kg) of modes, as defined by input file
-        """
-        
-        self.fn = f_vals
-        """
-        Undamped natural frequencies of modes, as defined by input file
-        """
-        
-        self.eta = eta_vals
-        """
-        Damping ratios for modes, as defined by input file
-        """
         
         # Assemble system matrices, which are diagonal due to modal decomposition
         M_mtrx = npy.asmatrix(npy.diag(M_vals))
@@ -187,15 +247,14 @@ class ModalSys(DynSys):
         
         # Return matrices and other properties using dict
         d = {}
-        d["mode_IDs"]=mode_IDs
         d["M_mtrx"]=M_mtrx
         d["C_mtrx"]=C_mtrx
         d["K_mtrx"]=K_mtrx
         d["J_dict"]={} # no constraints
         return d
-            
-                
-    def DefineModeshapes(self,fName='modeshapes.csv',saveAsAttr=True):
+        
+        
+    def DefineModeshapes(self,fName='modeshapes.csv'):
         """
         Function to allow 1-dimensional line-like modeshapes to be defined
         e.g. for use in calculating mode-generalised forces
@@ -238,13 +297,9 @@ class ModalSys(DynSys):
             warnings.warn("Unexpected mode_IDs in {0}\n".format(fName) + 
                           "mode_IDs: {0}\n".format(mode_IDs) + 
                           "self.mode_IDs: {0}\n".format(self.mode_IDs))
-        
-        # Define class properties
-        if saveAsAttr:
-            self.modeshapeFunc = modeshapeFunc
-            self.Ltrack = Ltrack
-    
+            
         return modeshapeFunc, Ltrack
+    
     
     def PlotModeshapes(self,
                        num:int = 50,
