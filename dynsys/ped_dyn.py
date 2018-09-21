@@ -250,7 +250,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
             else:
                 
                 Seff, lambda_vals = Calc_Seff(modalsys_obj.modeshapeFunc,S=S,
-                                              verbose=True,
+                                              verbose=verbose,
                                               makePlot=makePlot)
                 
                 # save to avoid recalculating
@@ -258,8 +258,9 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                 modalsys_obj.lambda_vals = lambda_vals
                 
             # Get Seff for mode being considered
-            Seff = Seff[int(mode_index/2)]
-            
+            if isinstance(Seff,list):
+                Seff = Seff[int(mode_index/2)]
+                        
         else:
             # "In all cases it is conservative to use Seff = S"
             Seff = S
@@ -2424,9 +2425,11 @@ def Calc_Seff(modeshapeFunc,S,
     y_abs_vals = abs_modeshapeFunc(x_vals)
     
     # Integrate using Scipy routine
-    y_integral_vals = scipy.integrate.cumtrapz(y_abs_vals,x_vals,
-                                               axis=0,initial=0.0)
-    y_integral = y_integral_vals[-1,:]
+    if makePlot:
+        y_integral_vals = scipy.integrate.cumtrapz(y_abs_vals,x_vals,
+                                                   axis=0,initial=0.0)
+    
+    y_integral = scipy.integrate.trapz(y_abs_vals,x_vals,axis=0)
     
     # Get maxima
     y_absmax = numpy.max(y_abs_vals,axis=0)

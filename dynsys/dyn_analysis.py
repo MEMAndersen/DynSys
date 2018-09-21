@@ -215,6 +215,7 @@ class MovingLoadAnalysis(Dyn_Analysis):
         
     
     def run(self,
+            verbose=True,
             saveResults=False,
             save_fName=None):
         """
@@ -222,16 +223,21 @@ class MovingLoadAnalysis(Dyn_Analysis):
         
         _Refer documentation for that function for more details_
         """
-        print("***** Running `%s`..." % self.__class__.__name__)
-        print("Dynamic system: '{0}'".format(self.dynsys_obj.name))
-        print("Load pattern: '{0}'".format(self.loading_obj.name))
-        print("Load velocity: %.1f" % self.loadVel)
+        
+        if verbose:
+            print("***** Running `%s`..." % self.__class__.__name__)
+            print("Dynamic system: '{0}'".format(self.dynsys_obj.name))
+            print("Load pattern: '{0}'".format(self.loading_obj.name))
+            print("Load velocity: %.1f" % self.loadVel)
+        
         tic=timeit.default_timer()
         
-        results_obj = self.tstep_obj.run()
+        results_obj = self.tstep_obj.run(verbose=verbose)
         
         toc=timeit.default_timer()
-        print("***** Analysis complete after %.3f seconds." % (toc-tic))
+        
+        if verbose:
+            print("***** Analysis complete after %.3f seconds." % (toc-tic))
                
         if saveResults:
             self.save(fName=save_fName)
