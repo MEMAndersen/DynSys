@@ -7,10 +7,11 @@ Refer "Three-Dimensional Wind Simulation" by Veers, 1988
 import numpy
 import matplotlib.pyplot as plt
 import scipy
+from scipy import spatial
 
 #%%
    
-def G_vonKarman(z,f,U_ref=20.0,z_ref=10.0,z0=0.05,Lx=120.0):
+def G_vonKarman(z,f,U_ref=20.0,z_ref=10.0,z0=0.05,Lx=120.0,make_plot=False):
     """
     Von Karman expression for along-wind turbulence autospectrum
     
@@ -47,10 +48,25 @@ def G_vonKarman(z,f,U_ref=20.0,z_ref=10.0,z0=0.05,Lx=120.0):
         denominator = 1.339 * (1 + 39.48 * (f*Lx/U)**2)**(5/6)
         Gv[:,i] = numerator / denominator
         
+    if make_plot:
+        
+        fig,axarr = plt.subplots(2,sharex=True)
+        
+        ax = axarr[0]
+        ax.plot(f,Gv)
+        
+        ax = axarr[1]
+        ax.plot(fm,numpy.abs((Gv.T * f).T))
+        ax.set_xlim([-fs/2,+fs/2])
+        ax.set_xlabel("Frequency f (Hz)")
+        ax.set_ylabel("f.G(f)")
+        #ax.set_xscale("log")#, nonposy='clip')
+        ax.set_yscale("log")#, nonposy='clip')
+        
     return Gv, U_z
 
 
-def coherance(points,f_vals,U_vals):
+def coherance(points,f_vals,U_vals,zi:int=-1,make_plot=False):
     """
     Defines coherance per Eqn 4.1
     
@@ -62,18 +78,24 @@ def coherance(points,f_vals,U_vals):
     
     """
     
+    if isinstance(zi,int):
+        zi = [zi]
+            
     #Np = points.shape[0]
     #Nf = len(f_vals)
     
     # Compute distance between points
     r_jk = scipy.spatial.distance.cdist(points,points,metric='euclidean')
     
+    # Compute coherance decrement
+    mu_b = 2*numpy.random.rand() - 1
+    b = 12 + 5 * mu_b
+    print("b = %.2f" % b)
+    
     # Evaluate Cjk per eqn 4.2
     Zm = numpy.mean(numpy.meshgrid(points[:,2],points[:,2]),axis=0)
     Um = numpy.mean(numpy.meshgrid(U_vals,U_vals), axis=0)
     
-    mu_b = 2*numpy.random.rand(*r_jk.shape) - 1
-    b = 12 + 5 * mu_b
     C_jk = b * (r_jk/Zm)**0.25
         
     # Evaluate coherance per eqn 4.1
@@ -87,7 +109,28 @@ def coherance(points,f_vals,U_vals):
         
     Coh = numpy.array(Coh)
     
-    return Coh, r_jk, Zm
+    if make_plot:
+        
+        r_Z = r_jk/Zm
+        
+        fig, axarr = plt.subplots(len(zi))
+        
+        if not isinstance(axarr,numpy.ndarray):
+            axarr = numpy.array([axarr])
+        
+        for i, ax in zip(zi,axarr):
+                
+            for Coh_f in Coh:
+
+                ax.plot(r_Z[:,i],Coh_f[:,i])
+            
+            ax.set_xlim([0,2.0])
+            ax.set_ylim([0,1.0])
+            
+            ax.set_xlabel(r"$\Delta r_{jk} / z$")
+            ax.set_ylabel("Coherance")
+    
+    return Coh
 
 
 def spectral_density_matrix(G_fm,Coh_fm,df):
@@ -132,6 +175,8 @@ def weighting_mtrx(S_f):
     Recursively determine H matrix per eqn (2.3)
     """
     
+    print("Calculating weighting matrix, H...")
+    
     # Check shape
     Nf,Np,Np2 = S_f.shape
     if Np!=Np2:
@@ -172,6 +217,8 @@ def weighting_mtrx(S_f):
                 H_i[j,k]=H_jk
                                       
         H.append(H_i)
+        
+    print("Complete!")
          
     return numpy.array(H)
 
@@ -200,7 +247,7 @@ def calc_fourier_coeffs(H,X):
     
 if __name__ == "__main__":
     
-    test_routine = 1
+    test_routine = 2
     
     if test_routine == 0:
     
@@ -217,29 +264,28 @@ if __name__ == "__main__":
     elif test_routine == 1:
         
         # Define points
-        z_vals = numpy.linspace(1,90,5)
+        z_vals = numpy.linspace(10,100,20)
         N = len(z_vals) # number of grid points / correlated processes
         points = numpy.zeros((N,3))
         points[:,2]=z_vals
         
         # Test coherance function
-        Coh, r_jk, Zm = coherance(points,[0.012,0.037,0.11,0.33],8.0)
+        Coh = coherance(points,[0.012,0.037,0.11,0.33],8.0,
+                        make_plot=True)#,zi=[5,7])
         
-        fig,ax = plt.subplots()
-        for Coh_f in Coh:
-            ax.plot((r_jk/Zm),Coh_f)
+        
 
     else:
             
         # Define points
-        z_vals = numpy.linspace(1,90,5)
+        z_vals = numpy.linspace(10,100,5)
         N = len(z_vals) # number of grid points / correlated processes
         points = numpy.zeros((N,3))
         points[:,2]=z_vals
         
         # Define sim properties    
-        t_duration = 60.0
-        fs = 1.0
+        t_duration = 10.0
+        fs = 10.0
         dt = 1/fs
         t_vals = numpy.arange(0,t_duration+dt/2,dt)
         
@@ -256,33 +302,18 @@ if __name__ == "__main__":
            
         # Calculate along-wind turbulences at centre freqs
         Gv_fm, U_vals = G_vonKarman(points[:,2],fm)
-        
-        fig,axarr = plt.subplots(2,sharex=True)
-        
-        ax = axarr[0]
-        ax.plot(fm,Gv_fm)
-        
-        ax = axarr[1]
-        ax.plot(fm,numpy.abs((Gv_fm.T * fm).T))
-        ax.set_xlim([-fs/2,+fs/2])
-        ax.set_xlabel("Frequency f (Hz)")
-        ax.set_ylabel("f.G(f)")
-        #ax.set_xscale("log")#, nonposy='clip')
-        ax.set_yscale("log")#, nonposy='clip')
-        
-        #%%
-        
+                
         # Generate coherance matrix at each frequency
-        Coh_fm = coherance(points,fm,U_vals)[0]
+        Coh_fm = coherance(points,fm,U_vals)
         
-        fig, axarr = plt.subplots(N,N,sharex=True, sharey=True)
-        fig.subplots_adjust(hspace=0,wspace=0)
-        
-        for j in range(N):
-            for k in range(N):
-                ax = axarr[j,k]
-                ax.plot(fm,Coh_fm[:,j,k])
-                ax.set_yscale("log")#, nonposy='clip')
+#        fig, axarr = plt.subplots(N,N,sharex=True, sharey=True)
+#        fig.subplots_adjust(hspace=0,wspace=0)
+#        
+#        for j in range(N):
+#            for k in range(N):
+#                ax = axarr[j,k]
+#                ax.plot(fm,Coh_fm[:,j,k])
+#                ax.set_yscale("log")#, nonposy='clip')
         
         # Calculate spectral density matrix at each frequency
         S_fm = spectral_density_matrix(Gv_fm,Coh_fm,df)
@@ -305,6 +336,9 @@ if __name__ == "__main__":
         v = numpy.fft.ifft(V,len(t_vals),axis=0)
         v = numpy.real(v)
         
-        plt.plot(t_vals,v)
-
+        fig, ax = plt.subplots()
+        h = ax.plot(t_vals,v)
+        ax.set_xlabel("Time (secs)")
+        ax.set_ylabel("Turbulence component u (m/s)")
+        ax.legend(h,["Z = %.0fm" % z for z in z_vals])
     
