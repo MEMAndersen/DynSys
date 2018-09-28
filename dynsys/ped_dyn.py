@@ -144,6 +144,8 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                  name=None,
                  bridgeClass='A',
                  analysis_type="walkers",
+                 load_velocity:float=None,
+                 N:int=None,
                  dt=None,
                  verbose=True,
                  calc_Seff=True,
@@ -163,6 +165,22 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
     
         ***
         Optional:
+            
+        * `name`, string, used within title of some plots
+        
+        * `analysis_type`, _string_, either 'walkers' of 'joggers'. Other 
+          parameters are defined according to this, per code guidance
+          
+        * `bridgeClass`, 'A' to 'D', influences group size for walkers/joggers,
+          per Table NA.7
+        
+        * `load_velocity`, float, used to define velocity of moving load. If 
+          None (default) then velocity will be determined according to 
+          `analysis_type` using values from Table NA.8
+          
+        * `N`, _integer_, defines size of group of walkers/joggers. If None 
+          (default) then `N` will be calculated according to `bridgeClass` and 
+          `analysis_type`, using values from Table NA.7
             
         * `dt`, time step to be used for results evaluation. If _None_ then 
           a suitable `dt` to use will be determined according to 
@@ -187,43 +205,35 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         if name is None:
             name = modalsys_obj.name + " - Mode %d - %s" % (mode_index,
                                                             analysis_type)
-        
-        # Get applicable parameters per Table NA.7 according to bridgeClass
-        bridgeClass = bridgeClass.upper()
-        
-        if bridgeClass == 'A':
-            N_walkers = 2
-            N_joggers = 0
             
-        elif bridgeClass == 'B':
-            N_walkers = 4
-            N_joggers = 1
-            
-        elif bridgeClass == 'C':
-            N_walkers = 8
-            N_joggers = 2
-            
-        elif bridgeClass == 'D':
-            N_walkers = 16
-            N_joggers = 4
-            
-        else:
-            raise ValueError("Invalid 'bridgeClass'!")
-        
-        # Define loading velocity per Table NA.8
-        # Get appropriate N value to use
-        if analysis_type == "walkers":
-            load_velocity = 1.7
-            N_to_use = N_walkers
-            
-        elif analysis_type == "joggers":
-            load_velocity = 3.0
-            N_to_use = N_joggers
-            
-        else:
+        # Check inputs are valid
+        if analysis_type not in ['walkers','joggers',None]:
             raise ValueError("Invalid 'analysis_type'!")
+           
+                
+        bridgeClass = bridgeClass.upper()
+        self.bridgeClass = bridgeClass
+        """
+        Bridge class per Table NA.7
+        """
+                
+        # Define loading velocity
+        if load_velocity is None:
+            load_velocity = self.get_load_velocity(analysis_type)
             
-        self.N = N_to_use
+        self.load_velocity = load_velocity
+        """
+        Velocity of moving load
+        """
+           
+        # Get appropriate N value to use
+        if N is None:
+            N = self.calc_N(bridgeClass,analysis_type)
+                            
+        self.N = N
+        """
+        Number of pedestrians in the group
+        """
             
         # Get natural frequency of mode to consider
         eig_results = modalsys_obj.CalcEigenproperties()
@@ -274,7 +284,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
         # Define loading objects to represent walkers and joggers
         loading_obj = UKNA_BSEN1991_2_walkers_joggers_loading(fv = f_d,
                                                               gamma=gamma,
-                                                              N=N_to_use,
+                                                              N=N,
                                                               analysis_type=analysis_type,
                                                               makePlot=makePlot)
         
@@ -301,9 +311,66 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
             print("Mode frequency:\t\t%.2f Hz" % f_d)
             print("Loading object:\t\t'%s'" % loading_obj.name)
             print("Load velocity:\t\t%.1f m/s" % load_velocity)
+            print("Load group size, N:\t%d" % N)
             print("Seff (m):\t\t%.1f" % Seff)
             print("gamma:\t\t\t%.2f" % gamma)
             print("")
+       
+        
+    def get_load_velocity(self,analysis_type):
+        """
+        Returns load velocity according to `analysis_type` per Table NA.8
+        """
+        
+        if analysis_type == "walkers":
+            load_velocity = 1.7
+            
+        elif analysis_type == "joggers":
+            load_velocity = 3.0
+            
+        else:
+            raise ValueError("Invalid 'analysis_type'!")
+            
+        return load_velocity
+        
+        
+    def calc_N(self,bridgeClass,analysis_type):
+        """
+        Returns N according to `bridgeClass` and `analysis_type`, values 
+        per Table NA.7
+        """
+        
+        # Define N values per Table NA.7
+        if bridgeClass == 'A':
+            N_walkers = 2
+            N_joggers = 0
+            
+        elif bridgeClass == 'B':
+            N_walkers = 4
+            N_joggers = 1
+            
+        elif bridgeClass == 'C':
+            N_walkers = 8
+            N_joggers = 2
+            
+        elif bridgeClass == 'D':
+            N_walkers = 16
+            N_joggers = 4
+            
+        else:
+            raise ValueError("Invalid 'bridgeClass'!")
+            
+        # Select N according to analysis type
+        if analysis_type == "walkers":
+            N = N_walkers
+            
+        elif analysis_type == "joggers":
+            N = N_joggers
+            
+        else:
+            raise ValueError("Invalid 'analysis_type'!")
+        
+        return N
             
             
             
