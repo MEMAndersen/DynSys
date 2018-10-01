@@ -397,6 +397,11 @@ class WindEnvironment():
         """
         Site latitude in degrees
         """
+        
+        self.coriolis_f = None
+        """
+        Coriolis parameter
+        """
     
         # Calculate A1 for use in log-law formula
         A1 = 2*(numpy.log(B)-A) - (1/6)
@@ -417,11 +422,12 @@ class WindEnvironment():
         Friction velocity (m/s)
         """
         
+        # Initialise other variables defined later
         self.U = None
         """
         Mean wind speed (m/s) at points
         """
-        
+                
         print("Wind environment initialised")
         
     
@@ -433,33 +439,63 @@ class WindEnvironment():
         print("d = %.1f\t\t[m]" % self.d)
         print("phi = %.1f\t[deg]" % self.phi)
         print("u* = %.2f\t[m/s]" % self.u_star)
+        print("f = %.2e" % self.coriolis_f)
         
         
-    def plot(self):
-        
-        fig,axarr = plt.subplots(1,3,sharey=True)
+    def plot_profiles(self,
+                      params2plot = {'U':"Mean wind speed (m/s)",
+                                     'i_u':"Along-wind turbulence intensity",
+                                     'sigma_u':"RMS turbulence $\sigma_{u}$ (m/s)",
+                                     'xLu':"Length scale xLu (m)"}
+                      ):
+                                 
+        nSubplots = len(params2plot)
+        fig,axarr = plt.subplots(1,nSubplots,sharey=True)
         fig.set_size_inches((10,8))
-        fig.suptitle("Variation of along-wind properties with height")
+        fig.suptitle("Profiles of wind environment parameters")
         
-        self.plot_mean_speed(ax=axarr[0],y_label=True)
-        self.plot_iuu(ax=axarr[1])
-        self.plot_sigma_u(ax=axarr[2])
+        y_label = False
+        
+        params = params2plot.keys()
+        xlabels = params2plot.values()
+        
+        for i, (ax, param, x_label) in enumerate(zip(axarr,params,xlabels)):
+            
+            if i==0:
+                y_label=True
+            else:
+                y_label=False
+                
+            self.plot_profile(param,ax=ax,x_label=x_label,y_label=y_label)
         
         
-    def plot_mean_speed(self,ax=None,
-                        y_label=False,title=False,
-                        recalculate=True):
+    def plot_profile(self,param:str,
+                     ax=None,
+                     recalculate=True,
+                     x_label:str=None,
+                     y_label=False,title=False):
         """
-        Plots variation of mean wind speed with height
+        Plots profile / variation of specified parameter with height
         """
         
-        z = self.pointset_obj.z
+        print("Plotting profile of '%s' versus height..." % param)
         
         if recalculate:
-            U = self.calc_mean_speed()
-        else:
-            U = self.U
+            vals = self.calc_param(param)
             
+        else:
+
+            if not hasattr(self,param):
+                raise ValueError("Parameter '%s' does not exist!\n" % param +
+                                 "Avaliable parameters:\n" + 
+                                 "{0}".format(self.__dict__.keys()))
+                
+            else:
+                vals = getattr(self,param)
+                                        
+        # Get z values at which parameter defined
+        z = self.pointset_obj.z
+        
         if ax is None:
             fig,ax = plt.subplots()
             y_label=True
@@ -467,82 +503,37 @@ class WindEnvironment():
         else:
             fig = ax.get_figure()
             
-        ax.plot(U,z)
-        ax.set_xlabel("Mean wind speed (m/s)",
-                      fontsize=fontsize_labels)
+        ax.plot(vals,z)
+        
+        # Define and assign x label
+        if x_label is None:
+            x_label = "%s" % param
+        
+        ax.set_xlabel(x_label, fontsize=fontsize_labels)
         
         if y_label:
-            ax.set_ylabel("Height above ground (m)",
-                          fontsize=fontsize_labels)
-            
+            ax.set_ylabel("z (m)",fontsize=fontsize_labels)
+             
         ax.set_xlim([0,ax.get_xlim()[1]])
         ax.set_ylim([0,ax.get_ylim()[1]])
         
         if title:
             ax.set_title("Variation of mean wind speed with height")
-        
-    
-    def plot_iuu(self,ax=None,write_labels=False,recalculate=True):
-        """
-        Plots variation of along-wind turbulence intensity with height
-        """
-        
-        z = self.pointset_obj.z
-        
-        if recalculate:
-            iuu = self.calc_iuu()
-        else:
-            iuu = self.iuu
             
-        if ax is None:
-            fig,ax = plt.subplots()
-            write_labels=True
-        else:
-            fig = ax.get_figure()
             
-        ax.plot(iuu,z)
+    def calc_param(self,param:str,**kwargs):
         
-        ax.set_xlabel("Along-wind turbulence intensity, $i_{uu}$",
-                      fontsize=fontsize_labels)
+        if param in ['U','Ubar']:
+            return self.calc_mean_speed(**kwargs)
         
-        if write_labels:
-            ax.set_ylabel("Height above ground (m)",
-                          fontsize=fontsize_labels)
+        elif param in ['i_uu','i_u']:
+            return self.calc_iuu(**kwargs)
         
-        ax.set_xlim([0,ax.get_xlim()[1]])
-        ax.set_ylim([0,ax.get_ylim()[1]])
+        elif param in ['sigma_u','sigma_uu']:
+            return self.calc_sigma_u(**kwargs)
         
-        if write_labels:
-            ax.set_title("Variation of along-wind turbulence " + 
-                         "intensity with height")
-            
-    
-    def plot_sigma_u(self,ax=None,write_labels=False,recalculate=False):
-        """
-        Plots variation of along-wind RMS turbulence with height
-        """
-        
-        z = self.pointset_obj.z
-        
-        sigma_u = self.calc_sigma_u(recalculate=recalculate)
-        
-        if ax is None:
-            fig,ax = plt.subplots()
-            write_labels=True
-        else:
-            fig = ax.get_figure()
-            
-        ax.plot(sigma_u,z)
-        
-        ax.set_xlabel(r"Along-wind RMS turbulence $\sigma_{u}$ (m/s)",
-                      fontsize=fontsize_labels)
-        
-        if write_labels: 
-            ax.set_ylabel("Height above ground (m)",
-                          fontsize=fontsize_labels)
-            
-        ax.set_xlim([0,ax.get_xlim()[1]])
-        ax.set_ylim([0,ax.get_ylim()[1]])
+        elif param in ['xLu']:
+            return self.calc_xLu(**kwargs)
         
         
     def calc_mean_speed(self,z=None):
@@ -559,7 +550,9 @@ class WindEnvironment():
         K_z = self._calc_K_z(z=z)
         
         U_z = K_z * u_star
+        
         self.U = U_z
+        
         return U_z
     
     
@@ -585,7 +578,9 @@ class WindEnvironment():
         num = 3*(1-z_rel_g)*((0.538+0.09*numpy.log(z_rel_0))**((1-z_rel_g)**(16)))
         denom = numpy.log(z_rel_0)*(1+0.156*numpy.log(6*zg/z0))
         i_uu = num / denom
+        
         self.i_uu = i_uu
+        
         return i_uu
     
     
@@ -609,6 +604,7 @@ class WindEnvironment():
         sigma_u = i_uu * U
         
         self.sigma_u = sigma_u
+        
         return sigma_u
     
     
@@ -701,7 +697,9 @@ class WindEnvironment():
         
         phi = numpy.deg2rad(phi)
         
-        return 2*omega*numpy.sin(phi)
+        f = 2*omega*numpy.sin(phi)
+        self.coriolis_f = f
+        return f
     
     
     def _calc_gradient_height(self,u_star=None):
@@ -734,13 +732,54 @@ class WindEnvironment():
         
         return zm, dz
     
+        
+    def calc_turbulence_length_scales(self):
+        
+        xLu = self.calc_xLu
+        
+        return [[xLu]]
     
-    def calc_xLu(z,x=None,y=None):
+    
+    def calc_xLu(self,z=None,recalculate=False):
         """
         Evaluates xLu at position (x,y,z)
         with xLu per ESDU data item 85020
         """
-        pass
+        
+        if z is None:
+            z = self.get_z()        
+        
+        A = self.A
+        u_star = self.u_star
+        zg = self.zg
+        z0 = self.z0
+        f = self.coriolis_f
+        
+        # Calculate R0 (Rossby number)
+        R0 = u_star / (f*z0)
+                
+        # Calculate other parameters dependent on Rossby number
+        B0 = 24 * R0**0.155
+        K0 = 0.39 / R0**0.11
+        N = 1.24 * R0**0.008
+        
+        # Calculate A, K parameters as function of height
+        K = 0.19 - (0.19-K0) * numpy.exp(-B0 * (z/zg)**N)        
+        A = 0.115 * (1 + 0.315 * (1 - z/zg)**6)**(2/3)
+        
+        # Get variation in RMS turbulence with height
+        if recalculate:
+            sigma_u = self.calc_sigma_u(recalculate=True)
+        else:
+            sigma_u = self.sigma_u
+
+        # Calculate xLu using the above parameters
+        num = A**(3/2) * (sigma_u/u_star)**3 * z
+        denom = 2.5 * K**(3/2) * (1 - z/zg)**2 * (1 + 5.75*z/zg)
+        xLu = num / denom
+        self.xLu = xLu
+        
+        return xLu
         
         
     
@@ -840,7 +879,7 @@ if __name__ == "__main__":
         
         we = WindEnvironment(V_ref=28.2095)
         we.print_details()
-        we.plot()
+        we.plot_profiles()
 
     else:
             
