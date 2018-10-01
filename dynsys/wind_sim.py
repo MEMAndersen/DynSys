@@ -443,12 +443,12 @@ class WindEnvironment():
         
         
     def plot_profiles(self,
-                      params2plot = {'U':"Mean wind speed (m/s)",
-                                     'i_u':"Along-wind turbulence intensity",
-                                     'sigma_u':"RMS turbulence $\sigma_{u}$ (m/s)",
-                                     'xLu':"Length scale xLu (m)"}
-                      ):
-                                 
+                      params2plot = ['U',
+                                     'i_u',
+                                     'sigma_u',
+                                     ['xLu','yLu','zLv']
+                                     ]):
+                                                       
         nSubplots = len(params2plot)
         fig,axarr = plt.subplots(1,nSubplots,sharey=True)
         fig.set_size_inches((10,8))
@@ -456,11 +456,13 @@ class WindEnvironment():
         
         y_label = False
         
-        params = params2plot.keys()
-        xlabels = params2plot.values()
+        params = params2plot
+        xlabels = params2plot
         
         for i, (ax, param, x_label) in enumerate(zip(axarr,params,xlabels)):
             
+            print(param)
+                        
             if i==0:
                 y_label=True
             else:
@@ -469,22 +471,36 @@ class WindEnvironment():
             self.plot_profile(param,ax=ax,x_label=x_label,y_label=y_label)
         
         
-    def plot_profile(self,param:str,
+    def plot_profile(self,param_list:list,
                      ax=None,
-                     recalculate=True,
                      x_label:str=None,
                      y_label=False,title=False):
         """
         Plots profile / variation of specified parameter with height
         """
         
-        print("Plotting profile of '%s' versus height..." % param)
+        print("Plotting profile of '%s' versus height..." % param_list)
         
-        if recalculate:
-            vals = self.calc_param(param)
+        # Convert to list
+        if not isinstance(param_list,list):
+            param_list = list(param_list)
             
+        # Get z values at which parameter defined
+        z = self.pointset_obj.z
+        
+        # Prepare plot window
+        if ax is None:
+            fig,ax = plt.subplots()
+            y_label=True
+            title=True
         else:
-
+            fig = ax.get_figure()
+            
+        ax.legend()
+            
+        # Loop over all listed parameters
+        for i, param in enumerate(param_list):
+            
             if not hasattr(self,param):
                 raise ValueError("Parameter '%s' does not exist!\n" % param +
                                  "Avaliable parameters:\n" + 
@@ -493,17 +509,7 @@ class WindEnvironment():
             else:
                 vals = getattr(self,param)
                                         
-        # Get z values at which parameter defined
-        z = self.pointset_obj.z
-        
-        if ax is None:
-            fig,ax = plt.subplots()
-            y_label=True
-            title=True
-        else:
-            fig = ax.get_figure()
-            
-        ax.plot(vals,z)
+                ax.plot(vals,z,label=param)
         
         # Define and assign x label
         if x_label is None:
@@ -520,21 +526,6 @@ class WindEnvironment():
         if title:
             ax.set_title("Variation of mean wind speed with height")
             
-            
-    def calc_param(self,param:str,**kwargs):
-        
-        if param in ['U','Ubar']:
-            return self.calc_mean_speed(**kwargs)
-        
-        elif param in ['i_uu','i_u']:
-            return self.calc_iuu(**kwargs)
-        
-        elif param in ['sigma_u','sigma_uu']:
-            return self.calc_sigma_u(**kwargs)
-        
-        elif param in ['xLu']:
-            return self.calc_xLu(**kwargs)
-        
         
     def calc_mean_speed(self,z=None):
         """
@@ -556,7 +547,7 @@ class WindEnvironment():
         return U_z
     
     
-    def calc_iuu(self,z=None):
+    def calc_iu(self,z=None):
         """
         Calculate along-wind turbulence intensity per Deaves and Harris
         
@@ -577,11 +568,23 @@ class WindEnvironment():
         
         num = 3*(1-z_rel_g)*((0.538+0.09*numpy.log(z_rel_0))**((1-z_rel_g)**(16)))
         denom = numpy.log(z_rel_0)*(1+0.156*numpy.log(6*zg/z0))
-        i_uu = num / denom
+        i_u = num / denom
         
-        self.i_uu = i_uu
+        self.i_u = i_u
         
-        return i_uu
+        return i_u
+    
+    
+    def calc_RMS_turbulence(self,z=None):
+        """
+        Calculates RMS turbulence components at height z
+        """
+        
+        sigma_u = self.calc_sigma_u(z=z)
+        sigma_v = self.calc_sigma_v(z=z)
+        sigma_w = self.calc_sigma_w(z=z)
+        
+        return [sigma_u,sigma_v,sigma_w]
     
     
     def calc_sigma_u(self,z=None,recalculate=False):
@@ -595,19 +598,75 @@ class WindEnvironment():
             
         if recalculate:
             U = self.calc_mean_speed(z=z)
-            i_uu = self.calc_iuu(z=z)
+            i_u = self.calc_iu(z=z)
             
         else:
             U = self.U
-            i_uu = self.i_uu
+            i_u = self.i_u
             
-        sigma_u = i_uu * U
+        sigma_u = i_u * U
         
         self.sigma_u = sigma_u
         
         return sigma_u
     
     
+    def calc_sigma_v(self,z=None,recalculate=False):
+        """
+        Calculates RMS cross-wind turbulence component 
+        per eqn (6.5), ESDU 86010
+        """
+        
+        if z is None:
+            z = self.get_z()
+        else:
+            recalculate = True
+        
+        if recalculate:
+            U = self.calc_mean_speed(z=z)
+            sigma_u = self.calc_sigma_u(z=z)
+        else:
+            U = self.U
+            sigma_u = self.sigma_u
+            
+        # eqn (6.5), ESDU 86010
+        h = self.zg
+        sigma_v = sigma_u * (1 - 0.22 * numpy.cos(numpy.pi/2 * z/h)**4)
+    
+        self.sigma_v = sigma_v
+        self.i_v = sigma_v / U
+        
+        return sigma_v
+    
+    
+    def calc_sigma_w(self,z=None,recalculate=False):
+        """
+        Calculates RMS vertical turbulence component 
+        per eqn (6.6), ESDU 86010
+        """
+        
+        if z is None:
+            z = self.get_z()
+        else:
+            recalculate = True
+        
+        if recalculate:
+            U = self.calc_mean_speed(z=z)
+            sigma_u = self.calc_sigma_u(z=z)
+        else:
+            U = self.U
+            sigma_u = self.sigma_u
+            
+        # eqn (6.5), ESDU 86010
+        h = self.zg
+        sigma_w = sigma_u * (1 - 0.45 * numpy.cos(numpy.pi/2 * z/h)**4)
+    
+        self.sigma_w = sigma_w
+        self.i_w = sigma_w / U
+        
+        return sigma_w
+    
+
     def get_z(self):
         return self.pointset_obj.z
         
@@ -733,21 +792,67 @@ class WindEnvironment():
         return zm, dz
     
         
-    def calc_turbulence_length_scales(self):
+    def calc_turbulence_length_scales(self,z=None):
+        """
+        Calculates turbulence length scales xLu, yLu etc using EDSU 86010
+        """
         
-        xLu = self.calc_xLu
+        # Calculate xLu to which other length scales relate
+        if z is None:
+            z = self.get_z()
         
-        return [[xLu]]
+        xLu = self.calc_xLu(z=z)
+        
+        # Calculate other related length scales for along-wind component
+        h = self.zg
+        
+        zLu = xLu * (0.5 - 0.34 * numpy.exp(-35 * (z/h)**1.7))      # eqn (6.3)
+        yLu = xLu * (0.16 + 0.68 * (zLu/zLu))                       # eqn (6.4)       
+        self.yLu = yLu
+        self.zLu = zLu
+        
+        # Evaluate turbulence RMS
+        sigma_u = self.calc_sigma_u()
+        sigma_v = self.calc_sigma_v()
+        sigma_w = self.calc_sigma_w()
+        
+        # Evaluate cross-wind component length scales
+        xLv = xLu * (0.5 * (sigma_v/sigma_u)**3)                    #eqn (6.9)
+        yLv = xLu * (1.0 * (2 * yLu / xLu) * (sigma_v/sigma_u)**3)  #eqn (6.10)
+        zLv = xLu * (0.5 * (2 * zLu / xLu) * (sigma_v/sigma_u)**3)  #eqn (6.11)
+        
+        self.xLv = xLv
+        self.yLv = yLv
+        self.zLv = zLv
+        
+        # Evaluate vertical component length scales
+        xLw = xLu * (0.5 * (sigma_w/sigma_u)**3)                    #eqn (6.12)
+        yLw = xLu * (0.5 * (2 * yLu / xLu) * (sigma_w/sigma_u)**3)  #eqn (6.13)
+        zLw = xLu * (1.0 * (2 * zLu / xLu) * (sigma_w/sigma_u)**3)  #eqn (6.14)
+        
+        self.xLv = xLv
+        self.yLv = yLv
+        self.zLv = zLv
+                     
+        # Return as ndarray
+        Nz = len(z)
+        length_scales = numpy.zeros((Nz,3,3))
+        for i in range(Nz):
+            length_scales[i,:,:] = numpy.array([[xLu[i], yLu[i], zLu[i]],
+                                                [xLv[i], yLv[i], zLv[i]],
+                                                [xLw[i], yLw[i], zLw[i]]])
+        return length_scales
     
     
     def calc_xLu(self,z=None,recalculate=False):
         """
-        Evaluates xLu at position (x,y,z)
-        with xLu per ESDU data item 85020
+        Calculates along-wind turbulence length scale according to ESDU 85020
         """
         
         if z is None:
-            z = self.get_z()        
+            z = self.get_z()  
+        else:
+            recalculate = True
         
         A = self.A
         u_star = self.u_star
@@ -780,7 +885,6 @@ class WindEnvironment():
         self.xLu = xLu
         
         return xLu
-        
         
     
     def calc_rLu(self):
@@ -879,6 +983,7 @@ if __name__ == "__main__":
         
         we = WindEnvironment(V_ref=28.2095)
         we.print_details()
+        length_scales = we.calc_turbulence_length_scales()
         we.plot_profiles()
 
     else:
