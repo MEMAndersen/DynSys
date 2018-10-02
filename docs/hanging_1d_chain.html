@@ -1,4 +1,4 @@
-Version: 1.5.1
+Version: 1.5.1_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1687,7 +1687,7 @@ equations are independent</p></div>
             
   <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.AddOutputMtrx">
-    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, fName=&#39;outputs.csv&#39;, verbose=False)</p>
+    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, overwrite=False, fName=&#39;outputs.csv&#39;, verbose=False)</p>
     </div>
     
 
@@ -1704,6 +1704,7 @@ equations are independent</p></div>
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                   <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                   <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">overwrite</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                   <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">,</span>
                   <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1717,6 +1718,9 @@ equations are independent</p></div>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;AddOutputMtrx() method invoked.&quot;</span><span class="p">)</span>
+    
     <span class="c1"># Read from file if no output_mtrx provided</span>
     <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
@@ -1727,13 +1731,19 @@ equations are independent</p></div>
     <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Response {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
         
-    <span class="c1"># Append to attribute</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">+=</span> <span class="n">output_names</span>
+    
+    <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New output matrix replaces previous output matrix, if defined&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">output_mtrx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New output matrix appended to previous output matrix, if defined&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">+=</span> <span class="n">output_names</span>
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;AddOutputMtrx() method invoked.&quot;</span><span class="p">)</span>
         
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output matrix shape:&quot;</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -2347,7 +2357,8 @@ will be ignored.</p>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
     
     <span class="c1"># Get key properties of system </span>
     <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>

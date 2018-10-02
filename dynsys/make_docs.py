@@ -45,6 +45,7 @@ make_html("dyn_analysis")
 make_html("loading")
 make_html("ped_dyn")
 make_html("damper")
+make_html("wind_sim")
 
 #%%
 # List markdown files in root folder to be rendered
