@@ -1292,6 +1292,14 @@ class SysPlot():
         # Call plot initialisation method of dynsys object
         dynsys_obj.PlotSystem_init_plot(ax)
         
+        # Overlay plot of loading, if avaliable
+        attr = 'analysis_obj'
+        if hasattr(results_obj,attr):
+            
+            analysis_obj = getattr(results_obj,attr)
+            loading_obj = analysis_obj.loading_obj
+            loading_obj.plot_init(ax=ax)
+        
         # Set y scale for plot
         if  y_lim is None:
             
@@ -1322,13 +1330,26 @@ class SysPlot():
         Animation plot update method, for results time step (frame) `i`
         """
         
+        results_obj = self.results_obj
+        
         # Get results applicable to this time increment
         t = self.results_obj.t[i,0]
         v = self.results_obj.v[i,:]
         
         # Call plot update method of dynsys object
         lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
+        
+        # Overlay plot of loading, if avaliable
+        attr = 'analysis_obj'
+        if hasattr(results_obj,attr):
+                       
+            analysis_obj = getattr(results_obj,attr)
+            loading_obj = analysis_obj.loading_obj
+            load_velocity = analysis_obj.loadVel
             
+            load_lines = loading_obj.plot_update(t=t,lead_x=load_velocity*t)
+            lines['load_lines'] = load_lines
+                        
         # Update time caption
         self.time_text.set_text(self.time_template % (t))
         

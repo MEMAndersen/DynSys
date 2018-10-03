@@ -33,6 +33,13 @@ class Loading():
         """
         print("Loading type: \t\t'{0}'".format(self.__class__.__name__))
         print("Loading object name: \t'%s'" % self.name)
+        
+        
+    def plot(self):
+        """
+        Plots diagram to illustrate load definition
+        """
+        pass
     
 
 class LoadTrain(Loading):
@@ -125,8 +132,6 @@ class LoadTrain(Loading):
         """
         
         
-        
-        
     def loadVals(self,t):
         """
         Returns intensity of point loads at time t
@@ -148,7 +153,60 @@ class LoadTrain(Loading):
         print("Load intensities:\t {0}".format(self._loadVals))
         print("Intensity function:\t {0}".format(self.intensityFunc))
         
-  
+        
+    def plot(self,ax=None, t=0, lead_x=0):
+        """
+        Plots diagram to illustrate load definition
+        
+        * `t`, time to plot loads at
+        
+        * `xpos`, defines position of lead axle
+        
+        """
+        
+        ax = self.plot_init(ax=ax)
+        self.plot_update(t=t, lead_x=lead_x, ax=ax, update_xlim=True)
+        
+        return ax
+    
+    
+    def plot_init(self,ax=None):
+        """
+        Method to initialise plot
+        """
+        
+        if ax is None:
+            fig, ax = plt.subplots()
+        
+        # Produce vector plot to visualise loads
+        self.plot_artists = ax.quiver([],[],[],[],
+                                      pivot='tip',color='b')
+        
+        return ax
+        
+    
+    def plot_update(self, t=0, lead_x=0, ax=None, update_xlim=False):
+        """
+        Method to update plot for given time and lead axle position
+        """
+        
+        # Get axle positions
+        x = lead_x + self.loadX
+        
+        # Get load values at time t
+        vals = self.loadVals(t)
+        
+        z = numpy.zeros_like(x)
+        
+        # Update plot artists
+        self.plot_artists.set_offsets(numpy.vstack((x,z)).T)
+        self.plot_artists.set_UVC(0,vals)
+              
+        if update_xlim:
+            ax.set_xlim([numpy.min(x),numpy.max(x)])
+                
+        return self.plot_artists
+        
         
 # ********************** FUNCTIONS ****************************************
         
