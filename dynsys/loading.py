@@ -154,40 +154,52 @@ class LoadTrain(Loading):
         print("Intensity function:\t {0}".format(self.intensityFunc))
         
         
-    def plot(self,ax=None, t=0, lead_x=0):
+    def plot(self,ax=None, **kwargs):
         """
         Plots diagram to illustrate load definition
-        
-        * `t`, time to plot loads at
-        
-        * `xpos`, defines position of lead axle
-        
         """
         
         ax = self.plot_init(ax=ax)
-        self.plot_update(t=t, lead_x=lead_x, ax=ax, update_xlim=True)
+        self.plot_update(**kwargs)
+        ax.relim()
+        ax.autoscale()
         
+        ax.set_ylim([0,ax.get_ylim()[1]])
+
+        ax.set_xlabel("Distance along load track (m)")
+        ax.set_ylabel("Load intensity (N)")
+        ax.set_title("'%s'" % self.name)
+
         return ax
     
     
     def plot_init(self,ax=None):
         """
         Method to initialise plot
+        
+        `ax` will be used if provided. Otherwise new figure will be created
         """
         
         if ax is None:
             fig, ax = plt.subplots()
-        
-        # Produce vector plot to visualise loads
-        self.plot_artists = ax.quiver([],[],[],[],
-                                      pivot='tip',color='b')
+               
+        self.plot_artists = {}
+        self.plot_artists['lines'] = ax.plot([],[],'b')[0]
+        self.plot_artists['heads'] = ax.plot([],[],'bv')[0]
         
         return ax
         
     
-    def plot_update(self, t=0, lead_x=0, ax=None, update_xlim=False):
+    def plot_update(self, t=0, lead_x=0, load_scale=1.0):
         """
         Method to update plot for given time and lead axle position
+        
+        * `t`, time value (secs) to plot loads at
+        
+        * `lead_x`, position of lead axle (m)
+        
+        * `load_scale`, factor used to convert loads (N) to distance (m) 
+          for plotting
         """
         
         # Get axle positions
@@ -197,14 +209,16 @@ class LoadTrain(Loading):
         vals = self.loadVals(t)
         
         z = numpy.zeros_like(x)
+        nan = numpy.full(x.shape,numpy.nan)
+        
+        X = numpy.ravel(numpy.vstack((x,x,nan)).T)
+        Y = numpy.ravel(numpy.vstack((-vals,z,nan)).T)
+        Y = Y * load_scale
         
         # Update plot artists
-        self.plot_artists.set_offsets(numpy.vstack((x,z)).T)
-        self.plot_artists.set_UVC(0,vals)
-              
-        if update_xlim:
-            ax.set_xlim([numpy.min(x),numpy.max(x)])
-                
+        self.plot_artists['lines'].set_data(X,Y)
+        self.plot_artists['heads'].set_data(x,z)
+                             
         return self.plot_artists
         
         

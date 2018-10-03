@@ -1260,6 +1260,7 @@ class SysPlot():
     
     def __init__(self, ax, results_obj,
                  y_lim=None,
+                 load_scale=1.0,
                  time_template = 'Time = %.2fs',
                  time_text_loc=(0.85, 0.95),):
         """
@@ -1300,6 +1301,8 @@ class SysPlot():
             loading_obj = analysis_obj.loading_obj
             loading_obj.plot_init(ax=ax)
         
+        self.load_scale = load_scale
+        
         # Set y scale for plot
         if  y_lim is None:
             
@@ -1332,6 +1335,7 @@ class SysPlot():
         
         results_obj = self.results_obj
         
+        
         # Get results applicable to this time increment
         t = self.results_obj.t[i,0]
         v = self.results_obj.v[i,:]
@@ -1346,8 +1350,10 @@ class SysPlot():
             analysis_obj = getattr(results_obj,attr)
             loading_obj = analysis_obj.loading_obj
             load_velocity = analysis_obj.loadVel
+            load_scale = self.load_scale
             
-            load_lines = loading_obj.plot_update(t=t,lead_x=load_velocity*t)
+            load_lines = loading_obj.plot_update(t=t,lead_x=load_velocity*t,
+                                                 load_scale=load_scale)
             lines['load_lines'] = load_lines
                         
         # Update time caption
