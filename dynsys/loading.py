@@ -157,15 +157,21 @@ class LoadTrain(Loading):
     def plot(self,ax=None, **kwargs):
         """
         Plots diagram to illustrate load definition
+        
+        Refer docs for **plot_init()** and **plot_update()** for further 
+        details. All additional kwargs are passed to **plot_update()**
         """
         
+        # Initialise then update plot
         ax = self.plot_init(ax=ax)
         self.plot_update(**kwargs)
+        
+        # Rescale plot (as update method will not do otherwise!)
         ax.relim()
         ax.autoscale()
         
+        # Define labels etc
         ax.set_ylim([0,ax.get_ylim()[1]])
-
         ax.set_xlabel("Distance along load track (m)")
         ax.set_ylabel("Load intensity (N)")
         ax.set_title("'%s'" % self.name)
@@ -176,16 +182,18 @@ class LoadTrain(Loading):
     def plot_init(self,ax=None):
         """
         Method to initialise plot
+        (used when producing animations, for example)
         
-        `ax` will be used if provided. Otherwise new figure will be created
+        `ax` will be used for plot, if provided. 
+        Otherwise new figure will be created
         """
         
         if ax is None:
             fig, ax = plt.subplots()
                
         self.plot_artists = {}
-        self.plot_artists['lines'] = ax.plot([],[],'b')[0]
-        self.plot_artists['heads'] = ax.plot([],[],'bv')[0]
+        self.plot_artists['lines'] = ax.plot([],[],'b',label=self.name)[0]
+        self.plot_artists['line_heads'] = ax.plot([],[],'bv')[0]
         
         return ax
         
@@ -193,6 +201,7 @@ class LoadTrain(Loading):
     def plot_update(self, t=0, lead_x=0, load_scale=1.0):
         """
         Method to update plot for given time and lead axle position
+        (used when producing animations, for example)
         
         * `t`, time value (secs) to plot loads at
         
@@ -217,7 +226,7 @@ class LoadTrain(Loading):
         
         # Update plot artists
         self.plot_artists['lines'].set_data(X,Y)
-        self.plot_artists['heads'].set_data(x,z)
+        self.plot_artists['line_heads'].set_data(x,z)
                              
         return self.plot_artists
         

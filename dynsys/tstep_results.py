@@ -1281,6 +1281,8 @@ class SysPlot():
         
         * `time_template`, string, text for time caption
         
+        * `load_scale`, factor used to convert loads (N) to distances (m)
+        
         """
         
         # Get objects

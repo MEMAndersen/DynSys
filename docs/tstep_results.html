@@ -1,4 +1,4 @@
-Version: 1.5.1
+Version: 1.5.1_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -2377,6 +2377,8 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
                  <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">plot_loading</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
                  <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2396,6 +2398,8 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="sd">        </span>
 <span class="sd">        * `time_template`, string, text for time caption</span>
 <span class="sd">        </span>
+<span class="sd">        * `load_scale`, factor used to convert loads (N) to distances (m)</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Get objects</span>
@@ -2408,6 +2412,37 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         
         <span class="c1"># Call plot initialisation method of dynsys object</span>
         <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        
+        <span class="c1"># Overlay plot of loading, if avaliable</span>
+        <span class="k">if</span> <span class="n">plot_loading</span><span class="p">:</span>
+            
+            <span class="n">attr</span> <span class="o">=</span> <span class="s1">&#39;analysis_obj&#39;</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">results_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                
+                <span class="n">analysis_obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">results_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+                <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">analysis_obj</span><span class="o">.</span><span class="n">loading_obj</span>
+                <span class="n">loading_obj</span><span class="o">.</span><span class="n">plot_init</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">loading_obj</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">plot_loading</span> <span class="o">=</span> <span class="bp">False</span> <span class="c1"># cannot plot loading</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Warning: could not plot loading&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_loading</span> <span class="o">=</span> <span class="n">plot_loading</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean, denotes whether loading should be overlaid onto plots</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scale factor used to convert load units (N) to distance (m)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span> <span class="o">=</span> <span class="n">loading_obj</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loading object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         
         <span class="c1"># Set y scale for plot</span>
         <span class="k">if</span>  <span class="n">y_lim</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -2439,13 +2474,29 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="sd">        Animation plot update method, for results time step (frame) `i`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span>
+        
+        
         <span class="c1"># Get results applicable to this time increment</span>
         <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
         
         <span class="c1"># Call plot update method of dynsys object</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+        
+        <span class="c1"># Overlay plot of loading, if avaliable</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_loading</span><span class="p">:</span>
             
+            <span class="n">analysis_obj</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">analysis_obj</span>
+            <span class="n">loading_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span>
+            <span class="n">load_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span>
+            
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="n">analysis_obj</span><span class="o">.</span><span class="n">loadVel</span>
+            
+            <span class="n">load_lines</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">plot_update</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">lead_x</span><span class="o">=</span><span class="n">load_velocity</span><span class="o">*</span><span class="n">t</span><span class="p">,</span>
+                                                 <span class="n">load_scale</span><span class="o">=</span><span class="n">load_scale</span><span class="p">)</span>
+            <span class="n">lines</span><span class="p">[</span><span class="s1">&#39;load_lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_lines</span>
+                        
         <span class="c1"># Update time caption</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">))</span>
         
@@ -2487,6 +2538,8 @@ as held in <code>tstep_results</code></p></div>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
                  <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">plot_loading</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
                  <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2506,6 +2559,8 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">        </span>
 <span class="sd">        * `time_template`, string, text for time caption</span>
 <span class="sd">        </span>
+<span class="sd">        * `load_scale`, factor used to convert loads (N) to distances (m)</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Get objects</span>
@@ -2518,6 +2573,37 @@ as held in <code>tstep_results</code></p></div>
         
         <span class="c1"># Call plot initialisation method of dynsys object</span>
         <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        
+        <span class="c1"># Overlay plot of loading, if avaliable</span>
+        <span class="k">if</span> <span class="n">plot_loading</span><span class="p">:</span>
+            
+            <span class="n">attr</span> <span class="o">=</span> <span class="s1">&#39;analysis_obj&#39;</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">results_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                
+                <span class="n">analysis_obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">results_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+                <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">analysis_obj</span><span class="o">.</span><span class="n">loading_obj</span>
+                <span class="n">loading_obj</span><span class="o">.</span><span class="n">plot_init</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">loading_obj</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">plot_loading</span> <span class="o">=</span> <span class="bp">False</span> <span class="c1"># cannot plot loading</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Warning: could not plot loading&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_loading</span> <span class="o">=</span> <span class="n">plot_loading</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean, denotes whether loading should be overlaid onto plots</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scale factor used to convert load units (N) to distance (m)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span> <span class="o">=</span> <span class="n">loading_obj</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loading object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         
         <span class="c1"># Set y scale for plot</span>
         <span class="k">if</span>  <span class="n">y_lim</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -2549,13 +2635,29 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">        Animation plot update method, for results time step (frame) `i`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span>
+        
+        
         <span class="c1"># Get results applicable to this time increment</span>
         <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
         
         <span class="c1"># Call plot update method of dynsys object</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+        
+        <span class="c1"># Overlay plot of loading, if avaliable</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_loading</span><span class="p">:</span>
             
+            <span class="n">analysis_obj</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">analysis_obj</span>
+            <span class="n">loading_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span>
+            <span class="n">load_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span>
+            
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="n">analysis_obj</span><span class="o">.</span><span class="n">loadVel</span>
+            
+            <span class="n">load_lines</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">plot_update</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">lead_x</span><span class="o">=</span><span class="n">load_velocity</span><span class="o">*</span><span class="n">t</span><span class="p">,</span>
+                                                 <span class="n">load_scale</span><span class="o">=</span><span class="n">load_scale</span><span class="p">)</span>
+            <span class="n">lines</span><span class="p">[</span><span class="s1">&#39;load_lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_lines</span>
+                        
         <span class="c1"># Update time caption</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">))</span>
         
@@ -2576,7 +2678,7 @@ as held in <code>tstep_results</code></p></div>
             
   <div class="item">
     <div class="name def" id="tstep_results.SysPlot.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, ax, results_obj, y_lim=None, time_template=&#39;Time = %.2fs&#39;, time_text_loc=(0.85, 0.95))</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, ax, results_obj, y_lim=None, plot_loading=True, load_scale=1.0, time_template=&#39;Time = %.2fs&#39;, time_text_loc=(0.85, 0.95))</p>
     </div>
     
 
@@ -2602,12 +2704,17 @@ as held in <code>tstep_results</code></p></div>
 <li>
 <p><code>time_template</code>, string, text for time caption</p>
 </li>
+<li>
+<p><code>load_scale</code>, factor used to convert loads (N) to distances (m)</p>
+</li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tstep_results.SysPlot.__init__', this);">Show source &equiv;</a></p>
   <div id="source-tstep_results.SysPlot.__init__" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
              <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">plot_loading</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
              <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
              <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -2627,6 +2734,8 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">    </span>
 <span class="sd">    * `time_template`, string, text for time caption</span>
 <span class="sd">    </span>
+<span class="sd">    * `load_scale`, factor used to convert loads (N) to distances (m)</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Get objects</span>
@@ -2639,6 +2748,37 @@ as held in <code>tstep_results</code></p></div>
     
     <span class="c1"># Call plot initialisation method of dynsys object</span>
     <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_init_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="c1"># Overlay plot of loading, if avaliable</span>
+    <span class="k">if</span> <span class="n">plot_loading</span><span class="p">:</span>
+        
+        <span class="n">attr</span> <span class="o">=</span> <span class="s1">&#39;analysis_obj&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">results_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+            
+            <span class="n">analysis_obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">results_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
+            <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">analysis_obj</span><span class="o">.</span><span class="n">loading_obj</span>
+            <span class="n">loading_obj</span><span class="o">.</span><span class="n">plot_init</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">loading_obj</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">plot_loading</span> <span class="o">=</span> <span class="bp">False</span> <span class="c1"># cannot plot loading</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Warning: could not plot loading&quot;</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_loading</span> <span class="o">=</span> <span class="n">plot_loading</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Boolean, denotes whether loading should be overlaid onto plots</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scale factor used to convert load units (N) to distance (m)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span> <span class="o">=</span> <span class="n">loading_obj</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loading object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     
     <span class="c1"># Set y scale for plot</span>
     <span class="k">if</span>  <span class="n">y_lim</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -2688,13 +2828,29 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">    Animation plot update method, for results time step (frame) `i`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
+    <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span>
+    
+    
     <span class="c1"># Get results applicable to this time increment</span>
     <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
     
     <span class="c1"># Call plot update method of dynsys object</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">PlotSystem_update_plot</span><span class="p">(</span><span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+    
+    <span class="c1"># Overlay plot of loading, if avaliable</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_loading</span><span class="p">:</span>
         
+        <span class="n">analysis_obj</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">analysis_obj</span>
+        <span class="n">loading_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span>
+        <span class="n">load_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span>
+        
+        <span class="n">load_velocity</span> <span class="o">=</span> <span class="n">analysis_obj</span><span class="o">.</span><span class="n">loadVel</span>
+        
+        <span class="n">load_lines</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">plot_update</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span><span class="n">lead_x</span><span class="o">=</span><span class="n">load_velocity</span><span class="o">*</span><span class="n">t</span><span class="p">,</span>
+                                             <span class="n">load_scale</span><span class="o">=</span><span class="n">load_scale</span><span class="p">)</span>
+        <span class="n">lines</span><span class="p">[</span><span class="s1">&#39;load_lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_lines</span>
+                    
     <span class="c1"># Update time caption</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">time_text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_template</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">))</span>
     
@@ -2713,6 +2869,39 @@ as held in <code>tstep_results</code></p></div>
 
             
   
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="tstep_results.SysPlot.load_scale" class="name">var <span class="ident">load_scale</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Scale factor used to convert load units (N) to distance (m)</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="tstep_results.SysPlot.loading_obj" class="name">var <span class="ident">loading_obj</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Loading object</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="tstep_results.SysPlot.plot_loading" class="name">var <span class="ident">plot_loading</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Boolean, denotes whether loading should be overlaid onto plots</p></div>
   <div class="source_cont">
 </div>
 
