@@ -213,6 +213,10 @@ class MovingLoadAnalysis(Dyn_Analysis):
         Results object
         """
         
+        # Create relationship to this analysis object
+        self.results_obj.analysis_obj = self
+        
+        
     
     def run(self,
             verbose=True,

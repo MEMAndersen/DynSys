@@ -1260,6 +1260,8 @@ class SysPlot():
     
     def __init__(self, ax, results_obj,
                  y_lim=None,
+                 plot_loading=True,
+                 load_scale=1.0,
                  time_template = 'Time = %.2fs',
                  time_text_loc=(0.85, 0.95),):
         """
@@ -1279,6 +1281,8 @@ class SysPlot():
         
         * `time_template`, string, text for time caption
         
+        * `load_scale`, factor used to convert loads (N) to distances (m)
+        
         """
         
         # Get objects
@@ -1291,6 +1295,37 @@ class SysPlot():
         
         # Call plot initialisation method of dynsys object
         dynsys_obj.PlotSystem_init_plot(ax)
+        
+        # Overlay plot of loading, if avaliable
+        if plot_loading:
+            
+            attr = 'analysis_obj'
+            if hasattr(results_obj,attr):
+                
+                analysis_obj = getattr(results_obj,attr)
+                loading_obj = analysis_obj.loading_obj
+                loading_obj.plot_init(ax=ax)
+                
+            else:
+                loading_obj = None
+                plot_loading = False # cannot plot loading
+                print("Warning: could not plot loading")
+        
+        self.plot_loading = plot_loading
+        """
+        Boolean, denotes whether loading should be overlaid onto plots
+        """
+        
+        self.load_scale = load_scale
+        """
+        Scale factor used to convert load units (N) to distance (m)
+        """
+        
+        self.loading_obj = loading_obj
+        """
+        Loading object
+        """
+        
         
         # Set y scale for plot
         if  y_lim is None:
@@ -1322,13 +1357,29 @@ class SysPlot():
         Animation plot update method, for results time step (frame) `i`
         """
         
+        results_obj = self.results_obj
+        
+        
         # Get results applicable to this time increment
         t = self.results_obj.t[i,0]
         v = self.results_obj.v[i,:]
         
         # Call plot update method of dynsys object
         lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
+        
+        # Overlay plot of loading, if avaliable
+        if self.plot_loading:
             
+            analysis_obj = results_obj.analysis_obj
+            loading_obj = self.loading_obj
+            load_scale = self.load_scale
+            
+            load_velocity = analysis_obj.loadVel
+            
+            load_lines = loading_obj.plot_update(t=t,lead_x=load_velocity*t,
+                                                 load_scale=load_scale)
+            lines['load_lines'] = load_lines
+                        
         # Update time caption
         self.time_text.set_text(self.time_template % (t))
         

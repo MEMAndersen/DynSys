@@ -33,6 +33,13 @@ class Loading():
         """
         print("Loading type: \t\t'{0}'".format(self.__class__.__name__))
         print("Loading object name: \t'%s'" % self.name)
+        
+        
+    def plot(self):
+        """
+        Plots diagram to illustrate load definition
+        """
+        pass
     
 
 class LoadTrain(Loading):
@@ -125,8 +132,6 @@ class LoadTrain(Loading):
         """
         
         
-        
-        
     def loadVals(self,t):
         """
         Returns intensity of point loads at time t
@@ -148,7 +153,83 @@ class LoadTrain(Loading):
         print("Load intensities:\t {0}".format(self._loadVals))
         print("Intensity function:\t {0}".format(self.intensityFunc))
         
-  
+        
+    def plot(self,ax=None, **kwargs):
+        """
+        Plots diagram to illustrate load definition
+        
+        Refer docs for **plot_init()** and **plot_update()** for further 
+        details. All additional kwargs are passed to **plot_update()**
+        """
+        
+        # Initialise then update plot
+        ax = self.plot_init(ax=ax)
+        self.plot_update(**kwargs)
+        
+        # Rescale plot (as update method will not do otherwise!)
+        ax.relim()
+        ax.autoscale()
+        
+        # Define labels etc
+        ax.set_ylim([0,ax.get_ylim()[1]])
+        ax.set_xlabel("Distance along load track (m)")
+        ax.set_ylabel("Load intensity (N)")
+        ax.set_title("'%s'" % self.name)
+
+        return ax
+    
+    
+    def plot_init(self,ax=None):
+        """
+        Method to initialise plot
+        (used when producing animations, for example)
+        
+        `ax` will be used for plot, if provided. 
+        Otherwise new figure will be created
+        """
+        
+        if ax is None:
+            fig, ax = plt.subplots()
+               
+        self.plot_artists = {}
+        self.plot_artists['lines'] = ax.plot([],[],'b',label=self.name)[0]
+        self.plot_artists['line_heads'] = ax.plot([],[],'bv')[0]
+        
+        return ax
+        
+    
+    def plot_update(self, t=0, lead_x=0, load_scale=1.0):
+        """
+        Method to update plot for given time and lead axle position
+        (used when producing animations, for example)
+        
+        * `t`, time value (secs) to plot loads at
+        
+        * `lead_x`, position of lead axle (m)
+        
+        * `load_scale`, factor used to convert loads (N) to distance (m) 
+          for plotting
+        """
+        
+        # Get axle positions
+        x = lead_x + self.loadX
+        
+        # Get load values at time t
+        vals = self.loadVals(t)
+        
+        z = numpy.zeros_like(x)
+        nan = numpy.full(x.shape,numpy.nan)
+        
+        X = numpy.ravel(numpy.vstack((x,x,nan)).T)
+        Y = numpy.ravel(numpy.vstack((-vals,z,nan)).T)
+        Y = Y * load_scale
+        
+        # Update plot artists
+        self.plot_artists['lines'].set_data(X,Y)
+        self.plot_artists['line_heads'].set_data(x,z)
+                             
+        return self.plot_artists
+        
         
 # ********************** FUNCTIONS ****************************************
         

@@ -14,6 +14,8 @@ and this project adheres to:
 
 ### Added
 
+* `AnimateResults()` method updated to plot loading as well as deformed system
+
 ### Fixed
 
 ### Removed
