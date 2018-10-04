@@ -1261,7 +1261,8 @@ class SysPlot():
     def __init__(self, ax, results_obj,
                  y_lim=None,
                  plot_loading=True,
-                 load_scale=1.0,
+                 load_scale=None,
+                 load_scale_relative=0.3,
                  time_template = 'Time = %.2fs',
                  time_text_loc=(0.85, 0.95),):
         """
@@ -1281,7 +1282,9 @@ class SysPlot():
         
         * `time_template`, string, text for time caption
         
-        * `load_scale`, factor used to convert loads (N) to distances (m)
+        * `load_scale`, factor used to convert loads (N) to distances (m). If 
+          _None_ (default) then `load_scale` will be set as proportion of 
+           vertical scale according to `load_scale_relative`
         
         """
         
@@ -1316,11 +1319,6 @@ class SysPlot():
         Boolean, denotes whether loading should be overlaid onto plots
         """
         
-        self.load_scale = load_scale
-        """
-        Scale factor used to convert load units (N) to distance (m)
-        """
-        
         self.loading_obj = loading_obj
         """
         Loading object
@@ -1332,12 +1330,23 @@ class SysPlot():
             
             # Attempt to determine appropriate y limits
             v = results_obj.v
-            y_max = 1.2*npy.max(v)
-            y_min = 1.2*npy.min(v)
-            y_absmax = npy.max([y_max,y_min])
-            y_lim = (-y_absmax,+y_absmax)
+            y_absmax = npy.max(npy.abs(v))
+            y_lim = (1.2*npy.array([-y_absmax,+y_absmax])).tolist()
             
         ax.set_ylim(y_lim)
+        
+        # Determine appropriate scale for loading in plot
+        if plot_loading and load_scale is None:
+            
+            loadVals = loading_obj.loadVals
+            
+            max_load = npy.max(npy.abs(loadVals))
+            load_scale = load_scale_relative * (y_lim[1] / max_load)
+        
+        self.load_scale = load_scale
+        """
+        Scale factor used to convert load units (N) to distance (m)
+        """
         
         # ----------------------------------------------------------
         

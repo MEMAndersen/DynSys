@@ -103,7 +103,7 @@ class LoadTrain(Loading):
         subsequent loads are at X<0 (_adjustment is made by this function_)
         """
         
-        self._loadVals = loadVals
+        self.loadVals = loadVals
         """
         Intensity of individual loads (in N)
         """
@@ -132,11 +132,11 @@ class LoadTrain(Loading):
         """
         
         
-    def loadVals(self,t):
+    def evaluate_loads(self,t):
         """
         Returns intensity of point loads at time t
         """
-        return self.intensityFunc(t)*self._loadVals
+        return self.intensityFunc(t)*self.loadVals
         
     
     def PrintDetails(self):
@@ -215,7 +215,7 @@ class LoadTrain(Loading):
         x = lead_x + self.loadX
         
         # Get load values at time t
-        vals = self.loadVals(t)
+        vals = self.evaluate_loads(t)
         
         z = numpy.zeros_like(x)
         nan = numpy.full(x.shape,numpy.nan)

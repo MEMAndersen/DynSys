@@ -446,7 +446,7 @@ class ModalSys(DynSys):
         
         # Get loading details
         loadX = loading_obj.loadX
-        loadVals = loading_obj.loadVals(t=0.0)
+        loadVals = loading_obj.evaluate_loads(t=0.0)
         
         # Check shapes of loadX and loadVals agree
         if not npy.array_equal(loadX.shape,loadVals.shape):
@@ -471,7 +471,8 @@ class ModalSys(DynSys):
             if use_abs_modeshape:
                 modeshapeVals = npy.abs(modeshapeVals)
             
-            QVals = npy.asmatrix(modeshapeVals.T) @ loading_obj.loadVals(t=t)
+            loads_arr = loading_obj.evaluate_loads(t=t)
+            QVals = npy.asmatrix(modeshapeVals.T) @ loads_arr 
             QVals = npy.ravel(QVals)
             return QVals
         
