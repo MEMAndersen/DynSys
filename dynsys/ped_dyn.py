@@ -258,7 +258,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                 modalsys_obj.lambda_vals = lambda_vals
                 
             # Get Seff for mode being considered
-            if isinstance(Seff,list):
+            if len(Seff)>1:
                 Seff = Seff[int(mode_index/2)]
                         
         else:
