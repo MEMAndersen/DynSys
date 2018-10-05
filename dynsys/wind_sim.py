@@ -342,12 +342,14 @@ class WindEnv_equilibrium():
                  points_arr=None,
                  mean_wind_dir=numpy.array([1,0,0]),
                  z_ref=10.0,
-                 z_max=300,
-                 dz=10.0,
+                 z_min=0.1,
+                 z_max=3000,
+                 nz=50,
                  z0=0.03,d=0.0,
                  phi=53.612,
                  A=-1.0,B=6.0,
-                 u_star=None):
+                 u_star=None,
+                 calc_wind_params=True):
         """
         Calculate coherance in accordance with ESDU data item 86010
         
@@ -371,7 +373,7 @@ class WindEnv_equilibrium():
         
         if points_arr is None:
             # Create default points set, e.g. for checking wind profile
-            z_vals = numpy.arange(z_ref,z_max+0.5*dz,dz)
+            z_vals = numpy.geomspace(z_min,z_max,nz)
             Np = len(z_vals)
             points_arr = numpy.zeros((Np,3))
             points_arr[:,2]=z_vals
@@ -588,8 +590,11 @@ class WindEnv_equilibrium():
         
         # ---------------------------
         
+        self.calc_exposure_factor()
+        
         # Evaluate wind params at point set currently defined
-        self.calculate_wind_params(mean_wind_dir)
+        if calc_wind_params:
+            self.calculate_wind_params(mean_wind_dir)
         
         
     def calculate_wind_params(self,mean_wind_dir):
@@ -605,8 +610,7 @@ class WindEnv_equilibrium():
         self.calc_iu()
         self.calc_RMS_turbulence()
         self.calc_turbulence_length_scales()
-        self.calc_exposure_factor()
-           
+               
     
     def print_details(self):
         print("Vref = %.1f\t[m/s]" % self.V_ref)
@@ -749,17 +753,17 @@ class WindEnv_equilibrium():
         
             
         
-    def calc_mean_speed(self):
+    def calc_mean_speed(self,z=None):
         """
         Calculate mean wind speed at height `z`, given wind environment 
         parameters already defined
         """
         
+        if z is None:
+            z = self.get_z()
+        
         u_star = self.u_star
-        z = self.get_z()
-        
         K_z = self._calc_K_z(z=z)
-        
         U_z = K_z * u_star
         
         self.U = U_z
@@ -1197,12 +1201,19 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         """
         
         # Define equilibrium wind model for site terrain
+        kwargs['calc_wind_params']=False
         super().__init__(**kwargs)
         
         # Define equilibrium wind model for upwind terrain
         upwind_kwargs = kwargs
         upwind_kwargs['z0']=z0_X
+        upwind_kwargs['calc_wind_params']=False
         upwind_wind_env = WindEnv_equilibrium(**kwargs)
+        
+        self.upwind_wind_env = upwind_wind_env
+        """
+        Object defining upwind wind environment
+        """
                 
         self.S_exposure_X = upwind_wind_env.S_exposure
         """
@@ -1229,6 +1240,20 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         kwargs['u_star']=u_star_local
         super().__init__(**kwargs)
         
+        # Calculate heights for roughness changes
+        z_bottom, z_top = self.calc_transition_z()
+        
+        self.z_bottom = z_bottom
+        """
+        Height (m) denoting lower extent of transition region; 
+        refer Fig 9.8, Cook part 1
+        """
+        
+        self.z_top = z_top
+        """
+        Height (m) denoting upper extent of transition region; 
+        refer Fig 9.8, Cook part 1
+        """
         
     
     def calc_fetch_factor(self):
@@ -1246,10 +1271,13 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         # Parameters relating to site
         z0 = self.z0
         SE = self.S_exposure
+
+        if not all([X,z0,z0_X,SE,SE_X]):
+            raise ValueError("Not all parameters initialised!")
         
         # Determine m0
         m0 = calc_m0(X=X,z0=z0)
-                
+                        
         # Determine fetch factor
         term1 = 1 - ln(z0_X/z0) / (0.42 + ln(m0))
         term2 = SE_X / ln(10/z0_X)
@@ -1257,6 +1285,114 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         SX_X = term1 * term2 * term3
                 
         return SX_X
+    
+    
+    def calc_transition_z(self):
+        """
+        Calculates z_bottom and z_top, i.e. heights at which transitions 
+        occur between upwind and site flow character
+        
+        Refer eqns (9.17) to (9.19) in Cook part 1
+        """
+        
+        X = self.X
+        d = self.d        # displacement height
+        z0 = self.z0      # roughness at sit 
+        z0_X = self.z0_X  # upwind roughness
+        
+        z0_rough = max(z0,z0_X)
+        z0_smooth = min(z0,z0_X)
+        
+        # Calculate z_bottom, i.e. height of bottom of transition region
+        
+        if z0_X == z0_rough:
+            # Rough->Smooth : eqn (9.17) applies
+            z_bottom = d + 0.36 * z0_rough**0.25 * X**0.75
+            
+        else:
+            # Smooth->Rough : eqn (9.18) applies
+            z_bottom = d + 0.07 * X * (z0_smooth/z0_rough)**0.5
+            
+        # Calculate z_top, i.e. height of top of transition region
+        # eqn (9.19) applies
+        z_top = d + 10 * z0_rough**0.4 * X**0.6
+        
+        return z_bottom, z_top
+    
+    
+    def calc_mean_speed(self,make_plot=True):
+        """
+        Calculate mean wind speed at height `z`, given wind environment 
+        parameters already defined
+        """
+        
+        upwind_wind_env = self.upwind_wind_env
+        
+        z = self.get_z()
+        d = self.d
+        z_eff = z - d
+        
+        SE_site = self.S_exposure
+        SE_upwind = self.S_exposure_X
+        
+        S_fetch = self.S_fetch
+        
+        z_bottom = self.z_bottom
+        z_top = self.z_top
+        
+        zg_site = self.zg
+        zg_upwind = upwind_wind_env.zg
+        
+        # Calculate wind speeds for site assuming this is at equilibrium
+        # with local terrain
+        U_site_equ = super(WindEnv_single_fetch,self).calc_mean_speed()
+        U_zg_site = super(WindEnv_single_fetch,self).calc_mean_speed(z=zg_site)
+        
+        # Calculate wind speeds for upwind site assuming this is at equilibrium
+        # with local terrain
+        U_upwind_equ = upwind_wind_env.calc_mean_speed()
+        U_zg_upwind = upwind_wind_env.calc_mean_speed(z=zg_upwind)
+        
+        # Define wind profile for heights in range 0 < z < z_bottom
+        U1 = S_fetch * SE_site * U_site_equ
+        
+        # Define wind profile for heights in range 0 < z < z_bottom
+        U3 = U_upwind_equ
+        
+        # Interpolate for transition region
+        U2 = numpy.mean([U1,U3],axis=0)
+        
+        # Define transition profile to be used
+        U_transition = numpy.where(z_eff < z_bottom, U1,
+                       numpy.where(z_eff > z_top, U3, U2))
+        
+        if make_plot:
+            
+            fig,ax = plt.subplots()
+            
+            ax.plot(U_site_equ,z_eff,label='site, equilibrium profile')
+            ax.plot(U_upwind_equ,z_eff,label='upwind, equilibrium profile')
+            ax.plot(U1,z_eff,'k-.',label='U1')
+            ax.plot(U3,z_eff,'k--',label='U3')
+            ax.plot(U_transition,z_eff,'k-',label='transition')
+            
+            ax.plot([U_zg_site,U_zg_site],[0,zg_site],color='b',alpha=0.3,label='$U(z_g)$ at site')
+            ax.plot([U_zg_upwind,U_zg_upwind],[0,zg_upwind],color='r',alpha=0.3,label='$U(z_g)$ upwind')
+                                    
+            ax.set_xlim([0,ax.get_xlim()[1]])
+            ax.set_ylim([0,ax.get_ylim()[1]])
+            
+            ax.set_xlabel("Mean wind speed (m/s)")
+            ax.set_ylabel("Effective height (z-d) (m)")
+            
+            ax.set_title("Transition wind profile for single fetch change")
+            
+            ax.legend()
+            
+        self.U = U_transition
+            
+        return U_transition
+    
     
     def print_details(self):
         
@@ -1365,7 +1501,7 @@ def plot_fetch_factor():
     
 if __name__ == "__main__":
     
-    test_routine = 4
+    test_routine = 5
     
     if test_routine == 0:
     
@@ -1414,7 +1550,12 @@ if __name__ == "__main__":
         
     elif test_routine ==4:
         
-        plot_fetch_factor()            
+        plot_fetch_factor()
+        
+    elif test_routine ==5:
+    
+        we = WindEnv_single_fetch(V_ref=20.0,z0=0.03,X=10000,z0_X=0.003)
+        we.calc_mean_speed()
 
     else:
             
