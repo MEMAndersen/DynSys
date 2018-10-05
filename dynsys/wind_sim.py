@@ -761,7 +761,7 @@ class WindEnvironment():
     
     
     
-    def calc_iu(self):
+    def calc_iu(self,apply_cook_correction=True):
         """
         Calculate along-wind turbulence intensity per Deaves and Harris
         """
@@ -776,8 +776,15 @@ class WindEnvironment():
         z_rel_0 = (z-d)/z0
         
         num = 3*(1-z_rel_g)*((0.538+0.09*numpy.log(z_rel_0))**((1-z_rel_g)**(16)))
-        denom = numpy.log(z_rel_0)*(1+0.156*numpy.log(6*zg/z0))
-        i_u = num / denom
+        denom2 = 1 + 0.156*numpy.log(6*zg/z0)
+        denom1 = numpy.log(z_rel_0)
+        
+        if apply_cook_correction:
+            # Augment with additional terms per numerator
+            # f eqn (9.12) in Cook Part 1
+            denom1 += 5.75 * z_rel_g - 1.875 * z_rel_g**2 -(4/3) * z_rel_g**3 + (1/4) * z_rel_g**4
+        
+        i_u = num / (denom1 * denom2)
         
         self.i_u = i_u
         
