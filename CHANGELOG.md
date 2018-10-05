@@ -16,6 +16,9 @@ and this project adheres to:
 
 * `AnimateResults()` method updated to plot loading as well as deformed system
 
+* `mesh.py` module added to faciliate definition or and manipulation of meshes
+  (i.e. interconnected nodes and elements)
+
 ### Fixed
 
 ### Removed

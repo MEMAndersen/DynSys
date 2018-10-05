@@ -77,32 +77,43 @@ class mesh:
     def __del__(self):
         pass
     
-    def extent(self):
+    def calc_extents(self):
         """
-        Determine xyz extent of mesh
+        Determine xyz extents of mesh
         """
-        xyz_min=[0,0,0]
-        xyz_max=[0,0,0]
         
-        for meshkey in self.meshObjs:
+        # Get list mesh objects to include in extent calculation
+        mesh_list = self.get_connected_meshes(get_full_tree=False)
+
+        # Loop over all nodes in all meshes
+        node_count = 0
+        for mesh_obj in mesh_list:
             
-            meshObj=self.meshObjs[meshkey]
+            node_list = mesh_obj.node_objs.values()
             
-            for nodekey in meshObj.nodeObjs:
+            for node_obj in node_list:
                
-                nodeObj=meshObj.nodeObjs[nodekey]
-                xyz_vals=nodeObj.xyz
+                node_count += 1                
+                xyz_vals=node_obj.get_xyz()
                 
-                for d in range(3):
+                if node_count == 1:
+                    xyz_min = xyz_vals
+                    xyz_max = xyz_vals
+                
+                xyz_min = npy.minimum(xyz_min,xyz_vals)
+                xyz_max = npy.maximum(xyz_max,xyz_vals)
+                  
+        if node_count > 0:
                     
-                    # Revise envelope
-                    if xyz_vals[d]>xyz_max[d]:
-                        xyz_max[d]=xyz_vals[d]
-                    if xyz_vals[d]<xyz_min[d]:
-                        xyz_min[d]=xyz_vals[d]
-                        
-        return xyz_min,xyz_max
+            # Reshape into nested list
+            xyz_lim = npy.vstack((xyz_min,xyz_max)).T.tolist()
+            return xyz_lim
                     
+        else:
+            print("Warning: mesh '%s' does not have any nodes!\n" % self.name + 
+                  "Could not evaluate mesh extents")
+            return None
+        
     
     def append_objs(self,obj_list:list):
         """
@@ -190,7 +201,7 @@ class mesh:
         return element_list
     
     
-    def get_mesh_tree(self,get_full_tree=True):
+    def get_connected_meshes(self,get_full_tree=True):
         """
         Returns list including all mesh objects associated with mesh object 
         
@@ -240,7 +251,7 @@ class mesh:
         print("Plotting mesh '%s'..." % self.name)
         
         # Get list of all related meshes
-        mesh_list = self.get_mesh_tree(get_full_tree=False)
+        mesh_list = self.get_connected_meshes(get_full_tree=False)
         
         for mesh_obj in mesh_list:
                 
@@ -251,7 +262,9 @@ class mesh:
             ax.set_xlim(axis_limits[0])
             ax.set_ylim(axis_limits[1])
             ax.set_zlim(axis_limits[2])
-            ax.legend()
+        
+        ax.legend()
+        ax.set_title("%s" % self.name)
         
         return ax
     

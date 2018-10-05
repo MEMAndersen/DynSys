@@ -1188,7 +1188,7 @@ table {
   <ul>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.__init__">__init__</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.PrintDetails">PrintDetails</a></li>
-    <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.loadVals">loadVals</a></li>
+    <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.evaluate_loads">evaluate_loads</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.plot">plot</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.plot_init">plot_init</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.plot_update">plot_update</a></li>
@@ -1475,7 +1475,7 @@ table {
                 <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">lambda_vals</span> <span class="o">=</span> <span class="n">lambda_vals</span>
                 
             <span class="c1"># Get Seff for mode being considered</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Seff</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Seff</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">Seff</span> <span class="o">=</span> <span class="n">Seff</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">mode_index</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
                         
         <span class="k">else</span><span class="p">:</span>
@@ -11254,7 +11254,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
                 <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">lambda_vals</span> <span class="o">=</span> <span class="n">lambda_vals</span>
                 
             <span class="c1"># Get Seff for mode being considered</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Seff</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Seff</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">Seff</span> <span class="o">=</span> <span class="n">Seff</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">mode_index</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
                         
         <span class="k">else</span><span class="p">:</span>
@@ -11482,7 +11482,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
             <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">lambda_vals</span> <span class="o">=</span> <span class="n">lambda_vals</span>
             
         <span class="c1"># Get Seff for mode being considered</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Seff</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Seff</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
             <span class="n">Seff</span> <span class="o">=</span> <span class="n">Seff</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">mode_index</span><span class="o">/</span><span class="mi">2</span><span class="p">)]</span>
                     
     <span class="k">else</span><span class="p">:</span>
@@ -12004,8 +12004,8 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
   
             
   <div class="item">
-    <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.loadVals">
-    <p>def <span class="ident">loadVals</span>(</p><p>self, t)</p>
+    <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.evaluate_loads">
+    <p>def <span class="ident">evaluate_loads</span>(</p><p>self, t)</p>
     </div>
     
 
@@ -12013,13 +12013,13 @@ according to NA.2.44.4, UK NA to BS EN 1991-2</p>
   
     <div class="desc"><p>Returns intensity of point loads at time t</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.loadVals', this);">Show source &equiv;</a></p>
-  <div id="source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.loadVals" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">loadVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.evaluate_loads', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers_loading.evaluate_loads" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">evaluate_loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns intensity of point loads at time t</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span>
 </pre></div>
 
   </div>
@@ -12154,7 +12154,7 @@ Otherwise new figure will be created</p></div>
     <span class="n">x</span> <span class="o">=</span> <span class="n">lead_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadX</span>
     
     <span class="c1"># Get load values at time t</span>
-    <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
     
     <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">nan</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>

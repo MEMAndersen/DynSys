@@ -2378,7 +2378,8 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
                  <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">plot_loading</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">load_scale</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">load_scale_relative</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
                  <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
                  <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2398,7 +2399,9 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="sd">        </span>
 <span class="sd">        * `time_template`, string, text for time caption</span>
 <span class="sd">        </span>
-<span class="sd">        * `load_scale`, factor used to convert loads (N) to distances (m)</span>
+<span class="sd">        * `load_scale`, factor used to convert loads (N) to distances (m). If </span>
+<span class="sd">          _None_ (default) then `load_scale` will be set as proportion of </span>
+<span class="sd">           vertical scale according to `load_scale_relative`</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -2433,11 +2436,6 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
 <span class="sd">        Boolean, denotes whether loading should be overlaid onto plots</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Scale factor used to convert load units (N) to distance (m)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
         <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span> <span class="o">=</span> <span class="n">loading_obj</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loading object</span>
@@ -2449,12 +2447,23 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
             
             <span class="c1"># Attempt to determine appropriate y limits</span>
             <span class="n">v</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">v</span>
-            <span class="n">y_max</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="n">y_min</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_max</span><span class="p">,</span><span class="n">y_min</span><span class="p">])</span>
-            <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">)</span>
+            <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+            <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">]))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
             
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">)</span>
+        
+        <span class="c1"># Determine appropriate scale for loading in plot</span>
+        <span class="k">if</span> <span class="n">plot_loading</span> <span class="ow">and</span> <span class="n">load_scale</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+            <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span>
+            
+            <span class="n">max_load</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">loadVals</span><span class="p">))</span>
+            <span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale_relative</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_lim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">max_load</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scale factor used to convert load units (N) to distance (m)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># ----------------------------------------------------------</span>
         
@@ -2539,7 +2548,8 @@ as held in <code>tstep_results</code></p></div>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
                  <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">plot_loading</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">load_scale</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">load_scale_relative</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
                  <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
                  <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2559,7 +2569,9 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">        </span>
 <span class="sd">        * `time_template`, string, text for time caption</span>
 <span class="sd">        </span>
-<span class="sd">        * `load_scale`, factor used to convert loads (N) to distances (m)</span>
+<span class="sd">        * `load_scale`, factor used to convert loads (N) to distances (m). If </span>
+<span class="sd">          _None_ (default) then `load_scale` will be set as proportion of </span>
+<span class="sd">           vertical scale according to `load_scale_relative`</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -2594,11 +2606,6 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">        Boolean, denotes whether loading should be overlaid onto plots</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Scale factor used to convert load units (N) to distance (m)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
         <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span> <span class="o">=</span> <span class="n">loading_obj</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loading object</span>
@@ -2610,12 +2617,23 @@ as held in <code>tstep_results</code></p></div>
             
             <span class="c1"># Attempt to determine appropriate y limits</span>
             <span class="n">v</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">v</span>
-            <span class="n">y_max</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="n">y_min</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_max</span><span class="p">,</span><span class="n">y_min</span><span class="p">])</span>
-            <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">)</span>
+            <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+            <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">]))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
             
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">)</span>
+        
+        <span class="c1"># Determine appropriate scale for loading in plot</span>
+        <span class="k">if</span> <span class="n">plot_loading</span> <span class="ow">and</span> <span class="n">load_scale</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+            <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span>
+            
+            <span class="n">max_load</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">loadVals</span><span class="p">))</span>
+            <span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale_relative</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_lim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">max_load</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scale factor used to convert load units (N) to distance (m)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># ----------------------------------------------------------</span>
         
@@ -2678,7 +2696,7 @@ as held in <code>tstep_results</code></p></div>
             
   <div class="item">
     <div class="name def" id="tstep_results.SysPlot.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, ax, results_obj, y_lim=None, plot_loading=True, load_scale=1.0, time_template=&#39;Time = %.2fs&#39;, time_text_loc=(0.85, 0.95))</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, ax, results_obj, y_lim=None, plot_loading=True, load_scale=None, load_scale_relative=0.3, time_template=&#39;Time = %.2fs&#39;, time_text_loc=(0.85, 0.95))</p>
     </div>
     
 
@@ -2705,7 +2723,9 @@ as held in <code>tstep_results</code></p></div>
 <p><code>time_template</code>, string, text for time caption</p>
 </li>
 <li>
-<p><code>load_scale</code>, factor used to convert loads (N) to distances (m)</p>
+<p><code>load_scale</code>, factor used to convert loads (N) to distances (m). If 
+  <em>None</em> (default) then <code>load_scale</code> will be set as proportion of 
+   vertical scale according to <code>load_scale_relative</code></p>
 </li>
 </ul></div>
   <div class="source_cont">
@@ -2714,7 +2734,8 @@ as held in <code>tstep_results</code></p></div>
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">,</span>
              <span class="n">y_lim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">plot_loading</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-             <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+             <span class="n">load_scale</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">load_scale_relative</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
              <span class="n">time_template</span> <span class="o">=</span> <span class="s1">&#39;Time = </span><span class="si">%.2f</span><span class="s1">s&#39;</span><span class="p">,</span>
              <span class="n">time_text_loc</span><span class="o">=</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -2734,7 +2755,9 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">    </span>
 <span class="sd">    * `time_template`, string, text for time caption</span>
 <span class="sd">    </span>
-<span class="sd">    * `load_scale`, factor used to convert loads (N) to distances (m)</span>
+<span class="sd">    * `load_scale`, factor used to convert loads (N) to distances (m). If </span>
+<span class="sd">      _None_ (default) then `load_scale` will be set as proportion of </span>
+<span class="sd">       vertical scale according to `load_scale_relative`</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -2769,11 +2792,6 @@ as held in <code>tstep_results</code></p></div>
 <span class="sd">    Boolean, denotes whether loading should be overlaid onto plots</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Scale factor used to convert load units (N) to distance (m)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
     <span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span> <span class="o">=</span> <span class="n">loading_obj</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Loading object</span>
@@ -2785,12 +2803,23 @@ as held in <code>tstep_results</code></p></div>
         
         <span class="c1"># Attempt to determine appropriate y limits</span>
         <span class="n">v</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">v</span>
-        <span class="n">y_max</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-        <span class="n">y_min</span> <span class="o">=</span> <span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-        <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">y_max</span><span class="p">,</span><span class="n">y_min</span><span class="p">])</span>
-        <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">)</span>
+        <span class="n">y_absmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="n">y_lim</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">y_absmax</span><span class="p">,</span><span class="o">+</span><span class="n">y_absmax</span><span class="p">]))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         
     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">y_lim</span><span class="p">)</span>
+    
+    <span class="c1"># Determine appropriate scale for loading in plot</span>
+    <span class="k">if</span> <span class="n">plot_loading</span> <span class="ow">and</span> <span class="n">load_scale</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span>
+        
+        <span class="n">max_load</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">loadVals</span><span class="p">))</span>
+        <span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale_relative</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_lim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">max_load</span><span class="p">)</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">load_scale</span> <span class="o">=</span> <span class="n">load_scale</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scale factor used to convert load units (N) to distance (m)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># ----------------------------------------------------------</span>
     
