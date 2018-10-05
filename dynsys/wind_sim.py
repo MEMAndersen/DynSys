@@ -12,8 +12,11 @@ import scipy
 from scipy import spatial
 from scipy import optimize
 
+from numpy import log as ln
+
 #%%
 
+plt.close('all')
 fontsize_labels = 8
    
 #%%
@@ -34,10 +37,10 @@ def G_vonKarman(z,f,U_ref=20.0,z_ref=10.0,z0=0.05,Lx=120.0,make_plot=False):
     """
     
     # Determine shear velocity
-    u_star = 0.4 * U_ref / numpy.log(z_ref/z0)
+    u_star = 0.4 * U_ref / ln(z_ref/z0)
     
     # Calculate mean wind speed at heights requested
-    U_z = u_star / 0.4 * numpy.log(z/z0)
+    U_z = u_star / 0.4 * ln(z/z0)
     
     # Calculate Lx at each height
     if isinstance(Lx,float):
@@ -330,7 +333,7 @@ class PointSet():
         self.dr = dr
 
 
-class WindEnvironment():
+class WindEnv_equilibrium():
     """
     Defines all attributes and methods required to define wind environment
     """
@@ -343,7 +346,8 @@ class WindEnvironment():
                  dz=10.0,
                  z0=0.03,d=0.0,
                  phi=53.612,
-                 A=-1.0,B=6.0):
+                 A=-1.0,B=6.0,
+                 u_star=None):
         """
         Calculate coherance in accordance with ESDU data item 86010
         
@@ -420,24 +424,35 @@ class WindEnvironment():
         Parameter as used in Deaves and Harris log-law mean wind speed equation
         """
         
-        self.A1 = 2*(numpy.log(B)-A) - (1/6)
+        self.A1 = 2*(ln(B)-A) - (1/6)
         """
         Parameter as used in Deaves and Harris log-law mean wind speed equation
         """
         
-        # Iteratively calculate gradient height consistent with defined terrain
-        self.zg = self.calc_gradient_height()
+        if u_star is None:
+            
+            # Iteratively calculate gradient height consistent with defined terrain
+            zg = self.calc_gradient_height()
+            
+            # Recalculate u_star now that zg determined
+            u_star = self._calc_u_star()
+            
+        else:
+            
+            # Calculate zg that is consistent with u_star provided
+            zg = self._calc_gradient_height(u_star=u_star)
+            
+        self.zg = zg
         """
         Gradient height (m)
         """
         
-        # Recalculate u_star now that zg determined
-        self.u_star = self._calc_u_star()
+        self.u_star = u_star
         """
         Friction velocity (m/s)
         """
         
-        # Initialise other variables defined later
+        # Initialise variables defined later
         self.U = None
         """
         Mean wind speed (m/s) at points
@@ -565,12 +580,16 @@ class WindEnvironment():
         * Vertical across-wind direction (z)
         """ 
         
+        self.S_exposure = None
+        """
+        Ratio of the local mean speed at 10m to the basic mean wind speed in 
+        standard terrain
+        """
+        
         # ---------------------------
         
         # Evaluate wind params at point set currently defined
         self.calculate_wind_params(mean_wind_dir)
-        
-        print("Wind environment initialised")
         
         
     def calculate_wind_params(self,mean_wind_dir):
@@ -586,6 +605,7 @@ class WindEnvironment():
         self.calc_iu()
         self.calc_RMS_turbulence()
         self.calc_turbulence_length_scales()
+        self.calc_exposure_factor()
            
     
     def print_details(self):
@@ -775,9 +795,9 @@ class WindEnvironment():
         z_rel_g = (z-d)/zg
         z_rel_0 = (z-d)/z0
         
-        num = 3*(1-z_rel_g)*((0.538+0.09*numpy.log(z_rel_0))**((1-z_rel_g)**(16)))
-        denom2 = 1 + 0.156*numpy.log(6*zg/z0)
-        denom1 = numpy.log(z_rel_0)
+        num = 3*(1-z_rel_g)*((0.538+0.09*ln(z_rel_0))**((1-z_rel_g)**(16)))
+        denom2 = 1 + 0.156*ln(6*zg/z0)
+        denom1 = ln(z_rel_0)
         
         if apply_cook_correction:
             # Augment with additional terms per numerator
@@ -866,6 +886,30 @@ class WindEnvironment():
         
     def get_xyz(self):
         return self.get_x(), self.get_y(), self.get_z()
+    
+    
+    def calc_exposure_factor(self):
+        """
+        Calculate exposure factor, i.e. the ratio of the local mean speed 
+        at 10m to the basic mean wind speed in standard terrain
+        """
+        
+        # Values for this terrain
+        zg = self.zg
+        z0 = self.z0
+        
+        # Standard terrain values
+        zg_std = 2550
+        z0_std = 0.03
+        
+        # equation (9.12) from Cook part 1
+        term1 = (ln(zg_std/z0_std) + 2.79) / (ln(zg/z0) + 2.79)
+        term2 = ln(10.0/z0) / ln(10.0/z0_std)
+        SE = term1 * term2
+        
+        self.S_exposure = SE
+        return SE
+        
         
     
     def calc_gradient_height(self,zg_assumed=2500):
@@ -920,7 +964,7 @@ class WindEnvironment():
         
         R = self._calc_R_z(z=z)
         
-        K = 2.5*(numpy.log((z-d)/z0) + A1*R
+        K = 2.5*(ln((z-d)/z0) + A1*R
                  + (1-A1/2)*(R**2)
                  - (4/3)*(R**3)
                  + (1/4)*(R**4))
@@ -1123,12 +1167,205 @@ class WindEnvironment():
         self.rLw = rLw
         
         return rLw
+    
+    
+class WindEnv_single_fetch(WindEnv_equilibrium):
+    """
+    Implements adjustments required to cater for single upwind fetch change
+    
+    Refer Section G.1.3 of TOWER manual (r2) for details of method
+    """
+    
+    def __init__(self,X,z0_X,**kwargs):
+        """
+        Required:
+            
+        * `X` upwind fetch to roughness change (m)
+        
+        * `z0_X`, ground roughness at distance `X` upwind (m)
+        
+        """
+                
+        self.X = X
+        """
+        Upwind distance (fetch) **in meters** to ground roughness change
+        """
+        
+        self.z0_X = z0_X
+        """
+        Ground roughness at upwind distance X (m)
+        """
+        
+        # Define equilibrium wind model for site terrain
+        super().__init__(**kwargs)
+        
+        # Define equilibrium wind model for upwind terrain
+        upwind_kwargs = kwargs
+        upwind_kwargs['z0']=z0_X
+        upwind_wind_env = WindEnv_equilibrium(**kwargs)
+                
+        self.S_exposure_X = upwind_wind_env.S_exposure
+        """
+        Exposure factor at upwind terrain
+        """
+                
+        SX = self.calc_fetch_factor()
+        self.S_fetch = SX
+        """
+        Fetch factor, defined as ratio between local friction 
+        velocity and equilibrium friction velocity
+        """
+        
+        # Calculate local friction velocity
+        u_star = self.u_star            # equilibrium value
+        u_star_local = u_star * SX      # by definition of fetch factor
+        self.u_star_local = u_star_local
+        """
+        Local value of friction velocity 'u_star', to account for 
+        upwind roughness change
+        """
+        
+        # Define equilibrium wind model for site terrain
+        kwargs['u_star']=u_star_local
+        super().__init__(**kwargs)
+        
+        
+    
+    def calc_fetch_factor(self):
+        """
+        Calculate fetch factor, defined as ratio between local friction 
+        velocity and equilibrium friction velocity
+        """
+        
+        X = self.X
+        
+        # Parameters relating to upwind site
+        z0_X = self.z0_X
+        SE_X = self.S_exposure_X
+        
+        # Parameters relating to site
+        z0 = self.z0
+        SE = self.S_exposure
+        
+        # Determine m0
+        m0 = calc_m0(X=X,z0=z0)
+                
+        # Determine fetch factor
+        term1 = 1 - ln(z0_X/z0) / (0.42 + ln(m0))
+        term2 = SE_X / ln(10/z0_X)
+        term3 = ln(10/z0) / SE
+        SX_X = term1 * term2 * term3
+                
+        return SX_X
+    
+    def print_details(self):
+        
+        super().print_details()
+
+        print("z0(X) = %.3f\t[m]" % self.z0_X)
+        print("SE(X) = %.3f" % self.S_exposure_X)
+        print("SX(X) = %.3f" % self.S_fetch)
+    
+   
+#%%
+        
+        
+# --------------- FUNCTIONS -----------------
+    
+def calc_m0(X,z0,tol=0.000001,max_iter=100,verbose=False):
+    """
+    Iteratively calculates m0 as required for calculation of fetch factor
+    
+    m0 is calculated using eqn (9.21) in Cook part 1
+    """
+   
+    def m0_func(m0_val):
+        return (0.32 * X) / (z0 * (ln(m0_val)-1))
+    
+    m0_last = X / (10*z0)   # Initial guess at m0
+    iter_count = 0
+    
+    converged = False
+    while not converged and iter_count < max_iter:
+        
+        iter_count += 1
+        
+        m0 = m0_func(m0_last)
+        
+        if abs(m0/m0_last - 1) < tol:
+            converged = True
+            
+        m0_last = m0
+        
+    if not converged:
+        raise ValueError("Could not converge on 'm0'!")
+    else:
+        if verbose: print("Converged on m0 after %d iterations" % iter_count)
+        
+    return m0
+
+# ------------------- TEST ROUTINES -----------------------
+    
+def plot_fetch_factor():
+    """
+    Tests implementation of single roughness change wind model by deriving
+    fetch factor for various roughness transitions
+    
+    Format of figure is intended to replicate Figure 9.9 in Cook part 1
+    """
+    
+    print("Calculating to produce fetch plot...")
+    
+    V_ref = 10 # arbitrary
+        
+    # Practical range of fetch values in m
+    fetch_vals = numpy.geomspace(0.1,10000) * 1000
+    
+    # z0 values for terrain categories - refer Fig 9.7 Cook part 1
+    z0_vals = [0.003,0.01,0.03,0.1,0.3,0.8]
+    
+    # Append to additionally consider reverse roughness transitions
+    z0_vals += z0_vals[::-1][1:]
+
+    # Loop over all transitions
+    SX_vals = []
+    for i in range(len(z0_vals)-1):
+        
+        z0_0 = z0_vals[i]
+        z0_1 = z0_vals[i+1]
+        
+        SX_vals_inner = []
+        
+        for X in fetch_vals:        
+        
+            we = WindEnv_single_fetch(V_ref=V_ref,z0=z0_1,X=X,z0_X=z0_0)
+            SX_vals_inner.append(we.S_fetch)
+            
+        SX_vals.append(SX_vals_inner)
+        
+    SX_vals = numpy.array(SX_vals)
+        
+    # Make plot and scale per Cook's to faciliate comparison
+    fig,ax = plt.subplots()
+    
+    fetch_vals = fetch_vals/1000 # convert to km for plot
+    ax.semilogx(fetch_vals,SX_vals.T)
+    
+    ax.set_xlabel("Upwind fetch (km)")
+    ax.set_xlim([0.1,200])
+    ax.set_ylim([0.8,1.2])
+    ax.set_title("Fetch factor")
+    
+    print("Done!")
+    
+    return fig
+        
 
 #%%
     
 if __name__ == "__main__":
     
-    test_routine = 3
+    test_routine = 4
     
     if test_routine == 0:
     
@@ -1168,11 +1405,16 @@ if __name__ == "__main__":
 
     elif test_routine ==3:
         
-        we = WindEnvironment(V_ref=28.2095)
+        we = WindEnv_equilibrium(V_ref=28.2,z0=0.03)
+        Se = we.calc_exposure_factor()
         we.print_details()
         we.plot_profiles()
         we.plot_param_3d(param='U')
         we.plot_param_3d(param='iLu')
+        
+    elif test_routine ==4:
+        
+        plot_fetch_factor()            
 
     else:
             
