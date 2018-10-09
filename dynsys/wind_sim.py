@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import scipy
 from scipy import spatial
+from scipy import interpolate
 from scipy import optimize
 
 from numpy import log as ln
@@ -339,12 +340,13 @@ class WindEnv_equilibrium():
     """
     
     def __init__(self,V_ref,
+                 pointset_obj=None,
                  points_arr=None,
                  mean_wind_dir=numpy.array([1,0,0]),
                  z_ref=10.0,
                  z_min=0.1,
-                 z_max=3000,
-                 nz=50,
+                 z_max=500,
+                 nz=100,
                  z0=0.03,d=0.0,
                  phi=53.612,
                  A=-1.0,B=6.0,
@@ -371,14 +373,18 @@ class WindEnv_equilibrium():
         
         """
         
-        if points_arr is None:
-            # Create default points set, e.g. for checking wind profile
-            z_vals = numpy.geomspace(z_min,z_max,nz)
-            Np = len(z_vals)
-            points_arr = numpy.zeros((Np,3))
-            points_arr[:,2]=z_vals
+        if pointset_obj is None:
+            
+            if points_arr is None:
+                # Create default points set, e.g. for checking wind profile
+                z_vals = numpy.geomspace(z_min,z_max,nz)
+                Np = len(z_vals)
+                points_arr = numpy.zeros((Np,3))
+                points_arr[:,2]=z_vals
+                
+            pointset_obj = PointSet(points_arr)
         
-        self.pointset_obj = PointSet(points_arr)
+        self.pointset_obj = pointset_obj
         Np = self.pointset_obj.nPoints
         
         self.zg = None
@@ -1200,22 +1206,23 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         Ground roughness at upwind distance X (m)
         """
         
-        # Define equilibrium wind model for site terrain
+        # Define equilibrium wind model for site terrain, given parameters
+        # passed to this function defining conditions at the site
         kwargs['calc_wind_params']=False
         super().__init__(**kwargs)
         
         # Define equilibrium wind model for upwind terrain
-        upwind_kwargs = kwargs
-        upwind_kwargs['z0']=z0_X
-        upwind_kwargs['calc_wind_params']=False
-        upwind_wind_env = WindEnv_equilibrium(**kwargs)
+        upwind_kwargs = kwargs.copy()
+        upwind_kwargs['z0']=z0_X # overrides value at site
+        upwind_kwargs['pointset_obj'] = self.pointset_obj
+        upwind_we = WindEnv_equilibrium(**upwind_kwargs)
         
-        self.upwind_wind_env = upwind_wind_env
+        self.upwind_we = upwind_we
         """
         Object defining upwind wind environment
         """
                 
-        self.S_exposure_X = upwind_wind_env.S_exposure
+        self.S_exposure_X = upwind_we.S_exposure
         """
         Exposure factor at upwind terrain
         """
@@ -1228,7 +1235,7 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         """
         
         # Calculate local friction velocity
-        u_star = self.u_star            # equilibrium value
+        u_star = upwind_we.u_star            # equilibrium value at site
         u_star_local = u_star * SX      # by definition of fetch factor
         self.u_star_local = u_star_local
         """
@@ -1320,13 +1327,13 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         return z_bottom, z_top
     
     
-    def calc_mean_speed(self,make_plot=True):
+    def calc_mean_speed(self,make_plot=True, verbose=True):
         """
         Calculate mean wind speed at height `z`, given wind environment 
         parameters already defined
         """
         
-        upwind_wind_env = self.upwind_wind_env
+        upwind_wind_env = self.upwind_we
         
         z = self.get_z()
         d = self.d
@@ -1334,58 +1341,81 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         
         SE_site = self.S_exposure
         SE_upwind = self.S_exposure_X
-        
+        SE_upwind = 1.37
+                
         S_fetch = self.S_fetch
         
         z_bottom = self.z_bottom
         z_top = self.z_top
-        
-        zg_site = self.zg
-        zg_upwind = upwind_wind_env.zg
-        
+                
         # Calculate wind speeds for site assuming this is at equilibrium
         # with local terrain
         U_site_equ = super(WindEnv_single_fetch,self).calc_mean_speed()
-        U_zg_site = super(WindEnv_single_fetch,self).calc_mean_speed(z=zg_site)
         
         # Calculate wind speeds for upwind site assuming this is at equilibrium
         # with local terrain
         U_upwind_equ = upwind_wind_env.calc_mean_speed()
-        U_zg_upwind = upwind_wind_env.calc_mean_speed(z=zg_upwind)
         
-        # Define wind profile for heights in range 0 < z < z_bottom
-        U1 = S_fetch * SE_site * U_site_equ
+        # Define local internal wind profile
+        U1 = S_fetch * U_site_equ
         
         # Define wind profile for heights in range 0 < z < z_bottom
         U3 = U_upwind_equ
         
-        # Interpolate for transition region
-        U2 = numpy.mean([U1,U3],axis=0)
+        # Locate intersection point z_l as described in Cook 9.4.1.6.1
+        U1_func = scipy.interpolate.interp1d(z,U1)
+        U3_func = scipy.interpolate.interp1d(z,U3)
+        
+        def U_diff(z):
+            return U3_func(z) - U1_func(z)
+        
+        try:
+            z_l = scipy.optimize.bisect(U_diff,z_bottom,z_top)
+        except:
+            z_l = z_bottom # conservative
+            print("*** Error in calculation of z_l! ***")
         
         # Define transition profile to be used
-        U_transition = numpy.where(z_eff < z_bottom, U1,
-                       numpy.where(z_eff > z_top, U3, U2))
+        U_transition = numpy.where(z_eff < z_l, U1, U3)
+        
+        if verbose:
+            
+            print("S_fetch:\t%.3f" % S_fetch)
+            print("SE_site\t\t%.3f" % SE_site)
+            print("SE_upwind\t%.3f" % SE_upwind)
+            print("z_bottom:\t%.1f\t[m]" % z_bottom)
+            print("z_l:\t\t%.1f\t[m]" % z_l)
+            print("z_top:\t\t%.0f\t[m]" % z_top)
+        
         
         if make_plot:
             
             fig,ax = plt.subplots()
+            fig.set_size_inches((6,8))
             
-            ax.plot(U_site_equ,z_eff,label='site, equilibrium profile')
-            ax.plot(U_upwind_equ,z_eff,label='upwind, equilibrium profile')
-            ax.plot(U1,z_eff,'k-.',label='U1')
-            ax.plot(U3,z_eff,'k--',label='U3')
-            ax.plot(U_transition,z_eff,'k-',label='transition')
+            ax.plot(U_site_equ,z_eff,label='New equilibrium profile')
+            ax.plot(U_upwind_equ,z_eff,label='Old equilibrium profile')
             
-            ax.plot([U_zg_site,U_zg_site],[0,zg_site],color='b',alpha=0.3,label='$U(z_g)$ at site')
-            ax.plot([U_zg_upwind,U_zg_upwind],[0,zg_upwind],color='r',alpha=0.3,label='$U(z_g)$ upwind')
-                                    
+            ax.plot(U1,z_eff,label='U1')
+            ax.plot(U3,z_eff,label='U3')
+            
+            ax.plot(U_transition,z_eff,'k-',label='Composite design profile')
+            
+            ax.axhline(y=z_bottom,color='k',alpha=0.3)            
+            ax.axhline(y=z_l,color='r',alpha=0.3)
+            ax.axhline(y=z_top,color='k',alpha=0.3)
+                                                
             ax.set_xlim([0,ax.get_xlim()[1]])
-            ax.set_ylim([0,ax.get_ylim()[1]])
+            ax.set_ylim([0.001,500]) # per Figure 9.10 in Cook part 1
             
             ax.set_xlabel("Mean wind speed (m/s)")
             ax.set_ylabel("Effective height (z-d) (m)")
             
-            ax.set_title("Transition wind profile for single fetch change")
+            ax.set_yscale("log")
+            
+            ax.set_title("Transition wind profile for single fetch change\n"+
+                         "z0 = %.3f; X = %.0f; z0(X) = %.3f" 
+                         % (self.z0,self.X,self.z0_X))
             
             ax.legend()
             
@@ -1545,8 +1575,8 @@ if __name__ == "__main__":
         Se = we.calc_exposure_factor()
         we.print_details()
         we.plot_profiles()
-        we.plot_param_3d(param='U')
-        we.plot_param_3d(param='iLu')
+        #we.plot_param_3d(param='U')
+        #we.plot_param_3d(param='iLu')
         
     elif test_routine ==4:
         
@@ -1554,7 +1584,7 @@ if __name__ == "__main__":
         
     elif test_routine ==5:
     
-        we = WindEnv_single_fetch(V_ref=20.0,z0=0.03,X=10000,z0_X=0.003)
+        we = WindEnv_single_fetch(V_ref=20.0,z0=0.300,X=500,z0_X=0.003)
         we.calc_mean_speed()
 
     else:
