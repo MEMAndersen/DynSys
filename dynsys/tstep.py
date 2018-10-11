@@ -140,6 +140,11 @@ class TStep:
         analysis relates
         """
         
+        self.is_linear = dynsys_obj.test_linearity()
+        """
+        Boolean variable to denote whether analysis is linear or not
+        """
+        
         # Check either initial conditions set or force - otherwise nothing will happen!
         if x0 is None and not force_func_dict:
             raise ValueError("Either `x0` or `force_func_dict` required, " + 
@@ -415,6 +420,8 @@ class TStep:
         tmax = self.tEnd
         y0 = self.x0
         results_obj = self.results_obj
+        dynsys_obj = self.dynsys_obj
+        isLinear = self.is_linear
         
         # Define keyword arguments for solve_ivp
         kwargs = {}
@@ -452,28 +459,40 @@ class TStep:
                     f_vals = npy.append(f_vals,f(t))
                     
             return f_vals
-                
-        # Get full system matrices
-        dynsys_obj = self.dynsys_obj
-        d = dynsys_obj.GetSystemMatrices()
+        
+        # Get initial system matrices
+        d = dynsys_obj.GetSystemMatrices(t=0)
         M = d["M_mtrx"]
         K = d["K_mtrx"]
         C = d["C_mtrx"]
         J = d["J_mtrx"]
         nDOF = d["nDOF"]
         isSparse = d["isSparse"]
-        isLinear = d["isLinear"]
-        hasConstraints = dynsys_obj.hasConstraints()
-        
+        hasConstraints = dynsys_obj.hasConstraints()  
+                
         def ODE_func(t,y):
             
+            # Update system matrices for current time
+            if not isLinear:
+                d = dynsys_obj.GetSystemMatrices(t=t)
+                _M = d["M_mtrx"]
+                _K = d["K_mtrx"]
+                _C = d["C_mtrx"]
+                _J = d["J_mtrx"] 
+                
+            else:
+                # Use nonlocal variables defined outside function
+                _M = M
+                _K = K
+                _C = C
+                _J = J
+                            
             # Function to use in conjunction with solve_ivp - see below
             results = eqnOfMotion_func(t=t,x=y,
                                        forceFunc=forceFunc_fullsys,
-                                       M=M,C=C,K=K,J=J,
+                                       M=_M,C=_C,K=_K,J=_J,
                                        nDOF=nDOF,
                                        isSparse=isSparse,
-                                       isLinear=isLinear,
                                        hasConstraints=hasConstraints)
             
             # Return xdot as flattened array
@@ -520,7 +539,6 @@ class TStep:
                                            M=M,C=C,K=K,J=J,
                                            nDOF=nDOF,
                                            isSparse=isSparse,
-                                           isLinear=isLinear,
                                            hasConstraints=hasConstraints)
             
                 # Record results
