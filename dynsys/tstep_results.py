@@ -1367,11 +1367,12 @@ class SysPlot():
         """
         
         results_obj = self.results_obj
-        
+        dynsys_obj = self.dynsys_obj
         
         # Get results applicable to this time increment
         t = self.results_obj.t[i,0]
-        v = self.results_obj.v[i,:]
+        v = self.results_obj.GetResults(dynsys_obj,'v')[0]
+        v = v[i,:]
         
         # Call plot update method of dynsys object
         lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
