@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy
 from pkg_resources import parse_version
+from inspect import isfunction
 
 #import deprecation # not in anaconda distribution - obtain this from pip
 #@deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
@@ -409,13 +410,17 @@ class DynSys:
 
     def GetSystemMatrices(self,
                           unconstrained:bool=False,
-                          createNewSystem:bool=False):
+                          createNewSystem:bool=False,
+                          t:float=0.0):
         """
         Function is used to retrieve system matrices, which are not usually to 
         be accessed directly, except by member functions
         
         ***
         Optional:
+            
+        * `t`, _float_, time value to obtain system matrices at. Only 
+          applicable when these are time-varying.
             
         * `unconstrained`, boolean, if True system matrices applicable to 
           the _unconstrained problem_ are returned. Note: only applicable to 
@@ -439,8 +444,8 @@ class DynSys:
         DynSys_list = self.DynSys_list
         
         # Determine properties of overall system
-        isLinear = all([x.isLinear for x in DynSys_list])
-        isSparse = all([x.isSparse for x in DynSys_list])
+        isLinear = self.test_linearity()
+        isSparse = self.test_sparsity()
         
         # Retrieve system matrices from all listed systems
         nDOF_list = []
@@ -482,6 +487,18 @@ class DynSys:
                 if key in list(x._J_dict.keys()):
                     
                     J_mtrx = x._J_dict[key]
+                    
+                    if isfunction(J_mtrx):
+
+                        J_mtrx = J_mtrx(t=t)
+                        
+                        if isLinear:
+                            print("System '%s' has time-varying constraints" % x.name)
+                            x.isLinear = False
+                            isLinear = False
+                            # systems without time-varying constraints
+                            # are not in general linear!
+                    
                     m = J_mtrx.shape[0]
                     
                     if x.isSparse:
@@ -887,12 +904,26 @@ class DynSys:
         return output_mtrx_full, output_names_arr
     
     
+    def test_linearity(self)->bool:
+        """
+        Tests whether system, including subsystems, is linear
+        """
+        return all([sys.isLinear for sys in self.DynSys_list])
+    
+    
+    def test_sparsity(self)->bool:
+        """
+        Tests whether system, including subsystems, is fully represented 
+        by sparse matrices
+        """
+        return all([sys.isSparse for sys in self.DynSys_list])
+    
+    
     def EqnOfMotion(self,x, t,
                     forceFunc,
                     M,C,K,J,
                     nDOF,
                     isSparse,
-                    isLinear,
                     hasConstraints):
         """
         Function defines equation of motion for dynamic system
@@ -914,11 +945,7 @@ class DynSys:
         """
         
         isDense = not isSparse
-        
-        # Check system is linear
-        if not isLinear:
-            raise ValueError("System `{0}` is not linear!".format(self.name))
-        
+                
         # Obtain inverse mass matrix
         attr = "_M_inv"
         
@@ -1004,7 +1031,8 @@ class DynSys:
                             normaliseEigenvectors=True,
                             verbose=False,
                             makePlots=False,
-                            axarr=None):
+                            axarr=None,
+                            t=0.0):
         """
         General method for determining damped eigenvectors and eigenvalues 
         of system
@@ -1047,6 +1075,8 @@ class DynSys:
           
         * `verbose`, _boolean_, if True intermediate output & text will be 
           printed to the console
+          
+        * `t`, _float_, time at which to obtain eigenproperties
          
         ***
         **Returns:**
@@ -1082,7 +1112,7 @@ class DynSys:
         """
         
         # Get system matrices
-        d = self.GetSystemMatrices()
+        d = self.GetSystemMatrices(t=t)
         M = d["M_mtrx"]
         K = d["K_mtrx"]
         C = d["C_mtrx"]

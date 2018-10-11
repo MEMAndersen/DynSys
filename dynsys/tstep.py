@@ -140,10 +140,15 @@ class TStep:
         analysis relates
         """
         
-        self.is_linear = dynsys_obj.test_linearity()
+        self.is_linear = dynsys_obj.GetSystemMatrices(t=0)["isLinear"]
         """
-        Boolean variable to denote whether analysis is linear or not
+        Boolean, denotes whether _overall_ system is linear or not.
+        
+        N.B: time-varying constraints can transform an otherwise time-invariant 
+        linear system into a nonlinear one
         """
+        
+        print(self.is_linear)
         
         # Check either initial conditions set or force - otherwise nothing will happen!
         if x0 is None and not force_func_dict:
@@ -421,7 +426,6 @@ class TStep:
         y0 = self.x0
         results_obj = self.results_obj
         dynsys_obj = self.dynsys_obj
-        isLinear = self.is_linear
         
         # Define keyword arguments for solve_ivp
         kwargs = {}
@@ -468,7 +472,12 @@ class TStep:
         J = d["J_mtrx"]
         nDOF = d["nDOF"]
         isSparse = d["isSparse"]
+        isLinear = self.is_linear
         hasConstraints = dynsys_obj.hasConstraints()  
+        
+        if not isLinear:
+            print("Overall system is nonlinear: system matrices will be " + 
+                  "evaluated at each time step")
                 
         def ODE_func(t,y):
             
