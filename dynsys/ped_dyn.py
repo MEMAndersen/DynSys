@@ -2713,7 +2713,12 @@ def UKNA_BSEN1991_2_Figure_NA_9(logDec,Seff=None,
                                                 bounds_error=True)
         
         # Use interpolation function to read off value at inputs specified
-        gamma = gamma_func(logDec,Seff)
+        try:
+            gamma = gamma_func(logDec,Seff)
+        except ValueError:
+            print("logDec = %.4f" % logDec)
+            print("Seff = %.1f" % Seff)
+            raise
         
         # Make plot (to show digitised curves)
         if makePlot:
