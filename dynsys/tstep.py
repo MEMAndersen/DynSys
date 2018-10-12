@@ -524,7 +524,6 @@ class TStep:
                 _c = self.c_vector
                 if isfunction(_c):
                     _c = _c(t=t)
-                    print(_c)
                     
             else:
                 # Use nonlocal variables defined outside function
