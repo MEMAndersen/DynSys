@@ -254,7 +254,7 @@ class ModalSys(DynSys):
         return d
         
         
-    def DefineModeshapes(self,fName='modeshapes.csv'):
+    def DefineModeshapes(self,fName='modeshapes.csv',use_splines=True):
         """
         Function to allow 1-dimensional line-like modeshapes to be defined
         e.g. for use in calculating mode-generalised forces
@@ -284,9 +284,37 @@ class ModalSys(DynSys):
         
         # Get length of track along dynamic system as defined by modeshapes
         Ltrack = max(chainageVals)-min(chainageVals)
+        
+        if use_splines:
             
-        # Set up interpolation function: linear interpolation between modeshape ordinates provided
-        modeshapeFunc = scipy.interpolate.interp1d(chainageVals,
+            # Define cubic spline through each modeshape data
+            modeshape_splines = []
+            
+            for mVals in modeshapeVals.T:
+                
+                modeshape_splines.append(scipy.interpolate.splrep(x=chainageVals,
+                                                                  y=mVals))
+                
+            self.modeshape_splines = modeshape_splines
+                
+            # Define function to use to carry out basic interpolation
+            def spline_interp(x):
+                
+                y_vals = []
+                for spline_data in modeshape_splines:
+                    y_vals.append(scipy.interpolate.splev(x, spline_data, ext=1))
+                    
+                return npy.array(y_vals).T
+                
+            modeshapeFunc = spline_interp
+            modeshapeFunc.x = chainageVals
+            
+        else:
+            
+            self.modeshape_splines = None
+            
+            # Set up interpolation function: linear interpolation between modeshape ordinates provided
+            modeshapeFunc = scipy.interpolate.interp1d(chainageVals,
                                                    modeshapeVals,
                                                    axis=0,
                                                    bounds_error=False,
@@ -298,6 +326,7 @@ class ModalSys(DynSys):
                           "mode_IDs: {0}\n".format(mode_IDs) + 
                           "self.mode_IDs: {0}\n".format(self.mode_IDs))
             
+                
         return modeshapeFunc, Ltrack
     
     
@@ -305,7 +334,8 @@ class ModalSys(DynSys):
                        num:int = 50,
                        L:float = 100.0,
                        ax=None,
-                       plotAttached=True):
+                       plotAttached=True,
+                       plot_derivs=True):
         """
         Plot modeshapes vs chainage using 'modeshapeFunc'
         
@@ -327,23 +357,31 @@ class ModalSys(DynSys):
         
         """
         
+        if plot_derivs:
+            nSubplots = 3
+        else:
+            nSubplots = 1
+                    
         # Configure plot
         if ax is None:
-            fig = plt.figure()
-            fig.set_size_inches(16,4)
-            ax = fig.add_subplot(1, 1, 1)
+            
+            fig, axarr = plt.subplots(nSubplots, sharex=True)
+            fig.set_size_inches(16,4*(nSubplots-1))
+            ax = axarr[0]
+                       
         else:
             fig = ax.gcf()
             
         # Get ordinates to plot
         modeshape_func = self.modeshapeFunc
         
-        if isinstance(modeshape_func,scipy.interpolate.interpolate.interp1d):
+        x_salient = npy.zeros((0,))
+        
+        if hasattr(modeshape_func,'x'):
             
             # Retrieve modeshape ordinates defining interpolation function
-            x = modeshape_func.x
-            m = modeshape_func.y
-            L = x[-1]
+            x_salient = modeshape_func.x
+            L = x_salient[-1]
             
         else:
             
@@ -353,9 +391,13 @@ class ModalSys(DynSys):
             if hasattr(obj,attr):
                 L=getattr(obj,attr)
                 
-            # Use interpolation function to obtain modeshapes at
-            x = npy.linspace(0,L,num,endpoint=True)
-            m = self.modeshapeFunc(x)
+        # Use interpolation function to obtain modeshapes at
+        x = npy.linspace(0,L,num,endpoint=True)
+            
+        x = npy.union1d(x, x_salient)
+        
+        # Evaluate modeshape function at ordinates requested
+        m = self.modeshapeFunc(x)
             
         # Get mode IDs to use as labels
         if hasattr(self,"mode_IDs"):
@@ -366,9 +408,8 @@ class ModalSys(DynSys):
         # Plot modeshapes vs chainage
         ax.plot(x,m,label=modeNames)
         ax.set_xlim([0,L])
-        ax.set_xlabel("Longitudinal chainage [m]")
-        ax.set_ylabel("Modeshape ordinate")
-        ax.set_title("Modeshapes along loading track")
+        if nSubplots == 1: ax.set_xlabel("Longitudinal chainage [m]")
+        ax.set_ylabel("Displacement, $\phi(x)$")
         
         # Overlaid modeshape ordinates at attachment positions, if defined
         if plotAttached and len(self.DynSys_list)>1:
@@ -398,11 +439,48 @@ class ModalSys(DynSys):
         
         # Prepare legend
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles, modeNames, loc='best',fontsize='xx-small',ncol=5)
+        fig.legend(handles, modeNames, fontsize='x-small',ncol=5)
+        
+        # Plot first/second derivatives if defined
+        if plot_derivs:
+            
+            ax = axarr[1]
+            ax.plot(x,self.calc_modeshape_deriv(x,der=1))
+            ax.set_ylabel("Rotation, $\phi'(x)$")
+            
+            ax = axarr[2]
+            ax.plot(x,self.calc_modeshape_deriv(x,der=2))
+            ax.set_ylabel("Curvature, $\phi''(x)$")
+            ax.set_xlabel("Distance along track, $x$") 
+            
+        # Prepare overall title
+        title_str = "Modeshapes along loading track"
+        #if plot_derivs: title_str += "\n (and 1st/2nd derivatives)"
+        fig.suptitle(title_str)
         
         # Return objects
         return fig, ax
     
+    
+    def calc_modeshape_deriv(self,x,der:int=1):
+        """
+        Evaluates derivatives of modeshapes at specified positions
+        
+        Only works if cubic splines used to represent modeshapes
+        """
+        
+        spline_tck = self.modeshape_splines
+        
+        if spline_tck is None:
+            raise ValueError("No spline data avaliable!")
+        
+        deriv_vals = []
+        for tck in spline_tck:
+            y_deriv = scipy.interpolate.splev(x=x, tck=tck, der=der, ext=1)
+            deriv_vals.append(y_deriv)
+            
+        return npy.array(deriv_vals).T
+        
     
     def CalcModalForces(self,loading_obj,
                         loadVel:float=5.0,
