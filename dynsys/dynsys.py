@@ -995,7 +995,14 @@ class DynSys:
         f = npy.asmatrix(forceFunc(t)).T
         
         # Calculate net force (excluding constraint forces
-        f_net = f - K.dot(y) - C.dot(ydot)
+        try:
+            f_net = f - K.dot(y) - C.dot(ydot)
+        except ValueError:
+            print("f.shape: {0}".format(f.shape))
+            print("y.shape: {0}".format(y.shape))
+            print("ydot.shape: {0}".format(ydot.shape))
+            raise
+            
         
         # Solve for accelerations
         if hasConstraints:
@@ -1337,7 +1344,8 @@ class DynSys:
         if m!=r:
             
             errorStr="Error: constraints matrix not full rank!\n"
-            errorStr+="J.shape: {0}\nComputed rank: {1}".format(J.shape,r)
+            errorStr+="J.shape: {0}\nComputed rank: {1}\n".format(J.shape,r)
+            errorStr+="J: {0}".format(J)
             
             if raiseException:
                 raise ValueError(errorStr)

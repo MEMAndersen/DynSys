@@ -10,12 +10,11 @@ import matplotlib.pyplot as plt
 
 plt.close('all')
 
-
-
 # DynSys package imports
 import modalsys
 import tstep
 from damper import TMD
+from msd_chain import MSD_Chain
 from ped_dyn import UKNA_BSEN1991_2_walkers_joggers
 
 #%%
@@ -96,3 +95,28 @@ ax.set_xlim([0,60.0])
 
 fig.suptitle("Variation in modal properties with time")
 fig.legend(h,["Mode %d" % (i+1) for i in range(len(h))])
+
+#%%
+
+# Define a new system
+msd_sys = MSD_Chain(M_vals = [1000,2000,500],
+                    f_vals = [1.0,1.0,1.00],
+                    eta_vals = [0.02,0.04,0.01])
+msd_sys.AddConstraintEqns(Jnew=numpy.asmatrix([[1,-1,-2]]),Jkey='0')
+
+J = msd_sys._J_dict['0']
+
+def constraints_func2(t,omega = 2.0):
+    temp = J
+    temp[0,0] = numpy.sin(2*numpy.pi*omega*t)
+    return temp
+
+msd_sys._J_dict['0']=constraints_func2
+
+#%%
+analysis_obj = tstep.TStep(msd_sys,x0=[1,0,0,0,0,0])
+results_obj = analysis_obj.run()
+results_obj.PlotStateResults()
+
+#%%
+anim = results_obj.AnimateResults()
