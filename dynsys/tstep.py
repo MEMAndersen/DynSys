@@ -11,6 +11,7 @@ import inspect
 import scipy
 from scipy.integrate import solve_ivp
 from pkg_resources import parse_version
+from inspect import isfunction
 
 import time
 
@@ -51,6 +52,7 @@ class TStep:
                  force_func_dict:dict={},
                  event_funcs:list=None,
                  post_event_funcs:list=None,
+                 c_vector:callable=None,
                  max_events=None,
                  **kwargs):
         """
@@ -90,6 +92,13 @@ class TStep:
         * `post_event_funcs`, _callable_ or _list of callables_, functions to 
           execute immediately after `event_funcs` have resolved. If list, 
           length must correspond to length of `event_funcs`.
+          
+        * `c_vector`, _float_ or _callable_, vector defining the RHS of 
+          generalised constraint eqn:            
+        
+              $$ J\ddot{y} = c $$
+         
+          Default value of None implies that c = 0, i.e. null vector
           
         * `max_events`, _integer_ limit on number of events
           
@@ -238,6 +247,16 @@ class TStep:
         """
         `tstep_results` objects used to store results and provide 
         useful functionality e.g. stats computation and plotting
+        """
+        
+        self.c_vector = c_vector
+        """
+        Vector defining the RHS of generalised constraint eqn:
+            
+        $$ J\ddot{y} = c $$
+         
+        Default value of None implies that c = 0
+        In general can be a function f(t)
         """
         
     
@@ -475,6 +494,19 @@ class TStep:
         isLinear = self.is_linear
         hasConstraints = dynsys_obj.hasConstraints()  
         
+        # Get RHS of constraint eqn
+        c_vector = self.c_vector
+        
+        if isfunction(c_vector):
+            
+            print("System has time-varying RHS of constraint eqns")
+            
+            isLinear = False
+            dynsys_obj.isLinear = False
+            # systems with time-varying constraints are not linear!
+            
+            c_vector = c_vector(t=0)
+        
         if not isLinear:
             print("Overall system is nonlinear: system matrices will be " + 
                   "evaluated at each time step")
@@ -489,12 +521,18 @@ class TStep:
                 _C = d["C_mtrx"]
                 _J = d["J_mtrx"] 
                 
+                _c = self.c_vector
+                if isfunction(_c):
+                    _c = _c(t=t)
+                    print(_c)
+                    
             else:
                 # Use nonlocal variables defined outside function
                 _M = M
                 _K = K
                 _C = C
                 _J = J
+                _c = c_vector
                             
             # Function to use in conjunction with solve_ivp - see below
             results = eqnOfMotion_func(t=t,x=y,
@@ -502,7 +540,8 @@ class TStep:
                                        M=_M,C=_C,K=_K,J=_J,
                                        nDOF=nDOF,
                                        isSparse=isSparse,
-                                       hasConstraints=hasConstraints)
+                                       hasConstraints=hasConstraints,
+                                       c=_c)
             
             # Return xdot as flattened array
             ydot = results["ydot"]

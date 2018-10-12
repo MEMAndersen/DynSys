@@ -924,7 +924,8 @@ class DynSys:
                     M,C,K,J,
                     nDOF,
                     isSparse,
-                    hasConstraints):
+                    hasConstraints,
+                    c=None):
         """
         Function defines equation of motion for dynamic system
         ***
@@ -940,7 +941,13 @@ class DynSys:
         
         Dynamic systems may have constraint equations defined as follows:
             
-        $$ J\ddot{y} = 0 $$
+        $$ J\ddot{y} = c $$
+        
+        where c is commonly a null vector (i.e. zeros)
+        
+        Refer David Baraf's _"Linear-time dynamics using Lagrange Multipliers"_
+        for the basis of the method implemented.
+        Note that c = -c in Baraf's paper, as this is more convenient
             
         """
         
@@ -1008,7 +1015,12 @@ class DynSys:
         if hasConstraints:
             
             # Calculate lagrange multipliers (to satify constraint eqns)
-            lagrange = Ainv * (- J * Minv * f_net)
+            b = - J * Minv * f_net
+            
+            if c is not None:
+                b += c   # add on RH term of constraint eqns, if defined
+                
+            lagrange = Ainv * b 
             
             # Define acceleration
             y2dot = Minv*(J.T*lagrange + f_net)
