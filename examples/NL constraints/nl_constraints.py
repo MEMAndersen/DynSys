@@ -28,7 +28,7 @@ TMD1 = TMD(sprung_mass=2000,nat_freq=1.9,damping_ratio=0.1,name='TMD1')
 # Statically append TMDs to modal system
 my_sys.AppendSystem(child_sys=TMD1,Xpos_parent=58.0,DOF_child=0)
 
-#my_sys.PlotModeshapes()
+my_sys.PlotModeshapes()
 
 #%%
 # Define single walkers/joggers analysis
@@ -39,8 +39,9 @@ my_analysis = UKNA_BSEN1991_2_walkers_joggers(modalsys_obj=my_sys,
 results_obj = my_analysis.run()
 
 #%%
-#anim = results_obj.AnimateResults()
+anim1 = results_obj.AnimateResults()
 
+#%%
 results_obj.PlotStateResults(my_sys)
 
 #%%
