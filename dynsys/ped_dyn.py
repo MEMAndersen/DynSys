@@ -1082,8 +1082,7 @@ class SteadyStateCrowdLoading():
 
             for fName in fname_list:
 
-                mfunc, L = modalsys_obj.DefineModeshapes(fName=fName,
-                                                         saveAsAttr=False)
+                mfunc, L = modalsys_obj.DefineModeshapes(fName=fName)
                 
                 # Evaluate to obtain maximum ordinates
                 m_vals = mfunc(numpy.linspace(0,L,num))
@@ -1711,6 +1710,8 @@ class LatSync_McRobie():
     
     def __init__(self,
                  modalsys,
+                 cp_func=None,
+                 makePlots=False,
                  **kwargs):
         """
         Initialise analysis
@@ -1726,7 +1727,8 @@ class LatSync_McRobie():
         ***
         Optional:
             
-        * 
+        * `cp_func`, function of form g(fn), where fn is frequency in Hz,
+          to define how _negative_ damping per pedestrian varies with frequency
           
         """
         
@@ -1736,24 +1738,52 @@ class LatSync_McRobie():
         pre-appended (e.g. TMDs)
         """
         
-        # Evaluate modal damping matrix based on 1 person on bridge
-        C_pa = self.calc_pedestrians_damping(**kwargs)
-        self.C_pa = C_pa
+        if cp_func is None:
+            cp_func = self.init_cp_func()
+        self.cp_func = cp_func
         """
-        Modal damping matrix based on 1 person on bridge
+        Function to define how negative damping per pedestrian varies with
+        frequency. Function with single argument 'fn' expected, i.e. g(fn)
         """
-        
+                
         self.Np_crit = None
         """
         Critical number of pedestrians to give zero net damping
         """
+        
+        if makePlots:
+            self.plot_cp_func()
+        
+        
+    def init_cp_func(self,conservative=False):
+        """
+        Initialise default function to use to define frequency-dependence of 
+        negative damping per pedestrian (Ns/m per pedestrian)
+        """
+        
+        if conservative:
+            f_vals = [0.0,2.0]
+            cp_vals = [300,300]
+            
+        else:
+            f_vals = [0.0,0.5,1.0,1.5,2.0]
+            cp_vals = [0,300,300,0,0]
+            
+            
+        cp_func = scipy.interpolate.interp1d(f_vals,cp_vals,kind='linear',
+                                             bounds_error=False,
+                                             fill_value=0.0)
+        return cp_func
+    
 
-
-    def calc_pedestrians_damping(self,cp=300,num=1000):
+    def calc_pedestrians_damping(self,f=1.0,num=1000):
         """
         Calculates modal damping matrix due to pedestrians, per the method 
         presented in McRobie paper
         """
+        
+        f = numpy.abs(f)
+        cp = self.cp_func(f)
         
         modalsys = self.modalsys
         
@@ -1771,11 +1801,16 @@ class LatSync_McRobie():
         # Return mode-generalised damping matrix
         C_pa = cp * dL / L * phi_product
         
-        return C_pa
+        # Return results as dict
+        rslts = {}
+        rslts['C_pa']=C_pa
+        rslts['cp']=cp
+        return rslts
         
     
     def run(self,Np_vals,verbose=True,
-            calc_Np_crit=True,append_rslts=False):
+            calc_Np_crit=True,append_rslts=False,
+            **kwargs):
         """
         Run analysis to explore eigenvalues of system state matrix for various 
         assumed pedestrian crowd densities
@@ -1794,7 +1829,7 @@ class LatSync_McRobie():
             print("Running lat sync eigenvalues analysis...")
     
         # Run analysis 
-        self._run_analysis(Np_vals,append_rslts)
+        self._run_analysis(Np_vals,append_rslts,**kwargs)
         
         # Calculate critical number of pedestrians for onset on instability
         if calc_Np_crit:
@@ -1809,45 +1844,107 @@ class LatSync_McRobie():
         
         return Np_crit
     
-    def _run_analysis(self,Np_vals,append_rslts):
+    
+    def _run_analysis(self,Np_vals,append_rslts=True,**kwargs):
+        """
+        Run analysis for various pedestrian numbers, as provided to function
+        """
         
-        # Run analysis for various pedestrian numbers, as provided to function
         
         modalsys = self.modalsys
-        C_pa = self.C_pa
+                
+        # Take copy of system damping matrix with no pedestrians
+        C_p0 = modalsys._C_mtrx
         
-        C_mtrx_vals = []
+        # Define function to iterate with
+        def calc_modal_properties(f,mode_index,Np,return_rslts=False):
+            
+            #print("Calculating: Np=%d, mode=%d, f=%.3f" % (Np,mode_index,f))
+            
+            # Calculate change in model damping matrix
+            # due to smeared effect of N=1 pedestrian
+            rslts = self.calc_pedestrians_damping(f=f,**kwargs)
+            C_pa = rslts['C_pa']
+            
+            # Adjust bridge damping matrix
+            modalsys._C_mtrx = C_p0 - Np * C_pa
+        
+            # Carry out eigevalue analysis using updated system matrices
+            eig_props = modalsys.CalcEigenproperties()
+            f_new = eig_props['f_d'][mode_index]
+            
+            f_error = f_new - f
+            
+            if return_rslts:
+                
+                d = {}
+                d['eig_props']=eig_props
+                d = {**d, **rslts}
+                
+                return f_error, d
+            else:
+                return f_error
+            
+        # Carry out eigevalue analysis of system with no pedestrians
+        eig_props = modalsys.CalcEigenproperties()
+        fd_vals_last = eig_props['f_d']
+        
+        # Loop over all pedestrian numbers provided to function
+        cp_vals = []
         s_vals = []
         eta_vals = []
         fd_vals = []
         X_vals = []
         
-        # Take copy of system damping matrix with no pedestrians
-        C_p0 = modalsys._C_mtrx
-        
-        for i, Np in enumerate(Np_vals):
+        for _Np in Np_vals:
             
-            # Adjust bridge damping matrix
-            modalsys._C_mtrx = C_p0 - Np * C_pa
-            C_mtrx_vals.append(modalsys._C_mtrx)
-        
-            # Carry out eigevalue analysis
-            eig_props = modalsys.CalcEigenproperties()
+            cp_vals_inner = []
+            s_vals_inner = []
+            eta_vals_inner = []
+            fd_vals_inner = []
+            X_vals_inner = []
             
-            # Record key results of interest
-            s_vals.append(eig_props["s"])
-            eta_vals.append(eig_props["eta"])
-            fd_vals.append(eig_props["f_d"])
-            X_vals.append(eig_props["X"])
+            for _mode_index, _fd in enumerate(fd_vals_last):
             
-        # Convert nested lists to array type
-        C_mtrx_vals = numpy.array(C_mtrx_vals)
+                # Solve for consistent frequencies, allowing for 
+                # frequency-dependence of pedestrian-related mass and damping
+                fd_sol = scipy.optimize.newton(func=calc_modal_properties,
+                                               x0=_fd,
+                                               args=(_mode_index,_Np))
+                
+                # Rerun for converged frequency of given mode
+                ferr, rslts = calc_modal_properties(fd_sol,
+                                                    _mode_index,_Np,
+                                                    return_rslts=True)
+                
+                eig_props = rslts['eig_props']
+                cp = rslts['cp']
+                
+                # Unpack results for this mode and append to inner lists
+                cp_vals_inner.append(cp)
+                s_vals_inner.append(eig_props['s'][_mode_index])
+                eta_vals_inner.append(eig_props['eta'][_mode_index])
+                fd_vals_inner.append(eig_props['f_d'][_mode_index])
+                X_vals_inner.append(eig_props['X'][_mode_index])
+                
+            # Update last frequencies
+            fd_vals_last = fd_vals_inner
+                
+            # Append inner lists to outer lists
+            cp_vals.append(cp_vals_inner)
+            s_vals.append(s_vals_inner)
+            eta_vals.append(eta_vals_inner)
+            fd_vals.append(fd_vals_inner)
+            X_vals.append(X_vals_inner)
+            
+        # Convert nested lists to numpy ndarray type
+        cp_vals = numpy.array(cp_vals)
         s_vals = numpy.array(s_vals)
         eta_vals = numpy.array(eta_vals)
         fd_vals = numpy.array(fd_vals)
         X_vals = numpy.array(X_vals)
         
-        # Restore with original bridge-only damping matrix
+        # Restore original bridge-only damping matrix
         modalsys._C_mtrx = C_p0
         
         # Check to see if previous results exist
@@ -1862,7 +1959,7 @@ class LatSync_McRobie():
             self.damped_freqs = fd_vals
             self.eigenvectors = X_vals
             self.N_pedestrians = Np_vals
-            self.C_mtrx = C_mtrx_vals
+            self.cp_vals = cp_vals
             
         if append_rslts:
             
@@ -1871,7 +1968,7 @@ class LatSync_McRobie():
             self.damped_freqs = numpy.vstack((self.damped_freqs,fd_vals))
             self.eigenvectors = numpy.vstack((self.eigenvectors,X_vals))
             self.N_pedestrians = numpy.hstack((self.N_pedestrians,Np_vals))
-            self.C_mtrx = numpy.vstack((self.C_mtrx,C_mtrx_vals))
+            self.cp_vals = numpy.vstack((self.cp_vals,cp_vals))
             
             
     def plot_results(self):
@@ -1891,7 +1988,7 @@ class LatSync_McRobie():
         self.plot_damping_vs_freq(ax=axarr[0,0])
         self.plot_poles(ax=axarr[0,1])
         self.plot_damping_vs_pedestrians(ax=axarr[1,0])
-        axarr[1,1].set_visible(False)
+        self.plot_cp_func(ax=axarr[1,1])
         
         return fig
         
@@ -1974,6 +2071,49 @@ class LatSync_McRobie():
         Np_crit = self.Np_crit
         if Np_crit is not None:
             ax.axvline(x=Np_crit,color='r',alpha=0.3)
+            
+            
+    def plot_cp_func(self,ax=None,f_vals=None):
+        """
+        Plots function defining how negative damping per pedestrian varies 
+        with frequency
+        """
+        cp_func = self.cp_func
+        
+        if f_vals is None:
+            if hasattr(cp_func,'x'):
+                f_vals = cp_func.x
+            else:
+                raise ValueError("`f_vals` must be provided!")
+                
+        cp_vals = cp_func(f_vals)
+           
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+            
+        ax.plot(f_vals,cp_vals,label='Defined $c_p(f)$ function')
+        
+        ax.set_xlim([0,ax.get_xlim()[1]])
+        
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("$c_p (Ns/m)$")
+        ax.set_title("Variation of negative damping rate per pedestrian " + 
+                     "$c_p$ with frequency")
+                
+        if hasattr(self,'cp_vals'):
+            fd_vals = self.damped_freqs
+            cp_vals = self.cp_vals
+            lines = ax.plot(fd_vals,cp_vals,'r|')
+            
+            for m, line in enumerate(lines):
+                if m==0:
+                    line.set_label('$c_p$ values for modes')
+
+        ax.legend()
+
+        return fig
         
         
     def calc_Np_crit(self,rerun_factor=2.0,verbose=True):
