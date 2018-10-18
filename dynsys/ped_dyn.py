@@ -18,7 +18,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from inspect import isfunction
 from numpy import real, imag
 import itertools
-
+from copy import deepcopy
 
 # DynSys package imports
 import dyn_analysis
@@ -1763,11 +1763,11 @@ class LatSync_McRobie():
         
         if conservative:
             f_vals = [0.0,2.0]
-            cp_vals = [300,300]
+            cp_vals = [-300,-300]
             
         else:
             f_vals = [0.0,0.5,1.0,1.5,2.0]
-            cp_vals = [0,300,300,0,0]
+            cp_vals = [0,-300,-300,0,0]
             
             
         cp_func = scipy.interpolate.interp1d(f_vals,cp_vals,kind='linear',
@@ -1782,24 +1782,33 @@ class LatSync_McRobie():
         presented in McRobie paper
         """
         
-        f = numpy.abs(f)
+        # Get damping matrix applicable to cp=1.0
+        try:
+            C_pa_0 = self.C_pa_0
+            
+        except:
+                
+            modalsys = self.modalsys
+            modeshape_func = modalsys.modeshapeFunc
+            L = modalsys.Ltrack
+            
+            # Evaluate modeshape ordinates at unif
+            dL = L/num
+            x = numpy.linspace(0,L,num,endpoint=False) + dL/2
+            phi = modeshape_func(x)
+                
+            # Evaluate matrix product of modeshape ordinate matrices
+            phi_product = phi.T @ phi
+            
+            # Return mode-generalised damping matrix
+            C_pa_0 = dL / L * phi_product
+            self.C_pa_0 = C_pa_0
+        
+        # Evaluate cp given mode natural frequency provided
+        f = numpy.abs(f) # positive frequencies to be used
         cp = self.cp_func(f)
         
-        modalsys = self.modalsys
-        
-        modeshape_func = modalsys.modeshapeFunc
-        L = modalsys.Ltrack
-        
-        # Evaluate modeshape ordinates at unif
-        dL = L/num
-        x = numpy.linspace(0,L,num,endpoint=False) + dL/2
-        phi = modeshape_func(x)
-            
-        # Evaluate matrix product of modeshape ordinate matrices
-        phi_product = phi.T @ phi
-        
-        # Return mode-generalised damping matrix
-        C_pa = cp * dL / L * phi_product
+        C_pa = cp * C_pa_0
         
         # Return results as dict
         rslts = {}
@@ -1848,13 +1857,16 @@ class LatSync_McRobie():
     def _run_analysis(self,Np_vals,append_rslts=True,**kwargs):
         """
         Run analysis for various pedestrian numbers, as provided to function
-        """
         
+        To cater for frequency-dependent nature of pedestrian damping/mass
+        effect an iterative procedure is adopted, similar to the p-k method 
+        devised by Theodorsen for solving aeroelastic problems
+        """
         
         modalsys = self.modalsys
                 
         # Take copy of system damping matrix with no pedestrians
-        C_p0 = modalsys._C_mtrx
+        C0 = deepcopy(modalsys._C_mtrx)
         
         # Define function to iterate with
         def calc_modal_properties(f,mode_index,Np,return_rslts=False):
@@ -1867,7 +1879,7 @@ class LatSync_McRobie():
             C_pa = rslts['C_pa']
             
             # Adjust bridge damping matrix
-            modalsys._C_mtrx = C_p0 - Np * C_pa
+            modalsys._C_mtrx = C0 + Np * C_pa
         
             # Carry out eigevalue analysis using updated system matrices
             eig_props = modalsys.CalcEigenproperties()
@@ -1945,7 +1957,7 @@ class LatSync_McRobie():
         X_vals = numpy.array(X_vals)
         
         # Restore original bridge-only damping matrix
-        modalsys._C_mtrx = C_p0
+        modalsys._C_mtrx = C0
         
         # Check to see if previous results exist
         if not hasattr(self,'eigenvalues'):
@@ -2099,8 +2111,7 @@ class LatSync_McRobie():
         
         ax.set_xlabel("Frequency (Hz)")
         ax.set_ylabel("$c_p (Ns/m)$")
-        ax.set_title("Variation of negative damping rate per pedestrian " + 
-                     "$c_p$ with frequency")
+        ax.set_title("Damping rate per pedestrian, $c_p$")
                 
         if hasattr(self,'cp_vals'):
             fd_vals = self.damped_freqs
