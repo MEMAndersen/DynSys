@@ -1841,8 +1841,8 @@ class LatSync_McRobie():
         _"Lateral excitation of bridges by balancing pedestrians"_
         """
         
-        f_vals = [0.0,0.5,1.0,1.5,2.0]
-        deltaM_vals = [-100,+30,+30,0,0]
+        f_vals = [0.0,0.5,0.8,1.25,2.0]
+        deltaM_vals = [+70,-45,-45,0,0]
             
         deltaM_func = scipy.interpolate.interp1d(f_vals,deltaM_vals,
                                                  kind='linear',
@@ -2255,6 +2255,7 @@ class LatSync_McRobie():
         ax.plot(f_vals,mp_vals,label='Defined $m_p(f)$ function')
         
         ax.set_xlim([0,ax.get_xlim()[1]])
+        ax.set_ylim([-100,+100])
         
         ax.set_xlabel("Frequency (Hz)")
         ax.set_ylabel("$\Delta M$ (kg)")

@@ -8,6 +8,19 @@ and this project adheres to:
 
 ***
 
+## [1.6.1] - 2018-10-18 - RIHY
+
+### Changed
+
+### Added
+
+### Fixed
+
+* Default mp(f) curve corrected; had previously mis-interpeted Fig 9(b) of 
+  MacDonald's paper
+
+### Removed
+
 ## [1.6.0] - 2018-10-18 - RIHY
 
 ### Changed
