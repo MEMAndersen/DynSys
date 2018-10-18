@@ -8,15 +8,24 @@ and this project adheres to:
 
 ***
 
-## Unreleased
+## [1.6.0] - 2018-10-18 - RIHY
 
 ### Changed
+
+* 'LatSync_McRobie' analysis extended to allow for frequency-dependent 
+  damping and added mass effect of pedestrians, with default curves defined 
+  based largely on John MacDonalds _'Lateral excitation of bridges by balancing 
+  pedestrians'_ paper, which has been included in the 'references' section.
 
 ### Added
 
 * `AnimateResults()` method updated to plot loading as well as deformed system
 
+* Lateral loading model in the spirit of UK NA to BS EN 1991-2 added
+
 ### Fixed
+
+* Minor bug fixed, relating to selection of correct S_eff for mode
 
 ### Removed
 
