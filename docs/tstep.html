@@ -1,4 +1,4 @@
-Version: 1.5.1
+Version: 1.6.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1139,8 +1139,8 @@ systems</p>
                  <span class="n">force_func_dict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">event_funcs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">post_event_funcs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">max_events</span><span class="o">=</span><span class="bp">None</span>
-                 <span class="p">):</span>
+                 <span class="n">max_events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialises time-stepping analysis</span>
 <span class="sd">        </span>
@@ -1187,7 +1187,7 @@ systems</p>
 <span class="sd">        otherwise the dynamic system in question will not do anything!</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-  
+          
         <span class="c1"># Write basic details to object   </span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -1589,9 +1589,9 @@ systems</p>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
             
             <span class="c1"># Run solution</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
             <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
             <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
             <span class="n">solvecount</span> <span class="o">+=</span> <span class="mi">1</span>
             
@@ -1807,8 +1807,8 @@ for further details:</p></div>
                  <span class="n">force_func_dict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">event_funcs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">post_event_funcs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">max_events</span><span class="o">=</span><span class="bp">None</span>
-                 <span class="p">):</span>
+                 <span class="n">max_events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialises time-stepping analysis</span>
 <span class="sd">        </span>
@@ -1855,7 +1855,7 @@ for further details:</p></div>
 <span class="sd">        otherwise the dynamic system in question will not do anything!</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-  
+          
         <span class="c1"># Write basic details to object   </span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -2257,9 +2257,9 @@ for further details:</p></div>
             <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
             
             <span class="c1"># Run solution</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
             <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
             <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
             <span class="n">solvecount</span> <span class="o">+=</span> <span class="mi">1</span>
             
@@ -2372,7 +2372,7 @@ for further details:</p></div>
             
   <div class="item">
     <div class="name def" id="tstep.TStep.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, dynsys_obj, name=None, tStart=0, tEnd=30.0, dt=None, max_dt=0.1, retainDOFTimeSeries=True, retainResponseTimeSeries=True, writeResults2File=False, results_fName=&#39;results.csv&#39;, plotResponseResults=True, responsePlot_kwargs={}, x0=None, force_func_dict={}, event_funcs=None, post_event_funcs=None, max_events=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, dynsys_obj, name=None, tStart=0, tEnd=30.0, dt=None, max_dt=0.1, retainDOFTimeSeries=True, retainResponseTimeSeries=True, writeResults2File=False, results_fName=&#39;results.csv&#39;, plotResponseResults=True, responsePlot_kwargs={}, x0=None, force_func_dict={}, event_funcs=None, post_event_funcs=None, max_events=None, **kwargs)</p>
     </div>
     
 
@@ -2446,8 +2446,8 @@ otherwise the dynamic system in question will not do anything!</p></div>
              <span class="n">force_func_dict</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
              <span class="n">event_funcs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">post_event_funcs</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">max_events</span><span class="o">=</span><span class="bp">None</span>
-             <span class="p">):</span>
+             <span class="n">max_events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialises time-stepping analysis</span>
 <span class="sd">    </span>
@@ -2494,6 +2494,7 @@ otherwise the dynamic system in question will not do anything!</p></div>
 <span class="sd">    otherwise the dynamic system in question will not do anything!</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+      
     <span class="c1"># Write basic details to object   </span>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -2801,9 +2802,9 @@ and methods avaliable.</p></div>
         <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
         
         <span class="c1"># Run solution</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solving using Scipy&#39;s `solve_ivp()` function:&quot;</span><span class="p">)</span>
         <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span><span class="n">fun</span><span class="o">=</span><span class="n">ODE_func</span><span class="p">,</span> <span class="n">t_span</span><span class="o">=</span><span class="p">[</span><span class="n">tmin</span><span class="p">,</span><span class="n">tmax</span><span class="p">],</span> <span class="n">y0</span><span class="o">=</span><span class="n">y0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Solution complete!&quot;</span><span class="p">)</span>
         <span class="n">sol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
         <span class="n">solvecount</span> <span class="o">+=</span> <span class="mi">1</span>
         

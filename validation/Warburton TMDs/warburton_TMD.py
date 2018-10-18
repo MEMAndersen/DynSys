@@ -51,11 +51,13 @@ print("Max |G_f|, system with TMDs: %.2e" % numpy.max(numpy.abs(G_f)))
 #%%
 
 # Obtain frequency response using CalcFreqResponse()
-f2 , G_f2 = main_sys_with_TMD.CalcFreqResponse(fmax=fmax)
+rslts = main_sys_with_TMD.CalcFreqResponse(fmax=fmax)
+f2 = rslts['f']
+G_f2 = rslts['G_f']
 
 
 # Overlay to compare frequency response
-plot_dict = PlotFrequencyResponse(f2,G_f2[0,0,:],
+plot_dict = PlotFrequencyResponse(f2,G_f2[:,0,0],
                                   label_str="using CalcFreqResponse()",
                                   ax_magnitude=plot_dict["ax_magnitude"],
                                   ax_phase=plot_dict["ax_phase"])
@@ -73,12 +75,12 @@ for line in lines2edit:
 #%%
     
 # Overlay frequency transfer function for relative displacement
-plot_dict = PlotFrequencyResponse(f2,G_f2[2,0,:],
+plot_dict = PlotFrequencyResponse(f2,G_f2[:,2,0],
                               label_str="Relative disp (m)",
                               ax_magnitude=plot_dict["ax_magnitude"],
                               ax_phase=plot_dict["ax_phase"])
 
-print("Max |G_f|, relative disp: %.2e" % numpy.max(numpy.abs(G_f2[2,0,:])))
+print("Max |G_f|, relative disp: %.2e" % numpy.max(numpy.abs(G_f2[:,2,0])))
 
 plot_dict["ax_magnitude"].axvline(f_D,color='c',alpha=0.4)
 plot_dict["ax_phase"].axvline(f_D,color='c',alpha=0.4)
@@ -90,12 +92,14 @@ main_sys = msd_chain.MSD_Chain(M_vals = m_M,
                                f_vals = f_M,
                                eta_vals = gamma_M)
 
-f3 , G_f3 = main_sys.CalcFreqResponse(fmax=fmax)
+rslts = main_sys.CalcFreqResponse(fmax=fmax)
+f3 = rslts['f']
+G_f3 = rslts['G_f']
 
-print("Max |G_f|, system with no TMDs: %.2e" % numpy.max(numpy.abs(G_f3[0,0,:])))
+print("Max |G_f|, system with no TMDs: %.2e" % numpy.max(numpy.abs(G_f3[:,0,0])))
 
 # Overlay to compare frequency response
-PlotFrequencyResponse(f3,G_f3[0,0,:],
+PlotFrequencyResponse(f3,G_f3[:,0,0],
                       label_str="using CalcFreqResponse(), no TMD",
                       ax_magnitude=plot_dict["ax_magnitude"],
                       ax_phase=plot_dict["ax_phase"])
@@ -109,10 +113,12 @@ TMD_sys = damper.TMD(sprung_mass=m_D,nat_freq=f_D,damping_ratio=gamma_D)
 main_sys.AppendSystem(child_sys=TMD_sys,DOF_parent=0,DOF_child=0)
 
 # Calculate frequency response of combined system
-f4 , G_f4 = main_sys.CalcFreqResponse(fmax=fmax)
+rslts = main_sys.CalcFreqResponse(fmax=fmax)
+f4 = rslts['f']
+G_f4 = rslts['G_f']
 
 # Overlay to compare frequency response
-PlotFrequencyResponse(f4,G_f4[0,0,:],
+PlotFrequencyResponse(f4,G_f4[:,0,0],
                       label_str="Relative disp, using CalcFreqResponse(); " + 
                                 "TMD as appended system",
                       ax_magnitude=plot_dict["ax_magnitude"],
@@ -135,10 +141,12 @@ main_sys_constrained = damper.TMD(sprung_mass=m_M,
 main_sys_constrained.AddConstraintEqns(Jnew=[1,0],Jkey="Constrain to ground")
 
 # Calculate frequency response of combined system
-f5 , G_f5 = main_sys_constrained.CalcFreqResponse(fmax=fmax)
+rslts = main_sys_constrained.CalcFreqResponse(fmax=fmax)
+f5 = rslts['f']
+G_f5 = rslts['G_f']
 
 # Overlay to compare frequency response
-PlotFrequencyResponse(f5,G_f5[0,1,:],
+PlotFrequencyResponse(f5,G_f5[:,0,1],
                       label_str="using CalcFreqResponse(), no TMD; " + 
                                 "2dof constrained system",
                       ax_magnitude=plot_dict["ax_magnitude"],

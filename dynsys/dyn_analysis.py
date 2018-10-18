@@ -213,8 +213,13 @@ class MovingLoadAnalysis(Dyn_Analysis):
         Results object
         """
         
+        # Create relationship to this analysis object
+        self.results_obj.analysis_obj = self
+        
+        
     
     def run(self,
+            verbose=True,
             saveResults=False,
             save_fName=None):
         """
@@ -222,16 +227,21 @@ class MovingLoadAnalysis(Dyn_Analysis):
         
         _Refer documentation for that function for more details_
         """
-        print("***** Running `%s`..." % self.__class__.__name__)
-        print("Dynamic system: '{0}'".format(self.dynsys_obj.name))
-        print("Load pattern: '{0}'".format(self.loading_obj.name))
-        print("Load velocity: %.1f" % self.loadVel)
+        
+        if verbose:
+            print("***** Running `%s`..." % self.__class__.__name__)
+            print("Dynamic system: '{0}'".format(self.dynsys_obj.name))
+            print("Load pattern: '{0}'".format(self.loading_obj.name))
+            print("Load velocity: %.1f" % self.loadVel)
+        
         tic=timeit.default_timer()
         
-        results_obj = self.tstep_obj.run()
+        results_obj = self.tstep_obj.run(verbose=verbose)
         
         toc=timeit.default_timer()
-        print("***** Analysis complete after %.3f seconds." % (toc-tic))
+        
+        if verbose:
+            print("***** Analysis complete after %.3f seconds." % (toc-tic))
                
         if saveResults:
             self.save(fName=save_fName)
@@ -772,6 +782,9 @@ def ResponseSpectrum(accFunc,
 
         period_str = "Period %.2fs" % _T
         
+        if i % 10 == 0:
+            print("    Period %d of %d" % (i,len(T_vals)))
+        
         # Define SDOF oscillator
         SDOF_sys = msd_chain.MSD_Chain(name=period_str,
                                        M_vals = M,
@@ -790,18 +803,18 @@ def ResponseSpectrum(accFunc,
         # Define time-stepping analysis
         tstep_obj = tstep.TStep(SDOF_sys,
                                 tStart=0, tEnd=tResponse,
-                                force_func=forceFunc,
+                                force_func_dict={SDOF_sys:forceFunc},
                                 retainResponseTimeSeries=True)
         
         # Run time-stepping analysis and append results
-        results_list.append(tstep_obj.run(showMsgs=False))
+        results_obj = tstep_obj.run(verbose=False)
+        results_list.append(results_obj)
         
         # Obtain absolute acceleration by adding back in ground motion
-        results_obj = tstep_obj.results_obj
-        results_obj.responses[2,:] += accFunc(results_obj.t.T)
+        results_obj.responses_list[0][2,:] += accFunc(results_obj.t.T)
         
         # Recalculate statistics
-        results_obj.CalcResponseStats(showMsgs=False)
+        results_obj.CalcResponseStats(verbose=False)
         
         # Tidy up
         del SDOF_sys

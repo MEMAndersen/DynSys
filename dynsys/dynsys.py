@@ -300,6 +300,7 @@ class DynSys:
     def AddOutputMtrx(self,
                       output_mtrx=None,
                       output_names=None,
+                      overwrite=False,
                       fName='outputs.csv',
                       verbose=False):
         """
@@ -313,6 +314,9 @@ class DynSys:
         
         """
         
+        if verbose:
+            print("AddOutputMtrx() method invoked.")
+        
         # Read from file if no output_mtrx provided
         if output_mtrx is None:
             output_mtrx, output_names = self.ReadOutputMtrxFromFile(fName)
@@ -323,13 +327,19 @@ class DynSys:
         if output_names is None:
             output_names = ["Response {0}".format(x) for x in range(output_mtrx.shape[0])]
             
-        # Append to attribute
-        self.output_mtrx = npy.append(self.output_mtrx,output_mtrx,axis=0)
-        self.output_names += output_names
+        
+        if overwrite:
+            if verbose:
+                print("New output matrix replaces previous output matrix, if defined")
+            self.output_mtrx = output_mtrx
+            self.output_names = output_names
+        else:
+            if verbose:
+                print("New output matrix appended to previous output matrix, if defined")
+            self.output_mtrx = npy.append(self.output_mtrx,output_mtrx,axis=0)
+            self.output_names += output_names
         
         if verbose:
-            
-            print("AddOutputMtrx() method invoked.")
             
             print("Updated output matrix shape:")
             print(self.output_mtrx.shape)
@@ -1478,8 +1488,7 @@ class DynSys:
         # Use function defined above to process optional arguments
         link_sys(parent_sys,"parent",Xpos_parent,modeshapes_parent,DOF_parent)
         link_sys(child_sys,"child",Xpos_child,modeshapes_child,DOF_child)
-        
-        
+            
     
     def freqVals(self,f_salient=None,nf_pad:int=400,fmax=None):
         """"
@@ -1577,7 +1586,8 @@ class DynSys:
         
         """
         
-        print("Calculating frequency response matrices..")
+        if verbose:
+            print("Calculating frequency response matrices..")
         
         # Get key properties of system 
         hasConstraints = self.hasConstraints()

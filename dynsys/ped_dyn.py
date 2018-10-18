@@ -13,12 +13,13 @@ import os
 import scipy
 import pandas
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from matplotlib.ticker import FuncFormatter
 from mpl_toolkits.mplot3d import Axes3D
 from inspect import isfunction
 from numpy import real, imag
 import itertools
-
+from copy import deepcopy
 
 # DynSys package imports
 import dyn_analysis
@@ -250,7 +251,7 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
             else:
                 
                 Seff, lambda_vals = Calc_Seff(modalsys_obj.modeshapeFunc,S=S,
-                                              verbose=True,
+                                              verbose=verbose,
                                               makePlot=makePlot)
                 
                 # save to avoid recalculating
@@ -258,8 +259,9 @@ class UKNA_BSEN1991_2_walkers_joggers(dyn_analysis.MovingLoadAnalysis):
                 modalsys_obj.lambda_vals = lambda_vals
                 
             # Get Seff for mode being considered
-            Seff = Seff[int(mode_index/2)]
-            
+            if len(Seff)>1:
+                Seff = Seff[int(mode_index/2)]
+                        
         else:
             # "In all cases it is conservative to use Seff = S"
             Seff = S
@@ -324,7 +326,7 @@ class SteadyStateCrowdLoading():
                  modeshapes_fname_arr=["modeshapes_edge1.csv",
                                         "modeshapes_edge2.csv"],
                  name=None,
-                 verbose=True,
+                 verbose=False,
                  makePlot=False):
         """
         Initialisation function
@@ -383,12 +385,26 @@ class SteadyStateCrowdLoading():
         """
             
         # Check `modeshapes_fname_arr` input
-        modeshapes_fname_arr = numpy.array(modeshapes_fname_arr)
-        self._check_modeshapes_fname_arr(modeshapes_fname_arr,nRegions)
+        
+        if modeshapes_fname_arr is None:
             
-        # Read modeshape data from file, determine interpolation functions
-        mFunc_list, Ltrack_list, max_ordinates = self._read_modeshapes(modalsys_obj,
-                                                                      modeshapes_fname_arr)
+            # Use already-defined modeshope for system
+            mFunc = modalsys_obj.modeshapeFunc
+            mFunc_list = numpy.array([[mFunc,mFunc]])
+            
+            Ltrack = modalsys_obj.Ltrack
+            Ltrack_list = numpy.array([[Ltrack,Ltrack]])
+            
+            max_ordinates = numpy.max(numpy.abs(mFunc.y))
+            
+        else:
+                
+            modeshapes_fname_arr = numpy.array(modeshapes_fname_arr)
+            self._check_modeshapes_fname_arr(modeshapes_fname_arr,nRegions)
+                
+            # Read modeshape data from file, determine interpolation functions
+            mFunc_list, Ltrack_list, max_ordinates = self._read_modeshapes(modalsys_obj,
+                                                                          modeshapes_fname_arr)
         
         self.max_modeshape = max_ordinates
         """
@@ -437,6 +453,17 @@ class SteadyStateCrowdLoading():
         """
         `ModalSys` object, corresponding to system being analysed
         """
+        
+        self.response_names = []
+        """
+        Names of responses computed
+        """
+        
+        self.response_amplitudes = []
+        """
+        Amplitudes of defined responses
+        """
+        
                 
         if verbose: 
             
@@ -450,7 +477,8 @@ class SteadyStateCrowdLoading():
             forcing_freq:float=None,
             run_freq_method=True,
             run_tstep=False,tstep_kwargs:dict={},
-            verbose=True, makePlot=False
+            verbose=False,
+            makePlot={'calc_modal_areas':False,'calc_load_intensity':True}
             ):
         """
         Runs calculations to determine steady-state crowd loading responses
@@ -499,12 +527,27 @@ class SteadyStateCrowdLoading():
           Refer [documentation](../docs/tstep.html) for `TStep()` 
           class for more details.
           
+        * `makePlot`, _dict_ or _bool_, used to control which plots are 
+          produced
+          
           [documentation]: 
           
         """
         
-
-        print("\n**** Running steady-state crowd loading analysis ****")
+        if verbose:
+            print("\n**** Running steady-state crowd loading analysis ****")
+        
+        # Handle makePlot
+        if isinstance(makePlot,bool):
+            
+            makePlot_dict = {}
+            makePlot_dict['calc_modal_areas']=makePlot
+            makePlot_dict['calc_load_intensity']=makePlot
+            
+        else:
+            makePlot_dict = makePlot
+        
+        
         
         self.target_mode = target_mode
         if verbose: print("Target mode index: %d" % target_mode)
@@ -524,14 +567,17 @@ class SteadyStateCrowdLoading():
         self.forcing_freq = forcing_freq
         
         # Obtain area integrals over all deck strips
-        modal_areas = self.calc_modal_areas(target_mode,makePlot=makePlot)
+        modal_areas = self.calc_modal_areas(target_mode,
+                                            makePlot=makePlot_dict['calc_modal_areas'])
+        
         self.modal_areas = modal_areas
         
         # Calculate load intensity, if not provided directly
         if load_intensity is None:
             load_intensity, d = self.calc_load_intensity(mode_index=target_mode,
                                                          fv=forcing_freq,
-                                                         makePlot=makePlot)
+                                                         verbose=verbose,
+                                                         makePlot=makePlot_dict['calc_load_intensity'])
         else:
             d = {}  # null dict
         
@@ -596,6 +642,7 @@ class SteadyStateCrowdLoading():
             # Retain only submatrix mapping modal forces to state DOFs
             nModes = len(modal_forces)
             G_state_vars = G_state_vars[:,:nModes]
+            self.G_state_vars = G_state_vars
             
             # Get submatrix mapping applied forces to DOF accelerations
             nDOF = int(G_state_vars.shape[0]/3)
@@ -618,76 +665,19 @@ class SteadyStateCrowdLoading():
             self.modal_accn_target = modal_accn_target
                            
             # Calculate responses amplitudes using full transfer matrix
-            output_mtrx, output_names = self.modalsys_obj.GetOutputMtrx(all_systems=True)
-            nResponses = output_mtrx.shape[0]
-            
-            if nResponses>0:
-                    
-                response_amplitudes = numpy.ravel(output_mtrx @ G_state_vars @ modal_forces)
-                self.response_amplitudes = response_amplitudes
-                self.response_names = output_names
-                
-            else:
-                print("No output matrix provided. " + 
-                      "Real-world responses have not been evaluated")
+            self.calc_responses()
               
-            
-            if makePlot:
-            
-                f, G3_f = Calc_Gf(None)
-                
-                nModes = G3_f.shape[1]
-                
-                fig, axarr = plt.subplots(nResponses,sharex=True,sharey=True)
-                axarr = numpy.array(axarr) # convert to array if not already
-                
-                for m in range(G3_f.shape[0]):
-                    
-                    ax = axarr[m]
-                    
-                    for j in range(G3_f.shape[1]):
-                        
-                        _G_f = G3_f[m,j,:]
-                        
-                        # Use function for plotting frequency responses
-                        # (this ensures good choice of f_vals)
-                        PlotFrequencyResponse(f,_G_f,
-                                              positive_f_only=True,
-                                              ax_magnitude=ax,
-                                              plotPhase=False)
-                        
-                    # Override properties for ax
-                    ax.set_title("")
-                    ax.set_ylabel("Modal accn %d" % (m+1))
-                    
-                    if m != nModes:
-                        ax.set_xlabel("")
-                        
-                    # Overlay values used in calculation
-                    ax.plot(f1,numpy.abs(G3[m,:]),"r.")
-                    ax.axvline(x=forcing_freq,color='k',alpha=0.3)
-                        
-                fig.suptitle("Frequency response functions\n" + 
-                             "relating applied modal forces (N) " + 
-                             "to modal accelerations (m/$s^2$)")
-                
-                fig.set_size_inches((14,8))
-                fig.legend(ax.lines[:nModes],["Modal force %d" % (m+1)
-                                              for m in range(nModes)])
-        
-                    
         if verbose:
 
             self.print_results()
-            
-        print("**** Analysis complete! ****\n")
+            print("**** Analysis complete! ****\n")
         
         if run_tstep:
             
             # Run time-stepping analysis to validate /check the above approach
             print("***Running time-stepping analysis, as cross-check of "+
                   "steady-state resonance approach...***")
-            
+                        
             # Define sinusoidal load function consistent with above
             def load_func(t):
                 return modal_forces * numpy.sin(2*numpy.pi*forcing_freq*t)
@@ -707,10 +697,37 @@ class SteadyStateCrowdLoading():
             """
             
             print("***Time-stepping analysis complete!***")
-
-
+            
+            
+    def calc_responses(self,output_mtrx=None,output_names=None):
+        """
+        Calculate steady-steady amplitude response of defined responses
+        """
+        
+        # Get output matrix and output names, if not passed to this function
+        if output_mtrx is None:
+            output_mtrx, output_names = self.modalsys_obj.GetOutputMtrx(all_systems=True)
+        
+        # Get frequency response matrix for {disp,vel,accn} variables
+        # (note: assumes already calculated!)
+        G_state_vars = self.G_state_vars
+            
+        # Get modal forces
+        modal_forces = self.modal_forces
+        
+        # Calculate responses at steady-state
+        nResponses = output_mtrx.shape[0]
+        
+        if nResponses>0:
                 
-    
+            response_amplitudes = numpy.ravel(output_mtrx @ G_state_vars @ modal_forces)
+            self.response_amplitudes = response_amplitudes
+            self.response_names = output_names
+            
+        else:
+            print("No output matrix provided. " + 
+                  "Real-world responses have not been evaluated")
+                
     
     def print_details(self):
         """
@@ -847,84 +864,144 @@ class SteadyStateCrowdLoading():
         """
         
         fig_list = []
-        
-        # Plot results of frequency domain analysis method, if avaliable
+                
         if self.run_freq_method:
-          
-            fig, axarr = plt.subplots(2)
+            fig = self.plot_results_freq_method(overlay_val=overlay_val)
             fig_list.append(fig)
             
-            fig.suptitle("Steady-state pedestrian crowd loading analysis results\n"+
-                         "Target mode: %d" % self.target_mode)
-            fig.set_size_inches((14,8))
-            fig.subplots_adjust(hspace=0.3)
-            
-            # Produce bar plot of modal accelerations
-            ax = axarr[0]
-            
-            vals = self.modal_accn
-            ticks = ["Mode %d" % (i+1) for i in range(self.modalsys_obj.nDOF)]
-            ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
-            ax.tick_params(labelsize=8)
-            
-            ax.set_title("Steady-state modal acceleration amplitudes (m/$s^2$)")
-            
-            # Produce bar plot of outputs
-            ax = axarr[1]
-            
-            vals = self.response_amplitudes
-            ticks = self.response_names
-            ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
-            ax.tick_params(labelsize=8)
-            
-            ax.set_title("Steady-state response amplitudes")
-            
-            if overlay_val is not None:
-                ax.axvline(overlay_val,color='darkorange')
-        
-        # Plot results of time-stepping analysis, if avaliable
         if self.run_tstep:
-            
-            # Handle overlay_val optional input
-            if overlay_val is not None:
-                overlay_val=[+overlay_val,-overlay_val]
-            else:
-                overlay_val=None
-            
-            tstep_fig_list = self.tstep_results.PlotResults(useCommonPlot=False,
-                                                            useCommonScale=False,
-                                                            y_overlay=overlay_val)
-            fig_list += tstep_fig_list
-            
-            
-            if self.run_freq_method:
-            
-                # Overlay expected modal acceleration amplitudes
-                # (from steady-state analysis, if run)
-                
-                state_results_fig = fig_list[1][0]
-                
-                
-                ax = state_results_fig.get_axes()[3] # plot of modal accelerations
-                accn_val = numpy.abs(self.modal_accn_target)    # value to overlay
-                ax.axhline(+accn_val,color='r',linestyle='--',alpha=0.3)
-                ax.axhline(-accn_val,color='r',linestyle='--',alpha=0.3)
-                
-                # Overlay expected response amplitudes 
-                # (from steady-state analysis, if run)
-                response_results_fig_list = fig_list[2]
-                
-                axarr = [x.get_axes() for x in response_results_fig_list]
-                axarr = list(itertools.chain(*axarr)) # flatten list
-
-                val2overlay = numpy.abs(self.response_amplitudes)
-    
-                for ax, val in zip(axarr,val2overlay):
-                    ax.axhline(+val,color='r',linestyle='--',alpha=0.3)
-                    ax.axhline(-val,color='r',linestyle='--',alpha=0.3) 
-            
-        return fig_list       
+            tstep_fig_list = self.plot_results_tstep_method(overlay_val=overlay_val)
+            fig_list += tstep_fig_list    
         
+        return fig_list      
+    
+    
+    def plot_results_freq_method(self,overlay_val=None):
+        """
+        Plot results of frequency domain analysis method, if avaliable
+        """
+        
+        if not self.run_freq_method:
+            print("No results avaliable for frequency domain method\n" + 
+                  "Could not plot results")
+            return None
+        
+        # Produce and configure figure
+        fig, axarr = plt.subplots(2)
+        
+        fig.suptitle("Steady-state pedestrian crowd loading analysis results\n"+
+                     "Target mode: %d" % self.target_mode)
+        fig.set_size_inches((14,8))
+        fig.subplots_adjust(hspace=0.3)
+        
+        # Produce bar plot of modal accelerations
+        self.plot_results_modal_accn(axarr[0])
+        
+        # Produce bar plot of outputs
+        self.plot_results_responses(axarr[1],overlay_val=overlay_val)
+        
+        return fig
+    
+    
+    def plot_results_modal_accn(self,ax=None):
+        """
+        Produce bar plot of steady-state modal accelerations
+        """
+        
+        # Define axes to plot to, if not done so already
+        if ax is None:
+            fig,ax = plt.subplots()
+            fig.set_size_inches((14,4))
+
+        vals = self.modal_accn
+        
+        # Get or define tick labels
+        if hasattr(self.modalsys_obj,'mode_IDs'):
+            ticks = self.modalsys_obj.mode_IDs
+        else:
+            ticks = ["Mode %d" % (i+1)
+                     for i in range(self.modalsys_obj.nDOF)]
+        
+        ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
+        ax.tick_params(labelsize=8)
+        
+        ax.set_title("Steady-state modal acceleration amplitudes (m/$s^2$)")
+        
+        
+    def plot_results_responses(self,ax=None,overlay_val=None):
+        """
+        Produce bar plot of steady-state responses
+        """
+        
+        # Define axes to plot to, if not done so already
+        if ax is None:
+            fig,ax = plt.subplots()
+            fig.set_size_inches((14,4))
+
+        # Get data to use in plot        
+        vals = self.response_amplitudes
+        ticks = self.response_names
+        
+        # Flatten list in case of nested lists (only when multiple subsystems)
+        if vals.shape != ticks.shape:
+            ticks = list(itertools.chain(*self.response_names.tolist()))
+        
+        ax.barh(range(len(vals)),numpy.abs(vals),tick_label=ticks)
+        
+        ax.tick_params(labelsize=8)
+        ax.set_title("Steady-state response amplitudes")
+        
+        if overlay_val is not None:
+            ax.axvline(overlay_val,color='darkorange')
+            
+        
+    def plot_results_tstep_method(self,overlay_val=None):
+        """
+        Plot results of time-stepping analysis, if avaliable
+        """
+        
+        if not self.run_tstep:
+            print("No results avaliable for time-stepping method\n" + 
+                  "Could not plot results")
+            return []
+        
+        # Define +/- values based on overlay_val, if provided
+        if overlay_val is not None:
+            overlay_val=[+overlay_val,-overlay_val]
+        else:
+            overlay_val=None
+        
+        fig_list = self.tstep_results.PlotResults(useCommonPlot=False,
+                                                  useCommonScale=False,
+                                                  y_overlay=overlay_val)
+        
+    
+        # Overlay expected modal acceleration amplitudes
+        # (from steady-state analysis, if run)
+        if self.run_freq_method:
+        
+            state_results_fig = fig_list[0][0]
+            
+            ax = state_results_fig.get_axes()[3] # plot of modal accelerations
+            accn_val = numpy.abs(self.modal_accn_target)    # value to overlay
+            ax.axhline(+accn_val,color='r',linestyle='--',alpha=0.3)
+            ax.axhline(-accn_val,color='r',linestyle='--',alpha=0.3)
+            
+            # Overlay expected response amplitudes 
+            # (from steady-state analysis, if run)
+            response_results_fig_list = fig_list[1]
+            
+            axarr = [x.get_axes() for x in response_results_fig_list]
+            axarr = list(itertools.chain(*axarr)) # flatten list
+
+            val2overlay = numpy.abs(self.response_amplitudes)
+
+            for ax, val in zip(axarr,val2overlay):
+                ax.axhline(+val,color='r',linestyle='--',alpha=0.3)
+                ax.axhline(-val,color='r',linestyle='--',alpha=0.3) 
+                
+        return fig_list
+    
 
     def _check_width_func_list(self,
                                width_func_list):
@@ -1006,8 +1083,7 @@ class SteadyStateCrowdLoading():
 
             for fName in fname_list:
 
-                mfunc, L = modalsys_obj.DefineModeshapes(fName=fName,
-                                                         saveAsAttr=False)
+                mfunc, L = modalsys_obj.DefineModeshapes(fName=fName)
                 
                 # Evaluate to obtain maximum ordinates
                 m_vals = mfunc(numpy.linspace(0,L,num))
@@ -1068,48 +1144,55 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
     to UK NA to BS EN1991-2
     """
     
-    def __init__(self,bridgeClass='A',**kwargs):
+    def __init__(self,
+                 bridgeClass:str=None,
+                 crowd_density:float=None,
+                 load_direction='vertical',
+                 **kwargs):
         """
         Initialisation function
         
         ***
-        Required:
-               
-        * `modalsys_obj`, object defining modal system to be analysed
-            
-        * `modeshapes_fname_arr`, array of strings, of shape (nRegions,2) 
-          denoting files containing modeshape variation along the edges of 
-          each deck region:
-              
-              * Axis 1 to be of shape = 2 (1 file for each edge)
-              
-              * Axis 0 length corresponds to number of deck regions, nRegions
-          
-        * `width_func_list`, list of functions to denote how width (m) of 
-          each deck region varies with chainage _along the centreline of the 
-          region_:
-              
-              * List length = nRegions required (this is checked)
-              
-              * List of floats may be provided if deck width is constant within 
-                each regions. But list length requirement above still applies
-    
-        ***
         Optional:
         
-        * calc_Seff`, _boolean_, dictates whether effective span will be 
-          computed according to Figure NA.7. If False, overall span will be 
-          used (conservative)
+        * `bridgeClass`, string character ('A' to 'D'), defines bridge class
+          per UK NA to BS EN1991-2
           
-        * `nLcuts`, _integer_, denotes number of transverse cuts to make when 
-          evaluating area integrals. Increasing number will increase accuracy,  
-          at the cost of longer computation time
+        * `crowd_density`, float, defines crowd density (P/m2). Note only used 
+          if `bridgeClass=None`
+          
+        * `load_direction`, string, either 'vertical' or 'lateral' required
         
         """
         
-        self.bridgeClass = bridgeClass.upper()
+        if bridgeClass is None:
+        
+            if crowd_density is None:
+            
+                raise ValueError("Either `bridgeClass` or `crowd_density` required")
+        
+        else:
+            
+            if not isinstance(bridgeClass,str):
+                raise ValueError("`bridgeClass` to be string character")
+                
+            else:
+                # correct to uppercase
+                bridgeClass = bridgeClass.upper()
+        
+        self.bridgeClass = bridgeClass
         """
         Bridge class per Table NA.7
+        """
+        
+        self.crowd_density = crowd_density
+        """
+        Crowd density (P/m2)
+        """
+        
+        self.load_direction = load_direction
+        """
+        Direction of applied crowd loading
         """
                
         # Run parent init function
@@ -1126,22 +1209,31 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         Returns density expressed as persons/m2
         """
 
-        bridgeClass = self.bridgeClass
+        # Define crowd density via bridge class, if defined
+        if self.bridgeClass is not None:
+        
+            bridgeClass = self.bridgeClass
 
-        if bridgeClass == 'A':
-            density=0.0
-
-        elif bridgeClass == 'B':
-            density=0.4
-
-        elif bridgeClass == 'C':
-            density=0.8
-
-        elif bridgeClass == 'D':
-            density=1.5
-
+            if bridgeClass == 'A':
+                density=0.0
+    
+            elif bridgeClass == 'B':
+                density=0.4
+    
+            elif bridgeClass == 'C':
+                density=0.8
+    
+            elif bridgeClass == 'D':
+                density=1.5
+    
+            else:
+                raise ValueError("Invalid 'bridgeClass'!")
+             
+        # Otherwise use pre-defined density
         else:
-            raise ValueError("Invalid 'bridgeClass'!")
+            density = self.crowd_density
+            
+        self.crowd_density = density
 
         if verbose:
             print("Bridge class: '%s'" % bridgeClass)
@@ -1151,11 +1243,12 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
             raise ValueError("Crowd density = 0; no analysis required!")
 
         return density
-    
+       
     
     def calc_load_intensity(self,
                             mode_index:int,
                             fv:float=None,
+                            load_direction=None,
                             calc_lambda=True,
                             verbose=True,
                             makePlot=True):
@@ -1163,12 +1256,12 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         Calculates required load intensity (N/m2) to UK NA to BS EN 1991-2
         
         ![Cl_2_44_5](../dynsys/img/UKNA_BSEN1991_2_Cl_2_44_5.png)
+        
         """
-    
-        #raise ValueError("Calculation of `load_intensity` to UK NA to " + 
-        #                 "BS EN 1991-2 not yet implemented!\n" + 
-        #                 "Value must be provided via `load_intensity` input")
-    
+
+        if load_direction is None:
+            load_direction = self.load_direction
+        
         # Retrieve attributes    
         A = self.deck_area
         max_modeshape = self.max_modeshape[mode_index]
@@ -1181,14 +1274,21 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         N = crowd_density * A
         
         # Define code inputs
-        F0 = 280.0 # N, refer Table NA.8
+        if load_direction == 'vertical':
+            F0 = 280.0
+            # N, refer Table NA.8
+            # n.b 'walkers' value to be used in crowd loading calcs
+        else:
+            F0 = 70.0  # N, refer Tue 24/07/2018 12:56 Chris Barker email
 
         # Derive adjustment factors
         if fv is None:
             # If not provided explicitly set to damped frequency of target mode
             fv = numpy.abs(self.f_d[mode_index])
             
-        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,analysis_type="walkers",
+        k = UKNA_BSEN1991_2_Figure_NA_8(fv=fv,
+                                        analysis_type="walkers",
+                                        load_direction=load_direction,
                                         makePlot=makePlot)
         
         log_dec = 2*numpy.pi*self.eta[mode_index]
@@ -1215,7 +1315,7 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         md_txt += "\n" + "A         = %.2f\t(m2)" % A
         md_txt += "\n" + "gamma_max = %.3f\t" % max_modeshape
         md_txt += "\n" + "Aeff      = %.2f\t(m2)" % Aeff
-        md_txt += "\n" + "rho       = %.2f" % crowd_density
+        md_txt += "\n" + "rho       = %.2f\t(P/m2)" % crowd_density
         md_txt += "\n" + "N         = %.1f" % N
         md_txt += "\n" + "fv        = %.3f\t(Hz)" % fv
         md_txt += "\n" + "k         = %.3f" % k
@@ -1232,12 +1332,15 @@ class UKNA_BSEN1991_2_crowd(SteadyStateCrowdLoading):
         results_dict["F0"]=F0
         results_dict["fv"]=fv
         results_dict["rho"]=crowd_density
+        results_dict["N"]=N
         results_dict["k"]=k
         results_dict["lambda"]=lambda_val
         results_dict["log_dec"]=log_dec
         results_dict["w"]=load_intensity
+        results_dict["md_txt"]=md_txt
 
         return load_intensity, results_dict
+    
     
     
 class HIVOSS(SteadyStateCrowdLoading):
@@ -1608,6 +1711,9 @@ class LatSync_McRobie():
     
     def __init__(self,
                  modalsys,
+                 cp_func=None,
+                 mp_func=None,
+                 makePlots=False,
                  **kwargs):
         """
         Initialise analysis
@@ -1623,9 +1729,12 @@ class LatSync_McRobie():
         ***
         Optional:
             
-        * 
+        * `cp_func`, function of form g(fn), where fn is frequency in Hz,
+          to define how _negative_ damping per pedestrian varies with frequency
           
         """
+        
+        print("Initialising 'LatSync_McRobie' analysis...")
         
         self.modalsys = modalsys
         """
@@ -1633,40 +1742,164 @@ class LatSync_McRobie():
         pre-appended (e.g. TMDs)
         """
         
-        # Evaluate modal damping matrix based on 1 person on bridge
-        C_pa = self.calc_pedestrians_damping(**kwargs)
-        self.C_pa = C_pa
+        print("Defining pedestrian added damping function...")
+        if cp_func is None:
+            print("Built-in function cp(f) will be used")
+            cp_func = self.init_cp_func()
+        elif isinstance(cp_func,float) or isinstance(cp_func,int):
+            print("cp = %.1f will be used for all f" % cp_func)
+            cp_val = cp_func
+            cp_func = scipy.interpolate.interp1d([0,2.0],[cp_val,cp_val],
+                                                 bounds_error=False,
+                                                 fill_value=cp_val)
+            
+        self.cp_func = cp_func
         """
-        Modal damping matrix based on 1 person on bridge
+        Function to define how added damping per pedestrian varies with
+        frequency. Function with single argument 'fn' expected, 
+        i.e. cp = g(fn), cp in [Ns/m]
         """
+        
+        print("Defining pedestrian added mass function...")
+        if mp_func is None:
+            print("Built-in function mp(f) will be used")
+            mp_func = self.init_mp_func()
+        elif isinstance(mp_func,float):
+            print("mp = %.1f will be used for all f" % mp_func)
+            mp_val = mp_func
+            mp_func = scipy.interpolate.interp1d([0,2.0],[mp_val,mp_val],
+                                                 bounds_error=False,
+                                                 fill_value=mp_val)
+            
+        self.mp_func = mp_func
+        """
+        Function to define how added mass per pedestrian varies with
+        frequency. Function with single argument 'fn' expected, 
+        i.e. mp = g(fn), cp in [kg]
+        """
+        
+        self.ped_effect_mtrx = None
+        """
+        Matrix to represent the smeared effect of one pedestrian on the deck
+        Used to calculate additive system matrices due to pedestrians
+        """
+                
+        self.Np_crit = None
+        """
+        Critical number of pedestrians to give zero net damping
+        """
+        
+        if makePlots:
+            self.plot_cp_func()
+        
+        
+    def init_cp_func(self,conservative=False):
+        """
+        Initialise default function to use to define frequency-dependence of 
+        effective added damping per pedestrian (Ns/m per pedestrian).
+        
+        Note damping taken in conventional sense, such that positive values
+        define added damping i.e. increased attenuation of vibrations. 
+        Correspondingly the effect of pedestrians will tend to be represented 
+        by a negative damping rate.
+        
+        This default profile has been defined with regards to the work done by
+        Dallard et al (2006) and John MacDonald (2008). The default curve 
+        defined within this function is taken to be a conservative 
+        representation of the damping values presented in Figure 9(a) of 
+        the latter's paper _"Lateral excitation of bridges by balancing 
+        pedestrians"_
+        
+        If `conservative=True` is used then the negative 300Ns/m value proposed 
+        by Dallard et al will be used. This value is taken to be independent 
+        of frequency.
+        """
+        
+        if conservative:
+            f_vals = [0.0,2.0]
+            cp_vals = [-300,-300]
+            
+        else:
+            f_vals = [0.0,0.5,1.0,1.5,2.0]
+            cp_vals = [0,-300,-300,0,0]
+            
+            
+        cp_func = scipy.interpolate.interp1d(f_vals,cp_vals,kind='linear',
+                                             bounds_error=False,
+                                             fill_value=0.0)
+        return cp_func
+    
+    
+    def init_mp_func(self):
+        """
+        Initialise default function to use to define frequency-dependence of 
+        effective added mass per pedestrian (kg per pedestrian)
+        
+        The default curve defined within this function is taken to be a 
+        simplified representation of the added mass values presented in 
+        Figure 9(b) of John MacDonald's 2008 Proc. of the Royal Society paper 
+        _"Lateral excitation of bridges by balancing pedestrians"_
+        """
+        
+        f_vals = [0.0,0.5,1.0,1.5,2.0]
+        deltaM_vals = [-100,+30,+30,0,0]
+            
+        deltaM_func = scipy.interpolate.interp1d(f_vals,deltaM_vals,
+                                                 kind='linear',
+                                                 bounds_error=False,
+                                                 fill_value=0.0)
+        return deltaM_func
+    
 
-
-    def calc_pedestrians_damping(self,cp=300,num=1000):
+    def calc_pedestrian_effect(self,f=1.0,num=1000):
         """
         Calculates modal damping matrix due to pedestrians, per the method 
         presented in McRobie paper
         """
         
-        modalsys = self.modalsys
-        
-        modeshape_func = modalsys.modeshapeFunc
-        L = modalsys.Ltrack
-        
-        # Evaluate modeshape ordinates at unif
-        dL = L/num
-        x = numpy.linspace(0,L,num,endpoint=False) + dL/2
-        phi = modeshape_func(x)
+        # Get system matrix to represent distributed action of pedestrians
+        # along deck modeshapes
+        ped_effect_mtrx = self.ped_effect_mtrx
             
-        # Evaluate matrix product of modeshape ordinate matrices
-        phi_product = phi.T @ phi
+        if ped_effect_mtrx is None:
+                
+            modalsys = self.modalsys
+            modeshape_func = modalsys.modeshapeFunc
+            L = modalsys.Ltrack
+            
+            # Evaluate modeshape ordinates at unif
+            dL = L/num
+            x = numpy.linspace(0,L,num,endpoint=False) + dL/2
+            phi = modeshape_func(x)
+                
+            # Evaluate matrix product of modeshape ordinate matrices
+            phi_product = phi.T @ phi
+            
+            # Return mode-generalised damping matrix
+            ped_effect_mtrx = dL / L * phi_product
+            
+            self.ped_effect_mtrx = ped_effect_mtrx
         
-        # Return mode-generalised damping matrix
-        C_pa = cp * dL / L * phi_product
+        # Evaluate cp and mp given mode natural frequency provided
+        f = numpy.abs(f) # positive frequencies to be used
+        cp = self.cp_func(f)
+        mp = self.mp_func(f)
         
-        return C_pa
+        C_pa = cp * ped_effect_mtrx
+        M_pa = mp * ped_effect_mtrx
+        
+        # Return results as dict
+        rslts = {}
+        rslts['C_pa']=C_pa
+        rslts['M_pa']=M_pa
+        rslts['cp']=cp
+        rslts['mp']=mp
+        return rslts
         
     
-    def run(self,Np_vals,verbose=True,append_rslts=False):
+    def run(self,Np_vals,verbose=True,
+            calc_Np_crit=True,append_rslts=False,
+            **kwargs):
         """
         Run analysis to explore eigenvalues of system state matrix for various 
         assumed pedestrian crowd densities
@@ -1685,10 +1918,14 @@ class LatSync_McRobie():
             print("Running lat sync eigenvalues analysis...")
     
         # Run analysis 
-        self._run_analysis(Np_vals,append_rslts)
+        self._run_analysis(Np_vals,append_rslts,**kwargs)
         
         # Calculate critical number of pedestrians for onset on instability
-        Np_crit = self.calc_Np_crit(verbose=verbose)
+        if calc_Np_crit:
+            Np_crit = self.calc_Np_crit(verbose=verbose)
+        else:
+            Np_crit = None
+        
         self.Np_crit = Np_crit
         
         if verbose:
@@ -1696,43 +1933,123 @@ class LatSync_McRobie():
         
         return Np_crit
     
-    def _run_analysis(self,Np_vals,append_rslts):
+    
+    def _run_analysis(self,Np_vals,append_rslts=True,**kwargs):
+        """
+        Run analysis for various pedestrian numbers, as provided to function
         
-        # Run analysis for various pedestrian numbers, as provided to function
+        To cater for frequency-dependent nature of pedestrian damping/mass
+        effect an iterative procedure is adopted, similar to the p-k method 
+        devised by Theodorsen for solving aeroelastic problems
+        """
         
         modalsys = self.modalsys
-        C_pa = self.C_pa
+                
+        # Take copy of system damping matrix with no pedestrians
+        C0 = deepcopy(modalsys._C_mtrx)
+        M0 = deepcopy(modalsys._M_mtrx)
         
+        # Define function to iterate with
+        def calc_modal_properties(f,mode_index,Np,return_rslts=False):
+            
+            #print("Calculating: Np=%d, mode=%d, f=%.3f" % (Np,mode_index,f))
+            
+            # Calculate change in model damping matrix
+            # due to smeared effect of N=1 pedestrian
+            rslts = self.calc_pedestrian_effect(f=f,**kwargs)
+            C_pa = rslts['C_pa']
+            M_pa = rslts['M_pa']
+            
+            # Adjust bridge damping and mass matrices
+            modalsys._C_mtrx = C0 + Np * C_pa
+            modalsys._M_mtrx = M0 + Np * M_pa
+                    
+            # Carry out eigevalue analysis using updated system matrices
+            eig_props = modalsys.CalcEigenproperties()
+            f_new = eig_props['f_d'][mode_index]
+            
+            f_error = f_new - f
+            
+            if return_rslts:
+                
+                d = {}
+                d['eig_props']=eig_props
+                d = {**d, **rslts}
+                d['C_mtrx'] = modalsys._C_mtrx
+                d['M_mtrx'] = modalsys._M_mtrx
+                
+                return f_error, d
+            else:
+                return f_error
+            
+        # Carry out eigevalue analysis of system with no pedestrians
+        eig_props = modalsys.CalcEigenproperties()
+        fd_vals_last = eig_props['f_d']
+        
+        # Loop over all pedestrian numbers provided to function
+        cp_vals = []
+        mp_vals = []
         s_vals = []
         eta_vals = []
         fd_vals = []
         X_vals = []
         
-        # Take copy of system damping matrix with no pedestrians
-        C_p0 = modalsys._C_mtrx
-        
-        for i, Np in enumerate(Np_vals):
+        for _Np in Np_vals:
             
-            # Adjust bridge damping matrix
-            modalsys._C_mtrx = C_p0 - Np * C_pa
-        
-            # Carry out eigevalue analysis
-            eig_props = modalsys.CalcEigenproperties()
+            cp_vals_inner = []
+            mp_vals_inner = []
+            s_vals_inner = []
+            eta_vals_inner = []
+            fd_vals_inner = []
+            X_vals_inner = []
             
-            # Record key results of interest
-            s_vals.append(eig_props["s"])
-            eta_vals.append(eig_props["eta"])
-            fd_vals.append(eig_props["f_d"])
-            X_vals.append(eig_props["X"])
+            for _mode_index, _fd in enumerate(fd_vals_last):
             
-        # Convert nested lists to array type
+                # Solve for consistent frequencies, allowing for 
+                # frequency-dependence of pedestrian-related mass and damping
+                fd_sol = scipy.optimize.newton(func=calc_modal_properties,
+                                               x0=_fd,
+                                               args=(_mode_index,_Np))
+                
+                # Rerun for converged frequency of given mode
+                ferr, rslts = calc_modal_properties(fd_sol,
+                                                    _mode_index,_Np,
+                                                    return_rslts=True)
+                
+                eig_props = rslts['eig_props']
+                cp = rslts['cp']
+                mp = rslts['mp']
+                
+                # Unpack results for this mode and append to inner lists
+                cp_vals_inner.append(cp)
+                mp_vals_inner.append(mp)
+                s_vals_inner.append(eig_props['s'][_mode_index])
+                eta_vals_inner.append(eig_props['eta'][_mode_index])
+                fd_vals_inner.append(eig_props['f_d'][_mode_index])
+                X_vals_inner.append(eig_props['X'][_mode_index])
+                
+            # Update last frequencies
+            fd_vals_last = fd_vals_inner
+                
+            # Append inner lists to outer lists
+            cp_vals.append(cp_vals_inner)
+            mp_vals.append(mp_vals_inner)
+            s_vals.append(s_vals_inner)
+            eta_vals.append(eta_vals_inner)
+            fd_vals.append(fd_vals_inner)
+            X_vals.append(X_vals_inner)
+            
+        # Convert nested lists to numpy ndarray type
+        cp_vals = numpy.array(cp_vals)
+        mp_vals = numpy.array(mp_vals)
         s_vals = numpy.array(s_vals)
         eta_vals = numpy.array(eta_vals)
         fd_vals = numpy.array(fd_vals)
         X_vals = numpy.array(X_vals)
         
-        # Restore with original bridge-only damping matrix
-        modalsys._C_mtrx = C_p0
+        # Restore original no-pedestrians system matrices
+        modalsys._C_mtrx = C0
+        modalsys._M_mtrx = M0
         
         # Check to see if previous results exist
         if not hasattr(self,'eigenvalues'):
@@ -1746,6 +2063,8 @@ class LatSync_McRobie():
             self.damped_freqs = fd_vals
             self.eigenvectors = X_vals
             self.N_pedestrians = Np_vals
+            self.cp_vals = cp_vals
+            self.mp_vals = mp_vals
             
         if append_rslts:
             
@@ -1753,8 +2072,9 @@ class LatSync_McRobie():
             self.damping_ratios = numpy.vstack((self.damping_ratios,eta_vals))
             self.damped_freqs = numpy.vstack((self.damped_freqs,fd_vals))
             self.eigenvectors = numpy.vstack((self.eigenvectors,X_vals))
-            
             self.N_pedestrians = numpy.hstack((self.N_pedestrians,Np_vals))
+            self.cp_vals = numpy.vstack((self.cp_vals,cp_vals))
+            self.mp_vals = numpy.vstack((self.mp_vals,mp_vals))
             
             
     def plot_results(self):
@@ -1765,17 +2085,28 @@ class LatSync_McRobie():
         McRobie's paper, as these have been used to validate the above routine
         """
         
-        # Define figure to provide summary of results
-        fig, axarr = plt.subplots(2,2)
-        fig.set_size_inches((14,7))
-        fig.subplots_adjust(hspace=0.5)
+        fig = plt.figure()
+        fig.set_size_inches((14,9))
+        
+        gs = gridspec.GridSpec(3, 2, height_ratios=[1.5, 1, 1])
+        gs.update(hspace=0.7)
         
         # Prepare subplots
-        self.plot_damping_vs_freq(ax=axarr[0,0])
-        self.plot_poles(ax=axarr[0,1])
-        self.plot_damping_vs_pedestrians(ax=axarr[1,0])
-        axarr[1,1].set_visible(False)
+        ax = fig.add_subplot(gs[0, 0])
+        self.plot_damping_vs_freq(ax=ax)
         
+        ax = fig.add_subplot(gs[0, 1])
+        self.plot_poles(ax=ax)
+        
+        ax = fig.add_subplot(gs[1:, 0])
+        self.plot_damping_vs_pedestrians(ax=ax)
+        
+        ax1 = fig.add_subplot(gs[1, 1])
+        self.plot_cp_func(ax=ax1)
+        
+        ax = fig.add_subplot(gs[2, 1],sharex = ax1)
+        self.plot_mp_func(ax=ax)
+                
         return fig
         
     
@@ -1852,12 +2183,95 @@ class LatSync_McRobie():
         
         ax.set_xlabel("Number of pedestrians")
         ax.set_ylabel("Effective damping ratio")
-        ax.set_title("Effect of pedestrians on damping")
+        ax.set_title("Effect of pedestrians on effective damping")
         
-        attr = "Np_crit"
-        if hasattr(self,attr):
-            Np_crit = getattr(self,attr)
+        Np_crit = self.Np_crit
+        if Np_crit is not None:
             ax.axvline(x=Np_crit,color='r',alpha=0.3)
+            
+            
+    def plot_cp_func(self,ax=None,f_vals=None):
+        """
+        Plots function defining how negative damping per pedestrian varies 
+        with frequency
+        """
+        cp_func = self.cp_func
+        
+        if f_vals is None:
+            if hasattr(cp_func,'x'):
+                f_vals = cp_func.x
+            else:
+                raise ValueError("`f_vals` must be provided!")
+                
+        cp_vals = cp_func(f_vals)
+           
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+            
+        ax.plot(f_vals,cp_vals,label='Defined $c_p(f)$ function')
+        
+        ax.set_xlim([0,ax.get_xlim()[1]])
+        
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("$c_p$ (Ns/m)")
+        ax.set_title("Damping rate per pedestrian, $c_p$")
+                
+        if hasattr(self,'cp_vals'):
+            fd_vals = self.damped_freqs
+            cp_vals = self.cp_vals
+            lines = ax.plot(fd_vals,cp_vals,'r|')
+            
+            for m, line in enumerate(lines):
+                if m==0:
+                    line.set_label('$c_p$ values for modes')
+
+        ax.legend()
+
+        return fig
+    
+    
+    def plot_mp_func(self,ax=None,f_vals=None):
+        """
+        Plots function defining how negative damping per pedestrian varies 
+        with frequency
+        """
+        mp_func = self.mp_func
+        
+        if f_vals is None:
+            if hasattr(mp_func,'x'):
+                f_vals = mp_func.x
+            else:
+                raise ValueError("`f_vals` must be provided!")
+                
+        mp_vals = mp_func(f_vals)
+           
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+            
+        ax.plot(f_vals,mp_vals,label='Defined $m_p(f)$ function')
+        
+        ax.set_xlim([0,ax.get_xlim()[1]])
+        
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("$\Delta M$ (kg)")
+        ax.set_title("Added mass per pedestrian, $\Delta M$")
+                
+        if hasattr(self,'mp_vals'):
+            fd_vals = self.damped_freqs
+            mp_vals = self.mp_vals
+            lines = ax.plot(fd_vals,mp_vals,'r|')
+            
+            for m, line in enumerate(lines):
+                if m==0:
+                    line.set_label('$\Delta M$ values for modes')
+
+        ax.legend()
+
+        return fig
         
         
     def calc_Np_crit(self,rerun_factor=2.0,verbose=True):
@@ -2309,9 +2723,11 @@ def Calc_Seff(modeshapeFunc,S,
     y_abs_vals = abs_modeshapeFunc(x_vals)
     
     # Integrate using Scipy routine
-    y_integral_vals = scipy.integrate.cumtrapz(y_abs_vals,x_vals,
-                                               axis=0,initial=0.0)
-    y_integral = y_integral_vals[-1,:]
+    if makePlot:
+        y_integral_vals = scipy.integrate.cumtrapz(y_abs_vals,x_vals,
+                                                   axis=0,initial=0.0)
+    
+    y_integral = scipy.integrate.trapz(y_abs_vals,x_vals,axis=0)
     
     # Get maxima
     y_absmax = numpy.max(y_abs_vals,axis=0)
@@ -2369,10 +2785,15 @@ def Calc_Seff(modeshapeFunc,S,
 
 def UKNA_BSEN1991_2_Figure_NA_8(fv,
                                 analysis_type="walkers",
+                                load_direction='vertical',
                                 kind='cubic',
                                 makePlot=False):
     """
     Returns $k_{v}(f)$ from Figure NA.8 in BS EN 1992-1:2003
+    
+    ***
+    
+    For lateral loading, refer Tue 24/07/2018 12:56 Chris Barker email
     
     ***
     Required:
@@ -2384,6 +2805,8 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
     
     * `analysis_type`, _string_, either 'walkers' or 'joggers'
     
+    * `load_direction`, _string_, either 'vertical' or 'lateral'
+    
     * `kind`, keyword argument used by scipy.interpolate.interp1d function. 
       Defines method of interpolation, e.g. 'linear' or 'cubic'
       
@@ -2393,40 +2816,81 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
     
     fv = numpy.abs(fv) # positive value to be used
     
-    # Arrays to digitise Figure NA.8
-    walkersData = [[0.000,0.000], [0.200,0.000], [0.400,0.010], [0.600,0.030],
-                   [0.800,0.080], [1.000,0.240], [1.200,0.440], [1.400,0.720],
-                   [1.600,0.930], [1.700,0.980], [1.800,1.000], [2.000,0.997],
-                   [2.100,0.970], [2.200,0.900], [2.400,0.650], [2.600,0.400],
-                   [2.800,0.250], [3.000,0.280], [3.200,0.320], [3.400,0.340],
-                   [3.600,0.360], [3.800,0.360], [4.000,0.350], [4.500,0.280],
-                   [5.000,0.180], [5.500,0.130], [6.000,0.115], [6.500,0.098],
-                   [7.000,0.080], [8.000,0.020], [9.000,0.000]]
+    if not load_direction in ['vertical','lateral','horizontal']:
+        raise ValueError("Unexpected load direction")
+        
+    #----------------
     
+    if load_direction == 'vertical':
+            
+        # Array to digitise Figure NA.8
+        walkersData = [[0.00,0.000], [0.20,0.000], [0.40,0.010], [0.60,0.030],
+                       [0.80,0.080], [1.00,0.240], [1.20,0.440], [1.40,0.720],
+                       [1.60,0.930], [1.70,0.980], [1.80,1.000], [2.00,0.997],
+                       [2.10,0.970], [2.20,0.900], [2.40,0.650], [2.60,0.400],
+                       [2.80,0.250], [3.00,0.280], [3.20,0.320], [3.40,0.340],
+                       [3.60,0.360], [3.80,0.360], [4.00,0.350], [4.50,0.280],
+                       [5.00,0.180], [5.50,0.130], [6.00,0.115], [6.50,0.098],
+                       [7.00,0.080], [8.00,0.020], [9.00,0.000]]
+        
+    else:
+        
+        # Digitised curve per Tue 24/07/2018 12:56 Chris Barker email
+        walkersData = [[0.00,0.000],[0.10,0.008],[0.20,0.020],[0.30,0.060],
+                       [0.40,0.170],[0.50,0.350],[0.60,0.620],[0.70,0.870],
+                       [0.75,0.950],[0.80,1.000],[1.05,1.000],[1.10,0.950],
+                       [1.15,0.850],[1.20,0.730],[1.30,0.480],[1.40,0.250],
+                       [1.50,0.120],[1.52,0.100],[1.60,0.065],[1.70,0.070],
+                       [1.80,0.070],[1.90,0.070],[2.00,0.070],[2.10,0.065],
+                       [2.20,0.063],[2.30,0.055],[2.40,0.045],[2.50,0.035],
+                       [2.60,0.028],[2.70,0.020],[2.80,0.015],[2.90,0.008],
+                       [3.00,0.000],[3.10,0.000],[3.20,0.000],[3.30,0.000],
+                       [3.40,0.000],[3.50,0.000],[3.60,0.000],[3.70,0.000],
+                       [3.80,0.000]]
+        
     walkersData = numpy.array(walkersData)
-    
     walkersFunc = scipy.interpolate.interp1d(x=walkersData[:,0],
                                              y=walkersData[:,1],
                                              kind=kind,
                                              bounds_error=False,
                                              fill_value=0.0)
+    #-------------------
     
-    joggersData = [[0.000,0.000], [0.200,0.000], [0.400,0.000], [0.600,0.000],
-                   [0.800,0.000], [1.000,0.010], [1.200,0.040], [1.400,0.150],
-                   [1.600,0.300], [1.700,0.450], [1.800,0.550], [2.000,0.870],
-                   [2.100,1.010], [2.200,1.110], [2.400,1.160], [2.600,1.120],
-                   [2.800,0.930], [3.000,0.640], [3.200,0.360], [3.400,0.160],
-                   [3.600,0.100], [3.800,0.130], [4.000,0.160], [4.500,0.210],
-                   [5.000,0.220], [5.500,0.180], [6.000,0.110], [6.500,0.040],
-                   [7.000,0.030], [8.000,0.020], [9.000,0.000]]
-    
+    if load_direction == 'vertical':
+        
+        # Array to digitise Figure NA.8
+        joggersData = [[0.00,0.000], [0.20,0.000], [0.40,0.000], [0.60,0.000],
+                       [0.80,0.000], [1.00,0.010], [1.20,0.040], [1.40,0.150],
+                       [1.60,0.300], [1.70,0.450], [1.80,0.550], [2.00,0.870],
+                       [2.10,1.010], [2.20,1.110], [2.40,1.160], [2.60,1.120],
+                       [2.80,0.930], [3.00,0.640], [3.20,0.360], [3.40,0.160],
+                       [3.60,0.100], [3.80,0.130], [4.00,0.160], [4.50,0.210],
+                       [5.00,0.220], [5.50,0.180], [6.00,0.110], [6.50,0.040],
+                       [7.00,0.030], [8.00,0.020], [9.00,0.000]]
+        
+    else:
+        
+         # Digitised curve per Tue 24/07/2018 12:56 Chris Barker email
+        joggersData = [[0.00,0.000],[0.10,0.000],[0.20,0.000],[0.30,0.000],
+                       [0.40,0.010],[0.50,0.030],[0.60,0.100],[0.70,0.250],
+                       [0.80,0.480],[0.90,0.790],[1.00,1.030],[1.05,1.120],
+                       [1.10,1.150],[1.30,1.150],[1.35,1.120],[1.40,1.030],
+                       [1.45,0.920],[1.50,0.780],[1.60,0.470],[1.70,0.240],
+                       [1.80,0.100],[1.85,0.060],[1.90,0.050],[2.00,0.055],
+                       [2.10,0.063],[2.20,0.068],[2.30,0.069],[2.40,0.069],
+                       [2.50,0.069],[2.60,0.068],[2.70,0.067],[2.80,0.060],
+                       [2.90,0.050],[3.00,0.040],[3.10,0.030],[3.20,0.021],
+                       [3.30,0.014],[3.40,0.007],[3.50,0.004],[3.60,0.002],
+                       [4.00,0.000]]
+        
     joggersData = numpy.array(joggersData)
-    
     joggersFunc = scipy.interpolate.interp1d(x=joggersData[:,0],
                                              y=joggersData[:,1],
                                              kind=kind,
                                              bounds_error=False,
                                              fill_value=0.0)
+    
+    #-------------------
     
     # Get applicable array to use
     if analysis_type=="walkers":
@@ -2448,19 +2912,29 @@ def UKNA_BSEN1991_2_Figure_NA_8(fv,
         
         fig, ax = plt.subplots()
         
-        ax.plot(fVals,caseA,label='A')
-        ax.plot(fVals,caseB,label='B')
+        ax.plot(fVals,caseA,label='Walkers')
+        ax.plot(fVals,caseB,label='Joggers')
         
         ax.axvline(fv,color='r',alpha=0.3)
         ax.axhline(k_fv,color='r',alpha=0.3)
         
         ax.legend()
         
-        ax.set_xlim([0,8.0]) # per Fig.NA.8
+        if load_direction == 'vertical':
+            ax.set_xlim([0,8.0]) # per Fig.NA.8
+        else:
+            ax.set_xlim([0,4.0]) # per Tue 24/07/2018 12:56 Chris Barker email
+            
         ax.set_ylim([0,1.4]) # per Fig.NA.8
         
-        ax.set_title("Combined population and harmonic factor k($f_{v}$)\n" + 
-                     "per Figure NA.8, UK NA to BS EN 1992-1:2003")
+        title_str = "Combined population and harmonic factor k($f_{v}$)\n"
+        
+        if load_direction == 'vertical':
+            title_str += "per Figure NA.8, UK NA to BS EN 1992-1:2003"
+        else:
+            title_str += "adjusted for lateral response calculations"
+                    
+        ax.set_title(title_str)
         ax.set_xlabel("Mode frequency $f_{v}$, Hz")
         ax.set_ylabel("k($f_{v}$)")
     

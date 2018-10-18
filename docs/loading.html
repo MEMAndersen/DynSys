@@ -1,4 +1,4 @@
-Version: 1.5.1
+Version: 1.6.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1064,7 +1064,10 @@ table {
   <ul>
     <li class="mono"><a href="#loading.LoadTrain.__init__">__init__</a></li>
     <li class="mono"><a href="#loading.LoadTrain.PrintDetails">PrintDetails</a></li>
-    <li class="mono"><a href="#loading.LoadTrain.loadVals">loadVals</a></li>
+    <li class="mono"><a href="#loading.LoadTrain.evaluate_loads">evaluate_loads</a></li>
+    <li class="mono"><a href="#loading.LoadTrain.plot">plot</a></li>
+    <li class="mono"><a href="#loading.LoadTrain.plot_init">plot_init</a></li>
+    <li class="mono"><a href="#loading.LoadTrain.plot_update">plot_update</a></li>
   </ul>
 
         </li>
@@ -1075,6 +1078,7 @@ table {
   <ul>
     <li class="mono"><a href="#loading.Loading.__init__">__init__</a></li>
     <li class="mono"><a href="#loading.Loading.PrintDetails">PrintDetails</a></li>
+    <li class="mono"><a href="#loading.Loading.plot">plot</a></li>
   </ul>
 
         </li>
@@ -1132,6 +1136,13 @@ table {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading type: </span><span class="se">\t\t</span><span class="s2">&#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading object name: </span><span class="se">\t</span><span class="s2">&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots diagram to illustrate load definition</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
     
 
 <span class="k">class</span> <span class="nc">LoadTrain</span><span class="p">(</span><span class="n">Loading</span><span class="p">):</span>
@@ -1195,7 +1206,7 @@ table {
 <span class="sd">        subsequent loads are at X&lt;0 (_adjustment is made by this function_)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Intensity of individual loads (in N)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1224,13 +1235,11 @@ table {
 <span class="sd">        &quot;&quot;&quot;</span>
         
         
-        
-        
-    <span class="k">def</span> <span class="nf">loadVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">evaluate_loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns intensity of point loads at time t</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span>
         
     
     <span class="k">def</span> <span class="nf">PrintDetails</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1247,7 +1256,83 @@ table {
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load intensities:</span><span class="se">\t</span><span class="s2"> {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Intensity function:</span><span class="se">\t</span><span class="s2"> {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">))</span>
         
-  
+        
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots diagram to illustrate load definition</span>
+<span class="sd">        </span>
+<span class="sd">        Refer docs for **plot_init()** and **plot_update()** for further </span>
+<span class="sd">        details. All additional kwargs are passed to **plot_update()**</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Initialise then update plot</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_init</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="c1"># Rescale plot (as update method will not do otherwise!)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">relim</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">autoscale</span><span class="p">()</span>
+        
+        <span class="c1"># Define labels etc</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Distance along load track (m)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Load intensity (N)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span>
+    
+    
+    <span class="k">def</span> <span class="nf">plot_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to initialise plot</span>
+<span class="sd">        (used when producing animations, for example)</span>
+<span class="sd">        </span>
+<span class="sd">        `ax` will be used for plot, if provided. </span>
+<span class="sd">        Otherwise new figure will be created</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+               
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],[],</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;line_heads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],[],</span><span class="s1">&#39;bv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">ax</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lead_x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to update plot for given time and lead axle position</span>
+<span class="sd">        (used when producing animations, for example)</span>
+<span class="sd">        </span>
+<span class="sd">        * `t`, time value (secs) to plot loads at</span>
+<span class="sd">        </span>
+<span class="sd">        * `lead_x`, position of lead axle (m)</span>
+<span class="sd">        </span>
+<span class="sd">        * `load_scale`, factor used to convert loads (N) to distance (m) </span>
+<span class="sd">          for plotting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get axle positions</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">lead_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadX</span>
+        
+        <span class="c1"># Get load values at time t</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        
+        <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">nan</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        
+        <span class="n">X</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="o">-</span><span class="n">vals</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">*</span> <span class="n">load_scale</span>
+        
+        <span class="c1"># Update plot artists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;line_heads&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+                             
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span>
+        
         
 <span class="c1"># ********************** FUNCTIONS ****************************************</span>
         
@@ -1365,7 +1450,7 @@ Defines a series of point loads at fixed relative positions</p></div>
 <span class="sd">        subsequent loads are at X&lt;0 (_adjustment is made by this function_)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Intensity of individual loads (in N)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1394,13 +1479,11 @@ Defines a series of point loads at fixed relative positions</p></div>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         
-        
-        
-    <span class="k">def</span> <span class="nf">loadVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">evaluate_loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns intensity of point loads at time t</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span>
         
     
     <span class="k">def</span> <span class="nf">PrintDetails</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1416,6 +1499,83 @@ Defines a series of point loads at fixed relative positions</p></div>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;X positions of loads:</span><span class="se">\t</span><span class="s2"> {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loadX</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load intensities:</span><span class="se">\t</span><span class="s2"> {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Intensity function:</span><span class="se">\t</span><span class="s2"> {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">))</span>
+        
+        
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots diagram to illustrate load definition</span>
+<span class="sd">        </span>
+<span class="sd">        Refer docs for **plot_init()** and **plot_update()** for further </span>
+<span class="sd">        details. All additional kwargs are passed to **plot_update()**</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Initialise then update plot</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_init</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="c1"># Rescale plot (as update method will not do otherwise!)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">relim</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">autoscale</span><span class="p">()</span>
+        
+        <span class="c1"># Define labels etc</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Distance along load track (m)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Load intensity (N)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span>
+    
+    
+    <span class="k">def</span> <span class="nf">plot_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to initialise plot</span>
+<span class="sd">        (used when producing animations, for example)</span>
+<span class="sd">        </span>
+<span class="sd">        `ax` will be used for plot, if provided. </span>
+<span class="sd">        Otherwise new figure will be created</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+               
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],[],</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;line_heads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],[],</span><span class="s1">&#39;bv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">ax</span>
+        
+    
+    <span class="k">def</span> <span class="nf">plot_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lead_x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to update plot for given time and lead axle position</span>
+<span class="sd">        (used when producing animations, for example)</span>
+<span class="sd">        </span>
+<span class="sd">        * `t`, time value (secs) to plot loads at</span>
+<span class="sd">        </span>
+<span class="sd">        * `lead_x`, position of lead axle (m)</span>
+<span class="sd">        </span>
+<span class="sd">        * `load_scale`, factor used to convert loads (N) to distance (m) </span>
+<span class="sd">          for plotting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get axle positions</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">lead_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadX</span>
+        
+        <span class="c1"># Get load values at time t</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        
+        <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">nan</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        
+        <span class="n">X</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="o">-</span><span class="n">vals</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">*</span> <span class="n">load_scale</span>
+        
+        <span class="c1"># Update plot artists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;line_heads&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+                             
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span>
 </pre></div>
 
   </div>
@@ -1504,7 +1664,7 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
 <span class="sd">    subsequent loads are at X&lt;0 (_adjustment is made by this function_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Intensity of individual loads (in N)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1572,8 +1732,8 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
   
             
   <div class="item">
-    <div class="name def" id="loading.LoadTrain.loadVals">
-    <p>def <span class="ident">loadVals</span>(</p><p>self, t)</p>
+    <div class="name def" id="loading.LoadTrain.evaluate_loads">
+    <p>def <span class="ident">evaluate_loads</span>(</p><p>self, t)</p>
     </div>
     
 
@@ -1581,13 +1741,161 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
   
     <div class="desc"><p>Returns intensity of point loads at time t</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.LoadTrain.loadVals', this);">Show source &equiv;</a></p>
-  <div id="source-loading.LoadTrain.loadVals" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">loadVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.LoadTrain.evaluate_loads', this);">Show source &equiv;</a></p>
+  <div id="source-loading.LoadTrain.evaluate_loads" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">evaluate_loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns intensity of point loads at time t</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="loading.LoadTrain.plot">
+    <p>def <span class="ident">plot</span>(</p><p>self, ax=None, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plots diagram to illustrate load definition</p>
+<p>Refer docs for <strong>plot_init()</strong> and <strong>plot_update()</strong> for further 
+details. All additional kwargs are passed to <strong>plot_update()</strong></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.LoadTrain.plot', this);">Show source &equiv;</a></p>
+  <div id="source-loading.LoadTrain.plot" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots diagram to illustrate load definition</span>
+<span class="sd">    </span>
+<span class="sd">    Refer docs for **plot_init()** and **plot_update()** for further </span>
+<span class="sd">    details. All additional kwargs are passed to **plot_update()**</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Initialise then update plot</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_init</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="c1"># Rescale plot (as update method will not do otherwise!)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">relim</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale</span><span class="p">()</span>
+    
+    <span class="c1"># Define labels etc</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Distance along load track (m)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Load intensity (N)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="loading.LoadTrain.plot_init">
+    <p>def <span class="ident">plot_init</span>(</p><p>self, ax=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Method to initialise plot
+(used when producing animations, for example)</p>
+<p><code>ax</code> will be used for plot, if provided. 
+Otherwise new figure will be created</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.LoadTrain.plot_init', this);">Show source &equiv;</a></p>
+  <div id="source-loading.LoadTrain.plot_init" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to initialise plot</span>
+<span class="sd">    (used when producing animations, for example)</span>
+<span class="sd">    </span>
+<span class="sd">    `ax` will be used for plot, if provided. </span>
+<span class="sd">    Otherwise new figure will be created</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+           
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],[],</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;line_heads&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([],[],</span><span class="s1">&#39;bv&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">ax</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="loading.LoadTrain.plot_update">
+    <p>def <span class="ident">plot_update</span>(</p><p>self, t=0, lead_x=0, load_scale=1.0)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Method to update plot for given time and lead axle position
+(used when producing animations, for example)</p>
+<ul>
+<li>
+<p><code>t</code>, time value (secs) to plot loads at</p>
+</li>
+<li>
+<p><code>lead_x</code>, position of lead axle (m)</p>
+</li>
+<li>
+<p><code>load_scale</code>, factor used to convert loads (N) to distance (m) 
+  for plotting</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.LoadTrain.plot_update', this);">Show source &equiv;</a></p>
+  <div id="source-loading.LoadTrain.plot_update" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lead_x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">load_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to update plot for given time and lead axle position</span>
+<span class="sd">    (used when producing animations, for example)</span>
+<span class="sd">    </span>
+<span class="sd">    * `t`, time value (secs) to plot loads at</span>
+<span class="sd">    </span>
+<span class="sd">    * `lead_x`, position of lead axle (m)</span>
+<span class="sd">    </span>
+<span class="sd">    * `load_scale`, factor used to convert loads (N) to distance (m) </span>
+<span class="sd">      for plotting</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get axle positions</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">lead_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadX</span>
+    
+    <span class="c1"># Get load values at time t</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    
+    <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">nan</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    
+    <span class="n">X</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="o">-</span><span class="n">vals</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">*</span> <span class="n">load_scale</span>
+    
+    <span class="c1"># Update plot artists</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;lines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span><span class="p">[</span><span class="s1">&#39;line_heads&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+                         
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_artists</span>
 </pre></div>
 
   </div>
@@ -1615,6 +1923,17 @@ otherwise constant point loads defined by this class</p></div>
             
   
     <div class="desc"><p>Defines distance between lead and trailing loads</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="loading.LoadTrain.loadVals" class="name">var <span class="ident">loadVals</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Intensity of individual loads (in N)</p></div>
   <div class="source_cont">
 </div>
 
@@ -1663,6 +1982,13 @@ subsequent loads are at X&lt;0 (<em>adjustment is made by this function</em>)</p
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading type: </span><span class="se">\t\t</span><span class="s2">&#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading object name: </span><span class="se">\t</span><span class="s2">&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots diagram to illustrate load definition</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
 </pre></div>
 
   </div>
@@ -1720,6 +2046,31 @@ subsequent loads are at X&lt;0 (<em>adjustment is made by this function</em>)</p
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading type: </span><span class="se">\t\t</span><span class="s2">&#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
     <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading object name: </span><span class="se">\t</span><span class="s2">&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="loading.Loading.plot">
+    <p>def <span class="ident">plot</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plots diagram to illustrate load definition</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.Loading.plot', this);">Show source &equiv;</a></p>
+  <div id="source-loading.Loading.plot" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots diagram to illustrate load definition</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
 </pre></div>
 
   </div>

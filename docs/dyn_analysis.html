@@ -1,4 +1,4 @@
-Version: 1.5.1
+Version: 1.6.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1337,8 +1337,13 @@ table {
 <span class="sd">        Results object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="c1"># Create relationship to this analysis object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">analysis_obj</span> <span class="o">=</span> <span class="bp">self</span>
+        
+        
     
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
             <span class="n">saveResults</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
             <span class="n">save_fName</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1346,16 +1351,21 @@ table {
 <span class="sd">        </span>
 <span class="sd">        _Refer documentation for that function for more details_</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Running `</span><span class="si">%s</span><span class="s2">`...&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Dynamic system: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load pattern: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity: </span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVel</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Running `</span><span class="si">%s</span><span class="s2">`...&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Dynamic system: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load pattern: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity: </span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVel</span><span class="p">)</span>
+        
         <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
         
-        <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         
         <span class="n">toc</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Analysis complete after </span><span class="si">%.3f</span><span class="s2"> seconds.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Analysis complete after </span><span class="si">%.3f</span><span class="s2"> seconds.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">))</span>
                
         <span class="k">if</span> <span class="n">saveResults</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="n">save_fName</span><span class="p">)</span>
@@ -1896,6 +1906,9 @@ table {
 
         <span class="n">period_str</span> <span class="o">=</span> <span class="s2">&quot;Period </span><span class="si">%.2f</span><span class="s2">s&quot;</span> <span class="o">%</span> <span class="n">_T</span>
         
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;    Period </span><span class="si">%d</span><span class="s2"> of </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)))</span>
+        
         <span class="c1"># Define SDOF oscillator</span>
         <span class="n">SDOF_sys</span> <span class="o">=</span> <span class="n">msd_chain</span><span class="o">.</span><span class="n">MSD_Chain</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">period_str</span><span class="p">,</span>
                                        <span class="n">M_vals</span> <span class="o">=</span> <span class="n">M</span><span class="p">,</span>
@@ -1914,18 +1927,18 @@ table {
         <span class="c1"># Define time-stepping analysis</span>
         <span class="n">tstep_obj</span> <span class="o">=</span> <span class="n">tstep</span><span class="o">.</span><span class="n">TStep</span><span class="p">(</span><span class="n">SDOF_sys</span><span class="p">,</span>
                                 <span class="n">tStart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tEnd</span><span class="o">=</span><span class="n">tResponse</span><span class="p">,</span>
-                                <span class="n">force_func</span><span class="o">=</span><span class="n">forceFunc</span><span class="p">,</span>
+                                <span class="n">force_func_dict</span><span class="o">=</span><span class="p">{</span><span class="n">SDOF_sys</span><span class="p">:</span><span class="n">forceFunc</span><span class="p">},</span>
                                 <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
         <span class="c1"># Run time-stepping analysis and append results</span>
-        <span class="n">results_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+        <span class="n">results_obj</span> <span class="o">=</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">results_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results_obj</span><span class="p">)</span>
         
         <span class="c1"># Obtain absolute acceleration by adding back in ground motion</span>
-        <span class="n">results_obj</span> <span class="o">=</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">results_obj</span>
-        <span class="n">results_obj</span><span class="o">.</span><span class="n">responses</span><span class="p">[</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">accFunc</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">responses_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">accFunc</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         
         <span class="c1"># Recalculate statistics</span>
-        <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
         <span class="c1"># Tidy up</span>
         <span class="k">del</span> <span class="n">SDOF_sys</span>
@@ -2396,6 +2409,9 @@ supplied <code>accFunc</code> returns ground acceleration in m/s<sup>2</sup>.</p
 
         <span class="n">period_str</span> <span class="o">=</span> <span class="s2">&quot;Period </span><span class="si">%.2f</span><span class="s2">s&quot;</span> <span class="o">%</span> <span class="n">_T</span>
         
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;    Period </span><span class="si">%d</span><span class="s2"> of </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">T_vals</span><span class="p">)))</span>
+        
         <span class="c1"># Define SDOF oscillator</span>
         <span class="n">SDOF_sys</span> <span class="o">=</span> <span class="n">msd_chain</span><span class="o">.</span><span class="n">MSD_Chain</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">period_str</span><span class="p">,</span>
                                        <span class="n">M_vals</span> <span class="o">=</span> <span class="n">M</span><span class="p">,</span>
@@ -2414,18 +2430,18 @@ supplied <code>accFunc</code> returns ground acceleration in m/s<sup>2</sup>.</p
         <span class="c1"># Define time-stepping analysis</span>
         <span class="n">tstep_obj</span> <span class="o">=</span> <span class="n">tstep</span><span class="o">.</span><span class="n">TStep</span><span class="p">(</span><span class="n">SDOF_sys</span><span class="p">,</span>
                                 <span class="n">tStart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tEnd</span><span class="o">=</span><span class="n">tResponse</span><span class="p">,</span>
-                                <span class="n">force_func</span><span class="o">=</span><span class="n">forceFunc</span><span class="p">,</span>
+                                <span class="n">force_func_dict</span><span class="o">=</span><span class="p">{</span><span class="n">SDOF_sys</span><span class="p">:</span><span class="n">forceFunc</span><span class="p">},</span>
                                 <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
         <span class="c1"># Run time-stepping analysis and append results</span>
-        <span class="n">results_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+        <span class="n">results_obj</span> <span class="o">=</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">results_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results_obj</span><span class="p">)</span>
         
         <span class="c1"># Obtain absolute acceleration by adding back in ground motion</span>
-        <span class="n">results_obj</span> <span class="o">=</span> <span class="n">tstep_obj</span><span class="o">.</span><span class="n">results_obj</span>
-        <span class="n">results_obj</span><span class="o">.</span><span class="n">responses</span><span class="p">[</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">accFunc</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">responses_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">,:]</span> <span class="o">+=</span> <span class="n">accFunc</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         
         <span class="c1"># Recalculate statistics</span>
-        <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">(</span><span class="n">showMsgs</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponseStats</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
         <span class="c1"># Tidy up</span>
         <span class="k">del</span> <span class="n">SDOF_sys</span>
@@ -2907,8 +2923,13 @@ track.</p>
 <span class="sd">        Results object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="c1"># Create relationship to this analysis object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">analysis_obj</span> <span class="o">=</span> <span class="bp">self</span>
+        
+        
     
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
             <span class="n">saveResults</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
             <span class="n">save_fName</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2916,16 +2937,21 @@ track.</p>
 <span class="sd">        </span>
 <span class="sd">        _Refer documentation for that function for more details_</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Running `</span><span class="si">%s</span><span class="s2">`...&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Dynamic system: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load pattern: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity: </span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVel</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Running `</span><span class="si">%s</span><span class="s2">`...&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Dynamic system: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load pattern: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity: </span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVel</span><span class="p">)</span>
+        
         <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
         
-        <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         
         <span class="n">toc</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Analysis complete after </span><span class="si">%.3f</span><span class="s2"> seconds.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Analysis complete after </span><span class="si">%.3f</span><span class="s2"> seconds.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">))</span>
                
         <span class="k">if</span> <span class="n">saveResults</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="n">save_fName</span><span class="p">)</span>
@@ -3146,6 +3172,9 @@ mode-generalised force functions for each mode. <em>This is checked</em>.</p>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Results object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Create relationship to this analysis object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">analysis_obj</span> <span class="o">=</span> <span class="bp">self</span>
 </pre></div>
 
   </div>
@@ -3184,7 +3213,7 @@ mode-generalised force functions for each mode. <em>This is checked</em>.</p>
             
   <div class="item">
     <div class="name def" id="dyn_analysis.MovingLoadAnalysis.run">
-    <p>def <span class="ident">run</span>(</p><p>self, saveResults=False, save_fName=None)</p>
+    <p>def <span class="ident">run</span>(</p><p>self, verbose=True, saveResults=False, save_fName=None)</p>
     </div>
     
 
@@ -3196,6 +3225,7 @@ mode-generalised force functions for each mode. <em>This is checked</em>.</p>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.MovingLoadAnalysis.run', this);">Show source &equiv;</a></p>
   <div id="source-dyn_analysis.MovingLoadAnalysis.run" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
         <span class="n">saveResults</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
         <span class="n">save_fName</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -3203,16 +3233,21 @@ mode-generalised force functions for each mode. <em>This is checked</em>.</p>
 <span class="sd">    </span>
 <span class="sd">    _Refer documentation for that function for more details_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Running `</span><span class="si">%s</span><span class="s2">`...&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Dynamic system: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load pattern: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity: </span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVel</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Running `</span><span class="si">%s</span><span class="s2">`...&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Dynamic system: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load pattern: &#39;{0}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity: </span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVel</span><span class="p">)</span>
+    
     <span class="n">tic</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
     
-    <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">results_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     
     <span class="n">toc</span><span class="o">=</span><span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Analysis complete after </span><span class="si">%.3f</span><span class="s2"> seconds.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***** Analysis complete after </span><span class="si">%.3f</span><span class="s2"> seconds.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">toc</span><span class="o">-</span><span class="n">tic</span><span class="p">))</span>
            
     <span class="k">if</span> <span class="n">saveResults</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fName</span><span class="o">=</span><span class="n">save_fName</span><span class="p">)</span>

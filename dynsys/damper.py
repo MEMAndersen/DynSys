@@ -26,6 +26,7 @@ class TMD(msd_chain.MSD_Chain):
     
     def __init__(self,sprung_mass:float,nat_freq:float,
                  fixed_mass:float=None,damping_ratio:float=0.0,
+                 outputs={'rel disp':True,'linkage force':True},
                  **kwargs):
         """
         Initialisation method
@@ -83,13 +84,15 @@ class TMD(msd_chain.MSD_Chain):
         
         # Add output matrix entry to compute relative displacement
         # (as this is commonly of interest)
-        self.AddOutputMtrx(output_mtrx=[-1,1,0,0,0,0],
-                           output_names=["Relative disp [m]"])
+        if outputs['rel disp']:
+            self.AddOutputMtrx(output_mtrx=[-1,1,0,0,0,0],
+                               output_names=["Relative disp [m]"])
         
         # Add output matrix to compute damper force
         # given by K.v_relative + C.vdot_relative
-        self.AddOutputMtrx(output_mtrx=[-K,+K,-C,+C,0,0],
-                           output_names=["TMD linkage force [N]"])
+        if outputs['linkage force']:
+            self.AddOutputMtrx(output_mtrx=[-K,+K,-C,+C,0,0],
+                               output_names=["TMD linkage force [N]"])
         
         
     def PlotSystem(self,ax,v,

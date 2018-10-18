@@ -28,6 +28,7 @@ plt.close("all")
 # Read in ground motion time series
 ground_acc = pd.read_csv('el-centro.csv',header=0,index_col=0)
 t = ground_acc.index
+tmax = t[-1]
 a = numpy.ravel(ground_acc.values) * 9.81  # convert to m/s2
 dt = t[1]-t[0]
 max_a = numpy.max(numpy.abs(a))
@@ -53,6 +54,7 @@ T_vals = numpy.logspace(-2,1.7,400)
 eta = 0.1
 
 results = ResponseSpectrum(accFunc,
+                           tResponse=tmax,
                            max_dt=dt,
                            T_vals=T_vals,
                            eta=eta)
