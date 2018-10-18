@@ -1,4 +1,4 @@
-Version: 1.5.1_dev
+Version: 1.6.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1568,7 +1568,7 @@ a second order dynamic system via its (usually truncated) modal properties</p>
         
         <span class="c1"># Get loading details</span>
         <span class="n">loadX</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadX</span>
-        <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
         
         <span class="c1"># Check shapes of loadX and loadVals agree</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">npy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">loadX</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">loadVals</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
@@ -1593,7 +1593,8 @@ a second order dynamic system via its (usually truncated) modal properties</p>
             <span class="k">if</span> <span class="n">use_abs_modeshape</span><span class="p">:</span>
                 <span class="n">modeshapeVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="p">)</span>
             
-            <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="err">@</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">loads_arr</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="err">@</span> <span class="n">loads_arr</span> 
             <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">QVals</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">QVals</span>
         
@@ -2426,7 +2427,7 @@ $$</p>
         
         <span class="c1"># Get loading details</span>
         <span class="n">loadX</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadX</span>
-        <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
         
         <span class="c1"># Check shapes of loadX and loadVals agree</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">npy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">loadX</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">loadVals</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
@@ -2451,7 +2452,8 @@ $$</p>
             <span class="k">if</span> <span class="n">use_abs_modeshape</span><span class="p">:</span>
                 <span class="n">modeshapeVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="p">)</span>
             
-            <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="err">@</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">loads_arr</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="err">@</span> <span class="n">loads_arr</span> 
             <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">QVals</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">QVals</span>
         
@@ -4224,7 +4226,7 @@ class attributes will be used.</em></p>
     
     <span class="c1"># Get loading details</span>
     <span class="n">loadX</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadX</span>
-    <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">loadVals</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
     
     <span class="c1"># Check shapes of loadX and loadVals agree</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">npy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">loadX</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">loadVals</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
@@ -4249,7 +4251,8 @@ class attributes will be used.</em></p>
         <span class="k">if</span> <span class="n">use_abs_modeshape</span><span class="p">:</span>
             <span class="n">modeshapeVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="p">)</span>
         
-        <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="err">@</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">loads_arr</span> <span class="o">=</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">modeshapeVals</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="err">@</span> <span class="n">loads_arr</span> 
         <span class="n">QVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">QVals</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">QVals</span>
     

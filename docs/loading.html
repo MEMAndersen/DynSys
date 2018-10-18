@@ -1,4 +1,4 @@
-Version: 1.5.1_dev
+Version: 1.6.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1064,7 +1064,7 @@ table {
   <ul>
     <li class="mono"><a href="#loading.LoadTrain.__init__">__init__</a></li>
     <li class="mono"><a href="#loading.LoadTrain.PrintDetails">PrintDetails</a></li>
-    <li class="mono"><a href="#loading.LoadTrain.loadVals">loadVals</a></li>
+    <li class="mono"><a href="#loading.LoadTrain.evaluate_loads">evaluate_loads</a></li>
     <li class="mono"><a href="#loading.LoadTrain.plot">plot</a></li>
     <li class="mono"><a href="#loading.LoadTrain.plot_init">plot_init</a></li>
     <li class="mono"><a href="#loading.LoadTrain.plot_update">plot_update</a></li>
@@ -1206,7 +1206,7 @@ table {
 <span class="sd">        subsequent loads are at X&lt;0 (_adjustment is made by this function_)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Intensity of individual loads (in N)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1235,11 +1235,11 @@ table {
 <span class="sd">        &quot;&quot;&quot;</span>
         
         
-    <span class="k">def</span> <span class="nf">loadVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">evaluate_loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns intensity of point loads at time t</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span>
         
     
     <span class="k">def</span> <span class="nf">PrintDetails</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1318,7 +1318,7 @@ table {
         <span class="n">x</span> <span class="o">=</span> <span class="n">lead_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadX</span>
         
         <span class="c1"># Get load values at time t</span>
-        <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
         
         <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">nan</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
@@ -1450,7 +1450,7 @@ Defines a series of point loads at fixed relative positions</p></div>
 <span class="sd">        subsequent loads are at X&lt;0 (_adjustment is made by this function_)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Intensity of individual loads (in N)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1479,11 +1479,11 @@ Defines a series of point loads at fixed relative positions</p></div>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         
-    <span class="k">def</span> <span class="nf">loadVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">evaluate_loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns intensity of point loads at time t</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span>
         
     
     <span class="k">def</span> <span class="nf">PrintDetails</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1562,7 +1562,7 @@ Defines a series of point loads at fixed relative positions</p></div>
         <span class="n">x</span> <span class="o">=</span> <span class="n">lead_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadX</span>
         
         <span class="c1"># Get load values at time t</span>
-        <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
         
         <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">nan</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
@@ -1664,7 +1664,7 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
 <span class="sd">    subsequent loads are at X&lt;0 (_adjustment is made by this function_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span> <span class="o">=</span> <span class="n">loadVals</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Intensity of individual loads (in N)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1732,8 +1732,8 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
   
             
   <div class="item">
-    <div class="name def" id="loading.LoadTrain.loadVals">
-    <p>def <span class="ident">loadVals</span>(</p><p>self, t)</p>
+    <div class="name def" id="loading.LoadTrain.evaluate_loads">
+    <p>def <span class="ident">evaluate_loads</span>(</p><p>self, t)</p>
     </div>
     
 
@@ -1741,13 +1741,13 @@ filename of a tabular comma-delimited file format with columns | Xpos | Load |.<
   
     <div class="desc"><p>Returns intensity of point loads at time t</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.LoadTrain.loadVals', this);">Show source &equiv;</a></p>
-  <div id="source-loading.LoadTrain.loadVals" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">loadVals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-loading.LoadTrain.evaluate_loads', this);">Show source &equiv;</a></p>
+  <div id="source-loading.LoadTrain.evaluate_loads" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">evaluate_loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">t</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns intensity of point loads at time t</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_loadVals</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensityFunc</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span>
 </pre></div>
 
   </div>
@@ -1882,7 +1882,7 @@ Otherwise new figure will be created</p></div>
     <span class="n">x</span> <span class="o">=</span> <span class="n">lead_x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadX</span>
     
     <span class="c1"># Get load values at time t</span>
-    <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadVals</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_loads</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
     
     <span class="n">z</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">nan</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
@@ -1923,6 +1923,17 @@ otherwise constant point loads defined by this class</p></div>
             
   
     <div class="desc"><p>Defines distance between lead and trailing loads</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="loading.LoadTrain.loadVals" class="name">var <span class="ident">loadVals</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Intensity of individual loads (in N)</p></div>
   <div class="source_cont">
 </div>
 
