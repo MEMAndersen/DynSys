@@ -1714,6 +1714,7 @@ class LatSync_McRobie():
                  cp_func=None,
                  mp_func=None,
                  makePlots=False,
+                 verbose=True,
                  **kwargs):
         """
         Initialise analysis
@@ -1734,7 +1735,8 @@ class LatSync_McRobie():
           
         """
         
-        print("Initialising 'LatSync_McRobie' analysis...")
+        if verbose:
+            print("Initialising 'LatSync_McRobie' analysis...")
         
         self.modalsys = modalsys
         """
@@ -1742,16 +1744,24 @@ class LatSync_McRobie():
         pre-appended (e.g. TMDs)
         """
         
-        print("Defining pedestrian added damping function...")
+        if verbose: print("Defining pedestrian added damping function...")
+        
         if cp_func is None:
-            print("Built-in function cp(f) will be used")
+            if verbose: print("Default cp(f) function will be used")
             cp_func = self.init_cp_func()
+            
         elif isinstance(cp_func,float) or isinstance(cp_func,int):
-            print("cp = %.1f will be used for all f" % cp_func)
+            if verbose: print("cp = %.1f will be used for all f" % cp_func)
             cp_val = cp_func
             cp_func = scipy.interpolate.interp1d([0,2.0],[cp_val,cp_val],
                                                  bounds_error=False,
                                                  fill_value=cp_val)
+            
+        elif isfunction(cp_func):
+            if verbose: print("User-supplied cp(f) function will be used")
+            
+        else:
+            raise ValueError("Unexpected `cp_func` argument")
             
         self.cp_func = cp_func
         """
@@ -1760,16 +1770,24 @@ class LatSync_McRobie():
         i.e. cp = g(fn), cp in [Ns/m]
         """
         
-        print("Defining pedestrian added mass function...")
+        if verbose: print("Defining pedestrian added mass function...")
+        
         if mp_func is None:
-            print("Built-in function mp(f) will be used")
+            if verbose: print("Default mp(f) function will be used")
             mp_func = self.init_mp_func()
+            
         elif isinstance(mp_func,float):
-            print("mp = %.1f will be used for all f" % mp_func)
+            if verbose: print("mp = %.1f will be used for all f" % mp_func)
             mp_val = mp_func
             mp_func = scipy.interpolate.interp1d([0,2.0],[mp_val,mp_val],
                                                  bounds_error=False,
                                                  fill_value=mp_val)
+            
+        elif isfunction(mp_func):
+            if verbose: print("User-supplied mp(f) function will be used")
+            
+        else:
+            raise ValueError("Unexpected `mp_func` argument")
             
         self.mp_func = mp_func
         """
@@ -1952,8 +1970,6 @@ class LatSync_McRobie():
         # Define function to iterate with
         def calc_modal_properties(f,mode_index,Np,return_rslts=False):
             
-            #print("Calculating: Np=%d, mode=%d, f=%.3f" % (Np,mode_index,f))
-            
             # Calculate change in model damping matrix
             # due to smeared effect of N=1 pedestrian
             rslts = self.calc_pedestrian_effect(f=f,**kwargs)
@@ -1969,6 +1985,9 @@ class LatSync_McRobie():
             f_new = eig_props['f_d'][mode_index]
             
             f_error = f_new - f
+            
+            #print("Calculating: Np=%d, mode=%d, f=%.3f, f_error=%.3f" 
+            #      % (Np,mode_index,f,f_error))
             
             if return_rslts:
                 
@@ -2076,7 +2095,7 @@ class LatSync_McRobie():
             self.cp_vals = numpy.vstack((self.cp_vals,cp_vals))
             self.mp_vals = numpy.vstack((self.mp_vals,mp_vals))
             
-            
+ 
     def plot_results(self):
         """
         Plots results from the above analysis
