@@ -2086,9 +2086,9 @@ class LatSync_McRobie():
         """
         
         fig = plt.figure()
-        fig.set_size_inches((14,7))
+        fig.set_size_inches((14,9))
         
-        gs = gridspec.GridSpec(3, 2)
+        gs = gridspec.GridSpec(3, 2, height_ratios=[1.5, 1, 1])
         gs.update(hspace=0.7)
         
         # Prepare subplots
