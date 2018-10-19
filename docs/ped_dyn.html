@@ -3124,26 +3124,20 @@ table {
         
         <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List of damping matrices (of &#39;parent&#39; modal system) for each mode </span>
-<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        Damping matrix (of &#39;parent&#39; modal system) applicable to mode that loses </span>
+<span class="sd">        stability at Np=Np_crit.</span>
 <span class="sd">        </span>
 <span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
-<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
-<span class="sd">        </span>
-<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
-<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)     </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper  </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List of mass matrices (of &#39;parent&#39; modal system) for each mode </span>
-<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        Mass matrix (of &#39;parent&#39; modal system) applicable to mode that loses </span>
+<span class="sd">        stability at Np=Np_crit.</span>
 <span class="sd">        </span>
 <span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
-<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
-<span class="sd">        </span>
-<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
-<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)    </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper  </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
@@ -3736,8 +3730,8 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">,:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
                     
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
@@ -6763,26 +6757,20 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List of damping matrices (of &#39;parent&#39; modal system) for each mode </span>
-<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        Damping matrix (of &#39;parent&#39; modal system) applicable to mode that loses </span>
+<span class="sd">        stability at Np=Np_crit.</span>
 <span class="sd">        </span>
 <span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
-<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
-<span class="sd">        </span>
-<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
-<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)     </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper  </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List of mass matrices (of &#39;parent&#39; modal system) for each mode </span>
-<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        Mass matrix (of &#39;parent&#39; modal system) applicable to mode that loses </span>
+<span class="sd">        stability at Np=Np_crit.</span>
 <span class="sd">        </span>
 <span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
-<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
-<span class="sd">        </span>
-<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
-<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)    </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper  </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
@@ -7375,8 +7363,8 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">,:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
                     
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
@@ -7619,26 +7607,20 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    List of damping matrices (of &#39;parent&#39; modal system) for each mode </span>
-<span class="sd">    at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">    Damping matrix (of &#39;parent&#39; modal system) applicable to mode that loses </span>
+<span class="sd">    stability at Np=Np_crit.</span>
 <span class="sd">    </span>
 <span class="sd">    Will in general include off-diagonal terms due to mode coupling effect </span>
-<span class="sd">    of pedestrians, determined per method presented in McRobie&#39;s paper</span>
-<span class="sd">    </span>
-<span class="sd">    Note: each mode has its own matrix (list item), due to possible </span>
-<span class="sd">    frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)     </span>
+<span class="sd">    of pedestrians, determined per method presented in McRobie&#39;s paper  </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    List of mass matrices (of &#39;parent&#39; modal system) for each mode </span>
-<span class="sd">    at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">    Mass matrix (of &#39;parent&#39; modal system) applicable to mode that loses </span>
+<span class="sd">    stability at Np=Np_crit.</span>
 <span class="sd">    </span>
 <span class="sd">    Will in general include off-diagonal terms due to mode coupling effect </span>
-<span class="sd">    of pedestrians, determined per method presented in McRobie&#39;s paper</span>
-<span class="sd">    </span>
-<span class="sd">    Note: each mode has its own matrix (list item), due to possible </span>
-<span class="sd">    frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)    </span>
+<span class="sd">    of pedestrians, determined per method presented in McRobie&#39;s paper  </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
@@ -7731,8 +7713,8 @@ onset of pedestrian-induced lateral instability</p></div>
     <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">,:]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
                 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
@@ -8309,12 +8291,10 @@ assumed pedestrian crowd densities</p>
 
             
   
-    <div class="desc"><p>List of damping matrices (of 'parent' modal system) for each mode 
-at Np=Np_crit. List length = N_modes.</p>
+    <div class="desc"><p>Damping matrix (of 'parent' modal system) applicable to mode that loses 
+stability at Np=Np_crit.</p>
 <p>Will in general include off-diagonal terms due to mode coupling effect 
-of pedestrians, determined per method presented in McRobie's paper</p>
-<p>Note: each mode has its own matrix (list item), due to possible 
-frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)</p></div>
+of pedestrians, determined per method presented in McRobie's paper</p></div>
   <div class="source_cont">
 </div>
 
@@ -8325,12 +8305,10 @@ frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)</p></div>
 
             
   
-    <div class="desc"><p>List of mass matrices (of 'parent' modal system) for each mode 
-at Np=Np_crit. List length = N_modes.</p>
+    <div class="desc"><p>Mass matrix (of 'parent' modal system) applicable to mode that loses 
+stability at Np=Np_crit.</p>
 <p>Will in general include off-diagonal terms due to mode coupling effect 
-of pedestrians, determined per method presented in McRobie's paper</p>
-<p>Note: each mode has its own matrix (list item), due to possible 
-frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)</p></div>
+of pedestrians, determined per method presented in McRobie's paper</p></div>
   <div class="source_cont">
 </div>
 

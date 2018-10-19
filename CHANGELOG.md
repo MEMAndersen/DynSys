@@ -19,6 +19,9 @@ and this project adheres to:
 
 * Verbose output control added to `LatSync_McRobie()` class methods
 
+* `LatSync_McRobie().calc_Np_crit()`: parameters / key results at 
+  Np=Np_crit instability point extracted and held as attributes
+
 ### Fixed
 
 ### Removed
