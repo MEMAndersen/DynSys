@@ -2497,14 +2497,18 @@ class LatSync_McRobie():
         self.Np_crit = Np_crit
         
         # Rerun analysis to obtain properties at critical point
-        crit_rslts = deepcopy(self) # take copy of class
-        crit_rslts.run(Np_vals=[Np_crit],calc_Np_crit=False)
+        # 1) take copy of class to pick up same attributes as analysis run
+        crit_rslts = deepcopy(self)
+        # 2) Edit a few key properties for this purpose
+        crit_rslts.store_mtrxs = True
+        # 3) rerun to override results already held in the above object
+        crit_rslts.run(Np_vals=[Np_crit],calc_Np_crit=False,append_rslts=False)
         
-        # Determine critical mode i.e. mode with min damping (=0)
+        # Determine critical mode i.e. mode with damping =0 when Np=Np_crit
         crit_mode = numpy.argmin(crit_rslts.damping_ratios[0,:])
         self.crit_mode = crit_mode
         
-        # Extract key properties of critical mode
+        # Extract key properties of critical mode at Np=Np_crit
         self.fd_crit = crit_rslts.damped_freqs[0,crit_mode]
         self.eta_crit = crit_rslts.damping_ratios[0,crit_mode]
         self.s_crit = crit_rslts.eigenvalues[0,crit_mode]
@@ -2513,7 +2517,7 @@ class LatSync_McRobie():
         self.M_mtrx_crit = crit_rslts.M_mtrx_list[-1][crit_mode]
                     
         if verbose:
-            print("Np_crit:\t\t\t%.0f" % self.Np_crit)
+            print("Critical no. pedestrians, Np_crit:\t%.0f" % self.Np_crit)
             print("Index of critical mode:\t\t%d" % self.crit_mode)
             print("Damped nat freq, critical mode:\t%.3f Hz" % self.fd_crit)
             print("Damping ratio, critical mode:\t%.2e" % self.eta_crit)
