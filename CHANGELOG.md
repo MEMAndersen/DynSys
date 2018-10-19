@@ -8,6 +8,25 @@ and this project adheres to:
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+
+* Option added to `LatSync_McRobie.__init__()` method, to allow system matrices 
+  determined at each Np value considered to be stored for subsequent usage
+
+* Verbose output control added to `LatSync_McRobie()` class methods
+
+* `LatSync_McRobie().calc_Np_crit()`: parameters / key results at 
+  Np=Np_crit instability point extracted and held as attributes
+
+### Fixed
+
+### Removed
+
+
 ## [1.6.1] - 2018-10-18 - RIHY
 
 ### Changed

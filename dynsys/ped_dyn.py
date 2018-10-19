@@ -1713,7 +1713,9 @@ class LatSync_McRobie():
                  modalsys,
                  cp_func=None,
                  mp_func=None,
+                 store_mtrxs=False,
                  makePlots=False,
+                 verbose=True,
                  **kwargs):
         """
         Initialise analysis
@@ -1734,7 +1736,8 @@ class LatSync_McRobie():
           
         """
         
-        print("Initialising 'LatSync_McRobie' analysis...")
+        if verbose:
+            print("Initialising 'LatSync_McRobie' analysis...")
         
         self.modalsys = modalsys
         """
@@ -1742,16 +1745,24 @@ class LatSync_McRobie():
         pre-appended (e.g. TMDs)
         """
         
-        print("Defining pedestrian added damping function...")
+        if verbose: print("Defining pedestrian added damping function...")
+        
         if cp_func is None:
-            print("Built-in function cp(f) will be used")
+            if verbose: print("Default cp(f) function will be used")
             cp_func = self.init_cp_func()
+            
         elif isinstance(cp_func,float) or isinstance(cp_func,int):
-            print("cp = %.1f will be used for all f" % cp_func)
+            if verbose: print("cp = %.1f will be used for all f" % cp_func)
             cp_val = cp_func
             cp_func = scipy.interpolate.interp1d([0,2.0],[cp_val,cp_val],
                                                  bounds_error=False,
                                                  fill_value=cp_val)
+            
+        elif isfunction(cp_func):
+            if verbose: print("User-supplied cp(f) function will be used")
+            
+        else:
+            raise ValueError("Unexpected `cp_func` argument")
             
         self.cp_func = cp_func
         """
@@ -1760,22 +1771,97 @@ class LatSync_McRobie():
         i.e. cp = g(fn), cp in [Ns/m]
         """
         
-        print("Defining pedestrian added mass function...")
+        if verbose: print("Defining pedestrian added mass function...")
+        
         if mp_func is None:
-            print("Built-in function mp(f) will be used")
+            if verbose: print("Default mp(f) function will be used")
             mp_func = self.init_mp_func()
+            
         elif isinstance(mp_func,float):
-            print("mp = %.1f will be used for all f" % mp_func)
+            if verbose: print("mp = %.1f will be used for all f" % mp_func)
             mp_val = mp_func
             mp_func = scipy.interpolate.interp1d([0,2.0],[mp_val,mp_val],
                                                  bounds_error=False,
                                                  fill_value=mp_val)
+            
+        elif isfunction(mp_func):
+            if verbose: print("User-supplied mp(f) function will be used")
+            
+        else:
+            raise ValueError("Unexpected `mp_func` argument")
             
         self.mp_func = mp_func
         """
         Function to define how added mass per pedestrian varies with
         frequency. Function with single argument 'fn' expected, 
         i.e. mp = g(fn), cp in [kg]
+        """
+        
+        self.store_mtrxs = store_mtrxs
+        """
+        Boolean option, if True then system damping and stiffness matrices
+        will be stored via nested list for all Np values and modes considered
+        (this can result in a large amount of data being stored!)
+        """
+        
+        # Class variables defined later on
+        
+        self.eigenvalues = None
+        """
+        Ndarray of complex-valued eigenvalues of shape (N_Np,N_modes), where:
+            
+        * _N_Np_ is number of pedestrian cases considered
+        
+        * _N_modes_ is number of system matrix eigenmodes
+        """
+                
+        self.damping_ratios = None
+        """
+        Ndarray of effective damping ratio for each mode and pedestrian 
+        count considered.
+        
+        _Ndarray shape as per eigenvalues above._
+        """
+        
+        self.damped_freqs = None
+        """
+        Ndarray of damped natural frequencies for each mode and pedestrian 
+        count considered.
+        
+        _Ndarray shape as per eigenvalues above._
+        """
+        
+        self.eigenvectors = None
+        """
+        Ndarray of complex-valued eigenvalues of shape _(N_Np,N_modes,N_dof)_, 
+        where:
+        * _N_Np_ is number of pedestrian cases considered
+        
+        * _N_modes_ is number of system matrix eigenmodes
+        
+        * _N_dof_ is the total number of degrees of freedom / state variables 
+          for the system analysed
+        """
+        
+        self.N_pedestrians = None
+        """
+        Array listing the set of pedestrian numbers analysed
+        """        
+        
+        self.cp_vals = None
+        """
+        Ndarray of effective damping rate per pedestrian for each mode and 
+        pedestrian count considered.
+        
+        _Ndarray shape as per eigenvalues above._
+        """
+        
+        self.mp_vals = None
+        """
+        Ndarray of effective added mass per pedestrian for each mode and 
+        pedestrian count considered.
+        
+        _Ndarray shape as per eigenvalues above._
         """
         
         self.ped_effect_mtrx = None
@@ -1787,6 +1873,50 @@ class LatSync_McRobie():
         self.Np_crit = None
         """
         Critical number of pedestrians to give zero net damping
+        """
+        
+        self.crit_mode = None
+        """
+        Index of (complex) eigenmode that loses stability at Np=Np_crit 
+        """
+        
+        self.fd_crit = None
+        """
+        Damped natural frequency of mode that loses stability at Np=Np_crit
+        """
+        
+        self.eta_crit = None
+        """
+        Effective damping ratio of mode that loses stability at Np=Np_crit
+        (damping ratio = 0.00 expected)
+        """
+        
+        self.s_crit = None
+        """
+        Complex-valued pole / eigenvalue at Np=Np_crit
+        """
+        
+        self.X_crit = None
+        """
+        Complex-valued eigenvector of mode that loses stability at Np=Np_crit
+        """
+        
+        self.C_mtrx_crit = None
+        """
+        Damping matrix (of 'parent' modal system) applicable to mode that loses 
+        stability at Np=Np_crit.
+        
+        Will in general include off-diagonal terms due to mode coupling effect 
+        of pedestrians, determined per method presented in McRobie's paper  
+        """
+        
+        self.M_mtrx_crit = None
+        """
+        Mass matrix (of 'parent' modal system) applicable to mode that loses 
+        stability at Np=Np_crit.
+        
+        Will in general include off-diagonal terms due to mode coupling effect 
+        of pedestrians, determined per method presented in McRobie's paper  
         """
         
         if makePlots:
@@ -1926,15 +2056,15 @@ class LatSync_McRobie():
         else:
             Np_crit = None
         
-        self.Np_crit = Np_crit
-        
         if verbose:
             print("Analysis complete!")
         
         return Np_crit
     
     
-    def _run_analysis(self,Np_vals,append_rslts=True,**kwargs):
+    def _run_analysis(self,Np_vals,
+                      append_rslts=True,
+                      **kwargs):
         """
         Run analysis for various pedestrian numbers, as provided to function
         
@@ -1944,6 +2074,8 @@ class LatSync_McRobie():
         """
         
         modalsys = self.modalsys
+        
+        store_mtrxs = self.store_mtrxs
                 
         # Take copy of system damping matrix with no pedestrians
         C0 = deepcopy(modalsys._C_mtrx)
@@ -1951,8 +2083,6 @@ class LatSync_McRobie():
         
         # Define function to iterate with
         def calc_modal_properties(f,mode_index,Np,return_rslts=False):
-            
-            #print("Calculating: Np=%d, mode=%d, f=%.3f" % (Np,mode_index,f))
             
             # Calculate change in model damping matrix
             # due to smeared effect of N=1 pedestrian
@@ -1969,6 +2099,9 @@ class LatSync_McRobie():
             f_new = eig_props['f_d'][mode_index]
             
             f_error = f_new - f
+            
+            #print("Calculating: Np=%d, mode=%d, f=%.3f, f_error=%.3f" 
+            #      % (Np,mode_index,f,f_error))
             
             if return_rslts:
                 
@@ -1994,6 +2127,10 @@ class LatSync_McRobie():
         fd_vals = []
         X_vals = []
         
+        if store_mtrxs:
+            C_mtrx_list = []
+            M_mtrx_list = []
+        
         for _Np in Np_vals:
             
             cp_vals_inner = []
@@ -2002,6 +2139,10 @@ class LatSync_McRobie():
             eta_vals_inner = []
             fd_vals_inner = []
             X_vals_inner = []
+            
+            if store_mtrxs:
+                C_mtrx_inner_list = []
+                M_mtrx_inner_list = []
             
             for _mode_index, _fd in enumerate(fd_vals_last):
             
@@ -2019,6 +2160,8 @@ class LatSync_McRobie():
                 eig_props = rslts['eig_props']
                 cp = rslts['cp']
                 mp = rslts['mp']
+                C_mtrx = rslts['C_mtrx']
+                M_mtrx = rslts['M_mtrx']
                 
                 # Unpack results for this mode and append to inner lists
                 cp_vals_inner.append(cp)
@@ -2026,7 +2169,11 @@ class LatSync_McRobie():
                 s_vals_inner.append(eig_props['s'][_mode_index])
                 eta_vals_inner.append(eig_props['eta'][_mode_index])
                 fd_vals_inner.append(eig_props['f_d'][_mode_index])
-                X_vals_inner.append(eig_props['X'][_mode_index])
+                X_vals_inner.append(numpy.ravel(eig_props['X'][:,_mode_index]))
+                
+                if store_mtrxs:
+                    C_mtrx_inner_list.append(C_mtrx)
+                    M_mtrx_inner_list.append(M_mtrx)
                 
             # Update last frequencies
             fd_vals_last = fd_vals_inner
@@ -2038,6 +2185,10 @@ class LatSync_McRobie():
             eta_vals.append(eta_vals_inner)
             fd_vals.append(fd_vals_inner)
             X_vals.append(X_vals_inner)
+            
+            if store_mtrxs:
+                C_mtrx_list.append(C_mtrx_inner_list)
+                M_mtrx_list.append(M_mtrx_inner_list)
             
         # Convert nested lists to numpy ndarray type
         cp_vals = numpy.array(cp_vals)
@@ -2066,6 +2217,10 @@ class LatSync_McRobie():
             self.cp_vals = cp_vals
             self.mp_vals = mp_vals
             
+            if store_mtrxs:
+                self.C_mtrx_list = C_mtrx_list
+                self.M_mtrx_list = M_mtrx_list
+            
         if append_rslts:
             
             self.eigenvalues = numpy.vstack((self.eigenvalues,s_vals))
@@ -2076,7 +2231,11 @@ class LatSync_McRobie():
             self.cp_vals = numpy.vstack((self.cp_vals,cp_vals))
             self.mp_vals = numpy.vstack((self.mp_vals,mp_vals))
             
+            if store_mtrxs:
+                self.C_mtrx_list.append(C_mtrx_list)
+                self.M_mtrx_list.append(M_mtrx_list)
             
+ 
     def plot_results(self):
         """
         Plots results from the above analysis
@@ -2136,6 +2295,9 @@ class LatSync_McRobie():
         ax.set_ylabel("Damped natural frequency (Hz)")
         ax.set_title("Frequency vs Effective Damping\n")
         
+        if self.eta_crit is not None:
+            ax.plot(self.eta_crit,self.fd_crit,'r.')
+        
         return fig
         
     
@@ -2164,6 +2326,10 @@ class LatSync_McRobie():
         ax.set_ylabel("Imag(s)")
         ax.set_title("Eigenvalues of system state matrix")
         
+        s_crit = self.s_crit
+        if s_crit is not None:
+            ax.plot(real(s_crit),imag(s_crit),'r.')
+        
         return fig
         
     
@@ -2188,6 +2354,7 @@ class LatSync_McRobie():
         Np_crit = self.Np_crit
         if Np_crit is not None:
             ax.axvline(x=Np_crit,color='r',alpha=0.3)
+            ax.plot(Np_crit,self.eta_crit,'r.')
             
             
     def plot_cp_func(self,ax=None,f_vals=None):
@@ -2327,9 +2494,33 @@ class LatSync_McRobie():
                                       
         # Use root finding function to obtain Np such that damping = 0.0
         Np_crit = scipy.optimize.bisect(f=Np_func,a=Np_vals[0],b=Np_vals[-1])
-            
+        self.Np_crit = Np_crit
+        
+        # Rerun analysis to obtain properties at critical point
+        # 1) take copy of class to pick up same attributes as analysis run
+        crit_rslts = deepcopy(self)
+        # 2) Edit a few key properties for this purpose
+        crit_rslts.store_mtrxs = True
+        # 3) rerun to override results already held in the above object
+        crit_rslts.run(Np_vals=[Np_crit],calc_Np_crit=False,append_rslts=False)
+        
+        # Determine critical mode i.e. mode with damping =0 when Np=Np_crit
+        crit_mode = numpy.argmin(crit_rslts.damping_ratios[0,:])
+        self.crit_mode = crit_mode
+        
+        # Extract key properties of critical mode at Np=Np_crit
+        self.fd_crit = crit_rslts.damped_freqs[0,crit_mode]
+        self.eta_crit = crit_rslts.damping_ratios[0,crit_mode]
+        self.s_crit = crit_rslts.eigenvalues[0,crit_mode]
+        self.X_crit = crit_rslts.eigenvectors[0,crit_mode,:]
+        self.C_mtrx_crit = crit_rslts.C_mtrx_list[-1][crit_mode]
+        self.M_mtrx_crit = crit_rslts.M_mtrx_list[-1][crit_mode]
+                    
         if verbose:
-            print("Np_crit: %.0f" % Np_crit)
+            print("Critical no. pedestrians, Np_crit:\t%.0f" % self.Np_crit)
+            print("Index of critical mode:\t\t%d" % self.crit_mode)
+            print("Damped nat freq, critical mode:\t%.3f Hz" % self.fd_crit)
+            print("Damping ratio, critical mode:\t%.2e" % self.eta_crit)
         
         return Np_crit
 
