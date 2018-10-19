@@ -172,7 +172,7 @@ class DynSys:
         if isSparse:
             print("Note: sparse matrix functionality as provided by Scipy "
                   "will be used for system matrices")
-            
+                       
         
     def _CheckSystemMatrices(self,
                              nDOF=None,
@@ -1104,14 +1104,10 @@ class DynSys:
         eig_rslts_obj = solve_eig(M=M,K=K,C=C,J=J,
                                   normalise=normalise,
                                   verbose=verbose)
-                    
-        # Write results to object
-        self.s = eig_rslts_obj.s
-        self.X = eig_rslts_obj.X
-        self.Y = eig_rslts_obj.Y
-        self.f_n = eig_rslts_obj.f_n
-        self.f_d = eig_rslts_obj.f_d
-        self.eta = eig_rslts_obj.eta
+        
+        # Create two-way link between objects
+        eig_rslts_obj.dynsys = self
+        self.eig_rslts = eig_rslts_obj
         
         if makePlots:
             eig_rslts_obj.plot(axarr)

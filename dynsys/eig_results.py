@@ -77,9 +77,6 @@ class Eig_Results():
     @property
     @wraps(Y)
     def left_eigenvectors(self):
-        """
-        Matrix of left-eigenvectors
-        """
         return self.X
     
     # -----------
@@ -89,6 +86,20 @@ class Eig_Results():
         Integer number of modes
         """
         return self._nModes
+    
+    # -----------
+    @property
+    def dynsys_obj(self):
+        """
+        Instance of `DynSys()` class (or derived classes thereof) to which 
+        eigenproperties held by this object relate
+        """
+        return self._dynsys_obj
+    
+    @property
+    @wraps(dynsys_obj)
+    def dynsys(self):
+        return self.dynsys_obj
     
     """
     Attribute setter methods
@@ -127,6 +138,14 @@ class Eig_Results():
         value = self._convert2matrix(value,'Y')    
         self._check_shape(value,'Y')            
         self._Y = value
+        
+    @dynsys_obj.setter
+    def dynsys_obj(self,obj):
+        self._dynsys_obj = obj
+        
+    @dynsys.setter
+    def dynsys(self,obj):  # alternative setter method
+        self.dynsys_obj = obj
     
     """
     Functions to determine engineering eigenproperties 
