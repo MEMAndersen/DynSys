@@ -5,6 +5,7 @@ Classes and methods used to store, present and manipulate eigenproperties
 
 import numpy as npy
 import matplotlib.pyplot as plt
+from functools import wraps
 
 
 class Eig_Results():
@@ -15,10 +16,10 @@ class Eig_Results():
         self.X = X
         self.Y = Y
         
-        self.sort_eigenproperties()
+        self._sort_eigenproperties()
         
         if normalise:
-            self.normalise_eigenvectors()
+            self._normalise_eigenvectors()
     
 
     def __repr__(self):
@@ -33,8 +34,8 @@ class Eig_Results():
         val = getattr(self, key)
         return val
     
-    def keys(self):
-        return list(self.__dict__.keys())
+    #def keys(self):
+    #    return list(self.__dict__.keys())
     
     """
     Attribute getter methods
@@ -42,27 +43,51 @@ class Eig_Results():
     
     @property
     def s(self):
-        # Array of eigenvalues
+        """
+        Array of eigenvalues
+        """
         return self._s
     
     @property
+    @wraps(s)
     def eigenvalues(self):
         return self.s
     
-    # ----
-    
+    # -----------
     @property
     def X(self):
-        # Matrix of right eigenvectors
+        """
+        Matrix of right eigenvectors
+        """
         return self._X
     
     @property
+    @wraps(X)
+    def right_eigenvectors(self):
+        return self.X
+    
+    # -----------
+    @property
     def Y(self):
-        # Matrix of left-eigenvectors
+        """
+        Matrix of left-eigenvectors
+        """
         return self._Y
     
     @property
+    @wraps(Y)
+    def left_eigenvectors(self):
+        """
+        Matrix of left-eigenvectors
+        """
+        return self.X
+    
+    # -----------
+    @property
     def nModes(self):
+        """
+        Integer number of modes
+        """
         return self._nModes
     
     """
@@ -113,41 +138,53 @@ class Eig_Results():
     
     @property
     def f_d(self):
-        # Damped natural frequency
+        """
+        Damped natural frequency
+        """
         return npy.imag(self.s) / (2*npy.pi)
     
     @property
+    @wraps(f_d)
     def fd(self):
         return self.f_d
     
     # ----------
     @property
     def eta(self):
-        # Damping ratio
+        """
+        Damping ratio
+        """
         s = self.s
         return - npy.real(s) / npy.absolute(s)
     
     @property
+    @wraps(eta)
     def damping_ratio(self):
         return self.eta
     
     # ----------
     @property
     def f_n_abs(self):
-        # Undamped natural frequency as positive real number
+        """
+        Undamped natural frequency as positive real number
+        """
         return npy.absolute(self.s) / (2*npy.pi)
     
     @property
+    @wraps(f_n_abs)
     def fn_abs(self):
         return self.f_n_abs
     
     # ----------
     @property
     def f_n(self):
-        # Undamped natural frequency as signed real number
+        """
+        Undamped natural frequency as signed real number
+        """
         return npy.sign(self.f_d) * self.f_n_abs
     
     @property
+    @wraps(f_n)
     def fn(self):
         return self.f_n
     
@@ -183,17 +220,12 @@ class Eig_Results():
     Other methods
     """
     
-    def NormaliseEigenvectors(self):
+    def _normalise_eigenvectors(self):
         
         X, Y = self.X, self.Y
-        self.X, self.Y = NormaliseEigenvectors(X,Y)
+        self.X, self.Y = normalise_eigenvectors(X,Y)
         
-        
-    def normalise_eigenvectors(self):
-        self.NormaliseEigenvectors()
-        
-        
-    def sort_eigenproperties(self):
+    def _sort_eigenproperties(self):
         # Sort eigenvalues into ascending order of f_n_abs
         
         i = npy.argsort(self.f_n_abs)
@@ -302,9 +334,11 @@ class Eig_Results():
     
 # -------------- FUNCTIONS --------------
     
-def NormaliseEigenvectors(X,Y):
+def normalise_eigenvectors(X,Y):
     """
-    Normalise eigenvectors such that YT.X=I
+    Normalise eigenvectors such that:
+    
+    $$ Y^{T}.X = I $$
     
     ***
     Required:
@@ -322,7 +356,8 @@ def NormaliseEigenvectors(X,Y):
                     
     return X, Y
         
-        
+
+
     
                    
         
@@ -344,11 +379,18 @@ if __name__ == "__main__":
     s = rslts['eigenvalues']    # uses alt. getter method and __getitem__
     fn = rslts.fn               # conventional attribute access
     fd = rslts['fd']            # note tolerant to mis-spelling
+    X = rslts.right_eigenvectors
     
     # Test setter function and dict __setitem__ behaviour
     rslts['s']=2.0
     print(rslts)
     
+    # Test @wraps passes docstrings correctly
+    help(Eig_Results.left_eigenvectors)
+    help(Eig_Results.fn)
+    help(Eig_Results.s)
+    
     rslts['fd']=2.0 # should give AttributeError: can't set attribute
+    
 
 

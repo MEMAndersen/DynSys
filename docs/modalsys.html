@@ -1,4 +1,4 @@
-Version: 1.6.2
+Version: 1.6.2_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1032,9 +1032,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1095,6 +1092,7 @@ table {
     <li class="mono"><a href="#modalsys.ModalSys.PrintSystemMatrices">PrintSystemMatrices</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.ReadModalParams">ReadModalParams</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
+    <li class="mono"><a href="#modalsys.ModalSys.calc_eigenproperties">calc_eigenproperties</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.freqVals">freqVals</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.hasConstraints">hasConstraints</a></li>
   </ul>
@@ -3524,237 +3522,17 @@ Infinity Footbridge using Complex Modes.pdf">PDF</a></p>
             
   <div class="item">
     <div class="name def" id="modalsys.ModalSys.CalcEigenproperties">
-    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, normaliseEigenvectors=True, verbose=False, makePlots=False, axarr=None)</p>
+    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, *args, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>General method for determining damped eigenvectors and eigenvalues 
-of system</p>
-<hr />
-<p>Note in general eigenproperties will be complex due to non-proportional
-damping.</p>
-<p>Eigendecomposition of the system state matrix 'A' is carried out to 
-obtain eigenvalues and displacement-velocity eigenvectors.</p>
-<p>Engineers who are not familiar with the background theory should read
-the following excellent paper:</p>
-<p><em>An Engineering Interpretation of the Complex 
-Eigensolution of Linear Dynamic Systems</em></p>
-<p>by Christopher Hoen. </p>
-<p><a href="../references/An Engineering Interpretation of the Complex 
-Eigensolution of Linear Dynamic Systems.pdf">PDF</a></p>
-<hr />
-<p><strong>Required:</strong></p>
-<p>No arguments; the mass, stiffness, damping and (if defined) constraint 
-matrices held as attributes of the system will be used.</p>
-<hr />
-<p><strong>Optional:</strong></p>
-<ul>
-<li>
-<p><code>normaliseEigenvectors</code>, <em>boolean</em>, dictates whether eigenvectors 
-  should be normalised, such that Y.T @ X = I</p>
-</li>
-<li>
-<p><code>makePlots</code>, <em>boolean</em>, if True plots will be produced to illustrate 
-  the eigensolution obtained</p>
-</li>
-<li>
-<p><code>axarr</code>, list of <em>axes</em> onto which plots should be made. If None 
-  plots will be made onto new figures</p>
-</li>
-<li>
-<p><code>verbose</code>, <em>boolean</em>, if True intermediate output &amp; text will be 
-  printed to the console</p>
-</li>
-</ul>
-<hr />
-<p><strong>Returns:</strong></p>
-<p><em>Dict</em> containing the following entries:</p>
-<ul>
-<li>
-<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
-</li>
-<li>
-<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
-</li>
-<li>
-<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
-</li>
-</ul>
-<p>The above entries will in general be complex-valued and represent the 
-eigenproperties of 'A'.</p>
-<p>The following entries are real-valued and 
-express the complex eigenvalues 's' in terms which should be more 
-familiar to structural/mechanical engineers:</p>
-<ul>
-<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
-</ul>
-<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
-positive and negative frequencies for a system with N degrees of 
-freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
-<ul>
-<li>
-<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
-</li>
-<li>
-<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
-  above, in rad/s</p>
-</li>
-<li>
-<p>'eta', damping ratio (1.0=critical)</p>
-</li>
-</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.CalcEigenproperties', this);">Show source &equiv;</a></p>
   <div id="source-modalsys.ModalSys.CalcEigenproperties" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                        <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                        <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                        <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
-<span class="sd">    of system</span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
-<span class="sd">    damping.</span>
-<span class="sd">    </span>
-<span class="sd">    Eigendecomposition of the system state matrix &#39;A&#39; is carried out to </span>
-<span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
-<span class="sd">    </span>
-<span class="sd">    Engineers who are not familiar with the background theory should read</span>
-<span class="sd">    the following excellent paper:</span>
-<span class="sd">        </span>
-<span class="sd">    *An Engineering Interpretation of the Complex </span>
-<span class="sd">    Eigensolution of Linear Dynamic Systems*</span>
-<span class="sd">    </span>
-<span class="sd">    by Christopher Hoen. </span>
-<span class="sd">    </span>
-<span class="sd">    [PDF](../references/An Engineering Interpretation of the Complex </span>
-<span class="sd">    Eigensolution of Linear Dynamic Systems.pdf)</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Required:**</span>
-<span class="sd">        </span>
-<span class="sd">    No arguments; the mass, stiffness, damping and (if defined) constraint </span>
-<span class="sd">    matrices held as attributes of the system will be used.</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Optional:**</span>
-<span class="sd">        </span>
-<span class="sd">    * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors </span>
-<span class="sd">      should be normalised, such that Y.T @ X = I</span>
-<span class="sd">      </span>
-<span class="sd">    * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
-<span class="sd">      the eigensolution obtained</span>
-<span class="sd">      </span>
-<span class="sd">    * `axarr`, list of _axes_ onto which plots should be made. If None </span>
-<span class="sd">      plots will be made onto new figures</span>
-<span class="sd">      </span>
-<span class="sd">    * `verbose`, _boolean_, if True intermediate output &amp; text will be </span>
-<span class="sd">      printed to the console</span>
-<span class="sd">     </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Returns:**</span>
-<span class="sd">         </span>
-<span class="sd">    _Dict_ containing the following entries:</span>
-<span class="sd">        </span>
-<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    The above entries will in general be complex-valued and represent the </span>
-<span class="sd">    eigenproperties of &#39;A&#39;.</span>
-<span class="sd">    </span>
-<span class="sd">    The following entries are real-valued and </span>
-<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
-<span class="sd">    familiar to structural/mechanical engineers:</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
-<span class="sd">      </span>
-<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
-<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
-<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
-<span class="sd">      above, in rad/s</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
-<span class="sd">            </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Get system matrices</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
-    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
-    
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="bp">None</span>
-        
-    <span class="c1"># Compute eigenproperties of A_c</span>
-    <span class="c1"># s is vector of singular values</span>
-    <span class="c1"># columns of X are right eigenvectors of A</span>
-    <span class="c1"># columns of Y are left eigenvectors of A  </span>
-    <span class="n">s</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-        
-    <span class="c1"># Normalise eigenvectors such that Y.T.X=I</span>
-    <span class="k">if</span> <span class="n">normaliseEigenvectors</span><span class="p">:</span>
-        <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
-    
-    <span class="c1"># Extract modal properties of system from eigenvalues</span>
-    <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-    <span class="c1"># Sort eigenvalues into ascending order of f_n_abs</span>
-    <span class="n">i1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">f_n</span><span class="o">=</span><span class="n">f_n</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">f_d</span><span class="o">=</span><span class="n">f_d</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    
-    <span class="c1"># Write results to object</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">f_n</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">f_d</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
-    
-    <span class="n">ax_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">axarr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]</span>
-            
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-    
-    <span class="c1"># Return complex eigensolution as dict</span>
-    <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">s</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">X</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">Y</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_n</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_n</span><span class="p">)</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">eta</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_d</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span>
-    
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_list&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">ax_list</span>
-    
-    <span class="k">return</span> <span class="n">d</span> 
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -5694,6 +5472,212 @@ C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</stro
     <span class="n">outputNames</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     
     <span class="k">return</span> <span class="n">C_mtrx</span><span class="p">,</span><span class="n">outputNames</span> 
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="modalsys.ModalSys.calc_eigenproperties">
+    <p>def <span class="ident">calc_eigenproperties</span>(</p><p>self, normalise=True, verbose=False, makePlots=False, axarr=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>General method for determining damped eigenvectors and eigenvalues 
+of system</p>
+<hr />
+<p>Note in general eigenproperties will be complex due to non-proportional
+damping.</p>
+<p>Eigendecomposition of the system state matrix 'A' is carried out to 
+obtain eigenvalues and displacement-velocity eigenvectors.</p>
+<p>Engineers who are not familiar with the background theory should read
+the following excellent paper:</p>
+<p><em>An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems</em></p>
+<p>by Christopher Hoen. </p>
+<p><a href="../references/An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems.pdf">PDF</a></p>
+<hr />
+<p><strong>Required:</strong></p>
+<p>No arguments; the mass, stiffness, damping and (if defined) constraint 
+matrices held as attributes of the system will be used.</p>
+<hr />
+<p><strong>Optional:</strong></p>
+<ul>
+<li>
+<p><code>normalise</code>, <em>boolean</em>, dictates whether eigenvectors 
+  should be normalised, such that Y.T @ X = I</p>
+</li>
+<li>
+<p><code>makePlots</code>, <em>boolean</em>, if True plots will be produced to illustrate 
+  the eigensolution obtained</p>
+</li>
+<li>
+<p><code>axarr</code>, list of <em>axes</em> onto which plots should be made. If None 
+  plots will be made onto new figures</p>
+</li>
+<li>
+<p><code>verbose</code>, <em>boolean</em>, if True intermediate output &amp; text will be 
+  printed to the console</p>
+</li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<p><em>Dict</em> containing the following entries:</p>
+<ul>
+<li>
+<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
+</li>
+<li>
+<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
+</li>
+<li>
+<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
+</li>
+</ul>
+<p>The above entries will in general be complex-valued and represent the 
+eigenproperties of 'A'.</p>
+<p>The following entries are real-valued and 
+express the complex eigenvalues 's' in terms which should be more 
+familiar to structural/mechanical engineers:</p>
+<ul>
+<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
+</ul>
+<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
+positive and negative frequencies for a system with N degrees of 
+freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
+<ul>
+<li>
+<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
+</li>
+<li>
+<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
+  above, in rad/s</p>
+</li>
+<li>
+<p>'eta', damping ratio (1.0=critical)</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.calc_eigenproperties', this);">Show source &equiv;</a></p>
+  <div id="source-modalsys.ModalSys.calc_eigenproperties" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_eigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">normalise</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                         <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
+<span class="sd">    of system</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
+<span class="sd">    damping.</span>
+<span class="sd">    </span>
+<span class="sd">    Eigendecomposition of the system state matrix &#39;A&#39; is carried out to </span>
+<span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
+<span class="sd">    </span>
+<span class="sd">    Engineers who are not familiar with the background theory should read</span>
+<span class="sd">    the following excellent paper:</span>
+<span class="sd">        </span>
+<span class="sd">    *An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems*</span>
+<span class="sd">    </span>
+<span class="sd">    by Christopher Hoen. </span>
+<span class="sd">    </span>
+<span class="sd">    [PDF](../references/An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems.pdf)</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">    No arguments; the mass, stiffness, damping and (if defined) constraint </span>
+<span class="sd">    matrices held as attributes of the system will be used.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Optional:**</span>
+<span class="sd">        </span>
+<span class="sd">    * `normalise`, _boolean_, dictates whether eigenvectors </span>
+<span class="sd">      should be normalised, such that Y.T @ X = I</span>
+<span class="sd">      </span>
+<span class="sd">    * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
+<span class="sd">      the eigensolution obtained</span>
+<span class="sd">      </span>
+<span class="sd">    * `axarr`, list of _axes_ onto which plots should be made. If None </span>
+<span class="sd">      plots will be made onto new figures</span>
+<span class="sd">      </span>
+<span class="sd">    * `verbose`, _boolean_, if True intermediate output &amp; text will be </span>
+<span class="sd">      printed to the console</span>
+<span class="sd">     </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">         </span>
+<span class="sd">    _Dict_ containing the following entries:</span>
+<span class="sd">        </span>
+<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    The above entries will in general be complex-valued and represent the </span>
+<span class="sd">    eigenproperties of &#39;A&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    The following entries are real-valued and </span>
+<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
+<span class="sd">    familiar to structural/mechanical engineers:</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
+<span class="sd">      </span>
+<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
+<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
+<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
+<span class="sd">      above, in rad/s</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get system matrices</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="c1"># Compute eigenproperties of A_c</span>
+    <span class="c1"># s is vector of singular values</span>
+    <span class="c1"># columns of X are right eigenvectors of A</span>
+    <span class="c1"># columns of Y are left eigenvectors of A  </span>
+    <span class="n">eig_rslts_obj</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                              <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">,</span>
+                              <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                
+    <span class="c1"># Write results to object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">s</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">X</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">Y</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_n</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_d</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">eta</span>
+    
+    <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
+        <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">eig_rslts_obj</span> 
 </pre></div>
 
   </div>

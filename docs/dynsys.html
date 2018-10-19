@@ -1,4 +1,4 @@
-Version: 1.6.2
+Version: 1.6.2_dev
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1033,9 +1033,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1057,9 +1054,7 @@ table {
     <li class="set"><h3><a href="#header-functions">Functions</a></h3>
       
   <ul>
-    <li class="mono"><a href="#dynsys.NormaliseEigenvectors">NormaliseEigenvectors</a></li>
     <li class="mono"><a href="#dynsys.PlotFrequencyResponse">PlotFrequencyResponse</a></li>
-    <li class="mono"><a href="#dynsys.RealEigenvalueProperties">RealEigenvalueProperties</a></li>
     <li class="mono"><a href="#dynsys.SDOF_dampingRatio">SDOF_dampingRatio</a></li>
     <li class="mono"><a href="#dynsys.SDOF_dashpot">SDOF_dashpot</a></li>
     <li class="mono"><a href="#dynsys.SDOF_frequency">SDOF_frequency</a></li>
@@ -1103,6 +1098,7 @@ table {
     <li class="mono"><a href="#dynsys.DynSys.PlotSystem_update_plot">PlotSystem_update_plot</a></li>
     <li class="mono"><a href="#dynsys.DynSys.PrintSystemMatrices">PrintSystemMatrices</a></li>
     <li class="mono"><a href="#dynsys.DynSys.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
+    <li class="mono"><a href="#dynsys.DynSys.calc_eigenproperties">calc_eigenproperties</a></li>
     <li class="mono"><a href="#dynsys.DynSys.freqVals">freqVals</a></li>
     <li class="mono"><a href="#dynsys.DynSys.hasConstraints">hasConstraints</a></li>
   </ul>
@@ -1152,7 +1148,8 @@ table {
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">block_diag</span>
 <span class="c1">#from scipy.sparse import bmat</span>
 
-<span class="c1"># Other imports</span>
+<span class="c1"># DynSys module imports</span>
+<span class="kn">from</span> <span class="nn">eig_results</span> <span class="kn">import</span> <span class="n">Eig_Results</span>
 
 
 <span class="k">class</span> <span class="nc">DynSys</span><span class="p">:</span>
@@ -2130,11 +2127,15 @@ table {
         <span class="k">return</span> <span class="n">d</span>
     
         
-    <span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                            <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                            <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                            <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                            <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    
+    <span class="k">def</span> <span class="nf">calc_eigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                             <span class="n">normalise</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                             <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                             <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                             <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        General method for determining damped eigenvectors and eigenvalues </span>
 <span class="sd">        of system</span>
@@ -2166,7 +2167,7 @@ table {
 <span class="sd">        ***</span>
 <span class="sd">        **Optional:**</span>
 <span class="sd">            </span>
-<span class="sd">        * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors </span>
+<span class="sd">        * `normalise`, _boolean_, dictates whether eigenvectors </span>
 <span class="sd">          should be normalised, such that Y.T @ X = I</span>
 <span class="sd">          </span>
 <span class="sd">        * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
@@ -2226,150 +2227,23 @@ table {
         <span class="c1"># s is vector of singular values</span>
         <span class="c1"># columns of X are right eigenvectors of A</span>
         <span class="c1"># columns of Y are left eigenvectors of A  </span>
-        <span class="n">s</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-            
-        <span class="c1"># Normalise eigenvectors such that Y.T.X=I</span>
-        <span class="k">if</span> <span class="n">normaliseEigenvectors</span><span class="p">:</span>
-            <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
-        
-        <span class="c1"># Extract modal properties of system from eigenvalues</span>
-        <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-
-        <span class="c1"># Sort eigenvalues into ascending order of f_n_abs</span>
-        <span class="n">i1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">f_n</span><span class="o">=</span><span class="n">f_n</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">f_d</span><span class="o">=</span><span class="n">f_d</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        
+        <span class="n">eig_rslts_obj</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                  <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">,</span>
+                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                    
         <span class="c1"># Write results to object</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">f_n</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">f_d</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
-        
-        <span class="n">ax_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">Y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">eta</span>
         
         <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">axarr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]</span>
-                
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-        
-        <span class="c1"># Return complex eigensolution as dict</span>
-        <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">s</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">X</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">Y</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_n</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_n</span><span class="p">)</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">eta</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_d</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span>
-        
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_list&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">ax_list</span>
-        
-        <span class="k">return</span> <span class="n">d</span> 
+            <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
+                    
+        <span class="k">return</span> <span class="n">eig_rslts_obj</span> 
     
-    
-     
-    
-    
-    <span class="k">def</span> <span class="nf">_EigenvaluePlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                        <span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                        <span class="n">s</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plots eigenvalues (assumed to be complex) on the complex plane</span>
-<span class="sd">        ***</span>
-<span class="sd">        </span>
-<span class="sd">        Allowable values for `plotType`:</span>
-<span class="sd">            </span>
-<span class="sd">        * `1`: Eigenvalues plotted on complex plane</span>
-<span class="sd">        </span>
-<span class="sd">        * `2`: |f_n| values plotted against index</span>
-<span class="sd">        </span>
-<span class="sd">        * `4`: Undamped natural frequencies vs damping ratio</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span>
-            
-        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c1"># Produce new plot</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
-            
-        <span class="n">f_n_abs</span><span class="p">,</span><span class="n">f_n</span><span class="p">,</span><span class="n">f_d</span><span class="p">,</span><span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-            
-        <span class="k">if</span> <span class="n">plotType</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="n">npy</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="s1">&#39;.b&#39;</span><span class="p">)</span>
-            <span class="c1">#ax.axis(&#39;equal&#39;)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues plotted on complex plane&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Real component&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag component&quot;</span><span class="p">)</span>
-            
-        <span class="k">elif</span> <span class="n">plotType</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)),</span><span class="n">f_n_abs</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Mode index&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Undamped natural frequency (Hz)&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Natural frequencies vs mode index&quot;</span><span class="p">)</span>
-            
-        <span class="k">elif</span> <span class="n">plotType</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-            
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f_n</span><span class="p">,</span><span class="n">eta</span><span class="p">,</span><span class="s1">&#39;.b&#39;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Pole frequency vs damping ratio plot&quot;</span><span class="p">)</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: unexpected plotType requested!&quot;</span><span class="p">)</span>
-            
-        <span class="k">return</span> <span class="n">ax</span>
-            
-    
-    <span class="k">def</span> <span class="nf">_OrthogonalityPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">X</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">Y</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Pixel plot of Y.T*X</span>
-<span class="sd">        ***</span>
-<span class="sd">        </span>
-<span class="sd">        This can be used to check orthogonality of X and Y column vectors</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="k">if</span> <span class="n">X</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
-            
-        <span class="k">if</span> <span class="n">Y</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span>
-            
-        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c1"># Produce new plot</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
-            
-        <span class="c1"># Produce pixel plot</span>
-        <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">X</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greys&#39;</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Y.T * X product&quot;</span><span class="p">)</span>
-        
-        <span class="k">return</span> <span class="n">ax</span>
-        
     
     <span class="k">def</span> <span class="nf">CheckDOF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">DOF</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2966,6 +2840,7 @@ table {
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">omega</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
 
+
 <span class="k">def</span> <span class="nf">angularFreq</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the angular frequency (rad/s) equivilent to frequency `f` (Hz)</span>
@@ -2973,6 +2848,7 @@ table {
 <span class="sd">    $$ \omega = 2\pi f $$</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">f</span>
+
         
 <span class="k">def</span> <span class="nf">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -3326,51 +3202,9 @@ table {
         <span class="n">X</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">X</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Y</span>
         
-    <span class="c1"># Normalise eigenvectors such that Y.T @ X = I</span>
-    <span class="k">if</span> <span class="n">normalise</span><span class="p">:</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span> <span class="err">@</span> <span class="n">X</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">/</span> <span class="n">d</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">/</span> <span class="n">d</span>
-        
-    <span class="c1"># Return eigenvalues (poles)</span>
-    <span class="c1"># and left and right eigenvector matrices (modeshapes)</span>
-    <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">X</span>
-
-
-<span class="k">def</span> <span class="nf">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Recovers real-valued properties from complex eigenvalues given</span>
-<span class="sd">    by array `s`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="n">f_d</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>             <span class="c1"># damped natural frequency</span>
-    <span class="n">eta</span> <span class="o">=</span> <span class="o">-</span> <span class="n">npy</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">npy</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>      <span class="c1"># damping ratio</span>
-    
-    <span class="n">f_n_abs</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>     <span class="c1"># undamped natural frequency</span>
-    <span class="n">f_n</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span> <span class="o">*</span> <span class="n">f_n_abs</span>              <span class="c1"># recovers sign of frequency</span>
-    
-    <span class="k">return</span> <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span>
-
-
-<span class="k">def</span> <span class="nf">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Normalise eigenvectors such that YT.X=I</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Required:</span>
-<span class="sd">    </span>
-<span class="sd">    * `X`, Numpy matrix, the columns of which are right-eigenvectors</span>
-<span class="sd">    * `Y`, Numpy matrix, the columns of which are left-eigenvectors</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-        
-    <span class="n">d</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">X</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
-    
-    <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">/</span> <span class="n">d</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">/</span> <span class="n">d</span>
-                    
-    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span>
+    <span class="c1"># Return instance of Eig_Results class to act as container for results</span>
+    <span class="n">rslts_obj</span> <span class="o">=</span> <span class="n">Eig_Results</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span><span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">)</span>    
+    <span class="k">return</span> <span class="n">rslts_obj</span>
 
 
 <span class="k">def</span> <span class="nf">PlotFrequencyResponse</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">G_f</span><span class="p">,</span>
@@ -3565,51 +3399,6 @@ table {
     <h2 class="section-title" id="header-functions">Functions</h2>
       
   <div class="item">
-    <div class="name def" id="dynsys.NormaliseEigenvectors">
-    <p>def <span class="ident">NormaliseEigenvectors</span>(</p><p>X, Y)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Normalise eigenvectors such that YT.X=I</p>
-<hr />
-<p>Required:</p>
-<ul>
-<li><code>X</code>, Numpy matrix, the columns of which are right-eigenvectors</li>
-<li><code>Y</code>, Numpy matrix, the columns of which are left-eigenvectors</li>
-</ul></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.NormaliseEigenvectors', this);">Show source &equiv;</a></p>
-  <div id="source-dynsys.NormaliseEigenvectors" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Normalise eigenvectors such that YT.X=I</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Required:</span>
-<span class="sd">    </span>
-<span class="sd">    * `X`, Numpy matrix, the columns of which are right-eigenvectors</span>
-<span class="sd">    * `Y`, Numpy matrix, the columns of which are left-eigenvectors</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-        
-    <span class="n">d</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">X</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
-    
-    <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">/</span> <span class="n">d</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">/</span> <span class="n">d</span>
-                    
-    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-      
-  <div class="item">
     <div class="name def" id="dynsys.PlotFrequencyResponse">
     <p>def <span class="ident">PlotFrequencyResponse</span>(</p><p>f, G_f, positive_f_only=True, label_str=None, plotMagnitude=True, ax_magnitude=None, plotPhase=True, ax_phase=None, f_d=None)</p>
     </div>
@@ -3791,40 +3580,6 @@ produced.</p>
     <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_magnitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax_magnitude</span>
     <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_phase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax_phase</span>
     <span class="k">return</span> <span class="n">d</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-      
-  <div class="item">
-    <div class="name def" id="dynsys.RealEigenvalueProperties">
-    <p>def <span class="ident">RealEigenvalueProperties</span>(</p><p>s)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Recovers real-valued properties from complex eigenvalues given
-by array <code>s</code></p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.RealEigenvalueProperties', this);">Show source &equiv;</a></p>
-  <div id="source-dynsys.RealEigenvalueProperties" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Recovers real-valued properties from complex eigenvalues given</span>
-<span class="sd">    by array `s`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="n">f_d</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>             <span class="c1"># damped natural frequency</span>
-    <span class="n">eta</span> <span class="o">=</span> <span class="o">-</span> <span class="n">npy</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">npy</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>      <span class="c1"># damping ratio</span>
-    
-    <span class="n">f_n_abs</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>     <span class="c1"># undamped natural frequency</span>
-    <span class="n">f_n</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span> <span class="o">*</span> <span class="n">f_n_abs</span>              <span class="c1"># recovers sign of frequency</span>
-    
-    <span class="k">return</span> <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span>
 </pre></div>
 
   </div>
@@ -4505,15 +4260,9 @@ eigenproperties of <strong>A</strong>.</p>
         <span class="n">X</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">X</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Y</span>
         
-    <span class="c1"># Normalise eigenvectors such that Y.T @ X = I</span>
-    <span class="k">if</span> <span class="n">normalise</span><span class="p">:</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span> <span class="err">@</span> <span class="n">X</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">/</span> <span class="n">d</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">/</span> <span class="n">d</span>
-        
-    <span class="c1"># Return eigenvalues (poles)</span>
-    <span class="c1"># and left and right eigenvector matrices (modeshapes)</span>
-    <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">X</span>
+    <span class="c1"># Return instance of Eig_Results class to act as container for results</span>
+    <span class="n">rslts_obj</span> <span class="o">=</span> <span class="n">Eig_Results</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span><span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="o">=</span><span class="n">Y</span><span class="p">,</span><span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">)</span>    
+    <span class="k">return</span> <span class="n">rslts_obj</span>
 </pre></div>
 
   </div>
@@ -5557,11 +5306,15 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="k">return</span> <span class="n">d</span>
     
         
-    <span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                            <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                            <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                            <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                            <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    
+    <span class="k">def</span> <span class="nf">calc_eigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                             <span class="n">normalise</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                             <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                             <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                             <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        General method for determining damped eigenvectors and eigenvalues </span>
 <span class="sd">        of system</span>
@@ -5593,7 +5346,7 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">        ***</span>
 <span class="sd">        **Optional:**</span>
 <span class="sd">            </span>
-<span class="sd">        * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors </span>
+<span class="sd">        * `normalise`, _boolean_, dictates whether eigenvectors </span>
 <span class="sd">          should be normalised, such that Y.T @ X = I</span>
 <span class="sd">          </span>
 <span class="sd">        * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
@@ -5653,150 +5406,23 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="c1"># s is vector of singular values</span>
         <span class="c1"># columns of X are right eigenvectors of A</span>
         <span class="c1"># columns of Y are left eigenvectors of A  </span>
-        <span class="n">s</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-            
-        <span class="c1"># Normalise eigenvectors such that Y.T.X=I</span>
-        <span class="k">if</span> <span class="n">normaliseEigenvectors</span><span class="p">:</span>
-            <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
-        
-        <span class="c1"># Extract modal properties of system from eigenvalues</span>
-        <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-
-        <span class="c1"># Sort eigenvalues into ascending order of f_n_abs</span>
-        <span class="n">i1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">f_n</span><span class="o">=</span><span class="n">f_n</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        <span class="n">f_d</span><span class="o">=</span><span class="n">f_d</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-        
+        <span class="n">eig_rslts_obj</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                                  <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">,</span>
+                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                    
         <span class="c1"># Write results to object</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">f_n</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">f_d</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
-        
-        <span class="n">ax_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">Y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">eta</span>
         
         <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">axarr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]</span>
-                
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-            <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-        
-        <span class="c1"># Return complex eigensolution as dict</span>
-        <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">s</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">X</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">Y</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_n</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_n</span><span class="p">)</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">eta</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_d</span>
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span>
-        
-        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_list&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">ax_list</span>
-        
-        <span class="k">return</span> <span class="n">d</span> 
+            <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
+                    
+        <span class="k">return</span> <span class="n">eig_rslts_obj</span> 
     
-    
-     
-    
-    
-    <span class="k">def</span> <span class="nf">_EigenvaluePlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                        <span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                        <span class="n">s</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plots eigenvalues (assumed to be complex) on the complex plane</span>
-<span class="sd">        ***</span>
-<span class="sd">        </span>
-<span class="sd">        Allowable values for `plotType`:</span>
-<span class="sd">            </span>
-<span class="sd">        * `1`: Eigenvalues plotted on complex plane</span>
-<span class="sd">        </span>
-<span class="sd">        * `2`: |f_n| values plotted against index</span>
-<span class="sd">        </span>
-<span class="sd">        * `4`: Undamped natural frequencies vs damping ratio</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span>
-            
-        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c1"># Produce new plot</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
-            
-        <span class="n">f_n_abs</span><span class="p">,</span><span class="n">f_n</span><span class="p">,</span><span class="n">f_d</span><span class="p">,</span><span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-            
-        <span class="k">if</span> <span class="n">plotType</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="n">npy</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="s1">&#39;.b&#39;</span><span class="p">)</span>
-            <span class="c1">#ax.axis(&#39;equal&#39;)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues plotted on complex plane&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Real component&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag component&quot;</span><span class="p">)</span>
-            
-        <span class="k">elif</span> <span class="n">plotType</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)),</span><span class="n">f_n_abs</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Mode index&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Undamped natural frequency (Hz)&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Natural frequencies vs mode index&quot;</span><span class="p">)</span>
-            
-        <span class="k">elif</span> <span class="n">plotType</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-            
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f_n</span><span class="p">,</span><span class="n">eta</span><span class="p">,</span><span class="s1">&#39;.b&#39;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency (Hz)&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Pole frequency vs damping ratio plot&quot;</span><span class="p">)</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: unexpected plotType requested!&quot;</span><span class="p">)</span>
-            
-        <span class="k">return</span> <span class="n">ax</span>
-            
-    
-    <span class="k">def</span> <span class="nf">_OrthogonalityPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">X</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">Y</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Pixel plot of Y.T*X</span>
-<span class="sd">        ***</span>
-<span class="sd">        </span>
-<span class="sd">        This can be used to check orthogonality of X and Y column vectors</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="k">if</span> <span class="n">X</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
-            
-        <span class="k">if</span> <span class="n">Y</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span>
-            
-        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c1"># Produce new plot</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
-            
-        <span class="c1"># Produce pixel plot</span>
-        <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">X</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greys&#39;</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Y.T * X product&quot;</span><span class="p">)</span>
-        
-        <span class="k">return</span> <span class="n">ax</span>
-        
     
     <span class="k">def</span> <span class="nf">CheckDOF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">DOF</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -7021,237 +6647,17 @@ with nonlinear systems).</p></div>
             
   <div class="item">
     <div class="name def" id="dynsys.DynSys.CalcEigenproperties">
-    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, normaliseEigenvectors=True, verbose=False, makePlots=False, axarr=None)</p>
+    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, *args, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>General method for determining damped eigenvectors and eigenvalues 
-of system</p>
-<hr />
-<p>Note in general eigenproperties will be complex due to non-proportional
-damping.</p>
-<p>Eigendecomposition of the system state matrix 'A' is carried out to 
-obtain eigenvalues and displacement-velocity eigenvectors.</p>
-<p>Engineers who are not familiar with the background theory should read
-the following excellent paper:</p>
-<p><em>An Engineering Interpretation of the Complex 
-Eigensolution of Linear Dynamic Systems</em></p>
-<p>by Christopher Hoen. </p>
-<p><a href="../references/An Engineering Interpretation of the Complex 
-Eigensolution of Linear Dynamic Systems.pdf">PDF</a></p>
-<hr />
-<p><strong>Required:</strong></p>
-<p>No arguments; the mass, stiffness, damping and (if defined) constraint 
-matrices held as attributes of the system will be used.</p>
-<hr />
-<p><strong>Optional:</strong></p>
-<ul>
-<li>
-<p><code>normaliseEigenvectors</code>, <em>boolean</em>, dictates whether eigenvectors 
-  should be normalised, such that Y.T @ X = I</p>
-</li>
-<li>
-<p><code>makePlots</code>, <em>boolean</em>, if True plots will be produced to illustrate 
-  the eigensolution obtained</p>
-</li>
-<li>
-<p><code>axarr</code>, list of <em>axes</em> onto which plots should be made. If None 
-  plots will be made onto new figures</p>
-</li>
-<li>
-<p><code>verbose</code>, <em>boolean</em>, if True intermediate output &amp; text will be 
-  printed to the console</p>
-</li>
-</ul>
-<hr />
-<p><strong>Returns:</strong></p>
-<p><em>Dict</em> containing the following entries:</p>
-<ul>
-<li>
-<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
-</li>
-<li>
-<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
-</li>
-<li>
-<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
-</li>
-</ul>
-<p>The above entries will in general be complex-valued and represent the 
-eigenproperties of 'A'.</p>
-<p>The following entries are real-valued and 
-express the complex eigenvalues 's' in terms which should be more 
-familiar to structural/mechanical engineers:</p>
-<ul>
-<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
-</ul>
-<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
-positive and negative frequencies for a system with N degrees of 
-freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
-<ul>
-<li>
-<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
-</li>
-<li>
-<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
-  above, in rad/s</p>
-</li>
-<li>
-<p>'eta', damping ratio (1.0=critical)</p>
-</li>
-</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.CalcEigenproperties', this);">Show source &equiv;</a></p>
   <div id="source-dynsys.DynSys.CalcEigenproperties" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                        <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                        <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                        <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
-<span class="sd">    of system</span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
-<span class="sd">    damping.</span>
-<span class="sd">    </span>
-<span class="sd">    Eigendecomposition of the system state matrix &#39;A&#39; is carried out to </span>
-<span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
-<span class="sd">    </span>
-<span class="sd">    Engineers who are not familiar with the background theory should read</span>
-<span class="sd">    the following excellent paper:</span>
-<span class="sd">        </span>
-<span class="sd">    *An Engineering Interpretation of the Complex </span>
-<span class="sd">    Eigensolution of Linear Dynamic Systems*</span>
-<span class="sd">    </span>
-<span class="sd">    by Christopher Hoen. </span>
-<span class="sd">    </span>
-<span class="sd">    [PDF](../references/An Engineering Interpretation of the Complex </span>
-<span class="sd">    Eigensolution of Linear Dynamic Systems.pdf)</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Required:**</span>
-<span class="sd">        </span>
-<span class="sd">    No arguments; the mass, stiffness, damping and (if defined) constraint </span>
-<span class="sd">    matrices held as attributes of the system will be used.</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Optional:**</span>
-<span class="sd">        </span>
-<span class="sd">    * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors </span>
-<span class="sd">      should be normalised, such that Y.T @ X = I</span>
-<span class="sd">      </span>
-<span class="sd">    * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
-<span class="sd">      the eigensolution obtained</span>
-<span class="sd">      </span>
-<span class="sd">    * `axarr`, list of _axes_ onto which plots should be made. If None </span>
-<span class="sd">      plots will be made onto new figures</span>
-<span class="sd">      </span>
-<span class="sd">    * `verbose`, _boolean_, if True intermediate output &amp; text will be </span>
-<span class="sd">      printed to the console</span>
-<span class="sd">     </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Returns:**</span>
-<span class="sd">         </span>
-<span class="sd">    _Dict_ containing the following entries:</span>
-<span class="sd">        </span>
-<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    The above entries will in general be complex-valued and represent the </span>
-<span class="sd">    eigenproperties of &#39;A&#39;.</span>
-<span class="sd">    </span>
-<span class="sd">    The following entries are real-valued and </span>
-<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
-<span class="sd">    familiar to structural/mechanical engineers:</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
-<span class="sd">      </span>
-<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
-<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
-<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
-<span class="sd">      above, in rad/s</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
-<span class="sd">            </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Get system matrices</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
-    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
-    
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="bp">None</span>
-        
-    <span class="c1"># Compute eigenproperties of A_c</span>
-    <span class="c1"># s is vector of singular values</span>
-    <span class="c1"># columns of X are right eigenvectors of A</span>
-    <span class="c1"># columns of Y are left eigenvectors of A  </span>
-    <span class="n">s</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-        
-    <span class="c1"># Normalise eigenvectors such that Y.T.X=I</span>
-    <span class="k">if</span> <span class="n">normaliseEigenvectors</span><span class="p">:</span>
-        <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
-    
-    <span class="c1"># Extract modal properties of system from eigenvalues</span>
-    <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-    <span class="c1"># Sort eigenvalues into ascending order of f_n_abs</span>
-    <span class="n">i1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">f_n</span><span class="o">=</span><span class="n">f_n</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">f_d</span><span class="o">=</span><span class="n">f_d</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    
-    <span class="c1"># Write results to object</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">f_n</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">f_d</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
-    
-    <span class="n">ax_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">axarr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]</span>
-            
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-    
-    <span class="c1"># Return complex eigensolution as dict</span>
-    <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">s</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">X</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">Y</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_n</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_n</span><span class="p">)</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">eta</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_d</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span>
-    
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_list&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">ax_list</span>
-    
-    <span class="k">return</span> <span class="n">d</span> 
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -8750,6 +8156,212 @@ C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</stro
     <span class="n">outputNames</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     
     <span class="k">return</span> <span class="n">C_mtrx</span><span class="p">,</span><span class="n">outputNames</span> 
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="dynsys.DynSys.calc_eigenproperties">
+    <p>def <span class="ident">calc_eigenproperties</span>(</p><p>self, normalise=True, verbose=False, makePlots=False, axarr=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>General method for determining damped eigenvectors and eigenvalues 
+of system</p>
+<hr />
+<p>Note in general eigenproperties will be complex due to non-proportional
+damping.</p>
+<p>Eigendecomposition of the system state matrix 'A' is carried out to 
+obtain eigenvalues and displacement-velocity eigenvectors.</p>
+<p>Engineers who are not familiar with the background theory should read
+the following excellent paper:</p>
+<p><em>An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems</em></p>
+<p>by Christopher Hoen. </p>
+<p><a href="../references/An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems.pdf">PDF</a></p>
+<hr />
+<p><strong>Required:</strong></p>
+<p>No arguments; the mass, stiffness, damping and (if defined) constraint 
+matrices held as attributes of the system will be used.</p>
+<hr />
+<p><strong>Optional:</strong></p>
+<ul>
+<li>
+<p><code>normalise</code>, <em>boolean</em>, dictates whether eigenvectors 
+  should be normalised, such that Y.T @ X = I</p>
+</li>
+<li>
+<p><code>makePlots</code>, <em>boolean</em>, if True plots will be produced to illustrate 
+  the eigensolution obtained</p>
+</li>
+<li>
+<p><code>axarr</code>, list of <em>axes</em> onto which plots should be made. If None 
+  plots will be made onto new figures</p>
+</li>
+<li>
+<p><code>verbose</code>, <em>boolean</em>, if True intermediate output &amp; text will be 
+  printed to the console</p>
+</li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<p><em>Dict</em> containing the following entries:</p>
+<ul>
+<li>
+<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
+</li>
+<li>
+<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
+</li>
+<li>
+<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
+</li>
+</ul>
+<p>The above entries will in general be complex-valued and represent the 
+eigenproperties of 'A'.</p>
+<p>The following entries are real-valued and 
+express the complex eigenvalues 's' in terms which should be more 
+familiar to structural/mechanical engineers:</p>
+<ul>
+<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
+</ul>
+<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
+positive and negative frequencies for a system with N degrees of 
+freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
+<ul>
+<li>
+<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
+</li>
+<li>
+<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
+  above, in rad/s</p>
+</li>
+<li>
+<p>'eta', damping ratio (1.0=critical)</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.calc_eigenproperties', this);">Show source &equiv;</a></p>
+  <div id="source-dynsys.DynSys.calc_eigenproperties" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_eigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">normalise</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                         <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
+<span class="sd">    of system</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
+<span class="sd">    damping.</span>
+<span class="sd">    </span>
+<span class="sd">    Eigendecomposition of the system state matrix &#39;A&#39; is carried out to </span>
+<span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
+<span class="sd">    </span>
+<span class="sd">    Engineers who are not familiar with the background theory should read</span>
+<span class="sd">    the following excellent paper:</span>
+<span class="sd">        </span>
+<span class="sd">    *An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems*</span>
+<span class="sd">    </span>
+<span class="sd">    by Christopher Hoen. </span>
+<span class="sd">    </span>
+<span class="sd">    [PDF](../references/An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems.pdf)</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">    No arguments; the mass, stiffness, damping and (if defined) constraint </span>
+<span class="sd">    matrices held as attributes of the system will be used.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Optional:**</span>
+<span class="sd">        </span>
+<span class="sd">    * `normalise`, _boolean_, dictates whether eigenvectors </span>
+<span class="sd">      should be normalised, such that Y.T @ X = I</span>
+<span class="sd">      </span>
+<span class="sd">    * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
+<span class="sd">      the eigensolution obtained</span>
+<span class="sd">      </span>
+<span class="sd">    * `axarr`, list of _axes_ onto which plots should be made. If None </span>
+<span class="sd">      plots will be made onto new figures</span>
+<span class="sd">      </span>
+<span class="sd">    * `verbose`, _boolean_, if True intermediate output &amp; text will be </span>
+<span class="sd">      printed to the console</span>
+<span class="sd">     </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">         </span>
+<span class="sd">    _Dict_ containing the following entries:</span>
+<span class="sd">        </span>
+<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    The above entries will in general be complex-valued and represent the </span>
+<span class="sd">    eigenproperties of &#39;A&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    The following entries are real-valued and </span>
+<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
+<span class="sd">    familiar to structural/mechanical engineers:</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
+<span class="sd">      </span>
+<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
+<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
+<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
+<span class="sd">      above, in rad/s</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get system matrices</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="c1"># Compute eigenproperties of A_c</span>
+    <span class="c1"># s is vector of singular values</span>
+    <span class="c1"># columns of X are right eigenvectors of A</span>
+    <span class="c1"># columns of Y are left eigenvectors of A  </span>
+    <span class="n">eig_rslts_obj</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                              <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">,</span>
+                              <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                
+    <span class="c1"># Write results to object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">s</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">X</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">Y</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_n</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_d</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">eta</span>
+    
+    <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
+        <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">eig_rslts_obj</span> 
 </pre></div>
 
   </div>

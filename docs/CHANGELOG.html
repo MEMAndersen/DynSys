@@ -10,6 +10,30 @@ and this project adheres to:
 <h3>Added</h3>
 <ul>
 <li>
+<p>New module <code>eig_results.py</code> added, with class to act as container for 
+  eigenvalue results, to replace previous dict usage. Coding is intended to be<br />
+  backwards-compatible, but allows eigenproperties plot methods previously 
+  housed as <code>DynSys()</code> class methods to more logically be implemented as 
+  methods associated with the new <code>Eig_Results()</code> class.</p>
+</li>
+<li>
+<p>Note with this change, the <code>Eig_Results()</code> class only holds unique data, i.e. 
+  eigenvalues and left- and right-eigenvectors. All other eigenproperties are 
+  calculated upon request. This is intended to be more robust and will ensure 
+  consistent properties are always obtained.</p>
+</li>
+<li>
+<p>Lots of alternative getter methods defined for <code>Eig_Results()</code> to be more 
+  flexible with spellings / names when requesting certain attributes</p>
+</li>
+</ul>
+<h3>Fixed</h3>
+<h3>Removed</h3>
+<h2>[1.6.2] - 2018-10-19 - RIHY</h2>
+<h3>Changed</h3>
+<h3>Added</h3>
+<ul>
+<li>
 <p>Option added to <code>LatSync_McRobie.__init__()</code> method, to allow system matrices 
   determined at each Np value considered to be stored for subsequent usage</p>
 </li>
