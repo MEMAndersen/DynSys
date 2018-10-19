@@ -3990,14 +3990,10 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
     <span class="n">eig_rslts_obj</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
                               <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">,</span>
                               <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-                
-    <span class="c1"># Write results to object</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">s</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">X</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">Y</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_n</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">f_d</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">eta</span>
+    
+    <span class="c1"># Create two-way link between objects</span>
+    <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">dynsys</span> <span class="o">=</span> <span class="bp">self</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eig_rslts</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span>
     
     <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
         <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>

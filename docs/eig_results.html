@@ -1162,9 +1162,6 @@ table {
     <span class="nd">@property</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">left_eigenvectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Matrix of left-eigenvectors</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
     
     <span class="c1"># -----------</span>
@@ -1174,6 +1171,20 @@ table {
 <span class="sd">        Integer number of modes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nModes</span>
+    
+    <span class="c1"># -----------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dynsys_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instance of `DynSys()` class (or derived classes thereof) to which </span>
+<span class="sd">        eigenproperties held by this object relate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynsys_obj</span>
+    
+    <span class="nd">@property</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">dynsys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span>
     
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Attribute setter methods</span>
@@ -1212,6 +1223,14 @@ table {
         <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert2matrix</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span>    
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_shape</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span>            
         <span class="bp">self</span><span class="o">.</span><span class="n">_Y</span> <span class="o">=</span> <span class="n">value</span>
+        
+    <span class="nd">@dynsys_obj.setter</span>
+    <span class="k">def</span> <span class="nf">dynsys_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dynsys_obj</span> <span class="o">=</span> <span class="n">obj</span>
+        
+    <span class="nd">@dynsys.setter</span>
+    <span class="k">def</span> <span class="nf">dynsys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>  <span class="c1"># alternative setter method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">obj</span>
     
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Functions to determine engineering eigenproperties </span>
@@ -1613,9 +1632,6 @@ table {
     <span class="nd">@property</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">left_eigenvectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Matrix of left-eigenvectors</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
     
     <span class="c1"># -----------</span>
@@ -1625,6 +1641,20 @@ table {
 <span class="sd">        Integer number of modes</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nModes</span>
+    
+    <span class="c1"># -----------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dynsys_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instance of `DynSys()` class (or derived classes thereof) to which </span>
+<span class="sd">        eigenproperties held by this object relate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynsys_obj</span>
+    
+    <span class="nd">@property</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">dynsys_obj</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">dynsys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span>
     
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Attribute setter methods</span>
@@ -1663,6 +1693,14 @@ table {
         <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert2matrix</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span>    
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_shape</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">)</span>            
         <span class="bp">self</span><span class="o">.</span><span class="n">_Y</span> <span class="o">=</span> <span class="n">value</span>
+        
+    <span class="nd">@dynsys_obj.setter</span>
+    <span class="k">def</span> <span class="nf">dynsys_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dynsys_obj</span> <span class="o">=</span> <span class="n">obj</span>
+        
+    <span class="nd">@dynsys.setter</span>
+    <span class="k">def</span> <span class="nf">dynsys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>  <span class="c1"># alternative setter method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span> <span class="o">=</span> <span class="n">obj</span>
     
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Functions to determine engineering eigenproperties </span>
@@ -2106,6 +2144,30 @@ table {
             
   
     <div class="desc"><p>Damping ratio</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="eig_results.Eig_Results.dynsys" class="name">var <span class="ident">dynsys</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Instance of <code>DynSys()</code> class (or derived classes thereof) to which 
+eigenproperties held by this object relate</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="eig_results.Eig_Results.dynsys_obj" class="name">var <span class="ident">dynsys_obj</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Instance of <code>DynSys()</code> class (or derived classes thereof) to which 
+eigenproperties held by this object relate</p></div>
   <div class="source_cont">
 </div>
 
