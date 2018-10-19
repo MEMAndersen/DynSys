@@ -8,6 +8,22 @@ and this project adheres to:
 
 ***
 
+## Unreleased
+
+### Changed
+
+### Added
+
+* Option added to `LatSync_McRobie.__init__()` method, to allow system matrices 
+  determined at each Np value considered to be stored for subsequent usage
+
+* Verbose output control added to `LatSync_McRobie()` class methods
+
+### Fixed
+
+### Removed
+
+
 ## [1.6.1] - 2018-10-18 - RIHY
 
 ### Changed
