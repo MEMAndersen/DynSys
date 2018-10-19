@@ -1713,6 +1713,7 @@ class LatSync_McRobie():
                  modalsys,
                  cp_func=None,
                  mp_func=None,
+                 store_mtrxs=False,
                  makePlots=False,
                  verbose=True,
                  **kwargs):
@@ -1805,6 +1806,13 @@ class LatSync_McRobie():
         self.Np_crit = None
         """
         Critical number of pedestrians to give zero net damping
+        """
+        
+        self.store_mtrxs = store_mtrxs
+        """
+        Boolean option, if True then system damping and stiffness matrices
+        will be stored via nested list for all Np values and modes considered
+        (this can result in a large amount of data being stored!)
         """
         
         if makePlots:
@@ -1952,7 +1960,9 @@ class LatSync_McRobie():
         return Np_crit
     
     
-    def _run_analysis(self,Np_vals,append_rslts=True,**kwargs):
+    def _run_analysis(self,Np_vals,
+                      append_rslts=True,
+                      **kwargs):
         """
         Run analysis for various pedestrian numbers, as provided to function
         
@@ -1962,6 +1972,8 @@ class LatSync_McRobie():
         """
         
         modalsys = self.modalsys
+        
+        store_mtrxs = self.store_mtrxs
                 
         # Take copy of system damping matrix with no pedestrians
         C0 = deepcopy(modalsys._C_mtrx)
@@ -2013,6 +2025,10 @@ class LatSync_McRobie():
         fd_vals = []
         X_vals = []
         
+        if store_mtrxs:
+            C_mtrx_list = []
+            M_mtrx_list = []
+        
         for _Np in Np_vals:
             
             cp_vals_inner = []
@@ -2021,6 +2037,10 @@ class LatSync_McRobie():
             eta_vals_inner = []
             fd_vals_inner = []
             X_vals_inner = []
+            
+            if store_mtrxs:
+                C_mtrx_inner_list = []
+                M_mtrx_inner_list = []
             
             for _mode_index, _fd in enumerate(fd_vals_last):
             
@@ -2038,6 +2058,8 @@ class LatSync_McRobie():
                 eig_props = rslts['eig_props']
                 cp = rslts['cp']
                 mp = rslts['mp']
+                C_mtrx = rslts['C_mtrx']
+                M_mtrx = rslts['M_mtrx']
                 
                 # Unpack results for this mode and append to inner lists
                 cp_vals_inner.append(cp)
@@ -2046,6 +2068,10 @@ class LatSync_McRobie():
                 eta_vals_inner.append(eig_props['eta'][_mode_index])
                 fd_vals_inner.append(eig_props['f_d'][_mode_index])
                 X_vals_inner.append(eig_props['X'][_mode_index])
+                
+                if store_mtrxs:
+                    C_mtrx_inner_list.append(C_mtrx)
+                    M_mtrx_inner_list.append(M_mtrx)
                 
             # Update last frequencies
             fd_vals_last = fd_vals_inner
@@ -2057,6 +2083,10 @@ class LatSync_McRobie():
             eta_vals.append(eta_vals_inner)
             fd_vals.append(fd_vals_inner)
             X_vals.append(X_vals_inner)
+            
+            if store_mtrxs:
+                C_mtrx_list.append(C_mtrx_inner_list)
+                M_mtrx_list.append(M_mtrx_inner_list)
             
         # Convert nested lists to numpy ndarray type
         cp_vals = numpy.array(cp_vals)
@@ -2085,6 +2115,10 @@ class LatSync_McRobie():
             self.cp_vals = cp_vals
             self.mp_vals = mp_vals
             
+            if store_mtrxs:
+                self.C_mtrx_list = C_mtrx_list
+                self.M_mtrx_list = M_mtrx_list
+            
         if append_rslts:
             
             self.eigenvalues = numpy.vstack((self.eigenvalues,s_vals))
@@ -2094,6 +2128,10 @@ class LatSync_McRobie():
             self.N_pedestrians = numpy.hstack((self.N_pedestrians,Np_vals))
             self.cp_vals = numpy.vstack((self.cp_vals,cp_vals))
             self.mp_vals = numpy.vstack((self.mp_vals,mp_vals))
+            
+            if store_mtrxs:
+                self.C_mtrx_list.append(C_mtrx_list)
+                self.M_mtrx_list.append(M_mtrx_list)
             
  
     def plot_results(self):
