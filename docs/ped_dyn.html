@@ -1,4 +1,4 @@
-Version: 1.6.1_dev
+Version: 1.6.2
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -3718,14 +3718,18 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
         
         <span class="c1"># Rerun analysis to obtain properties at critical point</span>
-        <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># take copy of class</span>
-        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="c1"># 1) take copy of class to pick up same attributes as analysis run</span>
+        <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># 2) Edit a few key properties for this purpose</span>
+        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="c1"># 3) rerun to override results already held in the above object</span>
+        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">append_rslts</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
-        <span class="c1"># Determine critical mode i.e. mode with min damping (=0)</span>
+        <span class="c1"># Determine critical mode i.e. mode with damping =0 when Np=Np_crit</span>
         <span class="n">crit_mode</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="n">crit_mode</span>
         
-        <span class="c1"># Extract key properties of critical mode</span>
+        <span class="c1"># Extract key properties of critical mode at Np=Np_crit</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damped_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
@@ -3734,7 +3738,7 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
                     
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Critical no. pedestrians, Np_crit:</span><span class="se">\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Index of critical mode:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damped nat freq, critical mode:</span><span class="se">\t</span><span class="si">%.3f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio, critical mode:</span><span class="se">\t</span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">)</span>
@@ -7351,14 +7355,18 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
         
         <span class="c1"># Rerun analysis to obtain properties at critical point</span>
-        <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># take copy of class</span>
-        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="c1"># 1) take copy of class to pick up same attributes as analysis run</span>
+        <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># 2) Edit a few key properties for this purpose</span>
+        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="c1"># 3) rerun to override results already held in the above object</span>
+        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">append_rslts</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
-        <span class="c1"># Determine critical mode i.e. mode with min damping (=0)</span>
+        <span class="c1"># Determine critical mode i.e. mode with damping =0 when Np=Np_crit</span>
         <span class="n">crit_mode</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="n">crit_mode</span>
         
-        <span class="c1"># Extract key properties of critical mode</span>
+        <span class="c1"># Extract key properties of critical mode at Np=Np_crit</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damped_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
@@ -7367,7 +7375,7 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
                     
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Critical no. pedestrians, Np_crit:</span><span class="se">\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Index of critical mode:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damped nat freq, critical mode:</span><span class="se">\t</span><span class="si">%.3f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio, critical mode:</span><span class="se">\t</span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">)</span>
@@ -7701,14 +7709,18 @@ onset of pedestrian-induced lateral instability</p></div>
     <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
     
     <span class="c1"># Rerun analysis to obtain properties at critical point</span>
-    <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># take copy of class</span>
-    <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c1"># 1) take copy of class to pick up same attributes as analysis run</span>
+    <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="c1"># 2) Edit a few key properties for this purpose</span>
+    <span class="n">crit_rslts</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="c1"># 3) rerun to override results already held in the above object</span>
+    <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">append_rslts</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     
-    <span class="c1"># Determine critical mode i.e. mode with min damping (=0)</span>
+    <span class="c1"># Determine critical mode i.e. mode with damping =0 when Np=Np_crit</span>
     <span class="n">crit_mode</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="n">crit_mode</span>
     
-    <span class="c1"># Extract key properties of critical mode</span>
+    <span class="c1"># Extract key properties of critical mode at Np=Np_crit</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damped_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
@@ -7717,7 +7729,7 @@ onset of pedestrian-induced lateral instability</p></div>
     <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">crit_mode</span><span class="p">]</span>
                 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Critical no. pedestrians, Np_crit:</span><span class="se">\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Index of critical mode:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damped nat freq, critical mode:</span><span class="se">\t</span><span class="si">%.3f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio, critical mode:</span><span class="se">\t</span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">)</span>
