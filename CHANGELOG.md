@@ -14,6 +14,17 @@ and this project adheres to:
 
 ### Added
 
+### Fixed
+
+### Removed
+
+
+## [1.6.2] - 2018-10-19 - RIHY
+
+### Changed
+
+### Added
+
 * Option added to `LatSync_McRobie.__init__()` method, to allow system matrices 
   determined at each Np value considered to be stored for subsequent usage
 
