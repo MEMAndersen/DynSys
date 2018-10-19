@@ -14,6 +14,20 @@ and this project adheres to:
 
 ### Added
 
+* New module `eig_results.py` added, with class to act as container for 
+  eigenvalue results, to replace previous dict usage. Coding is intended to be  
+  backwards-compatible, but allows eigenproperties plot methods previously 
+  housed as `DynSys()` class methods to more logically be implemented as 
+  methods associated with the new `Eig_Results()` class.
+  
+* Note with this change, the `Eig_Results()` class only holds unique data, i.e. 
+  eigenvalues and left- and right-eigenvectors. All other eigenproperties are 
+  calculated upon request. This is intended to be more robust and will ensure 
+  consistent properties are always obtained.
+  
+* Lots of alternative getter methods defined for `Eig_Results()` to be more 
+  flexible with spellings / names when requesting certain attributes
+
 ### Fixed
 
 ### Removed

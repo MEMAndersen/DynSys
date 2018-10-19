@@ -22,7 +22,8 @@ import scipy.sparse as sparse
 from scipy.linalg import block_diag
 #from scipy.sparse import bmat
 
-# Other imports
+# DynSys module imports
+from eig_results import Eig_Results
 
 
 class DynSys:
@@ -1000,11 +1001,15 @@ class DynSys:
         return d
     
         
-    def CalcEigenproperties(self,
-                            normaliseEigenvectors=True,
-                            verbose=False,
-                            makePlots=False,
-                            axarr=None):
+    def CalcEigenproperties(self,*args,**kwargs):
+        return self.calc_eigenproperties(*args,**kwargs)
+    
+    
+    def calc_eigenproperties(self,
+                             normalise=True,
+                             verbose=False,
+                             makePlots=False,
+                             axarr=None):
         """
         General method for determining damped eigenvectors and eigenvalues 
         of system
@@ -1036,7 +1041,7 @@ class DynSys:
         ***
         **Optional:**
             
-        * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors 
+        * `normalise`, _boolean_, dictates whether eigenvectors 
           should be normalised, such that Y.T @ X = I
           
         * `makePlots`, _boolean_, if True plots will be produced to illustrate 
@@ -1096,150 +1101,23 @@ class DynSys:
         # s is vector of singular values
         # columns of X are right eigenvectors of A
         # columns of Y are left eigenvectors of A  
-        s,Y,X = solve_eig(M=M,K=K,C=C,J=J,verbose=verbose)
-            
-        # Normalise eigenvectors such that Y.T.X=I
-        if normaliseEigenvectors:
-            X,Y = NormaliseEigenvectors(X,Y)
-        
-        # Extract modal properties of system from eigenvalues
-        f_n_abs, f_n, f_d, eta = RealEigenvalueProperties(s)
-
-        # Sort eigenvalues into ascending order of f_n_abs
-        i1 = npy.argsort(f_n_abs)
-        s = s[i1]
-        X = X[:,i1]
-        Y = Y[:,i1]
-        f_n=f_n[i1]
-        eta=eta[i1]
-        f_d=f_d[i1]
-        
+        eig_rslts_obj = solve_eig(M=M,K=K,C=C,J=J,
+                                  normalise=normalise,
+                                  verbose=verbose)
+                    
         # Write results to object
-        self.s = s
-        self.X = X
-        self.Y = Y
-        self.f_n = f_n
-        self.f_d = f_d
-        self.eta = eta
-        
-        ax_list = []
+        self.s = eig_rslts_obj.s
+        self.X = eig_rslts_obj.X
+        self.Y = eig_rslts_obj.Y
+        self.f_n = eig_rslts_obj.f_n
+        self.f_d = eig_rslts_obj.f_d
+        self.eta = eig_rslts_obj.eta
         
         if makePlots:
-            
-            if axarr is None:
-                axarr = [None,None,None,None]
-                
-            ax_list.append(self._OrthogonalityPlot(ax=axarr[0]))
-            ax_list.append(self._EigenvaluePlot(ax=axarr[1],plotType=1))
-            ax_list.append(self._EigenvaluePlot(ax=axarr[2],plotType=2))
-            ax_list.append(self._EigenvaluePlot(ax=axarr[3],plotType=4))
-        
-        # Return complex eigensolution as dict
-        d={}
-        d["s"]=s
-        d["X"]=X
-        d["Y"]=Y
-        d["f_n"]=f_n
-        d["w_n"]=angularFreq(f_n)
-        d["eta"]=eta
-        d["f_d"]=f_d
-        d["w_d"]=angularFreq(f_d)
-        
-        d["ax_list"]=ax_list
-        
-        return d 
+            eig_rslts_obj.plot(axarr)
+                    
+        return eig_rslts_obj 
     
-    
-     
-    
-    
-    def _EigenvaluePlot(self,
-                        ax=None,
-                        plotType=1,
-                        s=None):
-        """
-        Plots eigenvalues (assumed to be complex) on the complex plane
-        ***
-        
-        Allowable values for `plotType`:
-            
-        * `1`: Eigenvalues plotted on complex plane
-        
-        * `2`: |f_n| values plotted against index
-        
-        * `4`: Undamped natural frequencies vs damping ratio
-        
-        """
-        
-        if s is None:
-            s = self.s
-            
-        if ax is None:
-            # Produce new plot
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-        else:
-            fig = ax.gcf()
-            
-        f_n_abs,f_n,f_d,eta = RealEigenvalueProperties(s)
-            
-        if plotType == 1:
-            
-            ax.plot(npy.real(s),npy.imag(s),'.b')
-            #ax.axis('equal')
-            ax.set_title("Eigenvalues plotted on complex plane")
-            ax.set_xlabel("Real component")
-            ax.set_ylabel("Imag component")
-            
-        elif plotType == 2:
-            
-            ax.plot(range(len(f_n_abs)),f_n_abs)
-            ax.set_xlabel("Mode index")
-            ax.set_ylabel("Undamped natural frequency (Hz)")
-            ax.set_title("Natural frequencies vs mode index")
-            
-        elif plotType == 4:
-            
-            ax.plot(f_n,eta,'.b')
-            ax.set_xlabel("Frequency (Hz)")
-            ax.set_ylabel("Damping ratio")
-            ax.set_title("Pole frequency vs damping ratio plot")
-            
-        else:
-            raise ValueError("Error: unexpected plotType requested!")
-            
-        return ax
-            
-    
-    def _OrthogonalityPlot(self,ax=None,X=None,Y=None):
-        """
-        Pixel plot of Y.T*X
-        ***
-        
-        This can be used to check orthogonality of X and Y column vectors
-        
-        """
-        
-        if X is None:
-            X = self.X
-            
-        if Y is None:
-            Y = self.Y
-            
-        if ax is None:
-            # Produce new plot
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-        else:
-            fig = ax.gcf()
-            
-        # Produce pixel plot
-        im = ax.imshow(npy.absolute(Y.T*X),interpolation='none',cmap='Greys')
-        fig.colorbar(im)
-        ax.set_title("Y.T * X product")
-        
-        return ax
-        
     
     def CheckDOF(self,DOF):
         """
@@ -1836,6 +1714,7 @@ def freq_from_angularFreq(omega):
     """
     return omega / (2*npy.pi)
 
+
 def angularFreq(f):
     """
     Returns the angular frequency (rad/s) equivilent to frequency `f` (Hz)
@@ -1843,6 +1722,7 @@ def angularFreq(f):
     $$ \omega = 2\pi f $$
     """
     return 2*npy.pi*f
+
         
 def SDOF_stiffness(M,f=None,omega=None):
     """
@@ -2196,51 +2076,9 @@ def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
         X = Z2 @ X
         Y = Z2 @ Y
         
-    # Normalise eigenvectors such that Y.T @ X = I
-    if normalise:
-        d = npy.diagonal(Y.T @ X)**0.5
-        X = X / d
-        Y = Y / d
-        
-    # Return eigenvalues (poles)
-    # and left and right eigenvector matrices (modeshapes)
-    return s, Y, X
-
-
-def RealEigenvalueProperties(s):
-    """
-    Recovers real-valued properties from complex eigenvalues given
-    by array `s`
-    """
-    
-    f_d = npy.imag(s) / (2*npy.pi)             # damped natural frequency
-    eta = - npy.real(s) / npy.absolute(s)      # damping ratio
-    
-    f_n_abs = npy.absolute(s) / (2*npy.pi)     # undamped natural frequency
-    f_n = npy.sign(f_d) * f_n_abs              # recovers sign of frequency
-    
-    return f_n_abs, f_n, f_d, eta
-
-
-def NormaliseEigenvectors(X,Y):
-    """
-    Normalise eigenvectors such that YT.X=I
-    
-    ***
-    Required:
-    
-    * `X`, Numpy matrix, the columns of which are right-eigenvectors
-    * `Y`, Numpy matrix, the columns of which are left-eigenvectors
-    
-    """
-        
-    d = npy.diagonal(Y.T * X)**0.5
-    
-    if d.any() != 0:
-        X = X / d
-        Y = Y / d
-                    
-    return X, Y
+    # Return instance of Eig_Results class to act as container for results
+    rslts_obj = Eig_Results(s=s,X=X,Y=Y,normalise=normalise)    
+    return rslts_obj
 
 
 def PlotFrequencyResponse(f,G_f,
