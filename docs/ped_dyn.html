@@ -3018,6 +3018,73 @@ table {
 <span class="sd">        i.e. mp = g(fn), cp in [kg]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="n">store_mtrxs</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean option, if True then system damping and stiffness matrices</span>
+<span class="sd">        will be stored via nested list for all Np values and modes considered</span>
+<span class="sd">        (this can result in a large amount of data being stored!)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Class variables defined later on</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of complex-valued eigenvalues of shape (N_Np,N_modes), where:</span>
+<span class="sd">            </span>
+<span class="sd">        * _N_Np_ is number of pedestrian cases considered</span>
+<span class="sd">        </span>
+<span class="sd">        * _N_modes_ is number of system matrix eigenmodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of effective damping ratio for each mode and pedestrian </span>
+<span class="sd">        count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of damped natural frequencies for each mode and pedestrian </span>
+<span class="sd">        count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of complex-valued eigenvalues of shape _(N_Np,N_modes,N_dof)_, </span>
+<span class="sd">        where:</span>
+<span class="sd">        * _N_Np_ is number of pedestrian cases considered</span>
+<span class="sd">        </span>
+<span class="sd">        * _N_modes_ is number of system matrix eigenmodes</span>
+<span class="sd">        </span>
+<span class="sd">        * _N_dof_ is the total number of degrees of freedom / state variables </span>
+<span class="sd">          for the system analysed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Array listing the set of pedestrian numbers analysed</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">cp_vals</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of effective damping rate per pedestrian for each mode and </span>
+<span class="sd">        pedestrian count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">mp_vals</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of effective added mass per pedestrian for each mode and </span>
+<span class="sd">        pedestrian count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">ped_effect_mtrx</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Matrix to represent the smeared effect of one pedestrian on the deck</span>
@@ -3029,11 +3096,54 @@ table {
 <span class="sd">        Critical number of pedestrians to give zero net damping</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="n">store_mtrxs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Boolean option, if True then system damping and stiffness matrices</span>
-<span class="sd">        will be stored via nested list for all Np values and modes considered</span>
-<span class="sd">        (this can result in a large amount of data being stored!)</span>
+<span class="sd">        Index of (complex) eigenmode that loses stability at Np=Np_crit </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Damped natural frequency of mode that loses stability at Np=Np_crit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Effective damping ratio of mode that loses stability at Np=Np_crit</span>
+<span class="sd">        (damping ratio = 0.00 expected)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Complex-valued pole / eigenvalue at Np=Np_crit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Complex-valued eigenvector of mode that loses stability at Np=Np_crit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of damping matrices (of &#39;parent&#39; modal system) for each mode </span>
+<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        </span>
+<span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
+<span class="sd">        </span>
+<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
+<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)     </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of mass matrices (of &#39;parent&#39; modal system) for each mode </span>
+<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        </span>
+<span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
+<span class="sd">        </span>
+<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
+<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)    </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
@@ -3173,8 +3283,6 @@ table {
         <span class="k">else</span><span class="p">:</span>
             <span class="n">Np_crit</span> <span class="o">=</span> <span class="bp">None</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
-        
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
         
@@ -3288,7 +3396,7 @@ table {
                 <span class="n">s_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;s&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
                 <span class="n">eta_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;eta&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
                 <span class="n">fd_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;f_d&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
-                <span class="n">X_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
+                <span class="n">X_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">][:,</span><span class="n">_mode_index</span><span class="p">]))</span>
                 
                 <span class="k">if</span> <span class="n">store_mtrxs</span><span class="p">:</span>
                     <span class="n">C_mtrx_inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C_mtrx</span><span class="p">)</span>
@@ -3414,6 +3522,9 @@ table {
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damped natural frequency (Hz)&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Frequency vs Effective Damping</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">,</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
+        
         <span class="k">return</span> <span class="n">fig</span>
         
     
@@ -3442,6 +3553,10 @@ table {
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag(s)&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues of system state matrix&quot;</span><span class="p">)</span>
         
+        <span class="n">s_crit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span>
+        <span class="k">if</span> <span class="n">s_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_crit</span><span class="p">),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_crit</span><span class="p">),</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
+        
         <span class="k">return</span> <span class="n">fig</span>
         
     
@@ -3466,6 +3581,7 @@ table {
         <span class="n">Np_crit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span>
         <span class="k">if</span> <span class="n">Np_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">Np_crit</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Np_crit</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">,</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
             
             
     <span class="k">def</span> <span class="nf">plot_cp_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">f_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -3605,9 +3721,29 @@ table {
                                       
         <span class="c1"># Use root finding function to obtain Np such that damping = 0.0</span>
         <span class="n">Np_crit</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">bisect</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">Np_func</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="n">Np_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">b</span><span class="o">=</span><span class="n">Np_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            
+        <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
+        
+        <span class="c1"># Rerun analysis to obtain properties at critical point</span>
+        <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># take copy of class</span>
+        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Determine critical mode i.e. mode with min damping (=0)</span>
+        <span class="n">crit_mode</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="n">crit_mode</span>
+        
+        <span class="c1"># Extract key properties of critical mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damped_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit: </span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Np_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Index of critical mode:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damped nat freq, critical mode:</span><span class="se">\t</span><span class="si">%.3f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio, critical mode:</span><span class="se">\t</span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">Np_crit</span>
 
@@ -6521,6 +6657,73 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
 <span class="sd">        i.e. mp = g(fn), cp in [kg]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="n">store_mtrxs</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean option, if True then system damping and stiffness matrices</span>
+<span class="sd">        will be stored via nested list for all Np values and modes considered</span>
+<span class="sd">        (this can result in a large amount of data being stored!)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Class variables defined later on</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of complex-valued eigenvalues of shape (N_Np,N_modes), where:</span>
+<span class="sd">            </span>
+<span class="sd">        * _N_Np_ is number of pedestrian cases considered</span>
+<span class="sd">        </span>
+<span class="sd">        * _N_modes_ is number of system matrix eigenmodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of effective damping ratio for each mode and pedestrian </span>
+<span class="sd">        count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of damped natural frequencies for each mode and pedestrian </span>
+<span class="sd">        count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of complex-valued eigenvalues of shape _(N_Np,N_modes,N_dof)_, </span>
+<span class="sd">        where:</span>
+<span class="sd">        * _N_Np_ is number of pedestrian cases considered</span>
+<span class="sd">        </span>
+<span class="sd">        * _N_modes_ is number of system matrix eigenmodes</span>
+<span class="sd">        </span>
+<span class="sd">        * _N_dof_ is the total number of degrees of freedom / state variables </span>
+<span class="sd">          for the system analysed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Array listing the set of pedestrian numbers analysed</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">cp_vals</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of effective damping rate per pedestrian for each mode and </span>
+<span class="sd">        pedestrian count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">mp_vals</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ndarray of effective added mass per pedestrian for each mode and </span>
+<span class="sd">        pedestrian count considered.</span>
+<span class="sd">        </span>
+<span class="sd">        _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">ped_effect_mtrx</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Matrix to represent the smeared effect of one pedestrian on the deck</span>
@@ -6532,11 +6735,54 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
 <span class="sd">        Critical number of pedestrians to give zero net damping</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="n">store_mtrxs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Boolean option, if True then system damping and stiffness matrices</span>
-<span class="sd">        will be stored via nested list for all Np values and modes considered</span>
-<span class="sd">        (this can result in a large amount of data being stored!)</span>
+<span class="sd">        Index of (complex) eigenmode that loses stability at Np=Np_crit </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Damped natural frequency of mode that loses stability at Np=Np_crit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Effective damping ratio of mode that loses stability at Np=Np_crit</span>
+<span class="sd">        (damping ratio = 0.00 expected)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Complex-valued pole / eigenvalue at Np=Np_crit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Complex-valued eigenvector of mode that loses stability at Np=Np_crit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of damping matrices (of &#39;parent&#39; modal system) for each mode </span>
+<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        </span>
+<span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
+<span class="sd">        </span>
+<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
+<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)     </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of mass matrices (of &#39;parent&#39; modal system) for each mode </span>
+<span class="sd">        at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">        </span>
+<span class="sd">        Will in general include off-diagonal terms due to mode coupling effect </span>
+<span class="sd">        of pedestrians, determined per method presented in McRobie&#39;s paper</span>
+<span class="sd">        </span>
+<span class="sd">        Note: each mode has its own matrix (list item), due to possible </span>
+<span class="sd">        frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)    </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
@@ -6676,8 +6922,6 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">Np_crit</span> <span class="o">=</span> <span class="bp">None</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
-        
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
         
@@ -6791,7 +7035,7 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
                 <span class="n">s_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;s&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
                 <span class="n">eta_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;eta&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
                 <span class="n">fd_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;f_d&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
-                <span class="n">X_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">][</span><span class="n">_mode_index</span><span class="p">])</span>
+                <span class="n">X_vals_inner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">eig_props</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">][:,</span><span class="n">_mode_index</span><span class="p">]))</span>
                 
                 <span class="k">if</span> <span class="n">store_mtrxs</span><span class="p">:</span>
                     <span class="n">C_mtrx_inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C_mtrx</span><span class="p">)</span>
@@ -6917,6 +7161,9 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damped natural frequency (Hz)&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Frequency vs Effective Damping</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">,</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
+        
         <span class="k">return</span> <span class="n">fig</span>
         
     
@@ -6945,6 +7192,10 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag(s)&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues of system state matrix&quot;</span><span class="p">)</span>
         
+        <span class="n">s_crit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span>
+        <span class="k">if</span> <span class="n">s_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_crit</span><span class="p">),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_crit</span><span class="p">),</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
+        
         <span class="k">return</span> <span class="n">fig</span>
         
     
@@ -6969,6 +7220,7 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
         <span class="n">Np_crit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span>
         <span class="k">if</span> <span class="n">Np_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">Np_crit</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Np_crit</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">,</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
             
             
     <span class="k">def</span> <span class="nf">plot_cp_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">f_vals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -7108,9 +7360,29 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
                                       
         <span class="c1"># Use root finding function to obtain Np such that damping = 0.0</span>
         <span class="n">Np_crit</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">bisect</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">Np_func</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="n">Np_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">b</span><span class="o">=</span><span class="n">Np_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            
+        <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
+        
+        <span class="c1"># Rerun analysis to obtain properties at critical point</span>
+        <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># take copy of class</span>
+        <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Determine critical mode i.e. mode with min damping (=0)</span>
+        <span class="n">crit_mode</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="n">crit_mode</span>
+        
+        <span class="c1"># Extract key properties of critical mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damped_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit: </span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Np_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Index of critical mode:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damped nat freq, critical mode:</span><span class="se">\t</span><span class="si">%.3f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio, critical mode:</span><span class="se">\t</span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">)</span>
         
         <span class="k">return</span> <span class="n">Np_crit</span>
 </pre></div>
@@ -7241,6 +7513,73 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
 <span class="sd">    i.e. mp = g(fn), cp in [kg]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
+    <span class="bp">self</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="n">store_mtrxs</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Boolean option, if True then system damping and stiffness matrices</span>
+<span class="sd">    will be stored via nested list for all Np values and modes considered</span>
+<span class="sd">    (this can result in a large amount of data being stored!)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Class variables defined later on</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ndarray of complex-valued eigenvalues of shape (N_Np,N_modes), where:</span>
+<span class="sd">        </span>
+<span class="sd">    * _N_Np_ is number of pedestrian cases considered</span>
+<span class="sd">    </span>
+<span class="sd">    * _N_modes_ is number of system matrix eigenmodes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+            
+    <span class="bp">self</span><span class="o">.</span><span class="n">damping_ratios</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ndarray of effective damping ratio for each mode and pedestrian </span>
+<span class="sd">    count considered.</span>
+<span class="sd">    </span>
+<span class="sd">    _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">damped_freqs</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ndarray of damped natural frequencies for each mode and pedestrian </span>
+<span class="sd">    count considered.</span>
+<span class="sd">    </span>
+<span class="sd">    _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ndarray of complex-valued eigenvalues of shape _(N_Np,N_modes,N_dof)_, </span>
+<span class="sd">    where:</span>
+<span class="sd">    * _N_Np_ is number of pedestrian cases considered</span>
+<span class="sd">    </span>
+<span class="sd">    * _N_modes_ is number of system matrix eigenmodes</span>
+<span class="sd">    </span>
+<span class="sd">    * _N_dof_ is the total number of degrees of freedom / state variables </span>
+<span class="sd">      for the system analysed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">N_pedestrians</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Array listing the set of pedestrian numbers analysed</span>
+<span class="sd">    &quot;&quot;&quot;</span>        
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">cp_vals</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ndarray of effective damping rate per pedestrian for each mode and </span>
+<span class="sd">    pedestrian count considered.</span>
+<span class="sd">    </span>
+<span class="sd">    _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">mp_vals</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ndarray of effective added mass per pedestrian for each mode and </span>
+<span class="sd">    pedestrian count considered.</span>
+<span class="sd">    </span>
+<span class="sd">    _Ndarray shape as per eigenvalues above._</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="bp">self</span><span class="o">.</span><span class="n">ped_effect_mtrx</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Matrix to represent the smeared effect of one pedestrian on the deck</span>
@@ -7252,11 +7591,54 @@ Footbridge using Complex Modes.pdf">paper</a></p></div>
 <span class="sd">    Critical number of pedestrians to give zero net damping</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">store_mtrxs</span> <span class="o">=</span> <span class="n">store_mtrxs</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Boolean option, if True then system damping and stiffness matrices</span>
-<span class="sd">    will be stored via nested list for all Np values and modes considered</span>
-<span class="sd">    (this can result in a large amount of data being stored!)</span>
+<span class="sd">    Index of (complex) eigenmode that loses stability at Np=Np_crit </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Damped natural frequency of mode that loses stability at Np=Np_crit</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Effective damping ratio of mode that loses stability at Np=Np_crit</span>
+<span class="sd">    (damping ratio = 0.00 expected)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Complex-valued pole / eigenvalue at Np=Np_crit</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Complex-valued eigenvector of mode that loses stability at Np=Np_crit</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List of damping matrices (of &#39;parent&#39; modal system) for each mode </span>
+<span class="sd">    at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">    </span>
+<span class="sd">    Will in general include off-diagonal terms due to mode coupling effect </span>
+<span class="sd">    of pedestrians, determined per method presented in McRobie&#39;s paper</span>
+<span class="sd">    </span>
+<span class="sd">    Note: each mode has its own matrix (list item), due to possible </span>
+<span class="sd">    frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)     </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List of mass matrices (of &#39;parent&#39; modal system) for each mode </span>
+<span class="sd">    at Np=Np_crit. List length = N_modes.</span>
+<span class="sd">    </span>
+<span class="sd">    Will in general include off-diagonal terms due to mode coupling effect </span>
+<span class="sd">    of pedestrians, determined per method presented in McRobie&#39;s paper</span>
+<span class="sd">    </span>
+<span class="sd">    Note: each mode has its own matrix (list item), due to possible </span>
+<span class="sd">    frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
@@ -7334,9 +7716,29 @@ onset of pedestrian-induced lateral instability</p></div>
                                   
     <span class="c1"># Use root finding function to obtain Np such that damping = 0.0</span>
     <span class="n">Np_crit</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">bisect</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">Np_func</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="n">Np_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">b</span><span class="o">=</span><span class="n">Np_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        
+    <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
+    
+    <span class="c1"># Rerun analysis to obtain properties at critical point</span>
+    <span class="n">crit_rslts</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># take copy of class</span>
+    <span class="n">crit_rslts</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">Np_vals</span><span class="o">=</span><span class="p">[</span><span class="n">Np_crit</span><span class="p">],</span><span class="n">calc_Np_crit</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    
+    <span class="c1"># Determine critical mode i.e. mode with min damping (=0)</span>
+    <span class="n">crit_mode</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,:])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span> <span class="o">=</span> <span class="n">crit_mode</span>
+    
+    <span class="c1"># Extract key properties of critical mode</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damped_freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">damping_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">X_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">crit_mode</span><span class="p">,:]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">C_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">C_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">M_mtrx_crit</span> <span class="o">=</span> <span class="n">crit_rslts</span><span class="o">.</span><span class="n">M_mtrx_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit: </span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Np_crit</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Np_crit:</span><span class="se">\t\t\t</span><span class="si">%.0f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Index of critical mode:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">crit_mode</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damped nat freq, critical mode:</span><span class="se">\t</span><span class="si">%.3f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Damping ratio, critical mode:</span><span class="se">\t</span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">Np_crit</span>
 </pre></div>
@@ -7622,6 +8024,9 @@ with frequency</p></div>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Damped natural frequency (Hz)&quot;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Frequency vs Effective Damping</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fd_crit</span><span class="p">,</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
+    
     <span class="k">return</span> <span class="n">fig</span>
 </pre></div>
 
@@ -7664,6 +8069,7 @@ with frequency</p></div>
     <span class="n">Np_crit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span>
     <span class="k">if</span> <span class="n">Np_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">Np_crit</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Np_crit</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">eta_crit</span><span class="p">,</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -7768,6 +8174,10 @@ with frequency</p></div>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Real(s)&quot;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Imag(s)&quot;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Eigenvalues of system state matrix&quot;</span><span class="p">)</span>
+    
+    <span class="n">s_crit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_crit</span>
+    <span class="k">if</span> <span class="n">s_crit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">s_crit</span><span class="p">),</span><span class="n">imag</span><span class="p">(</span><span class="n">s_crit</span><span class="p">),</span><span class="s1">&#39;r.&#39;</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">fig</span>
 </pre></div>
@@ -7881,8 +8291,6 @@ assumed pedestrian crowd densities</p>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">Np_crit</span> <span class="o">=</span> <span class="bp">None</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">Np_crit</span> <span class="o">=</span> <span class="n">Np_crit</span>
-    
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Analysis complete!&quot;</span><span class="p">)</span>
     
@@ -7896,12 +8304,66 @@ assumed pedestrian crowd densities</p>
   
           <h3>Instance variables</h3>
             <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.C_mtrx_crit" class="name">var <span class="ident">C_mtrx_crit</span></p>
+            
+
+            
+  
+    <div class="desc"><p>List of damping matrices (of 'parent' modal system) for each mode 
+at Np=Np_crit. List length = N_modes.</p>
+<p>Will in general include off-diagonal terms due to mode coupling effect 
+of pedestrians, determined per method presented in McRobie's paper</p>
+<p>Note: each mode has its own matrix (list item), due to possible 
+frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.M_mtrx_crit" class="name">var <span class="ident">M_mtrx_crit</span></p>
+            
+
+            
+  
+    <div class="desc"><p>List of mass matrices (of 'parent' modal system) for each mode 
+at Np=Np_crit. List length = N_modes.</p>
+<p>Will in general include off-diagonal terms due to mode coupling effect 
+of pedestrians, determined per method presented in McRobie's paper</p>
+<p>Note: each mode has its own matrix (list item), due to possible 
+frequency-dependence of pedestrian effects i.e. cp(f) and mp(f)</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.N_pedestrians" class="name">var <span class="ident">N_pedestrians</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Array listing the set of pedestrian numbers analysed</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
             <p id="ped_dyn.LatSync_McRobie.Np_crit" class="name">var <span class="ident">Np_crit</span></p>
             
 
             
   
     <div class="desc"><p>Critical number of pedestrians to give zero net damping</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.X_crit" class="name">var <span class="ident">X_crit</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Complex-valued eigenvector of mode that loses stability at Np=Np_crit</p></div>
   <div class="source_cont">
 </div>
 
@@ -7915,6 +8377,120 @@ assumed pedestrian crowd densities</p>
     <div class="desc"><p>Function to define how added damping per pedestrian varies with
 frequency. Function with single argument 'fn' expected, 
 i.e. cp = g(fn), cp in [Ns/m]</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.cp_vals" class="name">var <span class="ident">cp_vals</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Ndarray of effective damping rate per pedestrian for each mode and 
+pedestrian count considered.</p>
+<p><em>Ndarray shape as per eigenvalues above.</em></p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.crit_mode" class="name">var <span class="ident">crit_mode</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Index of (complex) eigenmode that loses stability at Np=Np_crit</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.damped_freqs" class="name">var <span class="ident">damped_freqs</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Ndarray of damped natural frequencies for each mode and pedestrian 
+count considered.</p>
+<p><em>Ndarray shape as per eigenvalues above.</em></p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.damping_ratios" class="name">var <span class="ident">damping_ratios</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Ndarray of effective damping ratio for each mode and pedestrian 
+count considered.</p>
+<p><em>Ndarray shape as per eigenvalues above.</em></p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.eigenvalues" class="name">var <span class="ident">eigenvalues</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Ndarray of complex-valued eigenvalues of shape (N_Np,N_modes), where:</p>
+<ul>
+<li>
+<p><em>N_Np</em> is number of pedestrian cases considered</p>
+</li>
+<li>
+<p><em>N_modes</em> is number of system matrix eigenmodes</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.eigenvectors" class="name">var <span class="ident">eigenvectors</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Ndarray of complex-valued eigenvalues of shape <em>(N_Np,N_modes,N_dof)</em>, 
+where:
+* <em>N_Np</em> is number of pedestrian cases considered</p>
+<ul>
+<li>
+<p><em>N_modes</em> is number of system matrix eigenmodes</p>
+</li>
+<li>
+<p><em>N_dof</em> is the total number of degrees of freedom / state variables 
+  for the system analysed</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.eta_crit" class="name">var <span class="ident">eta_crit</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Effective damping ratio of mode that loses stability at Np=Np_crit
+(damping ratio = 0.00 expected)</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.fd_crit" class="name">var <span class="ident">fd_crit</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Damped natural frequency of mode that loses stability at Np=Np_crit</p></div>
   <div class="source_cont">
 </div>
 
@@ -7945,6 +8521,19 @@ i.e. mp = g(fn), cp in [kg]</p></div>
 
             </div>
             <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.mp_vals" class="name">var <span class="ident">mp_vals</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Ndarray of effective added mass per pedestrian for each mode and 
+pedestrian count considered.</p>
+<p><em>Ndarray shape as per eigenvalues above.</em></p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
             <p id="ped_dyn.LatSync_McRobie.ped_effect_mtrx" class="name">var <span class="ident">ped_effect_mtrx</span></p>
             
 
@@ -7952,6 +8541,17 @@ i.e. mp = g(fn), cp in [kg]</p></div>
   
     <div class="desc"><p>Matrix to represent the smeared effect of one pedestrian on the deck
 Used to calculate additive system matrices due to pedestrians</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.LatSync_McRobie.s_crit" class="name">var <span class="ident">s_crit</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Complex-valued pole / eigenvalue at Np=Np_crit</p></div>
   <div class="source_cont">
 </div>
 
