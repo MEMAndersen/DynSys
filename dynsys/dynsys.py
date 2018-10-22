@@ -172,6 +172,40 @@ class DynSys:
         if isSparse:
             print("Note: sparse matrix functionality as provided by Scipy "
                   "will be used for system matrices")
+            
+    # ------------------ GETTER / SETTER METHODS -----------------
+    
+    @property
+    def output_mtrx(self):
+        return self._output_mtrx_list
+    
+    @property
+    def response_mtrx(self):
+        return self.output_mtrx
+    
+    @output_mtrx.setter
+    def output_mtrx(self,value):
+        self._output_mtrx_list = value
+        
+    @response_mtrx.setter
+    def response_mtrx(self,value):
+        self.output_mtrx(value)
+        
+    @property
+    def output_names(self):
+        return self._output_names
+    
+    @property
+    def response_names(self):
+        return self.output_names
+    
+    @output_names.setter
+    def output_names(self,value):
+        self._output_names = value
+        
+    @response_names.setter
+    def response_names(self,value):
+        self.response_names(value)
                        
         
     def _CheckSystemMatrices(self,
