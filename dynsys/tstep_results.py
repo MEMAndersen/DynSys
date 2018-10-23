@@ -848,7 +848,8 @@ class TStep_Results:
                 
                 obj = Response_Results(names=_names,
                                        values=values,
-                                       dynsys_obj=x)
+                                       dynsys_obj=x,
+                                       tstep_results_obj=self)
                 
                 responses_inner_list.append(obj)
                 
@@ -1367,13 +1368,19 @@ class Response_Results():
     statistics
     """
     
-    def __init__(self,names,values,dynsys_obj,
-                 location_obj=None):
+    def __init__(self,names,values,dynsys_obj,tstep_results_obj,
+                 location_obj=None,
+                 plot_options={'use_common_scale' :True}
+                 ):
+        
         self.names = names
         self.values = values
         self.dynsys_obj = dynsys_obj
+        self.tstep_results_obj = tstep_results_obj
         self.location_obj = location_obj
-    
+        self.plot_options = plot_options
+        
+        
     # ----------------
     @property
     def names(self):
@@ -1440,5 +1447,61 @@ class Response_Results():
         self._stats_dict = stats_dict
         
         return stats_dict
+    
+    
+    def plot(self,axarr=None):
+        """
+        Plots time series results along with related stats
+        """
+        
+        tstep_results_obj = self.tstep_results_obj
+        tstep_obj = tstep_results_obj.tstep_obj
+        
+        nResponses = len(self.names)
+        
+        if axarr is None:
+            fig, axarr = plt.subplots(nResponses,sharex=True)
+        
+        # Get options
+        use_common_scale = self.plot_options['use_common_scale']
+        
+        # Get time values and time interval
+        t = tstep_results_obj.t
+        tInterval= [tstep_obj.tStart,tstep_obj.tEnd]
+        
+        # Determine common scale to use for plots
+        if use_common_scale:
+            
+            maxVal = npy.max(self.values)
+            minVal = npy.min(self.values)
+            absmaxVal = npy.max([maxVal,minVal])
+            
+        # Loop through plotting all responses
+        
+        for r, (vals, names) in enumerate(zip(self.values,self.names)):
+            
+            # Get axis object
+            if hasattr(axarr, "__len__"):
+                ax = axarr[r]
+            else:
+                ax = axarr
+                        
+            # Make time series plot
+            ax.plot(t,vals.T,label=names)
+                                   
+            # Set axis limits and labels
+            ax.set_xlim(tInterval)
+            
+            if r == nResponses-1:
+                ax.set_xlabel("Time [s]")
+            
+            if use_common_scale:
+                ax.set_ylim([-absmaxVal,+absmaxVal])
+            
+            # Create legend
+            if names is not None:
+                ax.legend(loc='right')
+        
+        
         
 
