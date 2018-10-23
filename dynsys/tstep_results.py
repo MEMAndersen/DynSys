@@ -523,101 +523,108 @@ class TStep_Results:
         
         fig_list = []
         
-        for dynsys_obj, _responses, _response_names in zip(DynSys_list,
+        for dynsys_obj, responses, response_names in zip(DynSys_list,
                                                            responses_list,
                                                            response_names_list):
             
-            print("   Plotting responses results for '{0}'...".format(dynsys_obj.name))
+            print("   Plotting responses results for '{0}'..."
+                  .format(dynsys_obj.name))
             
-            # Get responses to plot
-            if responses2plot is not None:
-                _responses = _responses[[r for r in responses2plot]]
-                _response_names = [_response_names[r] for r in responses2plot]
-        
-            # Determine total number of responses to plot
-            nResponses = _responses.shape[0]
-                        
-            if nResponses == 0:
-                errorstr = "nResponses=0, nothing to plot!"
-                if raiseErrors:
-                    raise ValueError(errorstr)
-                else:
-                    print(errorstr)
-                    return None
-                    
-            # Initialise figure 
-            if not useCommonPlot:
-                fig, axarr = plt.subplots(nResponses, sharex=True)
-            else:
-                fig, axarr = plt.subplots(1)
+            fig_list_inner = []
+            
+            for _responses, _response_names in zip(responses, response_names):
                 
-            fig.set_size_inches((14,8))
+                # Get responses to plot
+                if responses2plot is not None:
+                    _responses = _responses[[r for r in responses2plot]]
+                    _response_names = [_response_names[r] for r in responses2plot]
             
-            fig.suptitle("Responses for '{0}'".format(dynsys_obj.name))
-
-            fig_list.append(fig)
-            
-            # Determine common scale to use for plots
-            if useCommonScale:    
-                
-                maxVal = npy.max(_responses)
-                minVal = npy.min(_responses)
-                absmaxVal = npy.max([maxVal,minVal])
-                
-                if y_overlay is not None:
-                    
-                    y_overlay_max = npy.max(npy.array(y_overlay))
-                    absmaxVal = npy.max([absmaxVal,1.1*y_overlay_max])
-            
-            # Loop through plotting all responses
-            tvals = self.t
-            tInterval= [self.tstep_obj.tStart,self.tstep_obj.tEnd]
-            
-            for r in range(nResponses):
-                
-                # Get axis object
-                if useCommonPlot:
-                    ax = axarr
-                else:
-                    if hasattr(axarr, "__len__"):
-                        ax = axarr[r]
+                # Determine total number of responses to plot
+                nResponses = _responses.shape[0]
+                            
+                if nResponses == 0:
+                    errorstr = "nResponses=0, nothing to plot!"
+                    if raiseErrors:
+                        raise ValueError(errorstr)
                     else:
-                        ax = axarr
+                        print(errorstr)
+                        return None
+                        
+                # Initialise figure 
+                if not useCommonPlot:
+                    fig, axarr = plt.subplots(nResponses, sharex=True)
+                else:
+                    fig, axarr = plt.subplots(1)
+                    
+                fig.set_size_inches((14,8))
                 
-                # Get values to plot
-                vals = _responses[r,:].T
-                label_str = _response_names[r]
-                
-                # Make time series plot
-                ax.plot(tvals,vals,label=label_str)
-                
-                # Plot horizontal lines to overlay values provided
-                # Only plot once in case of common plot
-                if (useCommonPlot and r==0) or (not useCommonPlot):
+                fig.suptitle("Responses for '{0}'".format(dynsys_obj.name))
     
+                fig_list_inner.append(fig)
+                
+            
+                
+                # Determine common scale to use for plots
+                if useCommonScale:    
+                    
+                    maxVal = npy.max(_responses)
+                    minVal = npy.min(_responses)
+                    absmaxVal = npy.max([maxVal,minVal])
+                    
                     if y_overlay is not None:
                         
-                        # Convert to list in case of single float passed
-                        if not isinstance(y_overlay,list):
-                            y_overlay = [y_overlay]
+                        y_overlay_max = npy.max(npy.array(y_overlay))
+                        absmaxVal = npy.max([absmaxVal,1.1*y_overlay_max])
+                
+                # Loop through plotting all responses
+                tvals = self.t
+                tInterval= [self.tstep_obj.tStart,self.tstep_obj.tEnd]
+                
+                for r in range(nResponses):
+                    
+                    # Get axis object
+                    if useCommonPlot:
+                        ax = axarr
+                    else:
+                        if hasattr(axarr, "__len__"):
+                            ax = axarr[r]
+                        else:
+                            ax = axarr
+                    
+                    # Get values to plot
+                    vals = _responses[r,:].T
+                    label_str = _response_names[r]
+                    
+                    # Make time series plot
+                    ax.plot(tvals,vals,label=label_str)
+                    
+                    # Plot horizontal lines to overlay values provided
+                    # Only plot once in case of common plot
+                    if (useCommonPlot and r==0) or (not useCommonPlot):
+        
+                        if y_overlay is not None:
                             
-                        for y_val  in y_overlay:
-                            ax.axhline(y_val,color=y_overlay_color)
-                           
-                # Set axis limits and labels
-                ax.set_xlim(tInterval)
+                            # Convert to list in case of single float passed
+                            if not isinstance(y_overlay,list):
+                                y_overlay = [y_overlay]
+                                
+                            for y_val  in y_overlay:
+                                ax.axhline(y_val,color=y_overlay_color)
+                               
+                    # Set axis limits and labels
+                    ax.set_xlim(tInterval)
+                    
+                    if r == nResponses-1:
+                        ax.set_xlabel("Time [s]")
+                    
+                    if useCommonScale and not useCommonPlot:
+                        ax.set_ylim([-absmaxVal,+absmaxVal])
+                    
+                    # Create legend
+                    if _response_names is not None:
+                        ax.legend(loc='right')
                 
-                if r == nResponses-1:
-                    ax.set_xlabel("Time [s]")
-                
-                if useCommonScale and not useCommonPlot:
-                    ax.set_ylim([-absmaxVal,+absmaxVal])
-                
-                # Create legend
-                if _response_names is not None:
-                    ax.legend(loc='right')
-                
-                
+                fig_list.append(fig_list_inner)
             
         if verbose:
             toc=timeit.default_timer()
@@ -866,18 +873,21 @@ class TStep_Results:
         # Calculate responses for all systems and subsystems
         for x in dynsys_obj.DynSys_list:
             
-            # Get output matrix for subsystem
-            output_mtrx = x.output_mtrx
-            output_names = x.output_names
+            responses_inner_list = []
+            response_names_inner_list = []
             
             # Retrieve state variables for subsystem
             v, vdot, v2dot = self.GetResults(x,['v', 'vdot', 'v2dot'])
-            
-            # Obtain new responses
             state_vector = npy.hstack((v,vdot,v2dot))
             
-            responses_list.append(output_mtrx * state_vector.T)
-            response_names_list.append(output_names)
+            # Calculate responses for each set of outputs for this subsystem
+            for _om, _names in zip(x.output_mtrx,x.output_names):
+                
+                responses_inner_list.append(_om * state_vector.T)
+                response_names_inner_list.append(_names)
+                
+            responses_list.append(responses_inner_list)
+            response_names_list.append(response_names_inner_list)
             
         # Store as attributes
         self.responses_list = responses_list
@@ -1137,22 +1147,26 @@ class TStep_Results:
                 if verbose:
                     print("Calculating response statistics " + 
                           "for '{0}'...".format(dynsys_obj.name))
-                        
-                # Calculate stats for each response time series
-                maxVals = npy.ravel(npy.max(responses,axis=1))
-                minVals = npy.ravel(npy.min(responses,axis=1))
-                stdVals = npy.ravel(npy.std(responses,axis=1))
-                absmaxVals = npy.ravel(npy.max(npy.abs(responses),axis=1))
-            
-                # Record stats within a dict
-                stats_dict={}
-                stats_dict["max"]=maxVals
-                stats_dict["min"]=minVals
-                stats_dict["std"]=stdVals
-                stats_dict["absmax"]=absmaxVals
+                    
+                self.response_stats_dict[dynsys_obj] = []
                 
-                # Store as new dict entry
-                self.response_stats_dict[dynsys_obj] = stats_dict
+                for _responses in responses:
+                        
+                    # Calculate stats for each response time series
+                    maxVals = npy.ravel(npy.max(_responses,axis=1))
+                    minVals = npy.ravel(npy.min(_responses,axis=1))
+                    stdVals = npy.ravel(npy.std(_responses,axis=1))
+                    absmaxVals = npy.ravel(npy.max(npy.abs(_responses),axis=1))
+                
+                    # Record stats within a dict
+                    stats_dict={}
+                    stats_dict["max"]=maxVals
+                    stats_dict["min"]=minVals
+                    stats_dict["std"]=stdVals
+                    stats_dict["absmax"]=absmaxVals
+                    
+                    # Store as new dict entry
+                    self.response_stats_dict[dynsys_obj].append(stats_dict)
             
         else:
             if verbose:
