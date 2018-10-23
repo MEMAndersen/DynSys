@@ -7,6 +7,7 @@ import numpy as npy
 import matplotlib.pyplot as plt
 from functools import wraps
 
+from common import convert2matrix
 
 class Eig_Results():
     
@@ -23,7 +24,8 @@ class Eig_Results():
     
 
     def __repr__(self):
-        return "<%s: %s>" % (self.__class__.__name__,self.__dict__)
+        return "<%s: %s>" % (self.__class__.__name__,
+                             list(self.__dict__.keys()))
     
     # Functions to faciliate dict-like access to / setting of attributes
     
@@ -128,14 +130,14 @@ class Eig_Results():
     @X.setter
     def X(self,value):
         
-        value = self._convert2matrix(value,'X')
+        value = convert2matrix(value,dtype=complex)
         self._check_shape(value,'X')
         self._X = value
         
     @Y.setter
     def Y(self,value):
         
-        value = self._convert2matrix(value,'Y')    
+        value = convert2matrix(value,dtype=complex)    
         self._check_shape(value,'Y')            
         self._Y = value
         
@@ -210,22 +212,7 @@ class Eig_Results():
     """
     Type conversion / checker methods
     """
-    
-    def _convert2matrix(self,value,varname):
-        
-        if not isinstance(value,npy.matrix):
-            
-            value = npy.array(value)
-            
-            if value.ndim == 2:
-                value = npy.asmatrix(value,dtype=complex)
-            
-            else:
-                raise ValueError("Error: matrix type expected for '%s'"
-                                 % varname)
-                
-        return value
-    
+       
     
     def _check_shape(self,value,varname):
         

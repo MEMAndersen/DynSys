@@ -8,6 +8,7 @@ Type conversion / checker methods
 """
 
 import numpy as npy
+import inspect
 
 # Type conversion / checking functions
 # Common usage: use as decorators to setter functions
@@ -25,7 +26,7 @@ def convert2array(value):
     return value
 
 
-def convert2matrix(value):
+def convert2matrix(value,dtype=float):
     """
     Checks `value` is of numpy matrix format; 
     attempts to convert to matrix if not
@@ -35,8 +36,8 @@ def convert2matrix(value):
         
         value = npy.array(value)
         
-        if value.ndim == 2:
-            value = npy.asmatrix(value,dtype=complex)
+        if value.ndim <= 2:
+            value = npy.asmatrix(value,dtype=dtype)
         
         else:
             raise ValueError("Error: numpy.matrix type expected. " + 
@@ -47,6 +48,9 @@ def convert2matrix(value):
 
 
 # Shape checking functions
+def check_is_class(obj):
+    if not inspect.isclass(obj):
+        raise ValueError("Object expected!")
     
 def check_shape(value,expected_shape:tuple):
     

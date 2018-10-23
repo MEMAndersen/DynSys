@@ -41,8 +41,7 @@ class TStep:
                  name=None,
                  tStart=0, tEnd=30.0,
                  dt=None, max_dt=0.1,
-                 retainDOFTimeSeries=True,
-                 retainResponseTimeSeries=True,
+                 tstep_results_kwargs={},
                  writeResults2File=False,
                  results_fName="results.csv",
                  plotResponseResults=True,
@@ -220,9 +219,7 @@ class TStep:
         """
         
         # Create object to write results to
-        results_obj=tstep_results.TStep_Results(self,
-                                                retainDOFTimeSeries=retainDOFTimeSeries,
-                                                retainResponseTimeSeries=retainResponseTimeSeries)
+        results_obj=tstep_results.TStep_Results(self,**tstep_results_kwargs)
         
         self.results_obj=results_obj
         """
@@ -591,9 +588,9 @@ class TStep:
                 raise ValueError("Integration failed.")
                 
         # Calculate responses
-        results_obj.CalcResponses(write_results_to_file=self.writeResults2File,
-                                  results_fName=self.results_fName,
-                                  verbose=verbose)
+        results_obj.calc_responses(write_results_to_file=self.writeResults2File,
+                                   results_fName=self.results_fName,
+                                   verbose=verbose)
         
         if verbose: print("Total time steps: {0}".format(results_obj.nResults))        
         if verbose: print("Overall solution time: %.3f seconds" % solve_time)

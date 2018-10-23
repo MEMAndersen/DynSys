@@ -363,6 +363,9 @@ class DynSys:
                     
         if append:
             
+            output_mtrx = convert2matrix(output_mtrx)
+            output_names = list(output_names)
+                        
             self.output_mtrx.append(output_mtrx)
             self.output_names.append(output_names)
             
@@ -846,18 +849,18 @@ class DynSys:
             return getattr(self,attr)
         
         
-    def GetOutputMtrx(self,
-                      state_variables_only:bool=False,
-                      all_systems:bool=True):
+    def get_output_mtrx(self,
+                        state_variables_only:bool=False,
+                        all_systems:bool=True):
         """
         Returns output matrix for overall system
         
         ***
         Optional:
             
-        * `state_variables_only`, _boolean_, if True, only columns relating to state 
-          variables (i.e. displacements, velocities - but not accelerations)
-          will be returned
+        * `state_variables_only`, _boolean_, if True, only columns relating to 
+          state variables (i.e. displacements, velocities - but not 
+          accelerations) will be returned
           
         * `all_systems`, _boolean_, if True output matrices for all subsystems 
           will be arranged as block diagonal matrix, which represents the 
@@ -886,9 +889,18 @@ class DynSys:
         for x in sys_list:
 
             nDOF = x.nDOF
-            output_mtrx = x.output_mtrx
-            output_names = x.output_names
             
+            # Loop over all output matrices
+            for i, (om, names) in enumerate(zip(x.output_mtrx,x.output_names)):
+                
+                if i==0:
+                    output_mtrx = om
+                    output_names = names
+                    
+                else:
+                    output_mtrx = npy.vstack((output_mtrx,om))
+                    output_names += names
+                                
             # Decompose into groups relating to (disp,vel,accn)
             disp_cols = output_mtrx[:,:nDOF]
             vel_cols = output_mtrx[:,nDOF:2*nDOF]
@@ -1519,8 +1531,8 @@ class DynSys:
         if C is None:
             
             # Get output matrix for full system, if defined
-            C, output_names = self.GetOutputMtrx(all_systems=True,
-                                                 state_variables_only=False)
+            C, output_names = self.get_output_mtrx(all_systems=True,
+                                                   state_variables_only=False)
             
             # Check shape
             if C.shape[1]!=3*nDOF_full:
@@ -1569,28 +1581,6 @@ class DynSys:
             zeros_mtrx = npy.zeros_like(Z)
             Z2 = npy.vstack((npy.hstack((Z,zeros_mtrx)),
                              npy.hstack((zeros_mtrx,Z))))
-                    
-        # Print shapes of all arrays
-        if verbose:
-            print("Shapes of A B C D matrices:")
-            print("A: {0}".format(A.shape))
-            print("B: {0}".format(B.shape))
-            
-            if C is not None:
-                print("C: {0}".format(C.shape))
-            else:
-                print("C: None")
-            
-            if D is not None:
-                print("D: {0}".format(D.shape))
-            else:
-                print("D: None")
-                
-            print("C_acc: {0}".format(C_acc.shape))
-            print("D_acc: {0}".format(D_acc.shape))
-            
-            if hasConstraints:
-                print("Z2:{0}".format(Z2.shape))                
             
         # Loop through frequencies
         Gf_list = []
