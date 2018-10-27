@@ -71,7 +71,7 @@ analysis_obj = UKNA_BSEN1991_2_walkers_joggers(modalsys_obj=my_modal_sys,
 results_obj = analysis_obj.run()
 
 #%%
-fig_list = results_obj.plot_state_results(my_modal_sys)
+fig_list = results_obj.plot_response_results(my_modal_sys)
 print(fig_list)
 #results_obj.PlotResponsePSDs()
 

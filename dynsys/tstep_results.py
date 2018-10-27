@@ -128,12 +128,20 @@ class TStep_Results:
         Returns matrix of shape [nSteps,nDOF]
         """
         
-        obj = self._force_results
+        obj = self.f_obj
         
         if obj is None:
             return None
         else:
             return obj.values
+        
+    @property
+    def f_obj(self):
+        """
+        Returns `TimeSeries_Results()` instance used to internally implement
+        `f`
+        """
+        return self._force_results
     
     @f.setter
     def f(self,values):
@@ -159,12 +167,20 @@ class TStep_Results:
         
         Returns matrix of shape [nSteps,nDOF]
         """
-        obj = self._disp_results
+        obj = self.v_obj
         
         if obj is None:
             return None
         else:
             return obj.values
+        
+    @property
+    def v_obj(self):
+        """
+        Returns `TimeSeries_Results()` instance used to internally implement
+        `v`
+        """
+        return self._disp_results
     
     @v.setter
     def v(self,values):
@@ -188,12 +204,20 @@ class TStep_Results:
         """
         Velocities of analysis DOFs
         """
-        obj = self._velocity_results
+        obj = self.vdot_obj
         
         if obj is None:
             return None
         else:
             return obj.values
+        
+    @property
+    def vdot_obj(self):
+        """
+        Returns `TimeSeries_Results()` instance used to internally implement
+        `vdot`
+        """
+        return self._velocity_results
     
     @vdot.setter
     def vdot(self,values):
@@ -218,12 +242,20 @@ class TStep_Results:
         """
         Accelerations of analysis DOFs
         """
-        obj = self._accn_results
+        obj = self.v2dot_obj
         
         if obj is None:
             return None
         else:
             return obj.values
+        
+    @property
+    def v2dot_obj(self):
+        """
+        Returns `TimeSeries_Results()` instance used to internally implement
+        `v2dot`
+        """
+        return self._accn_results
     
     @v2dot.setter
     def v2dot(self,values):
@@ -248,12 +280,20 @@ class TStep_Results:
         """
         Internal constraint forces
         """
-        obj = self._constraint_forces
+        obj = self.f_constraint_obj
         
         if obj is None:
             return None
         else:
             return obj.values
+        
+    @property
+    def f_constraint_obj(self):
+        """
+        Returns `TimeSeries_Results()` instance used to internally implement
+        `f_constraint`
+        """
+        return self._constraint_forces
     
     @f_constraint.setter
     def f_constraint(self,values):
@@ -441,8 +481,7 @@ class TStep_Results:
     
     def plot_state_results(self,
                            dynsys_obj=None,
-                           verbose:bool=True,
-                           dofs2Plot=None):
+                           verbose:bool=True):
         """
         Produces time series plots of the following, as subplots in a single 
         figure:
@@ -463,21 +502,12 @@ class TStep_Results:
         produced for each subsystem.
         
         ***
-        **Required:**
-        
-        (No required arguments; results held as class attributes will be 
-        plotted)
-        
         ***
         **Optional:**
             
         * `dynsys_obj`, can be used to specify the subsystem for which results 
           which should be plotted. If _None_ then results for all freedoms 
           (i.e. all subsystems) will be plotted.
-          
-        * `dofs2plot`, _list_ or _array_ of indexs of freedoms for which 
-          results should be plotted. If _None_ then results for all freedoms 
-          will be plotted.
           
         * `verbose`, _boolean_, if True text will be written to console
           
@@ -532,21 +562,12 @@ class TStep_Results:
                 # All systems and subsystems are modal
                 sysStr = "Modal "
                 
-            # Get data to plot   
+             # Get data to plot   
             t = self.t
             f,v,vdot,v2dot,f_constraint =self.GetResults(obj,['f','v',
                                                             'vdot','v2dot',
                                                             'f_constraint'])
 
-            # Handle dofs2Plot if provided
-            # Note in this case the system to which dofs relate must also
-            # be defined!
-            if dofs2Plot is not None and dynsys_obj is not None:
-
-                f = f[:,dofs2Plot]
-                v = v[:,dofs2Plot]
-                vdot = vdot[:,dofs2Plot]
-                v2dot = v2dot[:,dofs2Plot]
             
             # Create time series plots
             self._TimePlot(ax=axarr[0],
@@ -1116,35 +1137,21 @@ class TStep_Results:
         
         if self.options['calc_dof_stats']:
             
-            if verbose: print("Calculating DOF statistics...")
+            if verbose:
+                print("Calculating DOF statistics...")
             
-            stats=[]
-            
-            for _timeseries in [self.v,self.vdot,self.v2dot,self.f_constraint]:
+            for obj in [self.v_obj,
+                        self.vdot_obj,
+                        self.v2dot_obj,
+                        self.f_constraint_obj]:
                 
-                # Calculate stats for each response time series
-                maxVals = npy.asarray(npy.max(_timeseries,axis=0).T)
-                minVals = npy.asarray(npy.min(_timeseries,axis=0).T)
-                stdVals = npy.asarray(npy.std(_timeseries,axis=0).T)
-                absmaxVals = npy.asarray(npy.max(npy.abs(_timeseries),axis=0).T)
-            
-                # Record stats within a dict
-                d={}
-                d["max"]=maxVals
-                d["min"]=minVals
-                d["std"]=stdVals
-                d["absmax"]=absmaxVals
-                stats.append(d)
-            
-            # Store within object
-            self.dof_stats=stats
-            
+                obj.calc_stats()
+                        
         else:
             if verbose:
                 print("'calc_dof_stats' option set to False\n" +
                       "DOF statistics will not be computed")
-        
-        return stats
+
         
     
     def calc_response_stats(self,verbose=True):
@@ -1432,6 +1439,8 @@ class TimeSeries_Results():
         
         self.dynsys_obj = tstep_results_obj.tstep_obj.dynsys_obj
         
+        self._stats_dict = None
+        
         
     # ----------------
     @property
@@ -1492,6 +1501,7 @@ class TimeSeries_Results():
         # Record stats within a dict
         stats_dict={}
         stats_dict["max"] = npy.ravel(npy.max(vals,axis=1))
+        stats_dict["mean"] = npy.ravel(npy.mean(vals,axis=1))
         stats_dict["min"] = npy.ravel(npy.min(vals,axis=1))
         stats_dict["std"] = npy.ravel(npy.std(vals,axis=1))
         stats_dict["absmax"] = npy.ravel(npy.max(npy.abs(vals),axis=1))
@@ -1517,14 +1527,22 @@ class TimeSeries_Results():
         if axarr is None:
             fig, axarr = plt.subplots(nResponses,sharex=True)
         
-        # Get options
+        # Get plot options
         use_common_scale = self.plot_options['use_common_scale']
+        
+        attr='plot_stats'
+        if hasattr(self.plot_options,attr):
+            plot_stats = getattr(self.plot_options,attr)
+        else:
+            plot_stats = True
         
         # Get time values and time interval
         t = tstep_results_obj.t
         tInterval= [tstep_obj.tStart,tstep_obj.tEnd]
         
         # Determine common scale to use for plots
+        
+        
         if use_common_scale:
             
             maxVal = npy.max(self.values)
@@ -1543,6 +1561,15 @@ class TimeSeries_Results():
                         
             # Make time series plot
             ax.plot(t,vals.T,label=names)
+            
+            if plot_stats:
+                # Overlay stats if avaliable
+                stats_dict = self.stats
+                
+                if stats_dict is not None:
+                    ax.axhline(stats_dict['max'][r],color='r',alpha=0.3)
+                    ax.axhline(stats_dict['mean'][r],color='k',alpha=0.3)
+                    ax.axhline(stats_dict['min'][r],color='g',alpha=0.3)
                                    
             # Set axis limits and labels
             ax.set_xlim(tInterval)
