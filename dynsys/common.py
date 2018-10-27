@@ -68,4 +68,9 @@ def check_is_square(value):
 
 
 
+def deprecation_warning(old_method:str,new_method):
+    
+    print("*** Warning: '%s' method is deprecated. Use '%s' instead ***" % 
+          (old_method,new_method))
+
 

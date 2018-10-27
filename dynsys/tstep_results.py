@@ -16,7 +16,7 @@ import pandas
 from datetime import datetime
 from collections import OrderedDict
 
-from common import check_is_class
+from common import check_is_class, deprecation_warning
 
 
 
@@ -63,47 +63,8 @@ class TStep_Results:
             Note that providing DOF time series are retained, responses can 
             always be re-calculated using `calc_responses()` method
         """
-        
-        
-        self.nDOF=None
-        """
-        Number of degrees of freedom for system being analysed
-        """
-        
-        self.t=None
-        """
-        Time values
-        """
-        
-        self.f=None
-        """
-        External applied forces
-        """
-        
-        self.v=None
-        """
-        Displacements of analysis DOFs
-        """
-        
-        self.vdot=None
-        """
-        Velocities of analysis DOFs
-        """
-        
-        self.v2dot=None
-        """
-        Accelerations of analysis DOFs
-        """
-        
-        self.f_constraint=None
-        """
-        Internal constraint forces
-        """
-        
+                
         self.nResults=0
-        """
-        Number of time-steps at which results are recorded
-        """
         
         self.tstep_obj=tstep_obj
         """
@@ -133,7 +94,202 @@ class TStep_Results:
         _Set using `CalcDOFStats()`_
         """
         
+    # -----------------GETTER / SETTER FUNCTIONS FOR PROPERTIES ---------------    
+                
+    @property
+    def nDOF(self):
+        """
+        Number of degrees of freedom for system being analysed
+        """
+        return self._nDOF
+    
+    @nDOF.setter
+    def nDOF(self,value):
+        self._nDOF = value
+        
+    # ---------------
+    @property
+    def t(self):
+        """
+        Time values for each results time step
+        """
+        return self._t
+        
+    @t.setter
+    def t(self,values):
+        self._t = values
+        
+    # ---------------
+    @property
+    def f(self):
+        """
+        External applied forces
+        
+        Returns matrix of shape [nSteps,nDOF]
+        """
+        
+        obj = self._force_results
+        
+        if obj is None:
+            return None
+        else:
+            return obj.values
+    
+    @f.setter
+    def f(self,values):
+        
+        if values is None:
+            self._force_results = None
+            
+        else:
+            nDOF = values.shape[1]
+            
+            obj = TimeSeries_Results(names = ["f%d" for n in range(nDOF)],
+                                     values = values,
+                                     tstep_results_obj = self,
+                                     plot_options={'use_common_plot' :True})
+            
+            self._force_results = obj
+        
+    # ---------------
+    @property
+    def v(self):
+        """
+        Displacements of analysis DOFs
+        
+        Returns matrix of shape [nSteps,nDOF]
+        """
+        obj = self._disp_results
+        
+        if obj is None:
+            return None
+        else:
+            return obj.values
+    
+    @v.setter
+    def v(self,values):
+        
+        if values is None:
+            self._disp_results = None
+            
+        else:
+            nDOF = values.shape[1]
+            
+            obj = TimeSeries_Results(names = ["$y_{%d}$" for n in range(nDOF)],
+                                     values = values,
+                                     tstep_results_obj = self,
+                                     plot_options={'use_common_plot' :True})
+            
+            self._disp_results = obj
+        
+    # ---------------
+    @property
+    def vdot(self):
+        """
+        Velocities of analysis DOFs
+        """
+        obj = self._velocity_results
+        
+        if obj is None:
+            return None
+        else:
+            return obj.values
+    
+    @vdot.setter
+    def vdot(self,values):
+        
+        if values is None:
+            self._velocity_results = None
+            
+        else:
+            nDOF = values.shape[1]
+            
+            obj = TimeSeries_Results(names = ["$\dot{v}_{%d}$"
+                                              for n in range(nDOF)],
+                                     values = values,
+                                     tstep_results_obj = self,
+                                     plot_options={'use_common_plot' :True})
+            
+            self._velocity_results = obj
+        
+    # ---------------
+    @property
+    def v2dot(self):
+        """
+        Accelerations of analysis DOFs
+        """
+        obj = self._accn_results
+        
+        if obj is None:
+            return None
+        else:
+            return obj.values
+    
+    @v2dot.setter
+    def v2dot(self,values):
+        
+        if values is None:
+            self._accn_results = None
+            
+        else:
+            nDOF = values.shape[1]
+            
+            obj = TimeSeries_Results(names = ["$\ddot{v}_{%d}$"
+                                              for n in range(nDOF)],
+                                     values = values,
+                                     tstep_results_obj = self,
+                                     plot_options={'use_common_plot' :True})
+            
+            self._accn_results = obj
+        
+    # ---------------
+    @property
+    def f_constraint(self):
+        """
+        Internal constraint forces
+        """
+        obj = self._constraint_forces
+        
+        if obj is None:
+            return None
+        else:
+            return obj.values
+    
+    @f_constraint.setter
+    def f_constraint(self,values):
+        
+        if values is None:
+            self._constraint_forces = None
+            
+        else:
+            nDOF = values.shape[1]
+            
+            obj = TimeSeries_Results(names = ["$f_{constraint,%d}$"
+                                              for n in range(nDOF)],
+                                     values = values,
+                                     tstep_results_obj = self,
+                                     plot_options={'use_common_plot' :True})
+            
+            self._constraint_forces = obj
+    
+    # ---------------     
+    @property
+    def nResults(self):
+        """
+        Number of time-steps at which results are recorded
+        """
+        return self._nResults
+    
+    @nResults.setter
+    def nResults(self,value):
+        self._nResults = value
      
+    # -------------------------------------------------------------------------
+    
+    
+    
+    
+        
         
     def ClearResults(self):
         """
@@ -149,13 +305,33 @@ class TStep_Results:
         self.nResults = 0
         
         
-    def RecordResults(self,t,f,v,vdot,v2dot,f_constraint):
+    def RecordResults(self,t,f,v,vdot,v2dot,f_constraint,
+                      verbose=True,append=True):
         """
         Used to record results from time-stepping analysis as implemented 
         by `TStep().run()`
         """
         
+        if not hasattr(t,'__len__'):
+            nResults = 1
+        else:
+            nResults = len(t)
+            
         if self.nResults==0:
+            append=False # no results currently save
+                       
+        if append:
+            
+            self.t = npy.asmatrix(npy.append(self.t,npy.asmatrix(t),axis=0))
+            self.f = npy.asmatrix(npy.append(self.f,f.T,axis=0))
+            self.v = npy.asmatrix(npy.append(self.v,v.T,axis=0))
+            self.vdot = npy.asmatrix(npy.append(self.vdot,vdot.T,axis=0))
+            self.v2dot = npy.asmatrix(npy.append(self.v2dot,v2dot.T,axis=0))
+            self.f_constraint = npy.asmatrix(npy.append(self.f_constraint,
+                                                        f_constraint.T,axis=0))
+            
+        else:
+                                   
             self.nDOF=v.shape[0]
             self.t=npy.asmatrix(t)
             self.f=f.T
@@ -164,15 +340,7 @@ class TStep_Results:
             self.v2dot=v2dot.T
             self.f_constraint=f_constraint.T
             
-        else:
-            self.t = npy.asmatrix(npy.append(self.t,npy.asmatrix(t),axis=0))
-            self.f = npy.asmatrix(npy.append(self.f,f.T,axis=0))
-            self.v = npy.asmatrix(npy.append(self.v,v.T,axis=0))
-            self.vdot = npy.asmatrix(npy.append(self.vdot,vdot.T,axis=0))
-            self.v2dot = npy.asmatrix(npy.append(self.v2dot,v2dot.T,axis=0))
-            self.f_constraint = npy.asmatrix(npy.append(self.f_constraint,f_constraint.T,axis=0))
-                        
-        self.nResults+=1
+        self.nResults += nResults
         
         
     def GetResults(self,dynsys_obj,attr_list:list):
@@ -266,10 +434,15 @@ class TStep_Results:
         return lines
         
     
-    def PlotStateResults(self,
-                         dynsys_obj=None,
-                         verbose:bool=True,
-                         dofs2Plot=None):
+    def PlotStateResults(self,*args,**kwargs):
+        deprecation_warning('PlotStateResults','plot_state_results')
+        return self.plot_state_results(*args,**kwargs)
+    
+    
+    def plot_state_results(self,
+                           dynsys_obj=None,
+                           verbose:bool=True,
+                           dofs2Plot=None):
         """
         Produces time series plots of the following, as subplots in a single 
         figure:
@@ -417,24 +590,17 @@ class TStep_Results:
         return fig_list
     
     
+    def PlotResponseResults(self,*args,**kwargs):
+        deprecation_warning('PlotResponseResults','plot_response_results')
+        return self.plot_response_results(*args,**kwargs)
+    
+    
     def plot_response_results(self,
                               dynsys_obj=None,
-                              responses2plot=None,
-                              y_overlay:list=None,
-                              y_overlay_color:str='darkorange',
-                              verbose=True,
-                              raiseErrors=True,
-                              useCommonPlot:bool=False,
-                              useCommonScale:bool=True):
+                              verbose=True):
         """
         Produces a new figure with linked time series subplots for 
         all responses/outputs
-        
-        ***
-        **Required:**
-        
-        (No required arguments; results held as class attributes will be 
-        plotted)
         
         ***
         **Optional:**
@@ -443,28 +609,10 @@ class TStep_Results:
           which should be plotted. If _None_ then results for all freedoms 
           (i.e. all subsystems) will be plotted.
           
-        * `responses2plot`, can be used to specify the indexs of responses to 
-          plot, with the specified `dynsys_obj`.
-          
-        * `y_overlay`, _list_ of floats, can be used to overlay a horizontal 
-          line onto plots e.g. to denote some criteria or limit to be satisfied
-          
-        * `verbose`, _boolean_, if True then output will be written to console
-          
-        * `raiseErrors`, _boolean, dictates whether `ValueError()` should be 
-          raised in case of no results to plot.
-        
-        * `useCommonPlot`, _boolean_, if True all responses will be overlaid 
-          onto a single axis. Otherwise multiple subplots will created, one for 
-          each response
-          
-        * `useCommonScale`, _boolean_, if multiple subplots are created, 
-          dictates whether a common vertical scale should be used
-          
         ***
         **Returns:**
          
-        _List_ of figure objects
+        Nested list of figure objects
           
         """
         
@@ -485,110 +633,21 @@ class TStep_Results:
         
         fig_list = []
         
-        for dynsys_obj, response_list in zip(DynSys_list,self.response_results):
+        # Loop over all specified subsystems
+        for dynsys_obj, response_obj_list in zip(DynSys_list,self.response_results):
             
             print("   Plotting responses results for '{0}'..."
                   .format(dynsys_obj.name))
             
             fig_list_inner = []
             
-            for obj in response_list:
+            # Iterate over all responses for this subsystem
+            for response_results_obj in response_obj_list:
                 
-                _responses = obj.values
-                _response_names = obj.names
+                fig_list_inner.append(response_results_obj.plot())
                 
-                # Get responses to plot
-                if responses2plot is not None:
-                    _responses = _responses[[r for r in responses2plot]]
-                    _response_names = [_response_names[r] for r in responses2plot]
-            
-                # Determine total number of responses to plot
-                nResponses = _responses.shape[0]
-                            
-                if nResponses == 0:
-                    errorstr = "nResponses=0, nothing to plot!"
-                    if raiseErrors:
-                        raise ValueError(errorstr)
-                    else:
-                        print(errorstr)
-                        return None
-                        
-                # Initialise figure 
-                if not useCommonPlot:
-                    fig, axarr = plt.subplots(nResponses, sharex=True)
-                else:
-                    fig, axarr = plt.subplots(1)
-                    
-                fig.set_size_inches((14,8))
+            fig_list.append(fig_list_inner)
                 
-                fig.suptitle("Responses for '{0}'".format(dynsys_obj.name))
-    
-                fig_list_inner.append(fig)
-                
-            
-                
-                # Determine common scale to use for plots
-                if useCommonScale:    
-                    
-                    maxVal = npy.max(_responses)
-                    minVal = npy.min(_responses)
-                    absmaxVal = npy.max([maxVal,minVal])
-                    
-                    if y_overlay is not None:
-                        
-                        y_overlay_max = npy.max(npy.array(y_overlay))
-                        absmaxVal = npy.max([absmaxVal,1.1*y_overlay_max])
-                
-                # Loop through plotting all responses
-                tvals = self.t
-                tInterval= [self.tstep_obj.tStart,self.tstep_obj.tEnd]
-                
-                for r in range(nResponses):
-                    
-                    # Get axis object
-                    if useCommonPlot:
-                        ax = axarr
-                    else:
-                        if hasattr(axarr, "__len__"):
-                            ax = axarr[r]
-                        else:
-                            ax = axarr
-                    
-                    # Get values to plot
-                    vals = _responses[r,:].T
-                    label_str = _response_names[r]
-                    
-                    # Make time series plot
-                    ax.plot(tvals,vals,label=label_str)
-                    
-                    # Plot horizontal lines to overlay values provided
-                    # Only plot once in case of common plot
-                    if (useCommonPlot and r==0) or (not useCommonPlot):
-        
-                        if y_overlay is not None:
-                            
-                            # Convert to list in case of single float passed
-                            if not isinstance(y_overlay,list):
-                                y_overlay = [y_overlay]
-                                
-                            for y_val  in y_overlay:
-                                ax.axhline(y_val,color=y_overlay_color)
-                               
-                    # Set axis limits and labels
-                    ax.set_xlim(tInterval)
-                    
-                    if r == nResponses-1:
-                        ax.set_xlabel("Time [s]")
-                    
-                    if useCommonScale and not useCommonPlot:
-                        ax.set_ylim([-absmaxVal,+absmaxVal])
-                    
-                    # Create legend
-                    if _response_names is not None:
-                        ax.legend(loc='right')
-                
-                fig_list.append(fig_list_inner)
-            
         if verbose:
             toc=timeit.default_timer()
             print("Plots prepared after %.3f seconds." % (toc-tic))
@@ -596,13 +655,17 @@ class TStep_Results:
         return fig_list
         
     
-    def PlotResults(self,
-                    dynsys_obj=None,
-                    verbose:bool=True,
-                    dofs2Plot:list=None,
-                    useCommonPlot:bool=False,
-                    useCommonScale:bool=False,
-                    y_overlay:float=None):
+    def PlotResults(self,*args,**kwargs):
+        
+        deprecation_warning('PlotResults','plot_results')
+    
+        return self.plot_results(*args,**kwargs)
+    
+    
+    def plot_results(self,
+                     dynsys_obj=None,
+                     verbose:bool=True,
+                     dofs2Plot:list=None):
         """
         Presents the results of time-stepping analysis by producing the 
         following plots:
@@ -610,12 +673,6 @@ class TStep_Results:
         * State results plot: refer `PlotStateResults()`
         
         * Response results plot: refer `PlotResponseResults()`
-        
-        ***
-        **Required:**
-        
-        (No required arguments; results held as class attributes will be 
-        plotted)
         
         ***
         **Optional:**
@@ -626,10 +683,9 @@ class TStep_Results:
         * `verbose`, _boolean_, if True progress will be written to console
         
         * `dof2Plot`, _list_ of integers to denote DOFs to plot. Can be used to 
-          produce a 'cleaner' plot, in case of large numbers of DOFs.
-          
-        * `useCommonPlot`, `useCommonScale`: _boolean_, 
-          refer `PlotResponseResults()` docs for details
+          produce a 'cleaner' plot, in case of large numbers of DOFs. Note will 
+          only work in conjunction with `dynsys_obj`, i.e. subsystem must also 
+          be selected
         
         ***
         **Returns:**
@@ -638,18 +694,14 @@ class TStep_Results:
         
         """
         
-        fig_list1 = self.PlotStateResults(dynsys_obj=dynsys_obj,
-                                          verbose=verbose,
-                                          dofs2Plot=dofs2Plot)
+        state_fig_list = self.plot_state_results(dynsys_obj=dynsys_obj,
+                                                 verbose=verbose,
+                                                 dofs2Plot=dofs2Plot)
         
-        fig_list2 = self.plot_response_results(dynsys_obj=dynsys_obj,
-                                               raiseErrors=False,
-                                               verbose=verbose,
-                                               useCommonPlot=useCommonPlot,
-                                               useCommonScale=useCommonScale,
-                                               y_overlay=y_overlay)
+        response_fig_list = self.plot_response_results(dynsys_obj=dynsys_obj,
+                                                       verbose=verbose)
         
-        return [fig_list1,fig_list2]
+        return state_fig_list, response_fig_list
     
     
     def PlotResponsePSDs(self,nperseg=None):
@@ -846,10 +898,9 @@ class TStep_Results:
                 
                 values = _om * state_vector.T
                 
-                obj = Response_Results(names=_names,
-                                       values=values,
-                                       dynsys_obj=x,
-                                       tstep_results_obj=self)
+                obj = TimeSeries_Results(names=_names,
+                                         values=values,
+                                         tstep_results_obj=self)
                 
                 responses_inner_list.append(obj)
                 
@@ -1362,23 +1413,24 @@ class SysPlot():
     
     
     
-class Response_Results():
+class TimeSeries_Results():
     """
-    Class to act as container for response results and associated 
-    statistics
+    Class to act as container for time series results, with methods to compute 
+    statistics etc
     """
     
-    def __init__(self,names,values,dynsys_obj,tstep_results_obj,
+    def __init__(self,names,values,tstep_results_obj,
                  location_obj=None,
                  plot_options={'use_common_scale' :True}
                  ):
         
         self.names = names
         self.values = values
-        self.dynsys_obj = dynsys_obj
         self.tstep_results_obj = tstep_results_obj
         self.location_obj = location_obj
         self.plot_options = plot_options
+        
+        self.dynsys_obj = tstep_results_obj.tstep_obj.dynsys_obj
         
         
     # ----------------
@@ -1429,7 +1481,7 @@ class Response_Results():
     
     # Note no setter method - cannot set stats directly!
     # ----------------
-    
+        
     def calc_stats(self):
         """
         Calculate basis statistics to summarise time series results
@@ -1447,6 +1499,9 @@ class Response_Results():
         self._stats_dict = stats_dict
         
         return stats_dict
+    
+    
+   
     
     
     def plot(self,axarr=None):
@@ -1501,6 +1556,8 @@ class Response_Results():
             # Create legend
             if names is not None:
                 ax.legend(loc='right')
+                
+        return fig
         
         
         
