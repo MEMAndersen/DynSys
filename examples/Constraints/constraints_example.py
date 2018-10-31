@@ -76,5 +76,12 @@ print(fig_list)
 #results_obj.PlotResponsePSDs()
 
 #%%
-#fig = results_obj.PlotDeformed(200,dynsys_obj=TMD1,seperation=0.0)
-#results_obj.AnimateResults(dynsys_obj=TMD1)
+df_list = results_obj.get_response_stats_df()
+for df in df_list:
+    print(df)
+
+#%%
+    
+df = results_obj.get_dof_stats_df()
+print(df)
+

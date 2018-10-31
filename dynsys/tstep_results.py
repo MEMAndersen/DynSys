@@ -362,28 +362,27 @@ class TStep_Results:
                        
         if append:
             
-            self.t = npy.asmatrix(npy.append(self.t,npy.asmatrix(t),axis=0))
-            self.f = npy.asmatrix(npy.append(self.f,f.T,axis=0))
-            self.v = npy.asmatrix(npy.append(self.v,v.T,axis=0))
-            self.vdot = npy.asmatrix(npy.append(self.vdot,vdot.T,axis=0))
-            self.v2dot = npy.asmatrix(npy.append(self.v2dot,v2dot.T,axis=0))
-            self.f_constraint = npy.asmatrix(npy.append(self.f_constraint,
-                                                        f_constraint.T,axis=0))
+            self.t += [t]
+            self.f = npy.append(self.f,f,axis=1)
+            self.v = npy.append(self.v,v,axis=1)
+            self.vdot = npy.append(self.vdot,vdot,axis=1)
+            self.v2dot = npy.append(self.v2dot,v2dot,axis=1)
+            self.f_constraint = npy.append(self.f_constraint,f_constraint,axis=1)
             
         else:
                                    
             self.nDOF=v.shape[0]
-            self.t=npy.asmatrix(t)
-            self.f=f.T
-            self.v=v.T
-            self.vdot=vdot.T
-            self.v2dot=v2dot.T
-            self.f_constraint=f_constraint.T
+            self.t=[t]
+            self.f=f
+            self.v=v
+            self.vdot=vdot
+            self.v2dot=v2dot
+            self.f_constraint=f_constraint
             
         self.nResults += nResults
         
         
-    def GetResults(self,dynsys_obj,attr_list:list):
+    def get_results(self,dynsys_obj,attr_list:list):
         """
         Retrieves results for a given DynSys object, which is assumed to be a 
         subsystem of the parent system (this is checked)
@@ -433,7 +432,7 @@ class TStep_Results:
                 vals = getattr(self,attr)             # for full system
                 
                 if attr != 't':
-                    vals = vals[:,startIndex:endIndex]    # for subsystem requested
+                    vals = vals[startIndex:endIndex,:]    # for subsystem requested
                 
                 vals_list.append(vals)
                 
@@ -911,13 +910,13 @@ class TStep_Results:
             responses_inner_list = []
             
             # Retrieve state variables for subsystem
-            v, vdot, v2dot = self.GetResults(x,['v', 'vdot', 'v2dot'])
-            state_vector = npy.hstack((v,vdot,v2dot))
+            v, vdot, v2dot = self.get_results(x,['v', 'vdot', 'v2dot'])
+            state_vector = npy.vstack((v,vdot,v2dot))
             
             # Calculate responses for each set of outputs for this subsystem
             for _om, _names in zip(x.output_mtrx,x.output_names):
                 
-                values = _om * state_vector.T
+                values = _om @ state_vector
                 
                 obj = TimeSeries_Results(names=_names,
                                          values=values,
@@ -1181,6 +1180,29 @@ class TStep_Results:
                 print("'calc_response_stats' option set to False\n" + 
                       "Response statistics will not be computed")
             
+            
+    def get_dof_stats_df(self):
+        """
+        Returns dof stats as Pandas dataframe
+        """
+        
+        def get_stats_df(obj,prefix:str):
+            stats_dict = obj.stats
+            n = stats_dict['max'].shape[0]
+            df = pandas.DataFrame(data=stats_dict,index=["%s%d" % (prefix,x) 
+                                                         for x in range(n)])
+            return df
+        
+        df_list = []
+        
+        df_list.append(get_stats_df(self.f_obj,'f'))
+        df_list.append(get_stats_df(self.v_obj,'disp'))
+        df_list.append(get_stats_df(self.vdot_obj,'vel'))
+        df_list.append(get_stats_df(self.v2dot_obj,'acc'))
+        df_list.append(get_stats_df(self.f_constraint_obj,'f_constraint'))
+            
+        return df_list
+        
     
     def get_response_stats_df(self):
         """
@@ -1190,7 +1212,7 @@ class TStep_Results:
         df_list = []
         
         for dynsys_obj, results_obj_list in zip(self.DynSys_list,
-                                                self.responses_list):
+                                                self.response_results):
                     
             for results_obj in results_obj_list:
             
@@ -1486,6 +1508,9 @@ class TimeSeries_Results():
         """
         Dict containing statistics dervied from time series results
         """
+        if self._stats_dict is None:
+            self.calc_stats()
+            
         return self._stats_dict
     
     # Note no setter method - cannot set stats directly!
