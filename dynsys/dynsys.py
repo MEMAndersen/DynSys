@@ -14,9 +14,6 @@ import matplotlib.pyplot as plt
 import scipy
 from pkg_resources import parse_version
 
-#import deprecation # not in anaconda distribution - obtain this from pip
-#@deprecation.deprecated(deprecated_in="0.1.0",current_version=currentVersion)
-
 import scipy.sparse as sparse
 
 from scipy.linalg import block_diag
@@ -25,6 +22,7 @@ from scipy.linalg import block_diag
 # DynSys module imports
 from eig_results import Eig_Results
 from freq_response_results import FreqResponse_Results
+from common import convert2matrix
 
 
 class DynSys:
@@ -141,31 +139,17 @@ class DynSys:
         self.name = name
         """Name/descriptions of dynamic system"""
         
-        
         if output_mtrx is None:
-            output_mtrx = npy.asmatrix(npy.zeros((0,3*self.nDOF)))
-            
+            output_mtrx = []
         self.output_mtrx = output_mtrx
-        """
-        Output matrix
-        
-        Use `AddOutputMtrx()` to define append output matrices. 
-        `CheckOutputMtrx()` can be used to check the validity (shape) of the 
-        output matrices defined.
-        """
         
         if output_names is None:
             output_names = []
-        
         self.output_names = output_names
-        """
-        List of string descriptions for rows of `output_mtrx`.
-        Used to label plots etc.
-        """
-        
+                            
         # Check definitions are consistent
         self._CheckSystemMatrices()
-        self.CheckOutputMtrx()
+        self.check_outputs()
         
         if showMsgs:
             print("%s `%s` initialised." % (self.description,self.name))
@@ -178,36 +162,39 @@ class DynSys:
     
     @property
     def output_mtrx(self):
+        """
+        List of output matrices
+        
+        Use `add_outputs()` to define append output matrices. 
+        `check_outputs()` can be used to check the validity (shape) of the 
+        output matrices defined.
+        """
         return self._output_mtrx_list
-    
-    @property
-    def response_mtrx(self):
-        return self.output_mtrx
     
     @output_mtrx.setter
     def output_mtrx(self,value):
+        if value!=[]:
+            value = convert2matrix(value)
+            value = [value]
         self._output_mtrx_list = value
-        
-    @response_mtrx.setter
-    def response_mtrx(self,value):
-        self.output_mtrx(value)
-        
+
+    # --------------   
     @property
     def output_names(self):
-        return self._output_names
-    
-    @property
-    def response_names(self):
-        return self.output_names
-    
+        """
+        List of string descriptions for rows of `output_mtrx`.
+        Used to label plots etc.
+        """
+        return self._output_names_list
+        
     @output_names.setter
     def output_names(self,value):
-        self._output_names = value
+        if value!=[]:
+            value = list(value) # convert to list
+            value = [value]     # make nested list
+        self._output_names_list = value
         
-    @response_names.setter
-    def response_names(self,value):
-        self.response_names(value)
-                       
+    # --------------                 
         
     def _CheckSystemMatrices(self,
                              nDOF=None,
@@ -262,11 +249,8 @@ class DynSys:
             
         return True
     
-    
-    def CheckOutputMtrx(self,
-                        output_mtrx=None,
-                        output_names=None,
-                        verbose=False):
+        
+    def check_outputs(self,output_mtrx=None,output_names=None,verbose=False):
         """
         Checks that all defined output matrices are of the correct shape
         """
@@ -277,34 +261,37 @@ class DynSys:
             
         if output_names is None:
             output_names = self.output_names
+            
+        # Exit early if both none
+        if output_mtrx is None and output_names is None:
+            return True
         
         if verbose:
             
             print("\nCheckOutputMtrx() method invoked:")
         
-            print("output_mtrx:")
-            print(output_mtrx.shape)
+            print("Output matrix shapes:")
+            for _om in output_mtrx:
+                print(_om.shape)
             
-            print("output_names:")
+            print("Output names:")
             print(output_names)
-            
-            print("")
         
         # Check list lengths agree
-        
-        if len(output_names)!=output_mtrx.shape[0]:
-            raise ValueError("Length of lists `output_names` "+
-                             "and rows of `output_mtrx` do not agree!\n"+
-                             "len(output_names)={0}\n".format(len(output_names))+
-                             "output_mtrx.shape: {0}".format(output_mtrx.shape))
-        
-        # Check shape of output matrix
-        if output_mtrx is not None:
+        for _om, _names in zip(output_mtrx, output_names):
             
+            if len(_names)!=_om.shape[0]:
+                raise ValueError("Length of lists `output_names` "+
+                                 "and rows of `output_mtrx` do not agree!\n"+
+                                 "len(output_names)={0}\n".format(len(_names))+
+                                 "output_mtrx.shape: {0}".format(_om.shape))
+        
+            # Check shape of output matrix 
             nDOF_expected = 3*self.nDOF
-            if output_mtrx.shape[1] != nDOF_expected:
+            
+            if _om.shape[1] != nDOF_expected:
                 raise ValueError("output_mtrx of invalid shape defined!\n" +
-                                 "Shape provided: {0}\n".format(output_mtrx.shape) +
+                                 "Shape provided: {0}\n".format(_om.shape) +
                                  "Cols expected: {0}".format(nDOF_expected))
     
         return True
@@ -333,58 +320,70 @@ class DynSys:
         return C_mtrx,outputNames 
     
     
-    def AddOutputMtrx(self,
-                      output_mtrx=None,
-                      output_names=None,
-                      overwrite=False,
-                      fName='outputs.csv',
-                      verbose=False):
+    def AddOutputMtrx(self,*args,**kwargs):
+        self.add_outputs(*args,**kwargs)
+        
+    
+    def add_outputs(self,output_mtrx=None,output_names=None,
+                    fName='outputs.csv',
+                    append=True,verbose=False):
         """
-        Appends `output_mtrx` to `outputsList`
+        Appends new output matrix and associated names to object
         ***
         
-        `output_mtrx` can either be supplied directly or else read from file 
-        (as denoted by `fName`)
+        Optional:
+            
+        * `output_mtrx`, numpy matrix expected
         
-        `output_mtrx` can be a list of matrices; each will be appended in turn
+        * `output_names`, list or array of strings
         
+        * `fName`, string denoting csv file defining output matrix and names
+        
+        * `append`, if True (default) then new output matrices and names will 
+          be appended to any previously-defined outputs.
+        
+        For normal usage either `output_mtrx` and `output_names` to be 
+        provided. Otherwise an attempt will be made to read data from `fName`.
         """
         
         if verbose:
-            print("AddOutputMtrx() method invoked.")
+            print("'add_outputs()' method invoked.")
         
         # Read from file if no output_mtrx provided
         if output_mtrx is None:
+            if verbose:
+                print("New outputs defined in '%s'" % fName)
             output_mtrx, output_names = self.ReadOutputMtrxFromFile(fName)
-        else:
-            output_mtrx = npy.asmatrix(output_mtrx)
             
         # Create default output names if none provided
         if output_names is None:
-            output_names = ["Response {0}".format(x) for x in range(output_mtrx.shape[0])]
+            output_names = ["Response {0}".format(x)
+                            for x in range(output_mtrx.shape[0])]
+                    
+        if append:
             
-        
-        if overwrite:
-            if verbose:
-                print("New output matrix replaces previous output matrix, if defined")
-            self.output_mtrx = output_mtrx
-            self.output_names = output_names
+            output_mtrx = convert2matrix(output_mtrx)
+            output_names = list(output_names)
+            
+            self.output_mtrx.append(output_mtrx)
+            self.output_names.append(output_names)
+            
         else:
-            if verbose:
-                print("New output matrix appended to previous output matrix, if defined")
-            self.output_mtrx = npy.append(self.output_mtrx,output_mtrx,axis=0)
-            self.output_names += output_names
+            
+            self.output_mtrx = output_mtrx
+            self.output_names = output_names            
         
         if verbose:
             
-            print("Updated output matrix shape:")
-            print(self.output_mtrx.shape)
+            print("Updated output matrix shapes:")
+            for _om in self.output_mtrx:
+                print(_om.shape)
             
-            print("Updated output names list:")
+            print("Updated output names:")
             print(self.output_names)
         
         # Check dimensions of all output matrices defined
-        self.CheckOutputMtrx()
+        self.check_outputs()
         
     
     def PrintSystemMatrices(self,printShapes=True,printValues=False):
@@ -849,18 +848,18 @@ class DynSys:
             return getattr(self,attr)
         
         
-    def GetOutputMtrx(self,
-                      state_variables_only:bool=False,
-                      all_systems:bool=True):
+    def get_output_mtrx(self,
+                        state_variables_only:bool=False,
+                        all_systems:bool=True):
         """
         Returns output matrix for overall system
         
         ***
         Optional:
             
-        * `state_variables_only`, _boolean_, if True, only columns relating to state 
-          variables (i.e. displacements, velocities - but not accelerations)
-          will be returned
+        * `state_variables_only`, _boolean_, if True, only columns relating to 
+          state variables (i.e. displacements, velocities - but not 
+          accelerations) will be returned
           
         * `all_systems`, _boolean_, if True output matrices for all subsystems 
           will be arranged as block diagonal matrix, which represents the 
@@ -875,11 +874,6 @@ class DynSys:
             sys_list = [self]
         
         # Assemble full output matrix by arranging as block diagonal matrix
-        #output_mtrx_list = [x.output_mtrx for x in sys_list]
-        #print(output_mtrx_list)
-        
-        #for x in output_mtrx_list:
-        #    print(x)
         
         disp_cols_list = []
         vel_cols_list = []
@@ -889,9 +883,18 @@ class DynSys:
         for x in sys_list:
 
             nDOF = x.nDOF
-            output_mtrx = x.output_mtrx
-            output_names = x.output_names
             
+            # Loop over all output matrices
+            for i, (om, names) in enumerate(zip(x.output_mtrx,x.output_names)):
+                                
+                if i==0:
+                    output_mtrx = om
+                    output_names = names
+                    
+                else:
+                    output_mtrx = npy.vstack((output_mtrx,om))
+                    output_names = output_names + names
+                                
             # Decompose into groups relating to (disp,vel,accn)
             disp_cols = output_mtrx[:,:nDOF]
             vel_cols = output_mtrx[:,nDOF:2*nDOF]
@@ -1522,8 +1525,8 @@ class DynSys:
         if C is None:
             
             # Get output matrix for full system, if defined
-            C, output_names = self.GetOutputMtrx(all_systems=True,
-                                                 state_variables_only=False)
+            C, output_names = self.get_output_mtrx(all_systems=True,
+                                                   state_variables_only=False)
             
             # Check shape
             if C.shape[1]!=3*nDOF_full:
@@ -1572,28 +1575,6 @@ class DynSys:
             zeros_mtrx = npy.zeros_like(Z)
             Z2 = npy.vstack((npy.hstack((Z,zeros_mtrx)),
                              npy.hstack((zeros_mtrx,Z))))
-                    
-        # Print shapes of all arrays
-        if verbose:
-            print("Shapes of A B C D matrices:")
-            print("A: {0}".format(A.shape))
-            print("B: {0}".format(B.shape))
-            
-            if C is not None:
-                print("C: {0}".format(C.shape))
-            else:
-                print("C: None")
-            
-            if D is not None:
-                print("D: {0}".format(D.shape))
-            else:
-                print("D: None")
-                
-            print("C_acc: {0}".format(C_acc.shape))
-            print("D_acc: {0}".format(D_acc.shape))
-            
-            if hasConstraints:
-                print("Z2:{0}".format(Z2.shape))                
             
         # Loop through frequencies
         Gf_list = []
