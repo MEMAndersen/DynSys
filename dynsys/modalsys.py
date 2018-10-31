@@ -719,7 +719,7 @@ class ModalSys(DynSys):
         """
         
         # Calculate displacements along structure at time t, given modal disp v
-        y = v @ self.modeshapeFunc(self.x).T
+        y = v.T @ self.modeshapeFunc(self.x).T
 
         # Update envelopes
         self.y_env_max = npy.maximum(y,self.y_env_max)

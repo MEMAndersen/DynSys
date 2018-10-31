@@ -14,7 +14,6 @@ from matplotlib.animation import FuncAnimation
 import timeit
 import pandas
 from datetime import datetime
-from collections import OrderedDict
 
 from common import check_is_class, deprecation_warning
 
@@ -374,7 +373,7 @@ class TStep_Results:
                        
         if append:
             
-            self.t += [t]
+            self.t = npy.hstack((self.t,t))
             self.f = npy.append(self.f,f,axis=1)
             self.v = npy.append(self.v,v,axis=1)
             self.vdot = npy.append(self.vdot,vdot,axis=1)
@@ -384,7 +383,7 @@ class TStep_Results:
         else:
                                    
             self.nDOF=v.shape[0]
-            self.t=[t]
+            self.t=t
             self.f=f
             self.v=v
             self.vdot=vdot
@@ -465,7 +464,7 @@ class TStep_Results:
         Produces a time series results plot
         """
         
-        lines = ax.plot(t_vals,data_vals)
+        lines = ax.plot(t_vals,data_vals.T)
         
         if titleStr is not None:
             ax.set_title(titleStr)
@@ -575,9 +574,9 @@ class TStep_Results:
                 
              # Get data to plot   
             t = self.t
-            f,v,vdot,v2dot,f_constraint =self.GetResults(obj,['f','v',
-                                                            'vdot','v2dot',
-                                                            'f_constraint'])
+            f,v,vdot,v2dot,f_constraint =self.get_results(obj,['f','v',
+                                                               'vdot','v2dot',
+                                                               'f_constraint'])
 
             
             # Create time series plots
@@ -696,8 +695,7 @@ class TStep_Results:
     
     def plot_results(self,
                      dynsys_obj=None,
-                     verbose:bool=True,
-                     dofs2Plot:list=None):
+                     verbose:bool=True):
         """
         Presents the results of time-stepping analysis by producing the 
         following plots:
@@ -727,8 +725,7 @@ class TStep_Results:
         """
         
         state_fig_list = self.plot_state_results(dynsys_obj=dynsys_obj,
-                                                 verbose=verbose,
-                                                 dofs2Plot=dofs2Plot)
+                                                 verbose=verbose)
         
         response_fig_list = self.plot_response_results(dynsys_obj=dynsys_obj,
                                                        verbose=verbose)
@@ -749,7 +746,7 @@ class TStep_Results:
         
         print("Plotting PSD estimates of responses using periodograms...")
         
-        if len(self.responses_list) == 0:
+        if len(self.response_results) == 0:
             raise ValueError("No response time series data avaliable!")
         
         # Get sampling frequency
@@ -763,40 +760,11 @@ class TStep_Results:
         # Loop through all responses
         fig_list = []
         
-        for dynsys_obj, responses, response_names in zip(self.tstep_obj.dynsys_obj.DynSys_list,
-                                                         self.responses_list,
-                                                         self.response_names_list):
-        
-            # Create figure
-            fig, axarr = plt.subplots(2,)
-            fig.set_size_inches((14,8))
+        for responses_list in self.response_results:
             
-            # Time series plot
-            ax = axarr[0]
-            handles = ax.plot(self.t,responses.T)
-            maxVal = npy.max(npy.abs(responses.T))
-            ax.set_ylim([-maxVal,maxVal])
-            ax.set_xlim(0,npy.max(self.t))
-            ax.set_title("Response time series")
-            ax.set_xlabel("Time (secs)")
-            
-            fig.legend(handles,response_names,loc='upper right')
-            
-            # PSD plot
-            f, Pxx = scipy.signal.periodogram(responses,fs)
-            ax = axarr[1]
-            ax.plot(f,Pxx.T)
-            ax.set_xlim([0,fs/2])
-            ax.set_title("Periodograms of responses")
-            ax.set_xlabel("Frequency (Hz)")
-            
-            fig.suptitle("System: '{0}'".format(dynsys_obj.name))
-            
-            fig.tight_layout()
-            fig.subplots_adjust(top=0.9)        # create space for suptitle
-            fig.subplots_adjust(right=0.8)      # create space for figlegend
-            
-            fig_list.append(fig)
+            for obj in responses_list:
+                
+                fig_list.append(obj.plot_psd())
         
         return fig_list
     
@@ -929,9 +897,7 @@ class TStep_Results:
             for _om, _names in zip(x.output_mtrx,x.output_names):
                 
                 values = _om @ state_vector
-                
-                print(_names)
-                
+                                
                 obj = TimeSeries_Results(names=_names,
                                          values=values,
                                          tstep_results_obj=self)
@@ -1430,8 +1396,8 @@ class SysPlot():
         
         
         # Get results applicable to this time increment
-        t = self.results_obj.t[i,0]
-        v = self.results_obj.v[i,:]
+        t = self.results_obj.t[i]
+        v = self.results_obj.v[:,i]
         
         # Call plot update method of dynsys object
         lines = self.dynsys_obj.PlotSystem_update_plot(v=v)
@@ -1573,7 +1539,7 @@ class TimeSeries_Results():
         if hasattr(self.plot_options,attr):
             plot_stats = getattr(self.plot_options,attr)
         else:
-            plot_stats = True
+            plot_stats = False
         
         # Get time values and time interval
         t = tstep_results_obj.t
@@ -1625,6 +1591,48 @@ class TimeSeries_Results():
                 
         return fig
         
+    
+    def plot_psd(self):
+        
+        # Create figure
+        fig, axarr = plt.subplots(2,)
+        fig.set_size_inches((14,8))
+        
+        # Time series plot
+        ax = axarr[0]
+        
+        t = self.tstep_results_obj.t
+        responses = self.values
+        response_names = self.names
+        
+        handles = ax.plot(t,responses.T)
+        
+        ax.set_xlim([0,npy.max(t)])
+        
+        ax.set_title("Response time series")
+        ax.set_xlabel("Time (secs)")
+        
+        fig.legend(handles,response_names,loc='upper right')
+        
+        # PSD plot
+        ax = axarr[1]
+        
+        dt = t[1] - t[0]
+        fs = 1 / dt
+        f, Pxx = scipy.signal.periodogram(responses,fs)
+        
+        ax.plot(f,Pxx.T)
+        ax.set_xlim([0,fs/2])
+        ax.set_title("Periodograms of responses")
+        ax.set_xlabel("Frequency (Hz)")
+        
+        fig.suptitle("System: '{0}'".format(self.dynsys_obj.name))
+        
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.9)        # create space for suptitle
+        fig.subplots_adjust(right=0.8)      # create space for figlegend
+        
+        return fig
         
         
 
