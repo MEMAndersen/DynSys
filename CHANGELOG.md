@@ -27,6 +27,12 @@ and this project adheres to:
   
 * Lots of alternative getter methods defined for `Eig_Results()` to be more 
   flexible with spellings / names when requesting certain attributes
+  
+* New module `freq_response_results.py` added, with class to act as container 
+  for frequency response results, to replace previous dict usage. Coding is 
+  backwards-compatible, except `PlotFrequencyResponse()` method previously 
+  implemented within `dynsys.py` now used as `FreqResponse_Results.plot()` 
+  method
 
 ### Fixed
 

@@ -2285,13 +2285,9 @@ will be ignored.</p>
     <span class="c1"># Convert to numpy ndarray format</span>
     <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
                 
-    <span class="c1"># Return values as dict</span>
-    <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
-    
-    <span class="k">return</span> <span class="n">rslts_dict</span>
+    <span class="c1"># Return values as class instance</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span><span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">)</span>        
+    <span class="k">return</span> <span class="n">obj</span>
 </pre></div>
 
   </div>
@@ -3863,6 +3859,46 @@ Define frequency values to evaluate frequency response G(f) at</p>
             </div>
             <div class="item">
             <p id="hanging_1d_chain.hanging1DChain.mass_per_length" class="name">var <span class="ident">mass_per_length</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="hanging_1d_chain.hanging1DChain.output_mtrx" class="name">var <span class="ident">output_mtrx</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="hanging_1d_chain.hanging1DChain.output_names" class="name">var <span class="ident">output_names</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="hanging_1d_chain.hanging1DChain.response_mtrx" class="name">var <span class="ident">response_mtrx</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="hanging_1d_chain.hanging1DChain.response_names" class="name">var <span class="ident">response_names</span></p>
             
 
             

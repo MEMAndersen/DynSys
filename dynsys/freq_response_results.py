@@ -39,6 +39,9 @@ class FreqResponse_Results():
     
     @property
     def G_f(self):
+        """
+        Synonym to `Gf`
+        """
         return self.Gf
     
     @Gf.setter
