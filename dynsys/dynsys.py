@@ -24,6 +24,7 @@ from scipy.linalg import block_diag
 
 # DynSys module imports
 from eig_results import Eig_Results
+from freq_response_results import FreqResponse_Results
 
 
 class DynSys:
@@ -1644,13 +1645,9 @@ class DynSys:
         # Convert to numpy ndarray format
         Gf_list = npy.asarray(Gf_list)
                     
-        # Return values as dict
-        rslts_dict = {}
-        rslts_dict["f"] = fVals
-        rslts_dict["G_f"] = Gf_list
-        rslts_dict["output_names"] = output_names
-        
-        return rslts_dict
+        # Return values as class instance
+        obj = FreqResponse_Results(f=fVals,Gf=Gf_list)        
+        return obj
     
             
     def PlotSystem(self,ax,v,**kwargs):
@@ -2111,130 +2108,7 @@ def solve_eig(M,C,K,J=None,isSparse=False,normalise=True,verbose=True):
     return rslts_obj
 
 
-def PlotFrequencyResponse(f,G_f,
-                          positive_f_only:bool=True,
-                          label_str:str=None,
-                          plotMagnitude:bool=True,ax_magnitude=None,
-                          plotPhase:bool=True,ax_phase=None,
-                          f_d:list=None
-                          ) -> dict:
-    """
-    Function to plot frequency response (f,G_f)
-    
-    ***
-    Required:
-        
-    * `f`, _array-like_, frequency values to which `G_f` relates
-    
-    * `G_f`, _array_like_, frequency response values corresponding to `f`
-    
-    ***
-    Optional:
-        
-    Variables:
-    
-    * `label_str`, used to label series in plot legend. If provided, legend 
-      will be produced.
-      
-    * `f_d`, damped natural frequencies, used as vertical lines overlay
-        
-    Boolean options:
-      
-    * `plotMagnitude`, _boolean_, indicates whether magnitude plot required
-    
-    * `plotPhase`, _boolean_, indicates whether phase plot required
-    
-    Axes objects:
-    
-    * `ax_magnitude`, axes to which magnitude plot should be drawn
-        
-    * `ax_phase`, axes to which phase plot should be drawn
-    
-    If both plots are requested, axes should normally be submitted to both 
-    `ax_magnitude` and `ax_phase`. Failing this a new figure will be 
-    produced.
-    
-    ***
-    Returns:
-        
-    `dict` containing figure and axes objects
-    
-    """
-    
-    # Check shapes consistent
-    if f.shape[0] != G_f.shape[0]:
-        raise ValueError("Error: shape of f and G_f different!\n" +
-                         "f.shape: {0}\n".format(f.shape) +
-                         "G_f.shape: {0}".format(G_f.shape))
-    
-    # Create new figure with subplots if insufficient axes passed
-    if (plotMagnitude and ax_magnitude is None) or (plotPhase and ax_phase is None):
-        
-        # Define new figure
-        if plotMagnitude and plotPhase:
-            
-            fig, axarr = plt.subplots(2,sharex=True)    
-            ax_magnitude =  axarr[0]
-            ax_phase =  axarr[1]
-            
-        else:
-            
-            fig, ax = plt.subplots(1)
-            
-            if plotMagnitude:
-                ax_magnitude = ax
-            else:
-                ax_phase = ax
-                
-        # Define figure properties
-        fig.suptitle("Frequency response G(f)")
-        fig.set_size_inches((14,8))
-        
-    else:
-        
-        fig = ax_magnitude.get_figure()
-    
-    # Set x limits
-    fmax = npy.max(f)
-    fmin = npy.min(f)
-    if positive_f_only:
-        fmin = 0
-    
-    # Prepare magnitude plot
-    if plotMagnitude:
-        _ = ax_magnitude
-        _.plot(f,npy.abs(G_f),label=label_str) 
-        _.set_xlim([fmin,fmax])
-        _.set_xlabel("Frequency f (Hz)")
-        _.set_ylabel("Magnitude |G(f)|")
-        if label_str is not None: _.legend()
-    
-    # Prepare phase plot
-    if plotPhase:
-        _ = ax_phase
-        _.plot(f,npy.angle(G_f),label=label_str)
-        _.set_xlim([fmin,fmax])
-        _.set_ylim([-npy.pi,+npy.pi]) # angles will always be in this range
-        _.set_xlabel("Frequency f (Hz)")
-        _.set_ylabel("Phase G(f) (rad)")
-        if label_str is not None: _.legend()
-    
-    # Overlay vertical lines to denote pole frequencies
 
-    if f_d is not None:
-        
-        for _f_d in f_d:
-    
-            ax_magnitude.axvline(_f_d,linestyle="--")
-            ax_phase.axvline(_f_d,linestyle="--")
-                
-    
-    # Return objects via dict
-    d = {}
-    d["fig"]=fig
-    d["ax_magnitude"] = ax_magnitude
-    d["ax_phase"] = ax_phase
-    return d
 
 
 # ********************** TEST ROUTINES ****************************************

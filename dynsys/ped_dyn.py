@@ -24,7 +24,6 @@ from copy import deepcopy
 # DynSys package imports
 import dyn_analysis
 import loading
-from dynsys import PlotFrequencyResponse
 import tstep
 #from loading import UKNA_BSEN1991_2_walkers_joggers_loading as ped_loading
 
