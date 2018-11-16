@@ -14,6 +14,9 @@ and this project adheres to:
 
 ### Added
 
+* New module `hysteresis.py` added, together with related example, to provide 
+  classes to model hysteretic behaviour
+
 * New module `eig_results.py` added, with class to act as container for 
   eigenvalue results, to replace previous dict usage. Coding is intended to be  
   backwards-compatible, but allows eigenproperties plot methods previously 
