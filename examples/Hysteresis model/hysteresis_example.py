@@ -74,7 +74,7 @@ def run_sim(x,verbose=True,make_plot=False):
 #%%
     
 K1 = 1.0
-K2 = 1.0
+K2 = 2.0
 K_vals = [0.1,1.0,10.0]
 W_vals = [1.0,1.0,1.0]
 run_sim([K1,K2,*K_vals,*W_vals],make_plot=True)

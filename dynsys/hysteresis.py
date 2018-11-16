@@ -306,7 +306,7 @@ class static_response():
             F_net = self.net_force(d_k,F_k)
             
             if not sol.success:
-                print(sol.message)
+                pass#print(sol.message)
                 
             x_k, y_k, F_hys_k = hys_obj.update(u=u_k,save_states=True)
             
