@@ -1054,7 +1054,6 @@ table {
     <li class="set"><h3><a href="#header-functions">Functions</a></h3>
       
   <ul>
-    <li class="mono"><a href="#dynsys.PlotFrequencyResponse">PlotFrequencyResponse</a></li>
     <li class="mono"><a href="#dynsys.SDOF_dampingRatio">SDOF_dampingRatio</a></li>
     <li class="mono"><a href="#dynsys.SDOF_dashpot">SDOF_dashpot</a></li>
     <li class="mono"><a href="#dynsys.SDOF_frequency">SDOF_frequency</a></li>
@@ -1150,6 +1149,7 @@ table {
 
 <span class="c1"># DynSys module imports</span>
 <span class="kn">from</span> <span class="nn">eig_results</span> <span class="kn">import</span> <span class="n">Eig_Results</span>
+<span class="kn">from</span> <span class="nn">freq_response_results</span> <span class="kn">import</span> <span class="n">FreqResponse_Results</span>
 
 
 <span class="k">class</span> <span class="nc">DynSys</span><span class="p">:</span>
@@ -1298,6 +1298,40 @@ table {
         <span class="k">if</span> <span class="n">isSparse</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Note: sparse matrix functionality as provided by Scipy &quot;</span>
                   <span class="s2">&quot;will be used for system matrices&quot;</span><span class="p">)</span>
+            
+    <span class="c1"># ------------------ GETTER / SETTER METHODS -----------------</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_mtrx_list</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">response_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+    
+    <span class="nd">@output_mtrx.setter</span>
+    <span class="k">def</span> <span class="nf">output_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_mtrx_list</span> <span class="o">=</span> <span class="n">value</span>
+        
+    <span class="nd">@response_mtrx.setter</span>
+    <span class="k">def</span> <span class="nf">response_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">response_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
+    
+    <span class="nd">@output_names.setter</span>
+    <span class="k">def</span> <span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span> <span class="o">=</span> <span class="n">value</span>
+        
+    <span class="nd">@response_names.setter</span>
+    <span class="k">def</span> <span class="nf">response_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response_names</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
                        
         
     <span class="k">def</span> <span class="nf">_CheckSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -2736,13 +2770,9 @@ table {
         <span class="c1"># Convert to numpy ndarray format</span>
         <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
                     
-        <span class="c1"># Return values as dict</span>
-        <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
-        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
-        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
-        
-        <span class="k">return</span> <span class="n">rslts_dict</span>
+        <span class="c1"># Return values as class instance</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span><span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">obj</span>
     
             
     <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -3203,130 +3233,7 @@ table {
     <span class="k">return</span> <span class="n">rslts_obj</span>
 
 
-<span class="k">def</span> <span class="nf">PlotFrequencyResponse</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">G_f</span><span class="p">,</span>
-                          <span class="n">positive_f_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                          <span class="n">label_str</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">plotMagnitude</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">ax_magnitude</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">plotPhase</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">ax_phase</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">f_d</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span>
-                          <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function to plot frequency response (f,G_f)</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Required:</span>
-<span class="sd">        </span>
-<span class="sd">    * `f`, _array-like_, frequency values to which `G_f` relates</span>
-<span class="sd">    </span>
-<span class="sd">    * `G_f`, _array_like_, frequency response values corresponding to `f`</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Optional:</span>
-<span class="sd">        </span>
-<span class="sd">    Variables:</span>
-<span class="sd">    </span>
-<span class="sd">    * `label_str`, used to label series in plot legend. If provided, legend </span>
-<span class="sd">      will be produced.</span>
-<span class="sd">      </span>
-<span class="sd">    * `f_d`, damped natural frequencies, used as vertical lines overlay</span>
-<span class="sd">        </span>
-<span class="sd">    Boolean options:</span>
-<span class="sd">      </span>
-<span class="sd">    * `plotMagnitude`, _boolean_, indicates whether magnitude plot required</span>
-<span class="sd">    </span>
-<span class="sd">    * `plotPhase`, _boolean_, indicates whether phase plot required</span>
-<span class="sd">    </span>
-<span class="sd">    Axes objects:</span>
-<span class="sd">    </span>
-<span class="sd">    * `ax_magnitude`, axes to which magnitude plot should be drawn</span>
-<span class="sd">        </span>
-<span class="sd">    * `ax_phase`, axes to which phase plot should be drawn</span>
-<span class="sd">    </span>
-<span class="sd">    If both plots are requested, axes should normally be submitted to both </span>
-<span class="sd">    `ax_magnitude` and `ax_phase`. Failing this a new figure will be </span>
-<span class="sd">    produced.</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        </span>
-<span class="sd">    `dict` containing figure and axes objects</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Check shapes consistent</span>
-    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: shape of f and G_f different!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
-                         <span class="s2">&quot;f.shape: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
-                         <span class="s2">&quot;G_f.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-    
-    <span class="c1"># Create new figure with subplots if insufficient axes passed</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">plotMagnitude</span> <span class="ow">and</span> <span class="n">ax_magnitude</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">plotPhase</span> <span class="ow">and</span> <span class="n">ax_phase</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
-        
-        <span class="c1"># Define new figure</span>
-        <span class="k">if</span> <span class="n">plotMagnitude</span> <span class="ow">and</span> <span class="n">plotPhase</span><span class="p">:</span>
-            
-            <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>    
-            <span class="n">ax_magnitude</span> <span class="o">=</span>  <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">ax_phase</span> <span class="o">=</span>  <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            
-            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-            
-            <span class="k">if</span> <span class="n">plotMagnitude</span><span class="p">:</span>
-                <span class="n">ax_magnitude</span> <span class="o">=</span> <span class="n">ax</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ax_phase</span> <span class="o">=</span> <span class="n">ax</span>
-                
-        <span class="c1"># Define figure properties</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Frequency response G(f)&quot;</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
-        
-    <span class="k">else</span><span class="p">:</span>
-        
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax_magnitude</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
-    
-    <span class="c1"># Set x limits</span>
-    <span class="n">fmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="n">fmin</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">positive_f_only</span><span class="p">:</span>
-        <span class="n">fmin</span> <span class="o">=</span> <span class="mi">0</span>
-    
-    <span class="c1"># Prepare magnitude plot</span>
-    <span class="k">if</span> <span class="n">plotMagnitude</span><span class="p">:</span>
-        <span class="n">_</span> <span class="o">=</span> <span class="n">ax_magnitude</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_f</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span> 
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">fmin</span><span class="p">,</span><span class="n">fmax</span><span class="p">])</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency f (Hz)&quot;</span><span class="p">)</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Magnitude |G(f)|&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">label_str</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-    
-    <span class="c1"># Prepare phase plot</span>
-    <span class="k">if</span> <span class="n">plotPhase</span><span class="p">:</span>
-        <span class="n">_</span> <span class="o">=</span> <span class="n">ax_phase</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">npy</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">G_f</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">fmin</span><span class="p">,</span><span class="n">fmax</span><span class="p">])</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span><span class="o">+</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span> <span class="c1"># angles will always be in this range</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency f (Hz)&quot;</span><span class="p">)</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Phase G(f) (rad)&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">label_str</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-    
-    <span class="c1"># Overlay vertical lines to denote pole frequencies</span>
 
-    <span class="k">if</span> <span class="n">f_d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="k">for</span> <span class="n">_f_d</span> <span class="ow">in</span> <span class="n">f_d</span><span class="p">:</span>
-    
-            <span class="n">ax_magnitude</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">_f_d</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-            <span class="n">ax_phase</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">_f_d</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-                
-    
-    <span class="c1"># Return objects via dict</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;fig&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">fig</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_magnitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax_magnitude</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_phase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax_phase</span>
-    <span class="k">return</span> <span class="n">d</span>
 
 
 <span class="c1"># ********************** TEST ROUTINES ****************************************</span>
@@ -3393,196 +3300,6 @@ table {
       </div>
 
     <h2 class="section-title" id="header-functions">Functions</h2>
-      
-  <div class="item">
-    <div class="name def" id="dynsys.PlotFrequencyResponse">
-    <p>def <span class="ident">PlotFrequencyResponse</span>(</p><p>f, G_f, positive_f_only=True, label_str=None, plotMagnitude=True, ax_magnitude=None, plotPhase=True, ax_phase=None, f_d=None)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Function to plot frequency response (f,G_f)</p>
-<hr />
-<p>Required:</p>
-<ul>
-<li>
-<p><code>f</code>, <em>array-like</em>, frequency values to which <code>G_f</code> relates</p>
-</li>
-<li>
-<p><code>G_f</code>, <em>array_like</em>, frequency response values corresponding to <code>f</code></p>
-</li>
-</ul>
-<hr />
-<p>Optional:</p>
-<p>Variables:</p>
-<ul>
-<li>
-<p><code>label_str</code>, used to label series in plot legend. If provided, legend 
-  will be produced.</p>
-</li>
-<li>
-<p><code>f_d</code>, damped natural frequencies, used as vertical lines overlay</p>
-</li>
-</ul>
-<p>Boolean options:</p>
-<ul>
-<li>
-<p><code>plotMagnitude</code>, <em>boolean</em>, indicates whether magnitude plot required</p>
-</li>
-<li>
-<p><code>plotPhase</code>, <em>boolean</em>, indicates whether phase plot required</p>
-</li>
-</ul>
-<p>Axes objects:</p>
-<ul>
-<li>
-<p><code>ax_magnitude</code>, axes to which magnitude plot should be drawn</p>
-</li>
-<li>
-<p><code>ax_phase</code>, axes to which phase plot should be drawn</p>
-</li>
-</ul>
-<p>If both plots are requested, axes should normally be submitted to both 
-<code>ax_magnitude</code> and <code>ax_phase</code>. Failing this a new figure will be 
-produced.</p>
-<hr />
-<p>Returns:</p>
-<p><code>dict</code> containing figure and axes objects</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.PlotFrequencyResponse', this);">Show source &equiv;</a></p>
-  <div id="source-dynsys.PlotFrequencyResponse" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">PlotFrequencyResponse</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">G_f</span><span class="p">,</span>
-                          <span class="n">positive_f_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                          <span class="n">label_str</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">plotMagnitude</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">ax_magnitude</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">plotPhase</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">ax_phase</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                          <span class="n">f_d</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span>
-                          <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function to plot frequency response (f,G_f)</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Required:</span>
-<span class="sd">        </span>
-<span class="sd">    * `f`, _array-like_, frequency values to which `G_f` relates</span>
-<span class="sd">    </span>
-<span class="sd">    * `G_f`, _array_like_, frequency response values corresponding to `f`</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Optional:</span>
-<span class="sd">        </span>
-<span class="sd">    Variables:</span>
-<span class="sd">    </span>
-<span class="sd">    * `label_str`, used to label series in plot legend. If provided, legend </span>
-<span class="sd">      will be produced.</span>
-<span class="sd">      </span>
-<span class="sd">    * `f_d`, damped natural frequencies, used as vertical lines overlay</span>
-<span class="sd">        </span>
-<span class="sd">    Boolean options:</span>
-<span class="sd">      </span>
-<span class="sd">    * `plotMagnitude`, _boolean_, indicates whether magnitude plot required</span>
-<span class="sd">    </span>
-<span class="sd">    * `plotPhase`, _boolean_, indicates whether phase plot required</span>
-<span class="sd">    </span>
-<span class="sd">    Axes objects:</span>
-<span class="sd">    </span>
-<span class="sd">    * `ax_magnitude`, axes to which magnitude plot should be drawn</span>
-<span class="sd">        </span>
-<span class="sd">    * `ax_phase`, axes to which phase plot should be drawn</span>
-<span class="sd">    </span>
-<span class="sd">    If both plots are requested, axes should normally be submitted to both </span>
-<span class="sd">    `ax_magnitude` and `ax_phase`. Failing this a new figure will be </span>
-<span class="sd">    produced.</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        </span>
-<span class="sd">    `dict` containing figure and axes objects</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Check shapes consistent</span>
-    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: shape of f and G_f different!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
-                         <span class="s2">&quot;f.shape: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
-                         <span class="s2">&quot;G_f.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-    
-    <span class="c1"># Create new figure with subplots if insufficient axes passed</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">plotMagnitude</span> <span class="ow">and</span> <span class="n">ax_magnitude</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">plotPhase</span> <span class="ow">and</span> <span class="n">ax_phase</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
-        
-        <span class="c1"># Define new figure</span>
-        <span class="k">if</span> <span class="n">plotMagnitude</span> <span class="ow">and</span> <span class="n">plotPhase</span><span class="p">:</span>
-            
-            <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>    
-            <span class="n">ax_magnitude</span> <span class="o">=</span>  <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">ax_phase</span> <span class="o">=</span>  <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            
-            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-            
-            <span class="k">if</span> <span class="n">plotMagnitude</span><span class="p">:</span>
-                <span class="n">ax_magnitude</span> <span class="o">=</span> <span class="n">ax</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ax_phase</span> <span class="o">=</span> <span class="n">ax</span>
-                
-        <span class="c1"># Define figure properties</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Frequency response G(f)&quot;</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
-        
-    <span class="k">else</span><span class="p">:</span>
-        
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">ax_magnitude</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
-    
-    <span class="c1"># Set x limits</span>
-    <span class="n">fmax</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="n">fmin</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">positive_f_only</span><span class="p">:</span>
-        <span class="n">fmin</span> <span class="o">=</span> <span class="mi">0</span>
-    
-    <span class="c1"># Prepare magnitude plot</span>
-    <span class="k">if</span> <span class="n">plotMagnitude</span><span class="p">:</span>
-        <span class="n">_</span> <span class="o">=</span> <span class="n">ax_magnitude</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">npy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_f</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span> 
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">fmin</span><span class="p">,</span><span class="n">fmax</span><span class="p">])</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency f (Hz)&quot;</span><span class="p">)</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Magnitude |G(f)|&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">label_str</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-    
-    <span class="c1"># Prepare phase plot</span>
-    <span class="k">if</span> <span class="n">plotPhase</span><span class="p">:</span>
-        <span class="n">_</span> <span class="o">=</span> <span class="n">ax_phase</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">npy</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">G_f</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="n">label_str</span><span class="p">)</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">fmin</span><span class="p">,</span><span class="n">fmax</span><span class="p">])</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span><span class="o">+</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span> <span class="c1"># angles will always be in this range</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency f (Hz)&quot;</span><span class="p">)</span>
-        <span class="n">_</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Phase G(f) (rad)&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">label_str</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-    
-    <span class="c1"># Overlay vertical lines to denote pole frequencies</span>
-
-    <span class="k">if</span> <span class="n">f_d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="k">for</span> <span class="n">_f_d</span> <span class="ow">in</span> <span class="n">f_d</span><span class="p">:</span>
-    
-            <span class="n">ax_magnitude</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">_f_d</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-            <span class="n">ax_phase</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">_f_d</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-                
-    
-    <span class="c1"># Return objects via dict</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;fig&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">fig</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_magnitude&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax_magnitude</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_phase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax_phase</span>
-    <span class="k">return</span> <span class="n">d</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
       
   <div class="item">
     <div class="name def" id="dynsys.SDOF_dampingRatio">
@@ -4473,6 +4190,40 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="k">if</span> <span class="n">isSparse</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Note: sparse matrix functionality as provided by Scipy &quot;</span>
                   <span class="s2">&quot;will be used for system matrices&quot;</span><span class="p">)</span>
+            
+    <span class="c1"># ------------------ GETTER / SETTER METHODS -----------------</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_mtrx_list</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">response_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+    
+    <span class="nd">@output_mtrx.setter</span>
+    <span class="k">def</span> <span class="nf">output_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_mtrx_list</span> <span class="o">=</span> <span class="n">value</span>
+        
+    <span class="nd">@response_mtrx.setter</span>
+    <span class="k">def</span> <span class="nf">response_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">response_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
+    
+    <span class="nd">@output_names.setter</span>
+    <span class="k">def</span> <span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span> <span class="o">=</span> <span class="n">value</span>
+        
+    <span class="nd">@response_names.setter</span>
+    <span class="k">def</span> <span class="nf">response_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">response_names</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
                        
         
     <span class="k">def</span> <span class="nf">_CheckSystemMatrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -5911,13 +5662,9 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="c1"># Convert to numpy ndarray format</span>
         <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
                     
-        <span class="c1"># Return values as dict</span>
-        <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
-        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
-        <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
-        
-        <span class="k">return</span> <span class="n">rslts_dict</span>
+        <span class="c1"># Return values as class instance</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span><span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">obj</span>
     
             
     <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -6901,13 +6648,9 @@ will be ignored.</p>
     <span class="c1"># Convert to numpy ndarray format</span>
     <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
                 
-    <span class="c1"># Return values as dict</span>
-    <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
-    
-    <span class="k">return</span> <span class="n">rslts_dict</span>
+    <span class="c1"># Return values as class instance</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span><span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">)</span>        
+    <span class="k">return</span> <span class="n">obj</span>
 </pre></div>
 
   </div>
@@ -8560,6 +8303,26 @@ output matrices defined.</p></div>
   
     <div class="desc"><p>List of string descriptions for rows of <code>output_mtrx</code>.
 Used to label plots etc.</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="dynsys.DynSys.response_mtrx" class="name">var <span class="ident">response_mtrx</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="dynsys.DynSys.response_names" class="name">var <span class="ident">response_names</span></p>
+            
+
+            
+  
   <div class="source_cont">
 </div>
 

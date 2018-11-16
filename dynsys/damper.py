@@ -85,13 +85,13 @@ class TMD(msd_chain.MSD_Chain):
         # Add output matrix entry to compute relative displacement
         # (as this is commonly of interest)
         if outputs['rel disp']:
-            self.AddOutputMtrx(output_mtrx=[-1,1,0,0,0,0],
+            self.add_outputs(output_mtrx=[-1,1,0,0,0,0],
                                output_names=["Relative disp [m]"])
         
         # Add output matrix to compute damper force
         # given by K.v_relative + C.vdot_relative
         if outputs['linkage force']:
-            self.AddOutputMtrx(output_mtrx=[-K,+K,-C,+C,0,0],
+            self.add_outputs(output_mtrx=[-K,+K,-C,+C,0,0],
                                output_names=["TMD linkage force [N]"])
         
         
