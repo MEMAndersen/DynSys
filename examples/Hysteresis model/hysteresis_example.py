@@ -5,7 +5,7 @@
 
 import numpy as npy
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize
+#from scipy.optimize import minimize
 
 from hysteresis import HysteresisModel, static_response
 
@@ -17,6 +17,7 @@ plt.close('all')
 fname = 'LW1_1607_MONTH.csv'
 data = npy.genfromtxt(fname,delimiter=',',skip_header=1)
 disp_vals = -data[:,1]
+disp_vals = disp_vals - disp_vals[0]
 F_vals = data[:,2]
 F_vals = F_vals - F_vals[0]
 plt.plot(disp_vals,F_vals)
@@ -27,14 +28,15 @@ def run_sim(x,verbose=True,make_plot=False):
       
     # Define hysteresis model
     x = list(x)
-    K_spring = x.pop(0)
+    K1 = x.pop(0)
+    K2 = x.pop(0)
     Ne = int(len(x)/2)
     K = x[:Ne]
     W = x[Ne:]
     hys = HysteresisModel(Ne,K,W=W)
             
     # Define and run analysis
-    analysis = static_response(hys_obj=hys,K_spring=K_spring)
+    analysis = static_response(hys_obj=hys,K1=K1,K2=K2)
     analysis.run(F_vals=F_vals)
     
     if make_plot:
@@ -52,8 +54,16 @@ def run_sim(x,verbose=True,make_plot=False):
         ax.plot(disp_vals,label='measured')
         ax.legend()
         
+        ax = ax_list[0]
+        ax.plot(analysis.F_net_vals,label='error')
+        
+        ax = ax_list[5]
+        ax.plot(disp_vals,F_vals,label='measured')
+        ax.legend()
+        
     if verbose:
-        print("K_spring:\t{0}".format(K_spring))
+        print("K1:\t{0}".format(K1))
+        print("K2:\t{0}".format(K2))
         print("K:\t\t{0}".format(K))
         print("W:\t\t{0}".format(W))
         print("RMS_error:\t%.3f" % RMS_error)
@@ -63,12 +73,13 @@ def run_sim(x,verbose=True,make_plot=False):
 
 #%%
     
-K_spring = 1.0
+K1 = 1.0
+K2 = 1.0
 K_vals = [0.1,1.0,10.0]
 W_vals = [1.0,1.0,1.0]
-run_sim([K_spring,*K_vals,*W_vals],make_plot=True)
+run_sim([K1,K2,*K_vals,*W_vals],make_plot=True)
 
-##%%
+#%%
 #
 #x = minimize(run_sim,x0=[K_spring,*K_vals,*W_vals],
 #             method='Powell',
