@@ -4,7 +4,7 @@
 # Mihaylova, Lampaert et al
 
 import numpy as npy
-from scipy.optimize import newton
+from scipy.optimize import root
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import copy
@@ -267,19 +267,23 @@ class static_response():
     Class used to compute response to forcing input
     """
 
-    def __init__(self,hys_obj,K_spring):
+    def __init__(self,hys_obj,K1, K2):
         self.hys_obj = hys_obj
-        self.K_spring = K_spring
+        self.K1 = K1
+        self.K2 = K2
     
-    def net_force(self,u,F_ext,verbose=False):
+    def net_force(self,d,F_ext,verbose=False):
         """
         Function which defines net force 
         given position 'u' and external force 'F_ext'
         """
         
+        u = d[0] - d[1]  # relative displacement at friction interface
         F_hys = self.hys_obj.update(u=u,save_states=False)[2]
 
-        F_net = self.K_spring * u + F_hys - F_ext
+        F_net_1 = self.K1 * d[0] + F_hys - F_ext
+        F_net_2 = self.K2 * d[1] - F_hys
+        F_net = npy.array([F_net_1,F_net_2])
         
         if verbose:
             print("u = %.3e" % u)
@@ -289,47 +293,58 @@ class static_response():
         
         return F_net
     
-    def run(self,F_vals,x0=None,u0=None):
+    def run(self,F_vals,x0=None,d0=None):
         
         # Define function to solve for next u
-        def solve(u_last,F_k,hys_obj):
+        def solve(d_last,F_k,hys_obj):
     
             # Determine next u to satify equilibrium - i.e. zero net force
-            u_k = newton(func=self.net_force,x0=u_last,args=(F_k,))
+            sol = root(fun=self.net_force,x0=d_last,args=(F_k,))
+            d_k = sol.x
+            u_k = d_k[0]-d_k[1]
+            
+            F_net = self.net_force(d_k,F_k)
+            
+            if not sol.success:
+                pass#print(sol.message)
+                
             x_k, y_k, F_hys_k = hys_obj.update(u=u_k,save_states=True)
             
-            return F_hys_k, u_k, x_k, y_k
+            return F_hys_k, d_k, u_k, x_k, y_k, F_net
         
         # Set initial conditions
         if x0 is None:
             x0 = npy.zeros((self.hys_obj.N,))
         self.hys_obj.x0 = x0
         
-        if u0 is None:
-            u0 = 0.0
-        u_j = u0 # initial guess
+        if d0 is None:
+            d0 = npy.array([0.0,0.0])
+        d_j = d0 # initial guess
         
         # Run step by step 
         F_hys_vals = []
         x_vals = []
         u_vals = []
         y_vals = []
+        F_net_vals = []
         
         for j, F_j in enumerate(F_vals):
             
             #print("--- Step #%d ---" % j)
-            F_hys_j, u_j, x_j, y_j = solve(u_j,F_j,self.hys_obj)
+            F_hys_j, d_j, u_j, x_j, y_j, F_net = solve(d_j,F_j,self.hys_obj)
             
             F_hys_vals.append(F_hys_j)
             x_vals.append(npy.ravel(x_j))
             y_vals.append(npy.ravel(y_j))
             u_vals.append(u_j)
+            F_net_vals.append(F_net)
         
         self.x_vals = x_vals
         self.y_vals = y_vals
         self.u_vals = u_vals
         self.F_hys_vals = F_hys_vals
         self.F_vals = F_vals
+        self.F_net_vals = F_net_vals
         
     
     def plot(self):
