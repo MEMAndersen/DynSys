@@ -252,15 +252,8 @@ class TStep:
             force_func = force_func_dict[x]
             
             # Check force_func is a function
-            if not inspect.isfunction(force_func):
+            if not callable(force_func):
                 raise ValueError("`force_func` is not a function!")
-                
-            # Check force_func has `t` as first argument
-            sig = inspect.signature(force_func)
-            if not 't' in sig.parameters:
-                raise ValueError("1st argument of `force_func` must be `t`\n" + 
-                                 "i.e. `force_func` must take the form " +
-                                 "force_func(t,*args,**kwargs)")
                 
             # Check dimension of vector returned by force_func is of the correct shape
             t0 = self.tStart
