@@ -11,7 +11,7 @@ from itertools import count
 from collections import OrderedDict
 
 
-class mesh:
+class Mesh:
     """
     Class is used to define a mesh, i.e. nodes inter-connected by elements
     
@@ -132,13 +132,13 @@ class mesh:
             # Add new objects to dictionaries according to class
             class_name = obj.__class__.__name__
             
-            if class_name == "mesh":
+            if class_name == "Mesh":
                 self.mesh_objs[obj.name] = obj
                 
-            elif class_name == "element":
+            elif class_name == "Element":
                 self.element_objs[obj.name] = obj
                 
-            elif class_name == "node":
+            elif class_name == "Node":
                 self.node_objs[obj.name] = obj
             
             else:
@@ -164,7 +164,7 @@ class mesh:
         for index, row in df.iterrows():
             
             # Define new node object
-            new_node = node(parent_mesh=self, name = row["Name"],
+            new_node = Node(parent_mesh=self, name = row["Name"],
                             xyz=[row['X'],row['Y'],row['Z']])
             
             node_list.append(new_node)
@@ -191,7 +191,7 @@ class mesh:
             node1_obj = self.node_objs[row["Node1"]]
             node2_obj = self.node_objs[row["Node2"]]
             
-            new_obj = element(parent_mesh=self,
+            new_obj = Element(parent_mesh=self,
                               name=row["Name"],
                               connected_nodes=[node1_obj,node2_obj])
             
@@ -255,8 +255,8 @@ class mesh:
         
         for mesh_obj in mesh_list:
                 
-                ax = mesh_obj.plot_init(ax=ax)
-                mesh_obj.plot_update()
+            ax = mesh_obj._plot_init(ax=ax)
+            mesh_obj._plot_update()
         
         if set_axis_limits:
             ax.set_xlim(axis_limits[0])
@@ -269,7 +269,7 @@ class mesh:
         return ax
     
     
-    def plot_init(self,ax=None):
+    def _plot_init(self,ax=None):
         """
         Initialises mesh plot
         """
@@ -291,39 +291,47 @@ class mesh:
         return ax
     
     
-    def plot_update(self):
+    def _plot_update(self):
         """
         Updates mesh plot
         """
-                
-        element_objs = self.element_objs
-        nElements = len(element_objs)
         
-        nan = npy.full((nElements,),npy.nan)
+        # Plot all nodes
         
-        xyz_end1 = npy.array([element_obj.connected_nodes[0].get_xyz() 
-                             for element_obj in element_objs.values()])
+        node_list = self.node_objs.values()
+        XYZ = npy.asarray([obj.xyz for obj in node_list])
         
-        xyz_end2 = npy.array([element_obj.connected_nodes[1].get_xyz() 
-                             for element_obj in element_objs.values()])
-        
-        X = npy.ravel(npy.vstack((xyz_end1[:,0],xyz_end2[:,0],nan)).T)
-        Y = npy.ravel(npy.vstack((xyz_end1[:,1],xyz_end2[:,1],nan)).T)
-        Z = npy.ravel(npy.vstack((xyz_end1[:,2],xyz_end2[:,2],nan)).T)
-    
-        elements = self.plot_artists['elements']
-        elements.set_data(X,Y)
-        elements.set_3d_properties(Z)
-        
-        nodes = self.plot_artists['nodes']
-        nodes.set_data(X,Y)
-        nodes.set_3d_properties(Z)
-        
+        node_artist = self.plot_artists['nodes']
+        node_artist.set_data(XYZ[:,0],XYZ[:,1])
+        node_artist.set_3d_properties(XYZ[:,2])
+#                
+#        element_objs = self.element_objs
+#        nElements = len(element_objs)
+#        
+#        nan = npy.full((nElements,),npy.nan)
+#        
+#        xyz_end1 = npy.array([element_obj.connected_nodes[0].get_xyz() 
+#                             for element_obj in element_objs.values()])
+#        
+#        xyz_end2 = npy.array([element_obj.connected_nodes[1].get_xyz() 
+#                             for element_obj in element_objs.values()])
+#        
+#        X = npy.ravel(npy.vstack((xyz_end1[:,0],xyz_end2[:,0],nan)).T)
+#        Y = npy.ravel(npy.vstack((xyz_end1[:,1],xyz_end2[:,1],nan)).T)
+#        Z = npy.ravel(npy.vstack((xyz_end1[:,2],xyz_end2[:,2],nan)).T)
+#    
+#        elements = self.plot_artists['elements']
+#        elements.set_data(X,Y)
+#        elements.set_3d_properties(Z)
+#        
+#        
+#        
+#        
         return self.plot_artists
 
 
         
-class element:
+class Element:
     """
     Base class used to define elements, i.e. entities connecting nodes (points in space)
     """
@@ -385,118 +393,115 @@ class element:
     def get_connected_node(node_index:int):
         
         return 
-            
-            
-#    def printAttrs(self,printName=True,printConnectivity=True):
-#        """
-#        Prints element attributes
-#        """
-#        if printName:       print("Element name: {0}".format(self.name))
-#        
-#        if printConnectivity:
-#            nodeNames=[]
-#            if self.connectedNodes:
-#                for nodeObj in self.connectedNodes:
-#                    nodeNames.append(nodeObj.name)
-#            print("Connected nodes: {0}".format(nodeNames))
-#            print("")
-#        else:
-#            print("")
-#            
-#    def plot(self,ax,
-#             updatePlot=False,dwgObj=None,
-#             plotNull=False,
-#             printOutput=True,plotDeformed=False,
-#             lineColor=None,lineStyle=None,**kwargs):
-#        """
-#        Plots element using ax
-#        """
-#        if printOutput: print("Plotting element {0}".format(self.name))
-#              
-#        # Get XYZ of connected nodes in requested configuration
-#        xvals=[]
-#        yvals=[]
-#        zvals=[]
-#        
-#        makePlot=True  # initialised
-#        
-#        if not plotNull:
-#            
-#            for i in range(len(self.connectedNodes)):
-#                
-#                # Get node position to plot
-#                if plotDeformed:
-#                    
-#                    if not hasattr(self.connectedNodes[i],"xyz_deformed"):
-#                        if not plotNull:
-#                            print("*** Warning: no deformations defined "
-#                                  "for node {0} connecting to element {1} ***"
-#                                  .format(self.connectedNodes[i].name,self.name))
-#                            print("*** Element {0} cannot be plotted "
-#                                  "in deformed configuration ***".format(self.name))
-#                            makePlot=False
-#                            
-#                        xyz_vals=None
-#                    else:  
-#                        xyz_vals=self.connectedNodes[i].xyz_deformed
-#                        
-#                else:
-#                    xyz_vals=self.connectedNodes[i].xyz
-#                     
-#                # Split xyz into coordinates and append to plot list
-#                xvals.append(xyz_vals[0])
-#                yvals.append(xyz_vals[1])
-#                zvals.append(xyz_vals[2])
-#        
-#        # Define default line colors to use
-#        if lineColor is None:
-#            if plotDeformed:
-#                lineColor='m'
-#            else:
-#                lineColor='b'
-#                
-#        if lineStyle is None:
-#            if plotDeformed:
-#                lineStyle='-'
-#            else:
-#                lineStyle='-'
-#            
-#        if makePlot:
-#            
-#            if not updatePlot:
-#                # Make new line to plot element
-#                dwgObj,=ax.plot(xvals, yvals, zvals,color=lineColor,linestyle=lineStyle)
-#            else:
-#                # Update data values used to plot element
-#                dwgObj.set_data(xvals,yvals)
-#                dwgObj.set_3d_properties(zvals)
-#                
-#        key=self.name
-#        if plotDeformed: key=key+"_deformed"
-#            
-#        return {key:dwgObj}
-#        
-#            
-#            
-#            
-#            
-#            
-#            
-#            
-#            
-            
-            
-            
-# ********************* DERIVED CLASS DEFINITIONS *****************************            
-            
-            
-            
-        
-        
-        
-class node:
+         
+# *****************************************************************************
+    
+class Point:
     """
-    Base class used to define nodes i.e. points in space    
+    Base class used to define discrete points in space    
+    """
+    
+    # Class properties
+    _ids = count(0)  # used to assign IDs to objects
+    
+    def __init__(self,xyz,name:str=None):
+        """
+        Creates new point instance
+        
+        ***
+        Required:
+            
+        * `xyz`, list or array of length 3, defines position of node
+        
+        ***
+        Optional:
+            
+        * `name`, _string_ name to identify points
+        
+        """
+        
+        self.id = next(self._ids)
+        """
+        Sequential integer ID, assigned to uniquely identify object
+        """  
+        
+        if name is None:
+            name = "Mesh %d" % self.id
+            
+        self.name = name
+        """
+        User-assigned name, usually of _string_ type
+        """
+        
+        self.xyz = xyz
+        
+    
+    # ------------ATTRIBUTES ---------------
+        
+    @property
+    def x(self):
+        return self._xyz[0]
+    
+    def get_x(self):
+        return self.x
+    
+    @x.setter
+    def x(self,value):
+        self._xyz[0] = value
+        
+    # -----
+        
+    @property
+    def y(self):
+        return self._xyz[1]
+    
+    def get_y(self):
+        return self.y
+    
+    @y.setter
+    def y(self,value):
+        self._xyz[1] = value
+        
+    # -----
+        
+    @property
+    def z(self):
+        return self._xyz[2]
+    
+    def get_z(self):
+        return self.z
+    
+    @z.setter
+    def z(self,value):
+        self._xyz[2] = value
+        
+    # -----
+    
+    @property
+    def xyz(self):
+        """
+        Array of shape (3,) defining position of node
+        """
+        return self._xyz
+    
+    def get_xyz(self):
+        return self.xyz
+    
+    @xyz.setter
+    def xyz(self,value):
+        value = npy.array(value)
+        if value.shape != (3,):
+            raise ValueError("`xyz` unexpected shape!\n" + 
+                             "Shape: {0}".format(value.shape))
+        self._xyz = value
+        
+# *****************************************************************************
+        
+class Node(Point):
+    """
+    Class used to define nodes i.e. points in space which define the 
+    vertices (end points in 1D) of elements and which are thus related via a 
+    mesh
     """
     
     # Class properties
@@ -527,30 +532,11 @@ class node:
         
         """
         
+        super().__init__(xyz,name)
+    
         self.parent_mesh = parent_mesh
         """
         Parent mesh to which element directly relates
-        """
-        
-        self.id = next(self._ids)
-        """
-        Sequential integer ID, assigned to uniquely identify object
-        """  
-        
-        if name is None:
-            name = "Mesh %d" % self.id
-            
-        self.name = name
-        """
-        User-assigned name, usually of _string_ type
-        """
-        
-        xyz = npy.array(xyz)
-        if xyz.shape != (3,): raise ValueError("`xyz` unexpected shape!")
-        
-        self._xyz = xyz
-        """
-        Array of shape (3,) defining position of node
         """
         
         self.connected_elements = OrderedDict()
@@ -563,8 +549,7 @@ class node:
         
         # Connect any elements passed in via list
         self.connect_elements(connected_elements)
-
-    
+        
     def connect_elements(self,element_objs:list):
         """
         Method to associate element objects with node object
@@ -577,158 +562,35 @@ class node:
         for obj in element_objs:
             self.connected_elements[obj.name]=obj
             
-            
-    def get_x(self):
-        return self._xyz[0]
     
-    def get_y(self):
-        return self._xyz[1]
-    
-    def get_z(self):
-        return self._xyz[2]
-    
-    def get_xyz(self):
-        return self._xyz
-    
-            
-#    def setDeformedPos(self,v,vmask=None):
-#        """
-#        Sets the deformed position of the node, given displacements v
-#        Required arguments:
-#            v       : usually a [3,] array
-#        Optional arguments:    
-#            vmask   : string displacement mask applied
-#                      (e.g. for 1D analysis in XY plane; dofs in Y:  "001")
-#                      (e.g. for 2D analysis in XZ plane; dofs in X,Z:"101")
-#        """
-#        
-#        # Covert v to npy.array format
-#        v = npy.asarray(v)
-#        
-#        # Parse displacement mask to establish active dimensions
-#        nDims=3
-#        
-#        if vmask is None:
-#            
-#            #[3,] array expected
-#            if v.shape[0]!=3:
-#                raise ValueError("Error: expected v.shape[0]==3")
-#                
-#        else:
-#            
-#            v_new = npy.zeros((3,)) # create 3D vector to store displacements in
-#            
-#            if len(vmask)!=3:
-#                raise ValueError("Error: 3-character string expected")
-#            
-#            dim=-1
-#            for i in range(len(vmask)):
-#                if vmask[i]=='0':
-#                    nDims=nDims-1
-#                elif vmask[i]=='1':
-#                    dim=dim+1
-#                    v_new[i]=v[dim]  # assign freedom provided to 3D array
-#                else:
-#                    raise ValueError("Error: unexpected character in vmask")
-#                    
-#            # Check nDims corresponds to length of v array provided
-#            if nDims!=v.shape[0]:
-#                raise ValueError("Error: vmask implies {0} dofs, "
-#                                 "but v.shape[0]={1}".format(nDims,v.shape[0]))
-#                    
-#            # Re-assign v
-#            v = v_new
-#            del v_new
-#        
-#        # Add displacements to undeformed positions
-#        self.xyz_deformed = self.xyz + v
-#    
-#    def printAttrs(self,printName=True,printXYZ=True,printConnectivity=True):
-#        """
-#        Prints nodes attributes
-#        """
-#        if printName:           print("Node name:  {0}".format(self.name))
-#        if printXYZ:            print("XYZ coords: {0}".format(self.xyz))
-#        
-#        if printConnectivity:
-#            elementNames=[]
-#            if self.connectedElements:
-#                for key in self.connectedElements:
-#                    obj=self.connectedElements[key]
-#                    elementNames.append(obj.name)
-#            print("Connected elements: {0}".format(elementNames))
-#            print("")
-#        else:
-#            print("")
-#            
-#    def plot(self,ax,
-#             updatePlot=False,dwgObj=None,plotNull=False,
-#             printOutput=True,plotDeformed=False,
-#             markerStyle=None,markerColor=None,**kwargs):
-#        """
-#        Plots node using ax
-#        """
-#        if printOutput: print("Plotting node {0}".format(self.name))
-#        
-#        # Get XYZ of connected nodes
-#        makePlot=True
-#        
-#        if plotDeformed:
-#            if not hasattr(self,"xyz_deformed"):
-#                if not plotNull:
-#                    print("*** Warning: no deformations defined for node {0}  ***"
-#                          .format(self.name))
-#                    print("*** Undeformed position of this node will not be plotted ***")
-#                    makePlot=False
-#                    
-#                xyz=None
-#            else:
-#                xyz = self.xyz_deformed    
-#        else:
-#            xyz = self.xyz
-#        
-#        # Set default marker styles and colors
-#        if markerColor is None:
-#            if plotDeformed:
-#                markerColor='m'
-#            else:
-#                markerColor='b'
-#        
-#        if markerStyle is None:
-#            if plotDeformed:
-#                markerStyle='.'
-#            else:
-#                markerStyle='.'
-#        
-#        # Produce plot
-#        if makePlot:
-#            
-#            # Get x,y,z vals to plot
-#            xvals=[]
-#            yvals=[]
-#            zvals=[]
-#            if not plotNull:
-#                xvals.append(xyz[0])
-#                yvals.append(xyz[1])
-#                zvals.append(xyz[2])
-#        
-#            if not updatePlot:
-#                # Plot node
-#                dwgObj,= ax.plot(xvals, yvals, zvals,marker=markerStyle,color=markerColor)
-#            else:
-#                # Update data values used to plot node
-#                dwgObj.set_data(xvals,yvals)
-#                dwgObj.set_3d_properties(zvals)
-#                
-#        key=self.name
-#        if plotDeformed: key=key+"_deformed"
-#        
-#        return {key:dwgObj}
-#    
-#    
-#    
 
-            
+class GaussPoint(Point):
+    """
+    Defines gauss point, i.e. point at specific position within an element
+    but not at its vertices. Gauss points have weights, which are used when 
+    performing gauss quadrature (numerical integration)
+    """
+    pass
+
+
+# ********************** FUNCTIONS ****************************************
+     
+def integrate_across_mesh(mesh_obj,
+                          integrand_func:callable):
+    """
+    Function to perform gauss integration across the domain of a mesh
+    
+    ***
+    Required:
+        
+    * `mesh_obj`, instance of Mesh class, defining mesh to be integrated over
+    
+    * `integrand_func`, _callable_ defining the integrand, i.e. the function to 
+      be integrated over the mesh
+          
+    """  
+    
+    pass
             
         
             
@@ -741,38 +603,31 @@ if __name__ == "__main__":
     
     if testRoutine2Run==1:
         
-        pass
+        print("*** TEST ROUTINE 1 COMMENCED ***")
+        print("")
     
-    
+        # Define new mesh
+        meshObj1 = Mesh(name="myMesh")
         
-#        
-#    elif testRoutine2Run==1:
-#        
-#        print("*** TEST ROUTINE 1 COMMENCED ***")
-#        print("")
-#    
-#        # Define new mesh
-#        meshObj1 = mesh(name="myMesh")
-#        
-#        # Define some nodes
-#        xyz = npy.asarray([[0,0,0],[1,0,1],[2,3,4],[2,1,-1]])
-#        Nn = xyz.shape[0]
-#        
-#        for n in range(Nn):
-#            new_obj=node(n,xyz=xyz[n,:])
-#            meshObj1.appendObjs("node",new_obj)
-#            
+        # Define some nodes
+        xyz = npy.asarray([[0,0,0],[1,0,1],[2,3,4],[2,1,-1],[-0.2,-0.4,1.0]])
+        Nn = xyz.shape[0]
+        
+        for n in range(Nn):
+            Node(meshObj1,xyz=xyz[n,:],name="Node %d" % (n+1))
+            
+        # Plot mesh
+        meshObj1.plot()
+            
 #        # Define some elements
 #        elemTopo = npy.asarray([[0,1],[1,2],[0,2]])
 #        Ne = elemTopo.shape[0]
 #        
 #        for e in range(Ne):
-#            new_obj=element(e)
-#            meshObj1.appendObjs("element",new_obj)
-#            new_obj.connectNodes(elemTopo[e,:])
+#            Element(meshObj1,elemTopo[e,:],name="Element %d" (e+1))
 #            
 #        # Define a mesh of meshes
-#        meshObj2 = mesh(name="myMeshOfMeshes")
+#        meshObj2 = Mesh(name="myMeshOfMeshes")
 #        meshObj2.appendObjs("mesh",meshObj1)
 #        meshObj2.printAttrs()
 #        
@@ -788,7 +643,7 @@ if __name__ == "__main__":
 #        ax = fig.gca(projection='3d')
 #        meshObj2.plot(ax,plotDeformed=True)
 #        plt.show()
-#        
+##        
 #    elif testRoutine2Run==2:
 #        
 #        print("*** TEST ROUTINE 2 COMMENCED ***")
@@ -882,3 +737,9 @@ if __name__ == "__main__":
     
     else:
         print("(No valid test routine selected)")
+        
+   
+
+    
+    
+    
