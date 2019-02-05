@@ -18,6 +18,9 @@ and this project adheres to:
 
 * `mesh.py` module added to faciliate definition or and manipulation of meshes
   (i.e. interconnected nodes and elements)
+  
+* `nodle.py` module added to provide methods for importing data from NODLE 
+  Excel input files
 
 ### Fixed
 
