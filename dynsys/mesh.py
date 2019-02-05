@@ -406,6 +406,62 @@ class Element:
     def get_connected_node(node_index:int):
         
         return 
+    
+    
+    def define_gauss_points(self,N_gp:int=3):
+        """
+        Defines gauss points as used for Gauss Quadrature
+        
+        ***
+        Required:
+            
+        * `N_gp`, integer, defines number of gauss points to be defined per 
+          element. This relates to accuracy of integration.
+          
+        """
+        # Define weights and locations for gauss points based on [-1,1] domain
+        # Refer Wikipedia - 'Gauss Quadrature' - for basis of values hard-coded
+        if N_gp == 1:
+            
+            locs = [0.0]
+            weights = [2.0]
+        
+        elif N_gp == 2:
+            
+            val = (1/3)**(0.5)
+            locs = [-val, +val]
+            del val
+            weights = [1.0,1.0]
+            
+        elif N_gp == 3:
+            
+            val = (3/5)**(0.5)
+            locs = [-val, 0.0, +val]
+            del val
+            weights = [(5/9),(8/9),(5/9)]
+            
+        else:
+            raise ValueError("N_gp>3 not yet implemented!")
+            
+        # Convert to numpy arrays
+        locs = npy.array(locs)
+        weights = npy.array(weights)
+        
+        # Convert to [0,L] domain
+        L = self.length()
+        weights =* L/2
+        
+        # Define gauss points
+        locs = (locs + 1)/2     # convert to [0,1] domain
+        r1 = self.connected_nodes[0].get_xyz()
+        r2 = self.connected_nodes[1].get_xyz()
+        r12 = r2 - r1           # vector from node 1 to 2
+        r_gp = r1 + locs*r1     # defines position of gauss points
+            
+        for (xyz,weight) in zip(r_gp,weights):
+            
+            gp_obj = GaussPoint(weight=weight,xyz=xyz)
+    
          
 # *****************************************************************************
     
@@ -583,7 +639,8 @@ class GaussPoint(Point):
     but not at its vertices. Gauss points have weights, which are used when 
     performing gauss quadrature (numerical integration)
     """
-    pass
+    def __init__(self,weight):
+        pass
 
 
 # ********************** FUNCTIONS ****************************************
