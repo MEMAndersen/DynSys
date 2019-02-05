@@ -6,13 +6,13 @@ Demonstrates functionality in mesh.py
 """
 
 
-from mesh import mesh, node, element
+from mesh import Mesh, Node, Element
 
 
 # Create blank meshes
-mesh_obj1 = mesh(name="Mesh1")
-mesh_obj2 = mesh(name="Mesh2",mesh_objs=[mesh_obj1])
-mesh_obj3 = mesh(name="Mesh3")
+mesh_obj1 = Mesh(name="Mesh1")
+mesh_obj2 = Mesh(name="Mesh2",mesh_objs=[mesh_obj1])
+mesh_obj3 = Mesh(name="Mesh3")
 
 # Define some nodes
 mesh_obj1.define_nodes(fname="mesh1_nodes.csv")
