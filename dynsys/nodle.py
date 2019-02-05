@@ -76,9 +76,49 @@ def read_MEM(fname):
     return df
 
 
+def read_DIS(fname=None,iostream=None,lcases=None,lcase_type=1):
+    """
+    Reads displacement results, as given in DIS section of NODLE results files
+    ***
+    Required:
+        
+    Either of the following inputs are required:
+    
+    * `fname`, string to denote filename of .res file to be read
+    
+    * `iostream`, open filestream object (i.e. partially read data file)
+    
+    ***
+    Optional:
+        
+    * `lcases`, list of indices to denote loadcases to be read. If None, 
+      results for all loadcases will be read
+      
+    * `lcase_type`, code to denote type of referencing to use when selecting 
+      loadcases using `lcases` parameter:
+          
+        * 0 : Select by index, i.e. order in results file (1 = first loadcase)
+          
+        * 1 : Select by loadcase ID
+        
+        * 2 : Select by mode index (dynamic results only) (1 = first mode)
+        
+    """
+    
+    if iostream is None:
+        
+        if fname is None:
+            raise ValueError("Either 'fname' or 'iostream' required!")
+            
+        pass
+    
+
+
 # -------------- PRIVATE FUNCTIONS ----------------
 
 def _check_is_xlsx(fname):
     if not 'xlsx' in fname:
         raise ValueError("Excel-based NODLE input file expected!")
+    
+
 
