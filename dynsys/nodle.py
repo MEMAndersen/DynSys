@@ -7,15 +7,48 @@ COWI UK's large displacement frame analysis software
 """
 
 import pandas
+from mesh import Mesh
+
+# -------------- PUBLIC FUCTIONS ------------------
+
+def read_mesh(fname,name=None):
+    """
+    Defines mesh based on data provided in COO and MEM tabs
+    """
+    
+    if name is None:
+        name = fname[:-5] # strip 'xlsx' from end of filename and use as name
+    
+    # Define new mesh object
+    mesh_obj = Mesh(name=name)
+    
+    # Read in node data from Excel file
+    COO_df = read_COO(fname)
+    
+    # Define nodes and append to mesh
+    mesh_obj.define_nodes(df=COO_df)
+    del COO_df
+    
+    # Read in member data from Excel file
+    MEM_df = read_MEM(fname)
+    
+    # Define elements and append to mesh
+    mesh_obj.define_elements(df=MEM_df)
+    del MEM_df
+    
+    return mesh_obj
+    
+    
 
 def read_COO(fname):
     """
-    Reads data from COO tab and returns as Pandas dataframe
+    Reads node data from COO tab and returns as Pandas dataframe
     """
+    
+    _check_is_xlsx(fname)
     
     df = pandas.read_excel(fname, sheet_name='COO',
                            names=['Node', 'X', 'Y', 'Z'],
-                           index_col=0, # use Node ID as index
                            # note: compressed input not supported
                            dtype={'Node':int, 'X':float, 'Y':float, 'Z':float},
                            skiprows=4,
@@ -24,15 +57,17 @@ def read_COO(fname):
     
     return df
 
+
 def read_MEM(fname):
     """
-    Reads data from MEM tab and returns as Pandas dataframe
-    """    
+    Reads member data from MEM tab and returns as Pandas dataframe
+    """ 
+    
+    _check_is_xlsx(fname)
     
     df = pandas.read_excel(fname, sheet_name='MEM',
                            names=['Member', 'EndJ', 'EndK', 'Section'],
-                           index_col=0, # use Member ID as index
-                           # note: compressed input not supported
+                           dtype=int,
                            convert_float=True,
                            skiprows=4,
                            comment=':',
@@ -41,5 +76,9 @@ def read_MEM(fname):
     return df
 
 
+# -------------- PRIVATE FUNCTIONS ----------------
 
+def _check_is_xlsx(fname):
+    if not 'xlsx' in fname:
+        raise ValueError("Excel-based NODLE input file expected!")
 

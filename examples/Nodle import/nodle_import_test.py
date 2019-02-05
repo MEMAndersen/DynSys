@@ -8,6 +8,7 @@ template
 
 import nodle
 
+
 fname = 'NODLE_demo.xlsx'
 
 COO_df = nodle.read_COO(fname)
@@ -16,3 +17,5 @@ print(COO_df)
 MEM_df = nodle.read_MEM(fname)
 print(MEM_df)
 
+mesh_obj = nodle.read_mesh(fname)
+mesh_obj.plot()

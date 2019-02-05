@@ -145,26 +145,33 @@ class Mesh:
                 raise ValueError("Unexpected object! Class '%s'" % class_name)
             
             
-    def define_nodes(self,fname="node_defs.csv",**kwargs):
+    def define_nodes(self,df=None,fname='nodes.csv',**kwargs):
         """
-        Function to define nodes based on tabular .csv data
+        Function to define nodes from tabulated input
         
-        | Name | X   | Y   | Z   | 
+        ***
+        Pandas Dataframe containing the following columns to be provided:
+        
+        | Node | X   | Y   | Z   | 
         | ...  | ... | ... | ... | 
+        
+        or alternatively `fName` defines .csv file containing similar input
         """
         # Use pandas to read in data as dataframe
-        df = pandas.read_csv(fname,
-                             header=0,
-                             index_col=None,
-                             converters={'Name': str},
-                             **kwargs)
+        if df is None:
+            df = pandas.read_csv(fname,
+                                 header=0,
+                                 names=['Node','X','Y','Z'],
+                                 index_col=None,
+                                 converters={'Node': int},
+                                 **kwargs)
         
         # Loop through rows in dataframe
         node_list = []
         for index, row in df.iterrows():
             
             # Define new node object
-            new_node = Node(parent_mesh=self, name = row["Name"],
+            new_node = Node(parent_mesh=self, name = row["Node"],
                             xyz=[row['X'],row['Y'],row['Z']])
             
             node_list.append(new_node)
@@ -173,26 +180,33 @@ class Mesh:
         return node_list
     
             
-    def define_elements(self,fname="element_defs.csv",**kwargs):
+    def define_elements(self,df=None,fname="elements.csv",**kwargs):
         """
-        Function to read element connectivity from a csv file
+        Function to read element connectivity from tabulated input
         
-        | Name | Node1 | Node2 |
-        | ...  | ...   | ...   |
+        ***
+        Pandas Dataframe containing the following columns to be provided:
+        
+        | Member | EndJ  | EndK  |
+        | ...    | ...   | ...   |
+        
+        or alternatively `fName` defines .csv file containing similar input
         """
         # Use pandas to read in data as dataframe
-        df = pandas.read_csv(fname,header=0,index_col=None,dtype=str,**kwargs)
+        if df is None:
+            df = pandas.read_csv(fname,header=0,index_col=None,dtype=str,
+                                 **kwargs)
             
         # Loop throuh rows in dataframe
         element_list = []
         for index, row in df.iterrows():
             
             # Define new node object
-            node1_obj = self.node_objs[row["Node1"]]
-            node2_obj = self.node_objs[row["Node2"]]
+            node1_obj = self.node_objs[row["EndJ"]]
+            node2_obj = self.node_objs[row["EndK"]]
             
             new_obj = Element(parent_mesh=self,
-                              name=row["Name"],
+                              name=row["Member"],
                               connected_nodes=[node1_obj,node2_obj])
             
             element_list.append(new_obj)
@@ -304,27 +318,26 @@ class Mesh:
         node_artist = self.plot_artists['nodes']
         node_artist.set_data(XYZ[:,0],XYZ[:,1])
         node_artist.set_3d_properties(XYZ[:,2])
-#                
-#        element_objs = self.element_objs
-#        nElements = len(element_objs)
-#        
-#        nan = npy.full((nElements,),npy.nan)
-#        
-#        xyz_end1 = npy.array([element_obj.connected_nodes[0].get_xyz() 
-#                             for element_obj in element_objs.values()])
-#        
-#        xyz_end2 = npy.array([element_obj.connected_nodes[1].get_xyz() 
-#                             for element_obj in element_objs.values()])
-#        
-#        X = npy.ravel(npy.vstack((xyz_end1[:,0],xyz_end2[:,0],nan)).T)
-#        Y = npy.ravel(npy.vstack((xyz_end1[:,1],xyz_end2[:,1],nan)).T)
-#        Z = npy.ravel(npy.vstack((xyz_end1[:,2],xyz_end2[:,2],nan)).T)
-#    
-#        elements = self.plot_artists['elements']
-#        elements.set_data(X,Y)
-#        elements.set_3d_properties(Z)
-#        
-#        
+        
+        # Plot all elements
+        
+        element_list = self.element_objs.values()
+        
+        xyz_end1 = npy.array([element_obj.connected_nodes[0].get_xyz() 
+                             for element_obj in element_list])
+        
+        xyz_end2 = npy.array([element_obj.connected_nodes[1].get_xyz() 
+                             for element_obj in element_list])
+    
+        nan = npy.full((len(element_list),),npy.nan) # used to create gaps
+        
+        X = npy.ravel(npy.vstack((xyz_end1[:,0],xyz_end2[:,0],nan)).T)
+        Y = npy.ravel(npy.vstack((xyz_end1[:,1],xyz_end2[:,1],nan)).T)
+        Z = npy.ravel(npy.vstack((xyz_end1[:,2],xyz_end2[:,2],nan)).T)
+    
+        elements = self.plot_artists['elements']
+        elements.set_data(X,Y)
+        elements.set_3d_properties(Z)
 #        
 #        
         return self.plot_artists
