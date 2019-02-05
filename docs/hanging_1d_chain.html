@@ -1032,6 +1032,9 @@ table {
     }
   }
   </script>
+  
+  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1068,10 +1071,8 @@ table {
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CalcStateMatrix">CalcStateMatrix</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckConstraints">CheckConstraints</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckDOF">CheckDOF</a></li>
-    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.CheckOutputMtrx">CheckOutputMtrx</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.EqnOfMotion">EqnOfMotion</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetLoadMatrix">GetLoadMatrix</a></li>
-    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetOutputMtrx">GetOutputMtrx</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetStateMatrix">GetStateMatrix</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystem">PlotSystem</a></li>
@@ -1079,8 +1080,11 @@ table {
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PlotSystem_update_plot">PlotSystem_update_plot</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.PrintSystemMatrices">PrintSystemMatrices</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.add_outputs">add_outputs</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.calc_eigenproperties">calc_eigenproperties</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.check_outputs">check_outputs</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.freqVals">freqVals</a></li>
+    <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.get_output_mtrx">get_output_mtrx</a></li>
     <li class="mono"><a href="#hanging_1d_chain.hanging1DChain.hasConstraints">hasConstraints</a></li>
   </ul>
 
@@ -1685,72 +1689,17 @@ equations are independent</p></div>
             
   <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.AddOutputMtrx">
-    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, overwrite=False, fName=&#39;outputs.csv&#39;, verbose=False)</p>
+    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, *args, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Appends <code>output_mtrx</code> to <code>outputsList</code></p>
-<hr />
-<p><code>output_mtrx</code> can either be supplied directly or else read from file 
-(as denoted by <code>fName</code>)</p>
-<p><code>output_mtrx</code> can be a list of matrices; each will be appended in turn</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.AddOutputMtrx', this);">Show source &equiv;</a></p>
   <div id="source-hanging_1d_chain.hanging1DChain.AddOutputMtrx" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                  <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                  <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                  <span class="n">overwrite</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                  <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">,</span>
-                  <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Appends `output_mtrx` to `outputsList`</span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    `output_mtrx` can either be supplied directly or else read from file </span>
-<span class="sd">    (as denoted by `fName`)</span>
-<span class="sd">    </span>
-<span class="sd">    `output_mtrx` can be a list of matrices; each will be appended in turn</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;AddOutputMtrx() method invoked.&quot;</span><span class="p">)</span>
-    
-    <span class="c1"># Read from file if no output_mtrx provided</span>
-    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">)</span>
-        
-    <span class="c1"># Create default output names if none provided</span>
-    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Response {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
-        
-    
-    <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New output matrix replaces previous output matrix, if defined&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">output_mtrx</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New output matrix appended to previous output matrix, if defined&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">+=</span> <span class="n">output_names</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output matrix shape:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output names list:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span>
-    
-    <span class="c1"># Check dimensions of all output matrices defined</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">CheckOutputMtrx</span><span class="p">()</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -2162,8 +2111,8 @@ will be ignored.</p>
     <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
         <span class="c1"># Get output matrix for full system, if defined</span>
-        <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                             <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_output_mtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                               <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
         <span class="c1"># Check shape</span>
         <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span><span class="p">:</span>
@@ -2212,28 +2161,6 @@ will be ignored.</p>
         <span class="n">zeros_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
         <span class="n">Z2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span><span class="n">zeros_mtrx</span><span class="p">)),</span>
                          <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">zeros_mtrx</span><span class="p">,</span><span class="n">Z</span><span class="p">))))</span>
-                
-    <span class="c1"># Print shapes of all arrays</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Shapes of A B C D matrices:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;A: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;B: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        
-        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: None&quot;</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: None&quot;</span><span class="p">)</span>
-            
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        
-        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Z2:{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Z2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>                
         
     <span class="c1"># Loop through frequencies</span>
     <span class="n">Gf_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2647,71 +2574,6 @@ system, including any sub-systems, is full rank</p></div>
   
             
   <div class="item">
-    <div class="name def" id="hanging_1d_chain.hanging1DChain.CheckOutputMtrx">
-    <p>def <span class="ident">CheckOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, verbose=False)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Checks that all defined output matrices are of the correct shape</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.CheckOutputMtrx', this);">Show source &equiv;</a></p>
-  <div id="source-hanging_1d_chain.hanging1DChain.CheckOutputMtrx" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                    <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                    <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Checks that all defined output matrices are of the correct shape</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Handle option arguments</span>
-    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
-        
-    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CheckOutputMtrx() method invoked:&quot;</span><span class="p">)</span>
-    
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;output_mtrx:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;output_names:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-    
-    <span class="c1"># Check list lengths agree</span>
-    
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span><span class="o">!=</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of lists `output_names` &quot;</span><span class="o">+</span>
-                         <span class="s2">&quot;and rows of `output_mtrx` do not agree!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
-                         <span class="s2">&quot;len(output_names)={0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">))</span><span class="o">+</span>
-                         <span class="s2">&quot;output_mtrx.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-    
-    <span class="c1"># Check shape of output matrix</span>
-    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-        <span class="k">if</span> <span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nDOF_expected</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;output_mtrx of invalid shape defined!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
-                             <span class="s2">&quot;Shape provided: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
-                             <span class="s2">&quot;Cols expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nDOF_expected</span><span class="p">))</span>
-
-    <span class="k">return</span> <span class="bp">True</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.EqnOfMotion">
     <p>def <span class="ident">EqnOfMotion</span>(</p><p>self, x, t, forceFunc, M, C, K, J, nDOF, isSparse, isLinear, hasConstraints)</p>
     </div>
@@ -2905,111 +2767,6 @@ and held as attribute. Otherwise load matrix will be recalculated</p>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">unconstrained</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="hanging_1d_chain.hanging1DChain.GetOutputMtrx">
-    <p>def <span class="ident">GetOutputMtrx</span>(</p><p>self, state_variables_only=False, all_systems=True)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Returns output matrix for overall system</p>
-<hr />
-<p>Optional:</p>
-<ul>
-<li>
-<p><code>state_variables_only</code>, <em>boolean</em>, if True, only columns relating to state 
-  variables (i.e. displacements, velocities - but not accelerations)
-  will be returned</p>
-</li>
-<li>
-<p><code>all_systems</code>, <em>boolean</em>, if True output matrices for all subsystems 
-  will be arranged as block diagonal matrix, which represents the 
-  output matrix for the full system</p>
-</li>
-</ul></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.GetOutputMtrx', this);">Show source &equiv;</a></p>
-  <div id="source-hanging_1d_chain.hanging1DChain.GetOutputMtrx" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                  <span class="n">state_variables_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                  <span class="n">all_systems</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns output matrix for overall system</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Optional:</span>
-<span class="sd">        </span>
-<span class="sd">    * `state_variables_only`, _boolean_, if True, only columns relating to state </span>
-<span class="sd">      variables (i.e. displacements, velocities - but not accelerations)</span>
-<span class="sd">      will be returned</span>
-<span class="sd">      </span>
-<span class="sd">    * `all_systems`, _boolean_, if True output matrices for all subsystems </span>
-<span class="sd">      will be arranged as block diagonal matrix, which represents the </span>
-<span class="sd">      output matrix for the full system</span>
-<span class="sd">      </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Define list over which to loop</span>
-    <span class="k">if</span> <span class="n">all_systems</span><span class="p">:</span>
-        <span class="n">sys_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
-    
-    <span class="c1"># Assemble full output matrix by arranging as block diagonal matrix</span>
-    <span class="c1">#output_mtrx_list = [x.output_mtrx for x in sys_list]</span>
-    <span class="c1">#print(output_mtrx_list)</span>
-    
-    <span class="c1">#for x in output_mtrx_list:</span>
-    <span class="c1">#    print(x)</span>
-    
-    <span class="n">disp_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">vel_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">accn_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">output_names_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sys_list</span><span class="p">:</span>
-        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span>
-        <span class="n">output_names</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">output_names</span>
-        
-        <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
-        <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
-        <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
-        <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
-        
-        <span class="c1"># Append to lists</span>
-        <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
-        <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
-        <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
-        <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
-        
-    <span class="c1"># Assemble submatrices for full system</span>
-    <span class="n">disp_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">disp_cols_list</span><span class="p">)</span>
-    <span class="n">vel_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">vel_cols_list</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
-        <span class="n">accn_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">accn_cols_list</span><span class="p">)</span>
-    
-    <span class="c1"># Concatenate to prepare output matrix for full system</span>
-    <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">disp_cols_full</span><span class="p">,</span><span class="n">vel_cols_full</span><span class="p">))</span>
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
-        <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">output_mtrx_full</span><span class="p">,</span><span class="n">accn_cols_full</span><span class="p">))</span>
-    
-    <span class="c1"># Convert list of names to array format</span>
-    <span class="n">output_names_arr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">output_names_list</span><span class="p">)</span> 
-    
-    <span class="c1"># Return matrix and row names for full system</span>
-    <span class="k">return</span> <span class="n">output_mtrx_full</span><span class="p">,</span> <span class="n">output_names_arr</span>
 </pre></div>
 
   </div>
@@ -3537,6 +3294,105 @@ C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</stro
   
             
   <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.add_outputs">
+    <p>def <span class="ident">add_outputs</span>(</p><p>self, output_mtrx=None, output_names=None, fName=&#39;outputs.csv&#39;, append=True, verbose=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Appends new output matrix and associated names to object</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>output_mtrx</code>, numpy matrix expected</p>
+</li>
+<li>
+<p><code>output_names</code>, list or array of strings</p>
+</li>
+<li>
+<p><code>fName</code>, string denoting csv file defining output matrix and names</p>
+</li>
+<li>
+<p><code>append</code>, if True (default) then new output matrices and names will 
+  be appended to any previously-defined outputs.</p>
+</li>
+</ul>
+<p>For normal usage either <code>output_mtrx</code> and <code>output_names</code> to be 
+provided. Otherwise an attempt will be made to read data from <code>fName</code>.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.add_outputs', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.add_outputs" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">add_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">,</span>
+                <span class="n">append</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Appends new output matrix and associated names to object</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `output_mtrx`, numpy matrix expected</span>
+<span class="sd">    </span>
+<span class="sd">    * `output_names`, list or array of strings</span>
+<span class="sd">    </span>
+<span class="sd">    * `fName`, string denoting csv file defining output matrix and names</span>
+<span class="sd">    </span>
+<span class="sd">    * `append`, if True (default) then new output matrices and names will </span>
+<span class="sd">      be appended to any previously-defined outputs.</span>
+<span class="sd">    </span>
+<span class="sd">    For normal usage either `output_mtrx` and `output_names` to be </span>
+<span class="sd">    provided. Otherwise an attempt will be made to read data from `fName`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&#39;add_outputs()&#39; method invoked.&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Read from file if no output_mtrx provided</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New outputs defined in &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">fName</span><span class="p">)</span>
+        <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
+        
+    <span class="c1"># Create default output names if none provided</span>
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Response {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+                
+    <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
+        
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">convert2matrix</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">)</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">output_mtrx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>            
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output matrix shapes:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_om</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output names:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span>
+    
+    <span class="c1"># Check dimensions of all output matrices defined</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.calc_eigenproperties">
     <p>def <span class="ident">calc_eigenproperties</span>(</p><p>self, normalise=True, verbose=False, makePlots=False, axarr=None)</p>
     </div>
@@ -3739,6 +3595,71 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
   
             
   <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.check_outputs">
+    <p>def <span class="ident">check_outputs</span>(</p><p>self, output_mtrx=None, output_names=None, verbose=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Checks that all defined output matrices are of the correct shape</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.check_outputs', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.check_outputs" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">check_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks that all defined output matrices are of the correct shape</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Handle option arguments</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+        
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
+        
+    <span class="c1"># Exit early if both none</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CheckOutputMtrx() method invoked:&quot;</span><span class="p">)</span>
+    
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Output matrix shapes:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_om</span> <span class="ow">in</span> <span class="n">output_mtrx</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Output names:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+    
+    <span class="c1"># Check list lengths agree</span>
+    <span class="k">for</span> <span class="n">_om</span><span class="p">,</span> <span class="n">_names</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_names</span><span class="p">)</span><span class="o">!=</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of lists `output_names` &quot;</span><span class="o">+</span>
+                             <span class="s2">&quot;and rows of `output_mtrx` do not agree!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
+                             <span class="s2">&quot;len(output_names)={0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_names</span><span class="p">))</span><span class="o">+</span>
+                             <span class="s2">&quot;output_mtrx.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    
+        <span class="c1"># Check shape of output matrix </span>
+        <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+        
+        <span class="k">if</span> <span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nDOF_expected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;output_mtrx of invalid shape defined!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                             <span class="s2">&quot;Shape provided: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="s2">&quot;Cols expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nDOF_expected</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.freqVals">
     <p>def <span class="ident">freqVals</span>(</p><p>self, f_salient=None, nf_pad=400, fmax=None)</p>
     </div>
@@ -3819,6 +3740,115 @@ Define frequency values to evaluate frequency response G(f) at</p>
   
             
   <div class="item">
+    <div class="name def" id="hanging_1d_chain.hanging1DChain.get_output_mtrx">
+    <p>def <span class="ident">get_output_mtrx</span>(</p><p>self, state_variables_only=False, all_systems=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns output matrix for overall system</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>state_variables_only</code>, <em>boolean</em>, if True, only columns relating to 
+  state variables (i.e. displacements, velocities - but not 
+  accelerations) will be returned</p>
+</li>
+<li>
+<p><code>all_systems</code>, <em>boolean</em>, if True output matrices for all subsystems 
+  will be arranged as block diagonal matrix, which represents the 
+  output matrix for the full system</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-hanging_1d_chain.hanging1DChain.get_output_mtrx', this);">Show source &equiv;</a></p>
+  <div id="source-hanging_1d_chain.hanging1DChain.get_output_mtrx" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_output_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">state_variables_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                    <span class="n">all_systems</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns output matrix for overall system</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `state_variables_only`, _boolean_, if True, only columns relating to </span>
+<span class="sd">      state variables (i.e. displacements, velocities - but not </span>
+<span class="sd">      accelerations) will be returned</span>
+<span class="sd">      </span>
+<span class="sd">    * `all_systems`, _boolean_, if True output matrices for all subsystems </span>
+<span class="sd">      will be arranged as block diagonal matrix, which represents the </span>
+<span class="sd">      output matrix for the full system</span>
+<span class="sd">      </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Define list over which to loop</span>
+    <span class="k">if</span> <span class="n">all_systems</span><span class="p">:</span>
+        <span class="n">sys_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+    
+    <span class="c1"># Assemble full output matrix by arranging as block diagonal matrix</span>
+    
+    <span class="n">disp_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">vel_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">accn_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">output_names_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sys_list</span><span class="p">:</span>
+        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
+        
+        <span class="c1"># Loop over all output matrices</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">x</span><span class="o">.</span><span class="n">output_names</span><span class="p">)):</span>
+                            
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">om</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="n">names</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">om</span><span class="p">))</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span> <span class="o">+</span> <span class="n">names</span>
+                            
+        <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
+        <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
+        <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+        <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
+        
+        <span class="c1"># Append to lists</span>
+        <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
+        <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
+        <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
+        <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
+        
+    <span class="c1"># Assemble submatrices for full system</span>
+    <span class="n">disp_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">disp_cols_list</span><span class="p">)</span>
+    <span class="n">vel_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">vel_cols_list</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
+        <span class="n">accn_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">accn_cols_list</span><span class="p">)</span>
+    
+    <span class="c1"># Concatenate to prepare output matrix for full system</span>
+    <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">disp_cols_full</span><span class="p">,</span><span class="n">vel_cols_full</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
+        <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">output_mtrx_full</span><span class="p">,</span><span class="n">accn_cols_full</span><span class="p">))</span>
+    
+    <span class="c1"># Convert list of names to array format</span>
+    <span class="n">output_names_arr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">output_names_list</span><span class="p">)</span> 
+    
+    <span class="c1"># Return matrix and row names for full system</span>
+    <span class="k">return</span> <span class="n">output_mtrx_full</span><span class="p">,</span> <span class="n">output_names_arr</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="hanging_1d_chain.hanging1DChain.hasConstraints">
     <p>def <span class="ident">hasConstraints</span>(</p><p>self)</p>
     </div>
@@ -3873,6 +3903,10 @@ Define frequency values to evaluate frequency response G(f) at</p>
 
             
   
+    <div class="desc"><p>List of output matrices</p>
+<p>Use <code>add_outputs()</code> to define append output matrices. 
+<code>check_outputs()</code> can be used to check the validity (shape) of the 
+output matrices defined.</p></div>
   <div class="source_cont">
 </div>
 
@@ -3883,26 +3917,8 @@ Define frequency values to evaluate frequency response G(f) at</p>
 
             
   
-  <div class="source_cont">
-</div>
-
-            </div>
-            <div class="item">
-            <p id="hanging_1d_chain.hanging1DChain.response_mtrx" class="name">var <span class="ident">response_mtrx</span></p>
-            
-
-            
-  
-  <div class="source_cont">
-</div>
-
-            </div>
-            <div class="item">
-            <p id="hanging_1d_chain.hanging1DChain.response_names" class="name">var <span class="ident">response_names</span></p>
-            
-
-            
-  
+    <div class="desc"><p>List of string descriptions for rows of <code>output_mtrx</code>.
+Used to label plots etc.</p></div>
   <div class="source_cont">
 </div>
 

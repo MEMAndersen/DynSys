@@ -14,10 +14,10 @@ and this project adheres to:
 
 ### Added
 
-* New module `hysteresis.py` added, together with related example, to provide 
+* New module `hysteresis.py`, together with related example, to provide 
   classes to model hysteretic behaviour
 
-* New module `eig_results.py` added, with class to act as container for 
+* New module `eig_results.py`, with class to act as container for 
   eigenvalue results, to replace previous dict usage. Coding is intended to be  
   backwards-compatible, but allows eigenproperties plot methods previously 
   housed as `DynSys()` class methods to more logically be implemented as 
@@ -31,11 +31,17 @@ and this project adheres to:
 * Lots of alternative getter methods defined for `Eig_Results()` to be more 
   flexible with spellings / names when requesting certain attributes
   
-* New module `freq_response_results.py` added, with class to act as container 
+* New module `freq_response_results.py`, with class to act as container 
   for frequency response results, to replace previous dict usage. Coding is 
   backwards-compatible, except `PlotFrequencyResponse()` method previously 
   implemented within `dynsys.py` now used as `FreqResponse_Results.plot()` 
   method
+  
+* New module `mesh.py`, to faciliate definition or and manipulation of meshes
+  (i.e. interconnected nodes and elements)
+  
+* New module `nodle.py`, to provide methods for importing data from NODLE 
+  Excel input files (COO and MEM data) and .res files (DIS data)
 
 ### Fixed
 

@@ -10,7 +10,11 @@ and this project adheres to:
 <h3>Added</h3>
 <ul>
 <li>
-<p>New module <code>eig_results.py</code> added, with class to act as container for 
+<p>New module <code>hysteresis.py</code>, together with related example, to provide 
+  classes to model hysteretic behaviour</p>
+</li>
+<li>
+<p>New module <code>eig_results.py</code>, with class to act as container for 
   eigenvalue results, to replace previous dict usage. Coding is intended to be<br />
   backwards-compatible, but allows eigenproperties plot methods previously 
   housed as <code>DynSys()</code> class methods to more logically be implemented as 
@@ -27,11 +31,19 @@ and this project adheres to:
   flexible with spellings / names when requesting certain attributes</p>
 </li>
 <li>
-<p>New module <code>freq_response_results.py</code> added, with class to act as container 
+<p>New module <code>freq_response_results.py</code>, with class to act as container 
   for frequency response results, to replace previous dict usage. Coding is 
   backwards-compatible, except <code>PlotFrequencyResponse()</code> method previously 
   implemented within <code>dynsys.py</code> now used as <code>FreqResponse_Results.plot()</code> 
   method</p>
+</li>
+<li>
+<p>New module <code>mesh.py</code>, to faciliate definition or and manipulation of meshes
+  (i.e. interconnected nodes and elements)</p>
+</li>
+<li>
+<p>New module <code>nodle.py</code>, to provide methods for importing data from NODLE 
+  Excel input files (COO and MEM data) and .res files (DIS data)</p>
 </li>
 </ul>
 <h3>Fixed</h3>
