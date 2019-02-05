@@ -215,6 +215,15 @@ class Mesh:
         return element_list
     
     
+    def define_gauss_points(self,N_gp=2):
+        """
+        Loops over all elements in mesh, defining gauss points
+        """
+        
+        for element_obj in self.element_objs.values():
+            element_obj.define_gauss_points(N_gp=N_gp)
+    
+    
     def get_connected_meshes(self,get_full_tree=True):
         """
         Returns list including all mesh objects associated with mesh object 
@@ -257,7 +266,8 @@ class Mesh:
     
     def plot(self,ax=None,
              set_axis_limits=True,
-             axis_limits=[[-5,5],[-10,10],[0,10]]):
+             axis_limits=None,
+             **kwargs):
         """
         Plots mesh and all sub-meshes
         """
@@ -269,10 +279,14 @@ class Mesh:
         
         for mesh_obj in mesh_list:
                 
-            ax = mesh_obj._plot_init(ax=ax)
+            ax = mesh_obj._plot_init(ax=ax,**kwargs)
             mesh_obj._plot_update()
         
         if set_axis_limits:
+            
+            if axis_limits is None:
+                axis_limits = self.calc_extents()
+                            
             ax.set_xlim(axis_limits[0])
             ax.set_ylim(axis_limits[1])
             ax.set_zlim(axis_limits[2])
@@ -283,7 +297,7 @@ class Mesh:
         return ax
     
     
-    def _plot_init(self,ax=None):
+    def _plot_init(self,ax=None,plot_gps=False):
         """
         Initialises mesh plot
         """
@@ -301,6 +315,10 @@ class Mesh:
         
         self.plot_artists['elements'] = ax.plot([],[],[],'-',label=self.name)[0]
         self.plot_artists['nodes'] = ax.plot([],[],[],'k.')[0]
+        
+        if plot_gps:
+            
+            self.plot_artists['gauss_points'] = ax.plot([],[],[],'g.')[0]
         
         return ax
     
@@ -339,6 +357,17 @@ class Mesh:
         elements.set_data(X,Y)
         elements.set_3d_properties(Z)
 #        
+        # Plot gauss points
+        attr = 'gauss_points'
+        if attr in self.plot_artists:
+            
+            gp_artist = self.plot_artists[attr]
+            
+            gp_XYZ = npy.array([gp.xyz for e in element_list
+                                for gp in e.gauss_points])
+        
+            gp_artist.set_data(gp_XYZ[:,0],gp_XYZ[:,1])
+            gp_artist.set_3d_properties(gp_XYZ[:,2])
 #        
         return self.plot_artists
 
@@ -385,6 +414,11 @@ class Element:
         List of node objects connecting to this element. Keys are node names
         """
         
+        self.gauss_points = []
+        """
+        List of gauss point objects associated with this element
+        """
+        
         # Connect to parent mesh
         self.parent_mesh.append_objs([self])
 
@@ -408,9 +442,27 @@ class Element:
         return 
     
     
+    def get_end_positions(self):
+        """
+        Returns position vectors of each end of elements
+        """
+        r1 = self.connected_nodes[0].get_xyz()
+        r2 = self.connected_nodes[1].get_xyz()
+        return r1, r2
+    
+    
+    def length(self):
+        """
+        Returns length of element i.e. distance between end nodes
+        """
+        r1, r2 = self.get_end_positions()
+        r12 = r2 - r1
+        return sum(r12**2)
+    
+    
     def define_gauss_points(self,N_gp:int=3):
         """
-        Defines gauss points as used for Gauss Quadrature
+        Defines gauss points to be associated with element
         
         ***
         Required:
@@ -420,7 +472,7 @@ class Element:
           
         """
         # Define weights and locations for gauss points based on [-1,1] domain
-        # Refer Wikipedia - 'Gauss Quadrature' - for basis of values hard-coded
+        # Refer https://en.wikipedia.org/wiki/Gaussian_quadrature
         if N_gp == 1:
             
             locs = [0.0]
@@ -449,18 +501,23 @@ class Element:
         
         # Convert to [0,L] domain
         L = self.length()
-        weights =* L/2
+        weights *= L/2
         
         # Define gauss points
-        locs = (locs + 1)/2     # convert to [0,1] domain
-        r1 = self.connected_nodes[0].get_xyz()
-        r2 = self.connected_nodes[1].get_xyz()
-        r12 = r2 - r1           # vector from node 1 to 2
-        r_gp = r1 + locs*r1     # defines position of gauss points
+        locs = (locs + 1)/2                     # convert to [0,1] domain
+        r1, r2 = self.get_end_positions()
+        r12 = r2 - r1
             
-        for (xyz,weight) in zip(r_gp,weights):
+        self.gauss_points = []
+        for (loc,weight) in zip(locs,weights):
             
-            gp_obj = GaussPoint(weight=weight,xyz=xyz)
+            # Calculate position of gauss point
+            xyz = r1 + loc * r12
+            
+            # Define new GaussPoint object and append to list
+            self.gauss_points.append(GaussPoint(weight=weight,xyz=xyz))
+            
+        return self.gauss_points
     
          
 # *****************************************************************************
@@ -639,8 +696,19 @@ class GaussPoint(Point):
     but not at its vertices. Gauss points have weights, which are used when 
     performing gauss quadrature (numerical integration)
     """
-    def __init__(self,weight):
-        pass
+    
+    # Class properties
+    _ids = count(0)  # used to assign IDs to objects
+    
+    def __init__(self,weight,**kwargs):
+        
+        self.weight = weight
+        """
+        Weight associated with gauss point, for use when carrying out 
+        integration by gauss quadrature
+        """
+        
+        super().__init__(**kwargs)
 
 
 # ********************** FUNCTIONS ****************************************

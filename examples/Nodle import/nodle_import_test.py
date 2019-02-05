@@ -7,7 +7,10 @@ template
 """
 
 import nodle
+import matplotlib.pyplot as plt
+plt.close('all')
 
+#%%
 
 fname = 'NODLE_demo.xlsx'
 
@@ -18,4 +21,14 @@ MEM_df = nodle.read_MEM(fname)
 print(MEM_df)
 
 mesh_obj = nodle.read_mesh(fname)
-mesh_obj.plot()
+
+mesh_obj.define_gauss_points(N_gp=2)
+
+mesh_obj.plot(plot_gps=True)
+
+#%%
+
+fname = 'bigger_model.xlsx'
+mesh_obj = nodle.read_mesh(fname)
+mesh_obj.define_gauss_points(N_gp=1)
+mesh_obj.plot(plot_gps=True)
