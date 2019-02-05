@@ -7,7 +7,9 @@ COWI UK's large displacement frame analysis software
 """
 
 import pandas
+import numpy
 from mesh import Mesh
+from common import read_block
 
 # -------------- PUBLIC FUCTIONS ------------------
 
@@ -76,7 +78,7 @@ def read_MEM(fname):
     return df
 
 
-def read_DIS(fname=None,iostream=None,lcases=None,lcase_type=1):
+def read_DIS(fname=None,file_obj=None,verbose=True):
     """
     Reads displacement results, as given in DIS section of NODLE results files
     ***
@@ -86,32 +88,55 @@ def read_DIS(fname=None,iostream=None,lcases=None,lcase_type=1):
     
     * `fname`, string to denote filename of .res file to be read
     
-    * `iostream`, open filestream object (i.e. partially read data file)
+    * `file_obj`, open textstream object (i.e. partially read data file)
     
-    ***
-    Optional:
-        
-    * `lcases`, list of indices to denote loadcases to be read. If None, 
-      results for all loadcases will be read
-      
-    * `lcase_type`, code to denote type of referencing to use when selecting 
-      loadcases using `lcases` parameter:
-          
-        * 0 : Select by index, i.e. order in results file (1 = first loadcase)
-          
-        * 1 : Select by loadcase ID
-        
-        * 2 : Select by mode index (dynamic results only) (1 = first mode)
-        
     """
+#    ***
+#    Optional:
+#        
+#    * `lcases`, list of indices to denote loadcases to be read. If None, 
+#      results for all loadcases will be read
+#      
+#    * `lcase_type`, code to denote type of referencing to use when selecting 
+#      loadcases using `lcases` parameter:
+#          
+#        * 0 : Select by index, i.e. order in results file (1 = first loadcase)
+#          
+#        * 1 : Select by loadcase ID
+#        
+#        * 2 : Select by mode index (dynamic results only) (1 = first mode)
+        
     
-    if iostream is None:
+    if file_obj is None:
         
         if fname is None:
             raise ValueError("Either 'fname' or 'iostream' required!")
-            
-        pass
+        
+        file_obj = open(fname,mode='rt')  
     
+    EOF = False
+    nLoadcases = 0
+    nModes = 0
+    while not EOF:
+        
+        data = read_block(file_obj,'DIS','FOR')
+        
+        if data is None:
+            EOF=True
+            
+        else:
+            
+            lcase_type, title,results = _parse_DIS_data(data)
+            
+            if lcase_type==1:
+                nLoadcases += 1
+            elif lcase_type==2:
+                nModes += 1
+            
+    if verbose:
+        print("Displacement results read from '%s'" % fname)
+        print("# loadcases found:\t%d\n# modes founds:\t\t%d" % (nLoadcases,nModes))
+
 
 
 # -------------- PRIVATE FUNCTIONS ----------------
@@ -119,6 +144,71 @@ def read_DIS(fname=None,iostream=None,lcases=None,lcase_type=1):
 def _check_is_xlsx(fname):
     if not 'xlsx' in fname:
         raise ValueError("Excel-based NODLE input file expected!")
+    
+def _parse_DIS_data(data):
+    """
+    Parses nested list `data` into objects used for storage of loadcase and 
+    results data
+    """
+    
+    # Get title line
+    title_line = data.pop(0)
+    
+    # Parse and tidy to obtain key data from title line
+    title_dict = {}
+    
+    title_line = title_line[1:]
+    Ndetails = len(title_line)
+    
+    if Ndetails == 1:
+        # Ordinary loadcase results
+        lcase_type = 1
+        
+        loadcase_title = title_line[0]
+        loadcase_title = loadcase_title.replace("'","")
+        loadcase_title = loadcase_title.lstrip()
+        loadcase_details = loadcase_title.split(':')
+        
+        name, description = loadcase_details
+        
+        name = int(name)
+        
+        title_dict['Name'] = name
+        title_dict['Description'] = description.lstrip()
+        
+    elif Ndetails == 3:
+        # Modal results
+        lcase_type = 2
+        
+        mode_name, freq, mass = title_line
+        
+        mode_name = int(mode_name[6:]) # remove 'Mode ' prefix
+        freq = float(freq[3:].lstrip()[:-2])
+        mass = float(mass[3:].lstrip()[:-1])
+        
+        title_dict['Mode'] = mode_name
+        title_dict['Frequency'] = freq
+        title_dict['Mass'] = mass
+        
+    else:
+        raise ValueError("Unexpected title encountered")
+    
+    # Discard last 3 lines (max/min displacement summary)
+    data.pop(-1)
+    data.pop(-1)
+    data.pop(-1)
+    
+    # Collate node-displacement data into dict
+    results_dict = {}
+    
+    for row in data:
+        
+        node = int(row[2])
+        disp_vals = numpy.array(row[3:],dtype=float)
+        
+        results_dict[node]=disp_vals
+    
+    return lcase_type, title_dict, results_dict
     
 
 

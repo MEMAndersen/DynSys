@@ -20,7 +20,7 @@ and this project adheres to:
   (i.e. interconnected nodes and elements)
   
 * `nodle.py` module added to provide methods for importing data from NODLE 
-  Excel input files
+  Excel input files (COO and MEM data) and .res files (DIS data)
 
 ### Fixed
 
