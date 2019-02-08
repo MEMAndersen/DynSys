@@ -718,6 +718,60 @@ class GaussPoint(Point):
         """
         
         super().__init__(**kwargs)
+      
+        
+# ------------------- CLASSES TO STORE MESH RESULTS -----------------------
+        
+class MeshResults():
+    """
+    Base class used to store results with relation to mesh objects
+    (e.g. nodes for displacements, member-node locations for forces)
+    """
+    def __init__(self, obj_list, results_arr):
+        
+        self.obj_list = obj_list
+        """
+        List of mesh objects to which results relate. E.g. displacements 
+        relate to nodes (i.e. list length = 1), whereas forces relate to 
+        elements and nodes (i.e. list of length = 2)
+        """
+        
+        self.values = results_arr
+        """
+        2d-array of vector results for multiple loadcases. 
+        Shape to be [nLoadcase,nComponents]
+        """
+    
+class DisplacementResults(MeshResults):
+    """
+    Class used to store displacement results, with relation to a given node
+    """
+    
+    def __init__(self, node_obj, results_arr):
+        
+        super()._init__([node_obj], results_arr)
+        
+        
+class ReactionResults(MeshResults):
+    """
+    Class used to store reaction results, with relation to a given node
+    """
+    
+    def __init__(self, node_obj, results_arr):
+        
+        super()._init__([node_obj], results_arr)
+        
+        
+class ForceResults(MeshResults):
+    """
+    Class used to store force results, with regards to a given [element, node]
+    location
+    """
+    
+    def __init__(self, element_obj, node_obj, results_arr):
+        
+        super()._init__([element_obj,node_obj], results_arr)
+    
 
 
 # ********************** FUNCTIONS ****************************************
