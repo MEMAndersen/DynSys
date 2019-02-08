@@ -8,7 +8,7 @@ COWI UK's large displacement frame analysis software
 
 import pandas
 import numpy
-from mesh import Mesh
+from mesh import Mesh, DispResults
 from common import read_block
 
 # -------------- PUBLIC FUCTIONS ------------------
@@ -78,7 +78,7 @@ def read_MEM(fname):
     return df
 
 
-def read_DIS(fname=None,file_obj=None,verbose=True):
+def read_DIS(fname=None,file_obj=None,mesh_obj=None,verbose=True):
     """
     Reads displacement results, as given in DIS section of NODLE results files
     ***
@@ -90,6 +90,9 @@ def read_DIS(fname=None,file_obj=None,verbose=True):
     
     * `file_obj`, open textstream object (i.e. partially read data file)
     
+    * `mesh_obj`, Mesh object to which results relate. If object provided, 
+      results will be assigned to mesh objects e.g. nodes / elements
+        
     """
 #    ***
 #    Optional:
@@ -117,6 +120,7 @@ def read_DIS(fname=None,file_obj=None,verbose=True):
     EOF = False
     nLoadcases = 0
     nModes = 0
+    
     while not EOF:
         
         data = read_block(file_obj,'DIS','FOR')
@@ -126,17 +130,29 @@ def read_DIS(fname=None,file_obj=None,verbose=True):
             
         else:
             
-            lcase_type, title,results = _parse_DIS_data(data)
+            lcase_type, title, results = _parse_DIS_data(data)
             
             if lcase_type==1:
                 nLoadcases += 1
             elif lcase_type==2:
                 nModes += 1
-            
+                
+            # Assign results to mesh objects
+            for node_name, results_arr in results.items():
+                
+                # Get node object
+                node_obj = mesh_obj.node_objs[node_name]
+                
+                # Determine which container to use
+                if lcase_type==1:
+                    node_obj.lcase_disp.add(results_arr)
+                    
+                if lcase_type==2:
+                    node_obj.modal_disp.add(results_arr)
+                        
     if verbose:
         print("Displacement results read from '%s'" % fname)
         print("# loadcases found:\t%d\n# modes founds:\t\t%d" % (nLoadcases,nModes))
-
 
 
 # -------------- PRIVATE FUNCTIONS ----------------

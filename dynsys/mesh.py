@@ -671,6 +671,18 @@ class Node(Point):
         Dict of element objects connected to this node. Keys are element names
         """
         
+        self.lcase_disp = DispResults(node_obj=self,results_arr=None)
+        """
+        Instance of `DispResults` class used as container for 
+        displacements as obtained for ordinary loadcases / combinations
+        """
+        
+        self.modal_disp = DispResults(node_obj=self,results_arr=None)
+        """
+        Instance of `DispResults` class used as container for 
+        mode displacements as obtained from eigenvalue analysis
+        """
+        
         # Connect to parent mesh
         self.parent_mesh.append_objs([self])
         
@@ -727,7 +739,10 @@ class MeshResults():
     Base class used to store results with relation to mesh objects
     (e.g. nodes for displacements, member-node locations for forces)
     """
-    def __init__(self, obj_list, results_arr):
+    
+    nComponents = None   # integer defining expected number of components
+    
+    def __init__(self, obj_list, results_arr=None, verbose=False):
         
         self.obj_list = obj_list
         """
@@ -736,20 +751,70 @@ class MeshResults():
         elements and nodes (i.e. list of length = 2)
         """
         
-        self.values = results_arr
+        self.clear()
+        
+        if results_arr is not None:
+            self.add(results_arr)
+        
+        if verbose:
+            print("New instance of '%s' created" % self.__class__.__name__)
+            
+    def __repr__(self):
+        
+        print_str = ""
+        print_str += "Class:\t%s\n" % self.__class__.__name__
+        print_str += "Name:\t%s\n" % self.name
+        print_str += "Shape of values array:\n{0}".format(self.values.shape)
+        print_str += "\n"
+        return print_str
+        
+    @property
+    def values(self):
         """
         2d-array of vector results for multiple loadcases. 
-        Shape to be [nLoadcase,nComponents]
+        Shape is [nLoadcase,nComponents]
         """
+        return self._values
     
-class DisplacementResults(MeshResults):
+    
+    @property
+    def name(self):
+        """
+        Returns list comprising names of mesh objects associated
+        """
+        return [x.name for x in self.obj_list]
+       
+        
+    def add(self,new_results,verbose=False):
+        """
+        Appends results for new loadcase
+        """
+        if verbose:
+            print("Appending new results to location {0}".format(self.name))
+            
+        self._values = npy.vstack((self.values, new_results))
+        
+    def clear(self):
+        """
+        Clears results held within object
+        """
+        self._values = npy.zeros((0,self.nComponents))
+        
+        
+    
+        
+        
+    
+class DispResults(MeshResults):
     """
     Class used to store displacement results, with relation to a given node
     """
     
-    def __init__(self, node_obj, results_arr):
+    nComponents = 6
+    
+    def __init__(self, node_obj, results_arr=None):
         
-        super()._init__([node_obj], results_arr)
+        super().__init__([node_obj], results_arr)
         
         
 class ReactionResults(MeshResults):
@@ -757,9 +822,11 @@ class ReactionResults(MeshResults):
     Class used to store reaction results, with relation to a given node
     """
     
-    def __init__(self, node_obj, results_arr):
+    nComponents = 6
+    
+    def __init__(self, node_obj, results_arr=None):
         
-        super()._init__([node_obj], results_arr)
+        super().__init__([node_obj], results_arr)
         
         
 class ForceResults(MeshResults):
@@ -768,9 +835,11 @@ class ForceResults(MeshResults):
     location
     """
     
-    def __init__(self, element_obj, node_obj, results_arr):
+    nComponents = 6
+    
+    def __init__(self, element_obj, node_obj, results_arr=None):
         
-        super()._init__([element_obj,node_obj], results_arr)
+        super().__init__([element_obj,node_obj], results_arr)
     
 
 
