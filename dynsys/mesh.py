@@ -515,7 +515,7 @@ class Element:
             xyz = r1 + loc * r12
             
             # Define new GaussPoint object and append to list
-            self.gauss_points.append(GaussPoint(weight=weight,xyz=xyz))
+            self.gauss_points.append(GaussPoint(loc=loc,weight=weight,xyz=xyz))
             
         return self.gauss_points
     
@@ -621,6 +621,7 @@ class Point:
                              "Shape: {0}".format(value.shape))
         self._xyz = value
         
+        
 # *****************************************************************************
         
 class Node(Point):
@@ -676,6 +677,7 @@ class Node(Point):
         # Connect any elements passed in via list
         self.connect_elements(connected_elements)
         
+        
     def connect_elements(self,element_objs:list):
         """
         Method to associate element objects with node object
@@ -700,7 +702,14 @@ class GaussPoint(Point):
     # Class properties
     _ids = count(0)  # used to assign IDs to objects
     
-    def __init__(self,weight,**kwargs):
+    def __init__(self,loc,weight,**kwargs):
+               
+        self.loc = loc
+        """
+        Location of gauss point within [0,1] domain along element to which 
+        gauss point relates (useful for interpolation of properties / results 
+        found at the end of the element)
+        """
         
         self.weight = weight
         """
@@ -713,8 +722,10 @@ class GaussPoint(Point):
 
 # ********************** FUNCTIONS ****************************************
      
-def integrate_across_mesh(mesh_obj,
-                          integrand_func:callable):
+def integrate_over_mesh(mesh_obj,
+                        integrand_func:callable,
+                        args=[],
+                        kwargs={}):
     """
     Function to perform gauss integration across the domain of a mesh
     
@@ -725,6 +736,13 @@ def integrate_across_mesh(mesh_obj,
     
     * `integrand_func`, _callable_ defining the integrand, i.e. the function to 
       be integrated over the mesh
+      
+    ***
+    Optional:
+        
+    * `args`, list of arguments, to be passed to `integrand_func`
+    
+    * `kwargs`, dict of keyword arguments, to be passed to 'integrand func'
           
     """  
     

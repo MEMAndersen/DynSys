@@ -35,8 +35,6 @@ mesh_obj.plot(plot_gps=True)
 #mesh_obj.define_gauss_points(N_gp=1)
 #mesh_obj.plot(plot_gps=True)
 
-#%%
-
 
 #%%
 results_fname = 'NODLE_demo.res'
