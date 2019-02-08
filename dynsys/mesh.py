@@ -8,8 +8,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pandas
 from itertools import count
-from collections import OrderedDict
-
+from inspect import getmro
 
 class Mesh:
     """
@@ -50,19 +49,19 @@ class Mesh:
         """
         
         # Create empty dictionary attributes to contain objects within
-        self.mesh_objs = OrderedDict({self.name : self})
+        self.mesh_objs = {self.name : self}
         """
         Dict of mesh objects related to this mesh. Will always include `self` 
         but also any sub-meshes defined. Keys are names of each mesh
         """
         
-        self.node_objs = OrderedDict()
+        self.node_objs = {}
         """
         Dict of node objects directly related to this mesh. Keys are names of 
         each node
         """
         
-        self.element_objs = OrderedDict()
+        self.element_objs = {}
         """
         Dict of element objects directly related to this mesh. Keys are names 
         of each node
@@ -130,19 +129,20 @@ class Mesh:
             obj.parent_mesh=self 
     
             # Add new objects to dictionaries according to class
-            class_name = obj.__class__.__name__
+            class_name_list = getmro(obj.__class__)
             
-            if class_name == "Mesh":
+            if Mesh in class_name_list:
                 self.mesh_objs[obj.name] = obj
                 
-            elif class_name == "Element":
+            elif Element in class_name_list:
                 self.element_objs[obj.name] = obj
                 
-            elif class_name == "Node":
+            elif Node in class_name_list:
                 self.node_objs[obj.name] = obj
             
             else:
-                raise ValueError("Unexpected object! Class '%s'" % class_name)
+                raise ValueError("Unexpected object!\n\n" + 
+                                 "Class list{0}".format(class_name_list))
             
             
     def define_nodes(self,df=None,fname='nodes.csv',**kwargs):
@@ -180,7 +180,7 @@ class Mesh:
         return node_list
     
             
-    def define_elements(self,df=None,fname="elements.csv",**kwargs):
+    def define_line_elements(self,df=None,fname="elements.csv",**kwargs):
         """
         Function to read element connectivity from tabulated input
         
@@ -201,11 +201,12 @@ class Mesh:
         element_list = []
         for index, row in df.iterrows():
             
-            # Define new node object
+            # Get node objects for each end
             node1_obj = self.node_objs[row["EndJ"]]
             node2_obj = self.node_objs[row["EndK"]]
             
-            new_obj = Element(parent_mesh=self,
+            # Define new line element
+            new_obj = LineElement(parent_mesh=self,
                               name=row["Member"],
                               connected_nodes=[node1_obj,node2_obj])
             
@@ -375,11 +376,16 @@ class Mesh:
         
 class Element:
     """
-    Base class used to define elements, i.e. entities connecting nodes (points in space)
+    Base class used to define elements, i.e. entities connecting nodes 
+    (points in space)
+    
+    _Note: implemented as an abstract class. Objects cannot be instantiated_
     """
         
     # Class properties
     _ids = count(0)  # used to assign IDs to objects
+    
+    _nNodes_expected = None
     
     # Class methods
     
@@ -388,9 +394,10 @@ class Element:
         Creates new element, in the context of `parent_mesh`
         """
         
-        if len(connected_nodes)!=2:
-            raise ValueError("len(connected_nodes)==2 expected!")
-        
+        # Prevent direct instatiation of this class
+        if type(self) == Element:
+            raise Exception("<Element> must be subclassed.")
+                
         self.parent_mesh = parent_mesh
         """
         Parent mesh to which element directly relates
@@ -426,7 +433,12 @@ class Element:
         self.connect_nodes(connected_nodes)
         
     
+    # -----
+          
+    
     def connect_nodes(self,node_objs:list):
+        
+        self._check_node_objs(node_objs)
         
         for node_obj in node_objs:
 
@@ -437,11 +449,62 @@ class Element:
             node_obj.connect_elements(self)
             
             
+    def _check_node_objs(self,node_objs):
+        
+        N = self._nNodes_expected
+        
+        if N is not None:
+            
+            if len(node_objs)!= N:
+                raise ValueError("Unexpected number of nodes supplied "
+                                 "to define element!")
+                
+            
     def get_connected_node(node_index:int):
         
         return 
     
     
+    
+    
+    
+    def define_gauss_points(self):
+        """
+        Defines gauss points to be associated with element
+        
+        _To be overridden by derived class method_
+        """
+        raise ValueError("Not implemented for base class! To be overridden")
+        
+    
+    
+class LineElement(Element):
+    """
+    Class to implement line elements, i.e. element between two nodes in 3d
+    """
+    
+    _nNodes_expected = 2
+            
+
+    def get_axes(self,vertical_dir=npy.array([0,0,1])):
+        """
+        Returns list of (3,) arrays defining unit vectors for each element axis
+        """
+        
+        # Calculate x-axis, taking as being direction vector from end1 to end2
+        r1, r2 = self.get_end_positions()
+        x = r2 - r1
+        x /= self.length() # normalise
+        
+        # Calculate y-axis
+        
+        # Calculate z-axis
+        
+        return x, y, z
+        
+    
+        
+        
     def get_end_positions(self):
         """
         Returns position vectors of each end of elements
@@ -473,6 +536,7 @@ class Element:
         """
         # Define weights and locations for gauss points based on [-1,1] domain
         # Refer https://en.wikipedia.org/wiki/Gaussian_quadrature
+        
         if N_gp == 1:
             
             locs = [0.0]
@@ -518,7 +582,6 @@ class Element:
             self.gauss_points.append(GaussPoint(loc=loc,weight=weight,xyz=xyz))
             
         return self.gauss_points
-    
          
 # *****************************************************************************
     
@@ -621,6 +684,8 @@ class Point:
                              "Shape: {0}".format(value.shape))
         self._xyz = value
         
+    
+        
         
 # *****************************************************************************
         
@@ -666,7 +731,7 @@ class Node(Point):
         Parent mesh to which element directly relates
         """
         
-        self.connected_elements = OrderedDict()
+        self.connected_elements = {}
         """
         Dict of element objects connected to this node. Keys are element names
         """

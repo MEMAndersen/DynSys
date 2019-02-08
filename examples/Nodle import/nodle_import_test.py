@@ -48,4 +48,6 @@ print(node_obj.lcase_disp)
 print(node_obj.modal_disp)
 
 #%%
-mesh_obj.plot_results(results_type='disp',lcase=1,lcase_type=2)
+
+#%%
+#mesh_obj.plot_results(results_type='disp',lcase=1,lcase_type=2)

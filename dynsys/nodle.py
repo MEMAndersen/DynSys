@@ -34,8 +34,8 @@ def read_mesh(fname,name=None):
     # Read in member data from Excel file
     MEM_df = read_MEM(fname)
     
-    # Define elements and append to mesh
-    mesh_obj.define_elements(df=MEM_df)
+    # Define elements and append to mesh   
+    mesh_obj.define_line_elements(df=MEM_df)
     del MEM_df
     
     return mesh_obj
@@ -151,8 +151,10 @@ def read_DIS(fname=None,file_obj=None,mesh_obj=None,verbose=True):
                     node_obj.modal_disp.add(results_arr)
                         
     if verbose:
-        print("Displacement results read from '%s'" % fname)
-        print("# loadcases found:\t%d\n# modes founds:\t\t%d" % (nLoadcases,nModes))
+        print("Displacement results read from '%s'\n" % fname +
+              "# loadcases found:\t%d\n" % nLoadcases + 
+              "# modes founds:\t\t%d" % nModes + 
+              "\n")
 
 
 # -------------- PRIVATE FUNCTIONS ----------------

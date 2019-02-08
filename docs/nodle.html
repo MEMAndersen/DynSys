@@ -1086,7 +1086,7 @@ COWI UK's large displacement frame analysis software</p>
 
 <span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
-<span class="kn">from</span> <span class="nn">mesh</span> <span class="kn">import</span> <span class="n">Mesh</span>
+<span class="kn">from</span> <span class="nn">mesh</span> <span class="kn">import</span> <span class="n">Mesh</span><span class="p">,</span> <span class="n">DispResults</span>
 <span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">read_block</span>
 
 <span class="c1"># -------------- PUBLIC FUCTIONS ------------------</span>
@@ -1112,8 +1112,8 @@ COWI UK's large displacement frame analysis software</p>
     <span class="c1"># Read in member data from Excel file</span>
     <span class="n">MEM_df</span> <span class="o">=</span> <span class="n">read_MEM</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
     
-    <span class="c1"># Define elements and append to mesh</span>
-    <span class="n">mesh_obj</span><span class="o">.</span><span class="n">define_elements</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">MEM_df</span><span class="p">)</span>
+    <span class="c1"># Define elements and append to mesh   </span>
+    <span class="n">mesh_obj</span><span class="o">.</span><span class="n">define_line_elements</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">MEM_df</span><span class="p">)</span>
     <span class="k">del</span> <span class="n">MEM_df</span>
     
     <span class="k">return</span> <span class="n">mesh_obj</span>
@@ -1156,7 +1156,7 @@ COWI UK's large displacement frame analysis software</p>
     <span class="k">return</span> <span class="n">df</span>
 
 
-<span class="k">def</span> <span class="nf">read_DIS</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">file_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_DIS</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">file_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads displacement results, as given in DIS section of NODLE results files</span>
 <span class="sd">    ***</span>
@@ -1168,6 +1168,9 @@ COWI UK's large displacement frame analysis software</p>
 <span class="sd">    </span>
 <span class="sd">    * `file_obj`, open textstream object (i.e. partially read data file)</span>
 <span class="sd">    </span>
+<span class="sd">    * `mesh_obj`, Mesh object to which results relate. If object provided, </span>
+<span class="sd">      results will be assigned to mesh objects e.g. nodes / elements</span>
+<span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <span class="c1">#    ***</span>
 <span class="c1">#    Optional:</span>
@@ -1195,6 +1198,7 @@ COWI UK's large displacement frame analysis software</p>
     <span class="n">EOF</span> <span class="o">=</span> <span class="bp">False</span>
     <span class="n">nLoadcases</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">nModes</span> <span class="o">=</span> <span class="mi">0</span>
+    
     <span class="k">while</span> <span class="ow">not</span> <span class="n">EOF</span><span class="p">:</span>
         
         <span class="n">data</span> <span class="o">=</span> <span class="n">read_block</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span><span class="s1">&#39;DIS&#39;</span><span class="p">,</span><span class="s1">&#39;FOR&#39;</span><span class="p">)</span>
@@ -1204,17 +1208,31 @@ COWI UK's large displacement frame analysis software</p>
             
         <span class="k">else</span><span class="p">:</span>
             
-            <span class="n">lcase_type</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span><span class="n">results</span> <span class="o">=</span> <span class="n">_parse_DIS_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">lcase_type</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="n">_parse_DIS_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">nLoadcases</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">elif</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
                 <span class="n">nModes</span> <span class="o">+=</span> <span class="mi">1</span>
-            
+                
+            <span class="c1"># Assign results to mesh objects</span>
+            <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">results_arr</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                
+                <span class="c1"># Get node object</span>
+                <span class="n">node_obj</span> <span class="o">=</span> <span class="n">mesh_obj</span><span class="o">.</span><span class="n">node_objs</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                
+                <span class="c1"># Determine which container to use</span>
+                <span class="k">if</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">node_obj</span><span class="o">.</span><span class="n">lcase_disp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">results_arr</span><span class="p">)</span>
+                    
+                <span class="k">if</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+                    <span class="n">node_obj</span><span class="o">.</span><span class="n">modal_disp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">results_arr</span><span class="p">)</span>
+                        
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Displacement results read from &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;# loadcases found:</span><span class="se">\t</span><span class="si">%d</span><span class="se">\n</span><span class="s2"># modes founds:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nLoadcases</span><span class="p">,</span><span class="n">nModes</span><span class="p">))</span>
-
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Displacement results read from &#39;</span><span class="si">%s</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fname</span> <span class="o">+</span>
+              <span class="s2">&quot;# loadcases found:</span><span class="se">\t</span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nLoadcases</span> <span class="o">+</span> 
+              <span class="s2">&quot;# modes founds:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nModes</span> <span class="o">+</span> 
+              <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
 <span class="c1"># -------------- PRIVATE FUNCTIONS ----------------</span>
@@ -1336,7 +1354,7 @@ COWI UK's large displacement frame analysis software</p>
       
   <div class="item">
     <div class="name def" id="nodle.read_DIS">
-    <p>def <span class="ident">read_DIS</span>(</p><p>fname=None, file_obj=None, verbose=True)</p>
+    <p>def <span class="ident">read_DIS</span>(</p><p>fname=None, file_obj=None, mesh_obj=None, verbose=True)</p>
     </div>
     
 
@@ -1353,11 +1371,15 @@ COWI UK's large displacement frame analysis software</p>
 <li>
 <p><code>file_obj</code>, open textstream object (i.e. partially read data file)</p>
 </li>
+<li>
+<p><code>mesh_obj</code>, Mesh object to which results relate. If object provided, 
+  results will be assigned to mesh objects e.g. nodes / elements</p>
+</li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-nodle.read_DIS', this);">Show source &equiv;</a></p>
   <div id="source-nodle.read_DIS" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">read_DIS</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">file_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">read_DIS</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">file_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads displacement results, as given in DIS section of NODLE results files</span>
 <span class="sd">    ***</span>
@@ -1369,6 +1391,9 @@ COWI UK's large displacement frame analysis software</p>
 <span class="sd">    </span>
 <span class="sd">    * `file_obj`, open textstream object (i.e. partially read data file)</span>
 <span class="sd">    </span>
+<span class="sd">    * `mesh_obj`, Mesh object to which results relate. If object provided, </span>
+<span class="sd">      results will be assigned to mesh objects e.g. nodes / elements</span>
+<span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <span class="c1">#    ***</span>
 <span class="c1">#    Optional:</span>
@@ -1396,6 +1421,7 @@ COWI UK's large displacement frame analysis software</p>
     <span class="n">EOF</span> <span class="o">=</span> <span class="bp">False</span>
     <span class="n">nLoadcases</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">nModes</span> <span class="o">=</span> <span class="mi">0</span>
+    
     <span class="k">while</span> <span class="ow">not</span> <span class="n">EOF</span><span class="p">:</span>
         
         <span class="n">data</span> <span class="o">=</span> <span class="n">read_block</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span><span class="s1">&#39;DIS&#39;</span><span class="p">,</span><span class="s1">&#39;FOR&#39;</span><span class="p">)</span>
@@ -1405,16 +1431,31 @@ COWI UK's large displacement frame analysis software</p>
             
         <span class="k">else</span><span class="p">:</span>
             
-            <span class="n">lcase_type</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span><span class="n">results</span> <span class="o">=</span> <span class="n">_parse_DIS_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">lcase_type</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="n">_parse_DIS_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             
             <span class="k">if</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">nLoadcases</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">elif</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
                 <span class="n">nModes</span> <span class="o">+=</span> <span class="mi">1</span>
-            
+                
+            <span class="c1"># Assign results to mesh objects</span>
+            <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">results_arr</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                
+                <span class="c1"># Get node object</span>
+                <span class="n">node_obj</span> <span class="o">=</span> <span class="n">mesh_obj</span><span class="o">.</span><span class="n">node_objs</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                
+                <span class="c1"># Determine which container to use</span>
+                <span class="k">if</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">node_obj</span><span class="o">.</span><span class="n">lcase_disp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">results_arr</span><span class="p">)</span>
+                    
+                <span class="k">if</span> <span class="n">lcase_type</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+                    <span class="n">node_obj</span><span class="o">.</span><span class="n">modal_disp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">results_arr</span><span class="p">)</span>
+                        
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Displacement results read from &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;# loadcases found:</span><span class="se">\t</span><span class="si">%d</span><span class="se">\n</span><span class="s2"># modes founds:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nLoadcases</span><span class="p">,</span><span class="n">nModes</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Displacement results read from &#39;</span><span class="si">%s</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fname</span> <span class="o">+</span>
+              <span class="s2">&quot;# loadcases found:</span><span class="se">\t</span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nLoadcases</span> <span class="o">+</span> 
+              <span class="s2">&quot;# modes founds:</span><span class="se">\t\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nModes</span> <span class="o">+</span> 
+              <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -1492,8 +1533,8 @@ COWI UK's large displacement frame analysis software</p>
     <span class="c1"># Read in member data from Excel file</span>
     <span class="n">MEM_df</span> <span class="o">=</span> <span class="n">read_MEM</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
     
-    <span class="c1"># Define elements and append to mesh</span>
-    <span class="n">mesh_obj</span><span class="o">.</span><span class="n">define_elements</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">MEM_df</span><span class="p">)</span>
+    <span class="c1"># Define elements and append to mesh   </span>
+    <span class="n">mesh_obj</span><span class="o">.</span><span class="n">define_line_elements</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">MEM_df</span><span class="p">)</span>
     <span class="k">del</span> <span class="n">MEM_df</span>
     
     <span class="k">return</span> <span class="n">mesh_obj</span>
