@@ -222,13 +222,33 @@ class Mesh:
         return element_list
     
     
-    def define_gauss_points(self,N_gp=2):
+    def define_gauss_points(self,N_gp=2,verbose=False):
         """
         Loops over all elements in mesh, defining gauss points
         """
         
-        for element_obj in self.element_objs.values():
-            element_obj.define_gauss_points(N_gp=N_gp)
+        element_list = self.element_objs.values()
+        
+        if isinstance(N_gp, list):
+            if len(N_gp)!=len(element_list):
+                raise ValueError("Length of `N_gp` list does not agree " + 
+                                 "with total number of elements")
+                
+        elif not isinstance(N_gp,int):
+            raise ValueError("`N_gp` to be either `int` or `list`")
+                
+                        
+        for i, element_obj in enumerate(element_list):
+            
+            # Determine number of gauss points required for this element
+            if isinstance(N_gp, list):
+                n = N_gp[i]
+                
+            else:
+                n = N_gp
+                
+            # Define gps
+            element_obj.define_gauss_points(N_gp=n, verbose=verbose)
     
     
     def get_connected_meshes(self,get_full_tree=True):
@@ -269,6 +289,17 @@ class Mesh:
     
         mesh_obj_list = dfs(self)
         return mesh_obj_list
+
+
+    def get_gauss_points(self):
+        """
+        Returns all nested list to describe all gauss points associated with 
+        mesh via its elements
+        """
+        gp_list = []
+        for e in self.element_objs.values():
+            gp_list.append(e.gauss_points)
+        return gp_list
 
     
     def plot(self,ax=None,
@@ -433,7 +464,42 @@ class Mesh:
     
     def has_elements(self):
         return len(self.element_objs)>=1
-
+    
+    
+class MeshChain(Mesh):
+    """
+    Class to implement a chain mesh, i.e. series of elements forming a chain
+    """
+    
+    def __init__(self,node_list,**kwargs):
+        """
+        Required:
+            
+        * `node_list`, list of Node objects defining chain
+        
+        Other keyword arguments are passed to `Mesh.__init__()` method
+        """
+        
+        # Define elements linking nodes
+        
+        nNodes = len(node_list)
+            
+        if nNodes < 2:
+            raise ValueError("Cannot define mesh chain from only 1 node!")
+           
+        element_list = []
+        for i in range(nNodes-1):
+            
+            node1 = node_list[i]
+            node2 = node_list[i+1]
+            
+            element_list.append(LineElement(parent_mesh=None, # append later
+                                            connected_nodes=[node1,node2]))
+        
+        super().__init__(node_objs=node_list,
+                         element_objs=element_list,
+                         **kwargs)
+    
         
 class Element:
     """
@@ -488,7 +554,8 @@ class Element:
         """
         
         # Connect to parent mesh
-        self.parent_mesh.append_objs([self])
+        if parent_mesh is not None:
+            self.parent_mesh.append_objs([self])
 
         # Connect any nodes passed in as list
         self.connect_nodes(connected_nodes)
@@ -590,7 +657,7 @@ class LineElement(Element):
         """
         r1, r2 = self.get_end_positions()
         r12 = r2 - r1
-        return sum(r12**2)
+        return sum(r12**2)**0.5
     
     
     def get_midpoint_xyz(self):
@@ -601,7 +668,7 @@ class LineElement(Element):
         return 0.5*(r1+r2)
     
     
-    def define_gauss_points(self,N_gp:int=3):
+    def define_gauss_points(self,N_gp:int=3,verbose=False):
         """
         Defines gauss points to be associated with element
         
@@ -640,6 +707,10 @@ class LineElement(Element):
         # Convert to numpy arrays
         locs = npy.array(locs)
         weights = npy.array(weights)
+        
+        if verbose:
+            print("Gauss points for element '%s'\n" % self.name + 
+                  "Locs: {0}\nWeights:{1}".format(locs,weights))
         
         # Convert to [0,L] domain
         L = self.length()
@@ -827,7 +898,8 @@ class Node(Point):
         """
         
         # Connect to parent mesh
-        self.parent_mesh.append_objs([self])
+        if self.parent_mesh is not None:
+            self.parent_mesh.append_objs([self])
         
         # Connect any elements passed in via list
         self.connect_elements(connected_elements)
@@ -993,7 +1065,8 @@ class ForceResults(MeshResults):
 def integrate_over_mesh(mesh_obj,
                         integrand_func:callable,
                         args=[],
-                        kwargs={}):
+                        kwargs={},
+                        cumulative=False):
     """
     Function to perform gauss integration across the domain of a mesh
     
@@ -1003,27 +1076,131 @@ def integrate_over_mesh(mesh_obj,
     * `mesh_obj`, instance of Mesh class, defining mesh to be integrated over
     
     * `integrand_func`, _callable_ defining the integrand, i.e. the function to 
-      be integrated over the mesh
+      be integrated over the mesh:
+          
+          * First argument shall be 'GaussPoint' instance
+          
+          * Other arguments may be passed via `args` and `kwargs` parameters.
       
     ***
     Optional:
-        
-    * `args`, list of arguments, to be passed to `integrand_func`
     
-    * `kwargs`, dict of keyword arguments, to be passed to 'integrand func'
+    * `cumulative`, boolean, if True the integral as evaluated over individual 
+      elements will be returned. If False (default) only total integral over 
+      all elements in the mesh will be returned.
+      
+    ***
+    Returns:
+        
+    Float or numpy array, depending on `cumulative` parameter.
           
     """  
-    
-    pass
-            
+    if not isinstance(mesh_obj, Mesh):
+        raise ValueError("`mesh_obj` to be of Mesh type")
         
+    full_gp_list = mesh_obj.get_gauss_points()
+        
+    mesh_integral = []
+        
+    for i, gp_list in enumerate(full_gp_list): # iterate over all elements
+        
+        element_integral = 0.0
+        for gp in gp_list: # iterate over all gps (within each element)
+            
+            element_integral += gp.weight * integrand_func(gp,*args,**kwargs)
+        
+        mesh_integral += [element_integral]
+    
+    # Determine which type of summation to use to aggregate integrals over mesh
+    if cumulative:
+        integral = npy.sum(mesh_integral)
+    else:
+        integral = npy.cumsum(mesh_integral)
+    
+    return integral
+            
+
+def integrate_gauss(f:callable,x,
+                    f_args=[],f_kwargs={},
+                    n_gp=3,
+                    make_plot=True,
+                    ax_list=None,
+                    **kwargs):
+    """
+    Evaluates integral by sub-dividing x-domain into a list of elements and 
+    using gauss quadrature to obtain integral across each element.
+    
+    ***
+    Required:
+    
+    * `f`, integrand function f(x)
+    
+    * `x`, 1d-array providing salient values to use in integration:
+        
+        * Bounds for integration are x[0], x[-1]
+        
+        * Other values may be provided to control the mesh used for gauss 
+          quadrature. E.g. more accurate integration is obtained by 
+          narrowing the step (element length) in parts of the function where 
+          integrand function is known a-priori to vary strongly.
+          
+    ***
+    Optional:
+        
+    * `f_args`, `f_kwargs`; _list_ and _dict_ respectively, used to pass 
+      arguments and keyword arguments to `f`.
+      
+    * `n_gp`, either int or _list_ of length `len(x)-1`, used to define 
+      number of gauss points per element
+      
+    Any further keyword arguments provided are passed to 
+    `integrate_over_mesh()` method, which is being used to implement 
+    integration over a mesh.      
+    """
+    
+    # Define mesh i.e. series of elements forming a chain
+    x = list(x)
+    if len(x)<2:
+        raise ValueError("`x` to be list of length 2\n" +
+                         "x[0] and x[-1] denote bounds for integration")
+    
+    node_list = []
+    for _x in x:
+        node_list.append(Node(parent_mesh=None, #append later by MeshChain init
+                              xyz=[_x,0.0,0.0]))
+        
+    integration_mesh = MeshChain(node_list=node_list,name='integration_mesh')
+    
+    integration_mesh.define_gauss_points(N_gp=n_gp,verbose=False)
+    
+    # Define wrapper around passed function to implement using gauss point data
+    def f_gp(gp_obj,*a,**b):
+        return f(gp_obj.x,*a,**b)
+    
+    # Evaluate integral
+    integral_vals = integrate_over_mesh(integration_mesh,
+                                        f_gp,args=f_args,kwargs=f_kwargs,
+                                        cumulative=False)
+    # Make plot
+    if make_plot:
+        if ax_list is None:
+            fig, (ax1, ax2) = plt.subplots(2,sharex=True)
+        else:
+            ax1, ax2 = ax_list
+            
+        ax1.plot(x,f(x,*f_args,**f_kwargs),'g.',label='$f(x_{salient})$')
+        ax2.plot(x,npy.hstack((0.0,integral_vals)),'g.',label='gauss')
+    
+    return integration_mesh, integral_vals
+    
+    
             
     
 # ********************** TEST ROUTINES ****************************************
         
 if __name__ == "__main__":
     
-    testRoutine2Run=2
+    testRoutine2Run=3
     
     if testRoutine2Run==1:
         
@@ -1068,6 +1245,35 @@ if __name__ == "__main__":
             
         # Plot mesh
         meshObj1.plot(plot_axes=True)
+        
+    if testRoutine2Run==3:
+        
+        print("*** TEST ROUTINE 2 COMMENCED *****")
+        print("--- Test of integration by gauss quadrature ---")
+        
+        # Define arbitrary polynomial
+        p = npy.poly1d([3,2, 1, 2, -5])
+        x = npy.linspace(-2.0,1.5,100)
+        fig, (ax1,ax2) = plt.subplots(2,sharex=True)
+        ax1.plot(x,p(x))
+        
+        # Perform integration over an uneven mesh using just two elements
+        x_salient = [x[0],0.1,x[-1]]
+        ax1.plot(x_salient,p(x_salient),'r.')
+        ax1.axhline(0.0,color='k',alpha=0.3) # overlay y=0 line
+        
+        mesh, integral_vals = integrate_gauss(p,x_salient,
+                                              n_gp=3,
+                                              cumulative=True,
+                                              make_plot=True,
+                                              ax_list=[ax1,ax2])
+        
+        # Derive exact integrated polynomial
+        p_integral = npy.polyint(p)
+        p0 = p_integral(x[0]) # integration constant
+        ax2.plot(x,p_integral(x)-p0,label='exact')
+        ax1.legend()
+        ax2.legend()
         
         # Define some nodes
         
