@@ -9,6 +9,12 @@ from mpl_toolkits.mplot3d import Axes3D
 import pandas
 from itertools import count
 from inspect import getmro
+from numpy.linalg import norm
+from common import check_class, set_equal_aspect_3d
+
+vertical_direction = npy.array([0.0,0.0,1.0])
+default_y_direction = npy.array([0.0,1.0,0.0])
+
 
 class Mesh:
     """
@@ -267,7 +273,7 @@ class Mesh:
     
     def plot(self,ax=None,
              set_axis_limits=True,
-             axis_limits=None,
+             set_square_axes=True,
              **kwargs):
         """
         Plots mesh and all sub-meshes
@@ -285,12 +291,18 @@ class Mesh:
         
         if set_axis_limits:
             
-            if axis_limits is None:
-                axis_limits = self.calc_extents()
+            axis_limits = self.calc_extents()
                             
-            ax.set_xlim(axis_limits[0])
-            ax.set_ylim(axis_limits[1])
-            ax.set_zlim(axis_limits[2])
+            if not set_square_axes:
+                ax.set_xlim(axis_limits[0])
+                ax.set_ylim(axis_limits[1])
+                ax.set_zlim(axis_limits[2])
+                
+            else:
+                
+                # Draw hidden line to ensure proper scaling of axes
+                set_equal_aspect_3d(ax,axis_limits)
+                
         
         ax.legend()
         ax.set_title("%s" % self.name)
@@ -298,7 +310,7 @@ class Mesh:
         return ax
     
     
-    def _plot_init(self,ax=None,plot_gps=False):
+    def _plot_init(self,ax=None,plot_gps=False,plot_axes=False):
         """
         Initialises mesh plot
         """
@@ -310,6 +322,8 @@ class Mesh:
             ax.set_xlabel("X (m)")
             ax.set_ylabel("Y (m)")
             ax.set_zlabel("Z (m)")
+            
+        self.ax = ax
         
         # Define plot artists (n.b. data set in plot_update)
         self.plot_artists = {}
@@ -318,8 +332,23 @@ class Mesh:
         self.plot_artists['nodes'] = ax.plot([],[],[],'k.')[0]
         
         if plot_gps:
-            
             self.plot_artists['gauss_points'] = ax.plot([],[],[],'g.')[0]
+            
+        if plot_axes: 
+            self.plot_artists['x_axes'] = ax.quiver([],[],[],
+                                                     [],[],[],
+                                                     linewidth=1.0,
+                                                     color='r')
+            
+            self.plot_artists['y_axes'] = ax.quiver([],[],[],
+                                                     [],[],[],
+                                                     linewidth=1.0,
+                                                     color='g')
+            
+            self.plot_artists['z_axes'] = ax.quiver([],[],[],
+                                                     [],[],[],
+                                                     linewidth=1.0,
+                                                     color='b')
         
         return ax
     
@@ -330,34 +359,37 @@ class Mesh:
         """
         
         # Plot all nodes
-        
-        node_list = self.node_objs.values()
-        XYZ = npy.asarray([obj.xyz for obj in node_list])
-        
-        node_artist = self.plot_artists['nodes']
-        node_artist.set_data(XYZ[:,0],XYZ[:,1])
-        node_artist.set_3d_properties(XYZ[:,2])
+        if self.has_nodes():
+            
+            node_list = self.node_objs.values()
+            XYZ = npy.asarray([obj.xyz for obj in node_list])
+            
+            node_artist = self.plot_artists['nodes']
+            node_artist.set_data(XYZ[:,0],XYZ[:,1])
+            node_artist.set_3d_properties(XYZ[:,2])
         
         # Plot all elements
+        if self.has_elements():
+            
+            element_list = self.element_objs.values()
+            
+            xyz_end1 = npy.array([element_obj.connected_nodes[0].get_xyz() 
+                                 for element_obj in element_list])
+            
+            xyz_end2 = npy.array([element_obj.connected_nodes[1].get_xyz() 
+                                 for element_obj in element_list])
         
-        element_list = self.element_objs.values()
+            nan = npy.full((len(element_list),),npy.nan) # used to create gaps
+            
+            X = npy.ravel(npy.vstack((xyz_end1[:,0],xyz_end2[:,0],nan)).T)
+            Y = npy.ravel(npy.vstack((xyz_end1[:,1],xyz_end2[:,1],nan)).T)
+            Z = npy.ravel(npy.vstack((xyz_end1[:,2],xyz_end2[:,2],nan)).T)
         
-        xyz_end1 = npy.array([element_obj.connected_nodes[0].get_xyz() 
-                             for element_obj in element_list])
+            elements = self.plot_artists['elements']
+            elements.set_data(X,Y)
+            elements.set_3d_properties(Z)
+            elements.set_alpha(0.5)
         
-        xyz_end2 = npy.array([element_obj.connected_nodes[1].get_xyz() 
-                             for element_obj in element_list])
-    
-        nan = npy.full((len(element_list),),npy.nan) # used to create gaps
-        
-        X = npy.ravel(npy.vstack((xyz_end1[:,0],xyz_end2[:,0],nan)).T)
-        Y = npy.ravel(npy.vstack((xyz_end1[:,1],xyz_end2[:,1],nan)).T)
-        Z = npy.ravel(npy.vstack((xyz_end1[:,2],xyz_end2[:,2],nan)).T)
-    
-        elements = self.plot_artists['elements']
-        elements.set_data(X,Y)
-        elements.set_3d_properties(Z)
-#        
         # Plot gauss points
         attr = 'gauss_points'
         if attr in self.plot_artists:
@@ -369,9 +401,38 @@ class Mesh:
         
             gp_artist.set_data(gp_XYZ[:,0],gp_XYZ[:,1])
             gp_artist.set_3d_properties(gp_XYZ[:,2])
-#        
+            
+        # Plot local axes
+        attr = 'x_axes'
+        if attr in self.plot_artists:
+            
+            x_axes = self.plot_artists['x_axes']
+            y_axes = self.plot_artists['y_axes']
+            z_axes = self.plot_artists['z_axes']
+            
+            element_list = self.element_objs.values()
+            
+            origin = npy.array([e.get_midpoint_xyz() for e in element_list])
+            
+            axes = npy.array([e.get_axes() for e in element_list])
+            ex = axes[:,0,:]
+            ey = axes[:,1,:]
+            ez = axes[:,2,:]
+            
+            sf = 0.4 # scale factor for element axes
+            x_axes.set_segments([[a,a+b] for a,b in zip(origin,sf*ex)])
+            y_axes.set_segments([[a,a+b] for a,b in zip(origin,sf*ey)])
+            z_axes.set_segments([[a,a+b] for a,b in zip(origin,sf*ez)])
+        
+        
         return self.plot_artists
 
+
+    def has_nodes(self):
+        return len(self.node_objs)>=1
+    
+    def has_elements(self):
+        return len(self.element_objs)>=1
 
         
 class Element:
@@ -409,7 +470,7 @@ class Element:
         """        
         
         if name is None:
-            name = "Mesh %d" % self.id
+            name = "%s %d" % (self.__class__.__name__,self.id)
             
         self.name = name
         """
@@ -441,6 +502,8 @@ class Element:
         self._check_node_objs(node_objs)
         
         for node_obj in node_objs:
+            
+            check_class(node_obj,Node)
 
             # Append object to connected nodes list
             self.connected_nodes.append(node_obj)
@@ -486,7 +549,7 @@ class LineElement(Element):
     _nNodes_expected = 2
             
 
-    def get_axes(self,vertical_dir=npy.array([0,0,1])):
+    def get_axes(self,verbose=False):
         """
         Returns list of (3,) arrays defining unit vectors for each element axis
         """
@@ -494,15 +557,22 @@ class LineElement(Element):
         # Calculate x-axis, taking as being direction vector from end1 to end2
         r1, r2 = self.get_end_positions()
         x = r2 - r1
-        x /= self.length() # normalise
+        x /= norm(x)
         
         # Calculate y-axis
+        # y to lie in horizontal plane orthogonal to x
+        y = npy.cross(vertical_direction,x)
         
-        # Calculate z-axis
-        
-        return x, y, z
-        
+        if norm(y)==0:
+            # Special case for vertical members
+            if verbose:
+                print("Element '%s' is vertical" % self.name)
+            y = default_y_direction
+            
+        # Calculate z-axis to be orthogonal to x and y
+        z = npy.cross(x,y)
     
+        return x, y, z
         
         
     def get_end_positions(self):
@@ -521,6 +591,14 @@ class LineElement(Element):
         r1, r2 = self.get_end_positions()
         r12 = r2 - r1
         return sum(r12**2)
+    
+    
+    def get_midpoint_xyz(self):
+        """
+        Returns position vector denoting the midpoint of element
+        """
+        r1, r2 = self.get_end_positions()
+        return 0.5*(r1+r2)
     
     
     def define_gauss_points(self,N_gp:int=3):
@@ -615,7 +693,7 @@ class Point:
         """  
         
         if name is None:
-            name = "Mesh %d" % self.id
+            name = "%s %d" % (self.__class__.__name__,self.id)
             
         self.name = name
         """
@@ -765,6 +843,8 @@ class Node(Point):
             element_objs=[element_objs]
         
         for obj in element_objs:
+            
+            check_class(obj,Element)
             self.connected_elements[obj.name]=obj
             
     
@@ -943,7 +1023,7 @@ def integrate_over_mesh(mesh_obj,
         
 if __name__ == "__main__":
     
-    testRoutine2Run=1
+    testRoutine2Run=2
     
     if testRoutine2Run==1:
         
@@ -962,6 +1042,35 @@ if __name__ == "__main__":
             
         # Plot mesh
         meshObj1.plot()
+        
+    if testRoutine2Run==2:
+        
+        print("*** TEST ROUTINE 2 COMMENCED *****")
+        print("--- Test of local element axes ---")
+        print("")
+    
+        # Define new mesh
+        meshObj1 = Mesh(name="Element axes test")
+        
+        # Define some nodes
+        xyz = npy.asarray([[0,0,0],[0,0,1.1],[0,1,0],[0.5,0.5,1],[0,1,-1],[2,0,0]])
+        Nn = xyz.shape[0]
+        
+        for n in range(Nn):
+            Node(meshObj1,xyz=xyz[n,:],name=n)
+            
+        # Define some elements
+        for n in range(1,Nn):
+            
+            node1 = meshObj1.node_objs[0]
+            node2 = meshObj1.node_objs[n]
+            LineElement(meshObj1,[node1,node2])
+            
+        # Plot mesh
+        meshObj1.plot(plot_axes=True)
+        
+        # Define some nodes
+        
             
 #        # Define some elements
 #        elemTopo = npy.asarray([[0,1],[1,2],[0,2]])

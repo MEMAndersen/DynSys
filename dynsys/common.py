@@ -45,10 +45,24 @@ def convert2matrix(value,dtype=float):
 
 
 
-# Shape checking functions
+# Checking functions
 def check_is_class(obj):
     if not inspect.isclass(obj):
-        raise ValueError("Object expected!")
+        raise ValueError("Class expected!\n" + 
+                         "type(obj): {0}".format(type(obj)))
+        
+        
+def check_class(obj,expected_class:str):
+    """
+    Returns exception if supplied object is not of the expected class
+    """
+    
+    if not isinstance(obj, expected_class):
+        
+        raise ValueError("Unexpected object provided!\n" + 
+                         "provided:\t{0}\n".format(type(obj)) + 
+                         "expected:\t{0}".format(expected_class))
+                         
     
 def check_shape(value,expected_shape:tuple):
     
@@ -156,3 +170,22 @@ def read_block(f, start_str, end_str):
             
     return data
 
+# ------------ PLOTTING --------------
+    
+def set_equal_aspect_3d(ax,axis_limits):
+    """
+    Draws a hidden diagonal line to ensure square axes obtained when plotting 
+    in 3d
+    
+    _This is a workaround relating to known matplotlib shortcoming. May not 
+    be required once proper API functionality provided_
+    """
+    
+    centre = npy.mean(axis_limits,axis=1)
+    sz = npy.max([a[1]-a[0] for a in axis_limits])
+    
+    a = centre + 0.5*sz*npy.ones((3,))
+    b = centre - 0.5*sz*npy.ones((3,))
+    ab = npy.vstack((a,b))
+    
+    ax.plot(ab[:,0],ab[:,1],ab[:,2],'k',linestyle='None') # hidden line
