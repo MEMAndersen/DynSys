@@ -1180,6 +1180,8 @@ table {
   <ul>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers.__init__">__init__</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers.PlotResults">PlotResults</a></li>
+    <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers.calc_N">calc_N</a></li>
+    <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers.get_load_velocity">get_load_velocity</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers.run">run</a></li>
     <li class="mono"><a href="#ped_dyn.UKNA_BSEN1991_2_walkers_joggers.save">save</a></li>
   </ul>
@@ -1365,6 +1367,8 @@ table {
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">bridgeClass</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
                  <span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+                 <span class="n">load_velocity</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
@@ -1384,6 +1388,22 @@ table {
 <span class="sd">    </span>
 <span class="sd">        ***</span>
 <span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * `name`, string, used within title of some plots</span>
+<span class="sd">        </span>
+<span class="sd">        * `analysis_type`, _string_, either &#39;walkers&#39; of &#39;joggers&#39;. Other </span>
+<span class="sd">          parameters are defined according to this, per code guidance</span>
+<span class="sd">          </span>
+<span class="sd">        * `bridgeClass`, &#39;A&#39; to &#39;D&#39;, influences group size for walkers/joggers,</span>
+<span class="sd">          per Table NA.7</span>
+<span class="sd">        </span>
+<span class="sd">        * `load_velocity`, float, used to define velocity of moving load. If </span>
+<span class="sd">          None (default) then velocity will be determined according to </span>
+<span class="sd">          `analysis_type` using values from Table NA.8</span>
+<span class="sd">          </span>
+<span class="sd">        * `N`, _integer_, defines size of group of walkers/joggers. If None </span>
+<span class="sd">          (default) then `N` will be calculated according to `bridgeClass` and </span>
+<span class="sd">          `analysis_type`, using values from Table NA.7</span>
 <span class="sd">            </span>
 <span class="sd">        * `dt`, time step to be used for results evaluation. If _None_ then </span>
 <span class="sd">          a suitable `dt` to use will be determined according to </span>
@@ -1408,43 +1428,35 @@ table {
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode_index</span><span class="p">,</span>
                                                             <span class="n">analysis_type</span><span class="p">)</span>
-        
-        <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
-        <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        
-        <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">2</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">0</span>
             
-        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">4</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">1</span>
-            
-        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">8</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">2</span>
-            
-        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">16</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">4</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
-        
-        <span class="c1"># Define loading velocity per Table NA.8</span>
-        <span class="c1"># Get appropriate N value to use</span>
-        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
-            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">1.7</span>
-            <span class="n">N_to_use</span> <span class="o">=</span> <span class="n">N_walkers</span>
-            
-        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
-            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">3.0</span>
-            <span class="n">N_to_use</span> <span class="o">=</span> <span class="n">N_joggers</span>
-            
-        <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Check inputs are valid</span>
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;walkers&#39;</span><span class="p">,</span><span class="s1">&#39;joggers&#39;</span><span class="p">,</span><span class="bp">None</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+           
+                
+        <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Bridge class per Table NA.7</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="c1"># Define loading velocity</span>
+        <span class="k">if</span> <span class="n">load_velocity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_load_velocity</span><span class="p">(</span><span class="n">analysis_type</span><span class="p">)</span>
             
-        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N_to_use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_velocity</span> <span class="o">=</span> <span class="n">load_velocity</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Velocity of moving load</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+           
+        <span class="c1"># Get appropriate N value to use</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_N</span><span class="p">(</span><span class="n">bridgeClass</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">)</span>
+                            
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of pedestrians in the group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
             
         <span class="c1"># Get natural frequency of mode to consider</span>
         <span class="n">eig_results</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()</span>
@@ -1495,7 +1507,7 @@ table {
         <span class="c1"># Define loading objects to represent walkers and joggers</span>
         <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_walkers_joggers_loading</span><span class="p">(</span><span class="n">fv</span> <span class="o">=</span> <span class="n">f_d</span><span class="p">,</span>
                                                               <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
-                                                              <span class="n">N</span><span class="o">=</span><span class="n">N_to_use</span><span class="p">,</span>
+                                                              <span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span>
                                                               <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
                                                               <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
@@ -1522,9 +1534,66 @@ table {
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Mode frequency:</span><span class="se">\t\t</span><span class="si">%.2f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="n">f_d</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading object:</span><span class="se">\t\t</span><span class="s2">&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity:</span><span class="se">\t\t</span><span class="si">%.1f</span><span class="s2"> m/s&quot;</span> <span class="o">%</span> <span class="n">load_velocity</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load group size, N:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">N</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Seff (m):</span><span class="se">\t\t</span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Seff</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;gamma:</span><span class="se">\t\t\t</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">gamma</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+       
+        
+    <span class="k">def</span> <span class="nf">get_load_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns load velocity according to `analysis_type` per Table NA.8</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">1.7</span>
+            
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">3.0</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">load_velocity</span>
+        
+        
+    <span class="k">def</span> <span class="nf">calc_N</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">bridgeClass</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns N according to `bridgeClass` and `analysis_type`, values </span>
+<span class="sd">        per Table NA.7</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Define N values per Table NA.7</span>
+        <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">0</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">4</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">1</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">8</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">2</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">16</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">4</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Select N according to analysis type</span>
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">N_walkers</span>
+            
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">N_joggers</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">N</span>
             
             
             
@@ -12822,6 +12891,8 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">bridgeClass</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
                  <span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+                 <span class="n">load_velocity</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                  <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
@@ -12841,6 +12912,22 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
 <span class="sd">    </span>
 <span class="sd">        ***</span>
 <span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * `name`, string, used within title of some plots</span>
+<span class="sd">        </span>
+<span class="sd">        * `analysis_type`, _string_, either &#39;walkers&#39; of &#39;joggers&#39;. Other </span>
+<span class="sd">          parameters are defined according to this, per code guidance</span>
+<span class="sd">          </span>
+<span class="sd">        * `bridgeClass`, &#39;A&#39; to &#39;D&#39;, influences group size for walkers/joggers,</span>
+<span class="sd">          per Table NA.7</span>
+<span class="sd">        </span>
+<span class="sd">        * `load_velocity`, float, used to define velocity of moving load. If </span>
+<span class="sd">          None (default) then velocity will be determined according to </span>
+<span class="sd">          `analysis_type` using values from Table NA.8</span>
+<span class="sd">          </span>
+<span class="sd">        * `N`, _integer_, defines size of group of walkers/joggers. If None </span>
+<span class="sd">          (default) then `N` will be calculated according to `bridgeClass` and </span>
+<span class="sd">          `analysis_type`, using values from Table NA.7</span>
 <span class="sd">            </span>
 <span class="sd">        * `dt`, time step to be used for results evaluation. If _None_ then </span>
 <span class="sd">          a suitable `dt` to use will be determined according to </span>
@@ -12865,43 +12952,35 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode_index</span><span class="p">,</span>
                                                             <span class="n">analysis_type</span><span class="p">)</span>
-        
-        <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
-        <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        
-        <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">2</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">0</span>
             
-        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">4</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">1</span>
-            
-        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">8</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">2</span>
-            
-        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
-            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">16</span>
-            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">4</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
-        
-        <span class="c1"># Define loading velocity per Table NA.8</span>
-        <span class="c1"># Get appropriate N value to use</span>
-        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
-            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">1.7</span>
-            <span class="n">N_to_use</span> <span class="o">=</span> <span class="n">N_walkers</span>
-            
-        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
-            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">3.0</span>
-            <span class="n">N_to_use</span> <span class="o">=</span> <span class="n">N_joggers</span>
-            
-        <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Check inputs are valid</span>
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;walkers&#39;</span><span class="p">,</span><span class="s1">&#39;joggers&#39;</span><span class="p">,</span><span class="bp">None</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+           
+                
+        <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Bridge class per Table NA.7</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+                
+        <span class="c1"># Define loading velocity</span>
+        <span class="k">if</span> <span class="n">load_velocity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_load_velocity</span><span class="p">(</span><span class="n">analysis_type</span><span class="p">)</span>
             
-        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N_to_use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_velocity</span> <span class="o">=</span> <span class="n">load_velocity</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Velocity of moving load</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+           
+        <span class="c1"># Get appropriate N value to use</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_N</span><span class="p">(</span><span class="n">bridgeClass</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">)</span>
+                            
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of pedestrians in the group</span>
+<span class="sd">        &quot;&quot;&quot;</span>
             
         <span class="c1"># Get natural frequency of mode to consider</span>
         <span class="n">eig_results</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()</span>
@@ -12952,7 +13031,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
         <span class="c1"># Define loading objects to represent walkers and joggers</span>
         <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_walkers_joggers_loading</span><span class="p">(</span><span class="n">fv</span> <span class="o">=</span> <span class="n">f_d</span><span class="p">,</span>
                                                               <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
-                                                              <span class="n">N</span><span class="o">=</span><span class="n">N_to_use</span><span class="p">,</span>
+                                                              <span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span>
                                                               <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
                                                               <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
         
@@ -12979,9 +13058,66 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Mode frequency:</span><span class="se">\t\t</span><span class="si">%.2f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="n">f_d</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading object:</span><span class="se">\t\t</span><span class="s2">&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity:</span><span class="se">\t\t</span><span class="si">%.1f</span><span class="s2"> m/s&quot;</span> <span class="o">%</span> <span class="n">load_velocity</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load group size, N:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">N</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Seff (m):</span><span class="se">\t\t</span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Seff</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;gamma:</span><span class="se">\t\t\t</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">gamma</span><span class="p">)</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+       
+        
+    <span class="k">def</span> <span class="nf">get_load_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns load velocity according to `analysis_type` per Table NA.8</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">1.7</span>
+            
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
+            <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">3.0</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">load_velocity</span>
+        
+        
+    <span class="k">def</span> <span class="nf">calc_N</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">bridgeClass</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns N according to `bridgeClass` and `analysis_type`, values </span>
+<span class="sd">        per Table NA.7</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Define N values per Table NA.7</span>
+        <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">0</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">4</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">1</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">8</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">2</span>
+            
+        <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+            <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">16</span>
+            <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">4</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Select N according to analysis type</span>
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">N_walkers</span>
+            
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">N_joggers</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">N</span>
 </pre></div>
 
   </div>
@@ -13000,7 +13136,7 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
             
   <div class="item">
     <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, dt=None, verbose=True, calc_Seff=True, makePlot=False, dt_factor=20, **kwargs)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, modalsys_obj, mode_index, name=None, bridgeClass=&#39;A&#39;, analysis_type=&#39;walkers&#39;, load_velocity=None, N=None, dt=None, verbose=True, calc_Seff=True, makePlot=False, dt_factor=20, **kwargs)</p>
     </div>
     
 
@@ -13021,6 +13157,27 @@ per NA.2.44.4 of UK NA to BS EN 1992-1:2003</p></div>
 <hr />
 <p>Optional:</p>
 <ul>
+<li>
+<p><code>name</code>, string, used within title of some plots</p>
+</li>
+<li>
+<p><code>analysis_type</code>, <em>string</em>, either 'walkers' of 'joggers'. Other 
+  parameters are defined according to this, per code guidance</p>
+</li>
+<li>
+<p><code>bridgeClass</code>, 'A' to 'D', influences group size for walkers/joggers,
+  per Table NA.7</p>
+</li>
+<li>
+<p><code>load_velocity</code>, float, used to define velocity of moving load. If 
+  None (default) then velocity will be determined according to 
+  <code>analysis_type</code> using values from Table NA.8</p>
+</li>
+<li>
+<p><code>N</code>, <em>integer</em>, defines size of group of walkers/joggers. If None 
+  (default) then <code>N</code> will be calculated according to <code>bridgeClass</code> and 
+  <code>analysis_type</code>, using values from Table NA.7</p>
+</li>
 <li>
 <p><code>dt</code>, time step to be used for results evaluation. If <em>None</em> then 
   a suitable <code>dt</code> to use will be determined according to 
@@ -13050,6 +13207,8 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
              <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">bridgeClass</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
              <span class="n">analysis_type</span><span class="o">=</span><span class="s2">&quot;walkers&quot;</span><span class="p">,</span>
+             <span class="n">load_velocity</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
              <span class="n">calc_Seff</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
@@ -13069,6 +13228,22 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
 
 <span class="sd">    ***</span>
 <span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `name`, string, used within title of some plots</span>
+<span class="sd">    </span>
+<span class="sd">    * `analysis_type`, _string_, either &#39;walkers&#39; of &#39;joggers&#39;. Other </span>
+<span class="sd">      parameters are defined according to this, per code guidance</span>
+<span class="sd">      </span>
+<span class="sd">    * `bridgeClass`, &#39;A&#39; to &#39;D&#39;, influences group size for walkers/joggers,</span>
+<span class="sd">      per Table NA.7</span>
+<span class="sd">    </span>
+<span class="sd">    * `load_velocity`, float, used to define velocity of moving load. If </span>
+<span class="sd">      None (default) then velocity will be determined according to </span>
+<span class="sd">      `analysis_type` using values from Table NA.8</span>
+<span class="sd">      </span>
+<span class="sd">    * `N`, _integer_, defines size of group of walkers/joggers. If None </span>
+<span class="sd">      (default) then `N` will be calculated according to `bridgeClass` and </span>
+<span class="sd">      `analysis_type`, using values from Table NA.7</span>
 <span class="sd">        </span>
 <span class="sd">    * `dt`, time step to be used for results evaluation. If _None_ then </span>
 <span class="sd">      a suitable `dt` to use will be determined according to </span>
@@ -13093,43 +13268,35 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; - Mode </span><span class="si">%d</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mode_index</span><span class="p">,</span>
                                                         <span class="n">analysis_type</span><span class="p">)</span>
-    
-    <span class="c1"># Get applicable parameters per Table NA.7 according to bridgeClass</span>
-    <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-    
-    <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
-        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">2</span>
-        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">0</span>
         
-    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
-        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">4</span>
-        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">1</span>
-        
-    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
-        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">8</span>
-        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">2</span>
-        
-    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
-        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">16</span>
-        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">4</span>
-        
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
-    
-    <span class="c1"># Define loading velocity per Table NA.8</span>
-    <span class="c1"># Get appropriate N value to use</span>
-    <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
-        <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">1.7</span>
-        <span class="n">N_to_use</span> <span class="o">=</span> <span class="n">N_walkers</span>
-        
-    <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
-        <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">3.0</span>
-        <span class="n">N_to_use</span> <span class="o">=</span> <span class="n">N_joggers</span>
-        
-    <span class="k">else</span><span class="p">:</span>
+    <span class="c1"># Check inputs are valid</span>
+    <span class="k">if</span> <span class="n">analysis_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;walkers&#39;</span><span class="p">,</span><span class="s1">&#39;joggers&#39;</span><span class="p">,</span><span class="bp">None</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+       
+            
+    <span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">bridgeClass</span> <span class="o">=</span> <span class="n">bridgeClass</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bridge class per Table NA.7</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+            
+    <span class="c1"># Define loading velocity</span>
+    <span class="k">if</span> <span class="n">load_velocity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">load_velocity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_load_velocity</span><span class="p">(</span><span class="n">analysis_type</span><span class="p">)</span>
         
-    <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N_to_use</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">load_velocity</span> <span class="o">=</span> <span class="n">load_velocity</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Velocity of moving load</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+       
+    <span class="c1"># Get appropriate N value to use</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_N</span><span class="p">(</span><span class="n">bridgeClass</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">)</span>
+                        
+    <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Number of pedestrians in the group</span>
+<span class="sd">    &quot;&quot;&quot;</span>
         
     <span class="c1"># Get natural frequency of mode to consider</span>
     <span class="n">eig_results</span> <span class="o">=</span> <span class="n">modalsys_obj</span><span class="o">.</span><span class="n">CalcEigenproperties</span><span class="p">()</span>
@@ -13180,7 +13347,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
     <span class="c1"># Define loading objects to represent walkers and joggers</span>
     <span class="n">loading_obj</span> <span class="o">=</span> <span class="n">UKNA_BSEN1991_2_walkers_joggers_loading</span><span class="p">(</span><span class="n">fv</span> <span class="o">=</span> <span class="n">f_d</span><span class="p">,</span>
                                                           <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
-                                                          <span class="n">N</span><span class="o">=</span><span class="n">N_to_use</span><span class="p">,</span>
+                                                          <span class="n">N</span><span class="o">=</span><span class="n">N</span><span class="p">,</span>
                                                           <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
                                                           <span class="n">makePlot</span><span class="o">=</span><span class="n">makePlot</span><span class="p">)</span>
     
@@ -13207,6 +13374,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Mode frequency:</span><span class="se">\t\t</span><span class="si">%.2f</span><span class="s2"> Hz&quot;</span> <span class="o">%</span> <span class="n">f_d</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Loading object:</span><span class="se">\t\t</span><span class="s2">&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">loading_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load velocity:</span><span class="se">\t\t</span><span class="si">%.1f</span><span class="s2"> m/s&quot;</span> <span class="o">%</span> <span class="n">load_velocity</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Load group size, N:</span><span class="se">\t</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">N</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Seff (m):</span><span class="se">\t\t</span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Seff</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;gamma:</span><span class="se">\t\t\t</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">gamma</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -13238,6 +13406,99 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
 <span class="sd">    _Refer documentation from that function for further details_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">.</span><span class="n">PlotResults</span><span class="p">(</span><span class="n">dofs2Plot</span><span class="o">=</span><span class="n">dofs2Plot</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.calc_N">
+    <p>def <span class="ident">calc_N</span>(</p><p>self, bridgeClass, analysis_type)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns N according to <code>bridgeClass</code> and <code>analysis_type</code>, values 
+per Table NA.7</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers.calc_N', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers.calc_N" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_N</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">bridgeClass</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns N according to `bridgeClass` and `analysis_type`, values </span>
+<span class="sd">    per Table NA.7</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Define N values per Table NA.7</span>
+    <span class="k">if</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span>
+        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">0</span>
+        
+    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span>
+        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">1</span>
+        
+    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">2</span>
+        
+    <span class="k">elif</span> <span class="n">bridgeClass</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+        <span class="n">N_walkers</span> <span class="o">=</span> <span class="mi">16</span>
+        <span class="n">N_joggers</span> <span class="o">=</span> <span class="mi">4</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;bridgeClass&#39;!&quot;</span><span class="p">)</span>
+        
+    <span class="c1"># Select N according to analysis type</span>
+    <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">N_walkers</span>
+        
+    <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">N_joggers</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">N</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.get_load_velocity">
+    <p>def <span class="ident">get_load_velocity</span>(</p><p>self, analysis_type)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns load velocity according to <code>analysis_type</code> per Table NA.8</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers.get_load_velocity', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.UKNA_BSEN1991_2_walkers_joggers.get_load_velocity" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_load_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">analysis_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns load velocity according to `analysis_type` per Table NA.8</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;walkers&quot;</span><span class="p">:</span>
+        <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">1.7</span>
+        
+    <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;joggers&quot;</span><span class="p">:</span>
+        <span class="n">load_velocity</span> <span class="o">=</span> <span class="mf">3.0</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;analysis_type&#39;!&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">load_velocity</span>
 </pre></div>
 
   </div>
@@ -13333,6 +13594,7 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
 
             
   
+    <div class="desc"><p>Number of pedestrians in the group</p></div>
   <div class="source_cont">
 </div>
 
@@ -13343,6 +13605,17 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
 
             
   
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.bridgeClass" class="name">var <span class="ident">bridgeClass</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Bridge class per Table NA.7</p></div>
   <div class="source_cont">
 </div>
 
@@ -13373,6 +13646,17 @@ the <code>__init__()</code> function of the <code>MovingLoadAnalysis</code> clas
 
             
   
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="ped_dyn.UKNA_BSEN1991_2_walkers_joggers.load_velocity" class="name">var <span class="ident">load_velocity</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Velocity of moving load</p></div>
   <div class="source_cont">
 </div>
 
