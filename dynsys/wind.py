@@ -22,6 +22,37 @@ fontsize_labels = 8
    
 #%%
 
+class BuffetingAnalysis():
+    """
+    Class to implement gust-buffeting analysis
+    """
+    
+    def __init__(self,sys,wind_env):
+        """
+        Defines analysis
+        
+        ***
+        Required:
+            
+        * `sys`, instance of DynSys class. A system with multiple sub-systems 
+          is permitted, but only on the proviso that the parent system is an 
+          instance of ModalSys, i.e. is a system represented by its modal 
+          properties [this is checked]
+          
+        * `wind_env`, instance 
+        """
+        
+        print("**** UNDER DEVELOPMENT ****")
+        
+        
+    def run(self):
+        """
+        Runs analysis
+        """
+        pass
+    
+
+
 def G_vonKarman(z,f,U_ref=20.0,z_ref=10.0,z0=0.05,Lx=120.0,make_plot=False):
     """
     Von Karman expression for along-wind turbulence autospectrum
@@ -332,6 +363,17 @@ class PointSet():
         self.dy = dy
         self.dz = dz
         self.dr = dr
+        
+        
+class WindEnv():
+    """
+    Base class used to defines those attributes and methods required to 
+    define a 'wind environment' for a given site
+    
+    _Note: this is intended to serve as a abstract class, i.e. it is not 
+    possible to instatiate an object of this class_
+    """
+    pass
 
 
 class WindEnv_equilibrium():
