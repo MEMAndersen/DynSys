@@ -22,7 +22,8 @@ from scipy.linalg import block_diag
 # DynSys module imports
 from eig_results import Eig_Results
 from freq_response_results import FreqResponse_Results
-from common import convert2matrix
+from common import convert2matrix, check_class
+from mesh import Mesh
 
 
 class DynSys:
@@ -41,7 +42,8 @@ class DynSys:
                  isModal=False,
                  isSparse=False,
                  name=None,
-                 showMsgs=True):
+                 showMsgs=True,
+                 mesh_obj=None):
         """
         Dynamic systems, which may have constraints, are defined by the 
         following:
@@ -67,6 +69,13 @@ class DynSys:
             
         * `J_dict`, _dict_ of constraint equations matrices. Shape of each 
         entry must be _[mxn]_
+        
+        * `mesh_obj`, instance of `Mesh` class. Allows mesh to be associated 
+          with system
+          
+          _This is obviously useful for visualisation of results, but also 
+          facilates certain analyses, e.g. integration of loads on a 
+          system represented by modal properties_
             
         """
         
@@ -147,6 +156,8 @@ class DynSys:
             output_names = []
         self.output_names = output_names
                             
+        self.mesh = mesh_obj
+        
         # Check definitions are consistent
         self._CheckSystemMatrices()
         self.check_outputs()
@@ -204,6 +215,32 @@ class DynSys:
             value = list(value) # convert to list
             value = [value]     # make nested list
         self._output_names_list = value
+        
+        
+    # --------------   
+    @property
+    def mesh(self):
+        """
+        Returns instance of `Mesh` class, used to define mesh that relates to 
+        system
+        """
+        return self._mesh
+    
+    @mesh.setter
+    def mesh(self,obj):
+        
+        check_class(obj,Mesh)
+        self._mesh = obj
+        
+    
+    def has_mesh(self)->bool:
+        """
+        Returns True if object has `Mesh` instance associated with it
+        """
+        if self.mesh is None:
+            return False
+        else:
+            return True
         
     # --------------                 
         
