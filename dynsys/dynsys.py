@@ -177,6 +177,17 @@ class DynSys:
             value = convert2matrix(value)
             value = [value]
         self._output_mtrx_list = value
+        
+        
+    def has_output_mtrx(self)->bool:
+        """
+        Returns True if system has output matrix
+        """
+        if self.output_mtrx == []:
+            return False
+        else:
+            return True
+        
 
     # --------------   
     @property
@@ -884,6 +895,9 @@ class DynSys:
 
             nDOF = x.nDOF
             
+            if not x.has_output_mtrx():
+                break
+            
             # Loop over all output matrices
             for i, (om, names) in enumerate(zip(x.output_mtrx,x.output_names)):
                                 
@@ -905,6 +919,10 @@ class DynSys:
             vel_cols_list.append(vel_cols)
             accn_cols_list.append(accn_cols)
             output_names_list.append([x.name+" : "+y for y in output_names])
+            
+        # Break out of function if no output matrices defined
+        if output_names_list==[]:
+            return None, None
             
         # Assemble submatrices for full system
         disp_cols_full = scipy.linalg.block_diag(*disp_cols_list)
@@ -1529,10 +1547,10 @@ class DynSys:
                                                    state_variables_only=False)
             
             # Check shape
-            if C.shape[1]!=3*nDOF_full:
+            if C is not None and C.shape[1]!=3*nDOF_full:
                 raise ValueError("Error: C matrix of unexpected shape!")
                     
-        if C.shape[0]==0:
+        if C is None or C.shape[0]==0:
             
             if verbose:
                 print("***\nWarning: no output matrix defined. "+
