@@ -1024,8 +1024,98 @@ class WindEnv_equilibrium():
         f = self._calc_coriolis_f()
         
         return u_star / (B*f)
+    
+    
+    def calc_Su(self,n):
+        """
+        Evaluates along-wind power spectrum at specified frequency `n`
         
         
+        """
+        
+        pass
+    
+    
+    def calc_Sv_Sw(self,z,n,make_plot=False,ax_list=None):
+        """
+        Evaluates horizontal and vertical across-wind power spectrum at 
+        specified frequencies `n` and heights 'z'
+        
+        _Refer eqns (3.5.22) and (3.5.23) from "Wind Loading on Structures", 
+        Hansen & Dyrbye. Equations are attributes to Simiu and Scanlan (1986)._
+        
+        ***
+        Required:
+            
+        * `z`, float or 1d-array of shape (Nz,), defining heights above 
+          ground level [m] at which to evaluate power spectrum
+        
+        * `n`, float or 1d-array of shape (Nn,), defining frequencies [Hz] 
+          at which to evaluate power spectrum
+            
+        ***
+        Returns:
+            
+        Pair of 2d-arrays of shape (Nz,Nn), giving (Sv, Sw) at (z,n) pairs
+            
+        """
+        
+        Z, N = numpy.meshgrid(z,n)
+        
+        U = self.calc_mean_speed(z=z)   
+        f_z = self.calc_fz(Z,N,U)
+        
+        u_star = self.u_star
+        
+        Sv = (15*f_z) / (1 + 9.5*f_z)**(5/3) * (u_star**2/N)
+        Sw = (3.36*f_z) / (1 + 10.0*f_z)**(5/3) * (u_star**2/N)
+        
+        Sv, Sw = Sv.T, Sw.T  # return arrays of shape [Nz, Nn]
+        
+        if make_plot:
+            
+            if ax_list is None:
+                fig, (ax1,ax2) = plt.subplots(1,2,sharey=True)
+            else:
+                ax1 = ax_list[0]
+                ax2 = ax_list[1]
+                fig = ax1.get_figure()
+            
+            h1 = ax1.plot(Sv,z_vals)
+            ax2.plot(Sw,z_vals)
+            
+            fig.legend(h1,n_vals,title='n [Hz]',fontsize='x-small')
+            
+            ax1.set_xlabel("$S_v(z,n)$")
+            ax1.set_ylabel("z [m]")
+            ax2.set_xlabel("$S_w(z,n)$")
+            
+            ax1.set_ylim([0,ax1.get_ylim()[1]])
+            
+            fig.set_size_inches((8,8))
+            
+            fig.suptitle("Horizontal and vertical across-wind power spectra\n"+ 
+                         "(Simiu and Scanlan, 1986)")
+            
+            return Sv, Sw, fig
+            
+        else:
+            return Sv, Sw
+        
+    
+    def calc_fz(self,z,n,U):
+        """
+        Evaluates Monin similarity coordinate given the following:
+        
+        * `n`, frequency [Hz]
+        
+        * `U`, mean wind speed [m/s]
+        
+        * `z`, height [m]
+        
+        """
+        return n*z/U
+    
     
     def coherance(self):
         
@@ -1531,7 +1621,7 @@ def plot_fetch_factor():
     
 if __name__ == "__main__":
     
-    test_routine = 5
+    test_routine = 6
     
     if test_routine == 0:
     
@@ -1586,6 +1676,16 @@ if __name__ == "__main__":
     
         we = WindEnv_single_fetch(V_ref=20.0,z0=0.300,X=500,z0_X=0.003)
         we.calc_mean_speed()
+        
+    elif test_routine ==6:
+        
+        print("TEST #6: Check of Sw, Sv methods")
+        we = WindEnv_equilibrium(V_ref=28.2,z0=0.03) 
+        z_vals = numpy.arange(10,301,10)
+        n_vals = [0.1,0.15,0.5,1.5]
+        Sv, Sw, fig = we.calc_Sv_Sw(z_vals,n_vals,make_plot=True)
+        
+
 
     else:
             
