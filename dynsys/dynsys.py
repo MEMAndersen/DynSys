@@ -894,10 +894,7 @@ class DynSys:
         for x in sys_list:
 
             nDOF = x.nDOF
-            
-            if not x.has_output_mtrx():
-                break
-            
+                        
             # Loop over all output matrices
             for i, (om, names) in enumerate(zip(x.output_mtrx,x.output_names)):
                                 
@@ -1547,8 +1544,11 @@ class DynSys:
                                                    state_variables_only=False)
             
             # Check shape
-            if C is not None and C.shape[1]!=3*nDOF_full:
-                raise ValueError("Error: C matrix of unexpected shape!")
+            expected = 3*nDOF_full
+            if C is not None and C.shape[1]!=expected:
+                raise ValueError("Error: C matrix of unexpected shape!\n" + 
+                                 "C.shape: {0}\n".format(C.shape) + 
+                                 "Expected: {0}".format(expected))
                     
         if C is None or C.shape[0]==0:
             
@@ -1645,7 +1645,9 @@ class DynSys:
         Gf_list = npy.asarray(Gf_list)
                     
         # Return values as class instance
-        obj = FreqResponse_Results(f=fVals,Gf=Gf_list)        
+        obj = FreqResponse_Results(f=fVals,
+                                   Gf=Gf_list,
+                                   output_names=output_names)        
         return obj
     
             

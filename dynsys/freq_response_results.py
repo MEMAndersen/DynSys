@@ -9,7 +9,7 @@ import numpy as npy
 
 class FreqResponse_Results():
     
-    def __init__(self,f,Gf):
+    def __init__(self,f,Gf,output_names=None,input_names=None):
         
         self.f = f
         """
@@ -22,6 +22,21 @@ class FreqResponse_Results():
         Ndarray of shape (Nf,No,Ni) where Nf=len(f) and [No,Ni] is frequency 
         response matrix at each frequency value considered
         """
+        
+        if output_names is None:
+            output_names = ['Output %d' % i for i in range(Gf.shape[1])]
+        self.output_names = output_names
+        """
+        List of output names, length No
+        """
+        
+        if input_names is None:
+            input_names = ['Input %d' % i for i in range(Gf.shape[2])]
+        self.input_names = input_names
+        """
+        List of input names, length Ni
+        """
+
       
     # --------------------
     @property
@@ -63,15 +78,76 @@ class FreqResponse_Results():
         return val
         
     # Other methods
-        
-    def plot(self,i:int,j:int,
+    
+    def plot(self,i=None,j=None,
              positive_f_only:bool=True,
-             label_str:str=None,
-             plotMagnitude:bool=True,ax_magnitude=None,
-             plotPhase:bool=True,ax_phase=None,
-             f_d:list=None) -> dict:
+             axarr=None,
+             **kwargs):
         """
-        Function to plot frequency response (f,G_f)
+        Function to plot frequency response matrix (f,G_f)
+        """
+        
+        # Define rows/columns to plot
+        if i is None:
+            i = range(self.G_f.shape[1])
+        if j is None:
+            j = range(self.G_f.shape[2])
+        
+        # Create plots
+        if axarr is None:
+            fig, axarr = plt.subplots(len(i),len(j),sharex=True,sharey='row')
+            
+        else:
+            fig = axarr[0,0].get_figure()
+            
+        fig.set_size_inches((14,8))
+        
+        fig.subplots_adjust(hspace=0.0,wspace=0.0)
+        
+        fig.suptitle("Plot of G(f) frequency response matrix")
+        
+        for row, _i in enumerate(i):
+            
+            for col, _j in enumerate(j):
+                
+                try:
+                    ax = axarr[row,col]
+                except IndexError:
+                    break
+                
+                self.plot_component(_i,_j,
+                                    ax_magnitude=ax,
+                                    plotPhase=False,
+                                    **kwargs)
+                
+                ax.set_ylabel(ax.get_ylabel(),fontsize='xx-small')
+            
+                # Tidy-up plot, removing labels etc.
+                if col==0:
+                    ax.set_ylabel(self.output_names[_i])
+                else:
+                    ax.set_ylabel("")
+                    
+                if row==0:
+                    ax.set_title(self.input_names[_j])
+                    
+                if row!=len(i)-1:
+                    ax.set_xlabel("")
+                else:
+                    if col!=0:
+                        ax.set_xlabel("")
+                    
+        return fig, axarr
+                                    
+        
+    def plot_component(self,i:int,j:int,
+                       positive_f_only:bool=True,
+                       label_str:str=None,
+                       plotMagnitude:bool=True,ax_magnitude=None,
+                       plotPhase:bool=True,ax_phase=None,
+                       f_d:list=None) -> dict:
+        """
+        Function to plot frequency response matrix (f,G_f)
         
         ***
         Required:
@@ -160,8 +236,9 @@ class FreqResponse_Results():
             ax = ax_magnitude
             ax.plot(f,npy.abs(G_f),label=label_str) 
             ax.set_xlim([fmin,fmax])
-            ax.set_xlabel("Frequency f (Hz)")
-            ax.set_ylabel("Magnitude |G(f)|")
+            ax.set_xlabel("f (Hz)")
+            ax.set_ylabel("|G(f)|")
+            #ax.set_ylim([0.0,ax.get_ylim()[1]])
             if label_str is not None: ax.legend()
         
         # Prepare phase plot
@@ -170,7 +247,7 @@ class FreqResponse_Results():
             ax.plot(f,npy.angle(G_f),label=label_str)
             ax.set_xlim([fmin,fmax])
             ax.set_ylim([-npy.pi,+npy.pi]) # angles will always be in this range
-            ax.set_xlabel("Frequency f (Hz)")
+            ax.set_xlabel("f (Hz)")
             ax.set_ylabel("Phase G(f) (rad)")
             if label_str is not None: ax.legend()
         
