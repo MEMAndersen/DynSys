@@ -13,7 +13,6 @@ import scipy
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import warnings
-#import deprecation # not in anaconda distribution - obtain this from pip
 
 # Other imports
 from dynsys import DynSys
@@ -300,12 +299,21 @@ class ModalSys(DynSys):
             
         return modeshapeFunc, Ltrack
     
+
+    def PlotModeshapes(self,*args,**kwargs):
+        """
+        Note: DEPRECATED METHOD
+        """
+        print("PlotModeshapes() method is deprecated. " + 
+              "Use plot_modeshapes instead")
+        self.plot_modeshapes(*args,**kwargs)
     
-    def PlotModeshapes(self,
-                       num:int = 50,
-                       L:float = 100.0,
-                       ax=None,
-                       plotAttached=True):
+    
+    def plot_modeshapes(self,
+                        num:int = 50,
+                        L:float = 100.0,
+                        ax=None,
+                        plotAttached=True):
         """
         Plot modeshapes vs chainage using 'modeshapeFunc'
         
