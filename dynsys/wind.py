@@ -15,6 +15,9 @@ from scipy import optimize
 
 from numpy import log as ln
 
+from modalsys import ModalSys
+from common import check_class
+
 #%%
 
 plt.close('all')
@@ -34,15 +37,78 @@ class BuffetingAnalysis():
         ***
         Required:
             
-        * `sys`, instance of DynSys class. A system with multiple sub-systems 
-          is permitted, but only on the proviso that the parent system is an 
-          instance of ModalSys, i.e. is a system represented by its modal 
-          properties [this is checked]
+        * `sys`, instance of `ModalSys` class. Note: a modal system with 
+          multiple sub-systems (e.g. TMDs) appended is permitted
           
-        * `wind_env`, instance 
+        * `wind_env`, instance of `WindEnv` class (or derived classes)
         """
         
         print("**** UNDER DEVELOPMENT ****")
+        
+        self.sys = sys
+        self.wind_env = wind_env
+        
+        # Check modal system has a mesh associated with it
+        if not sys.has_mesh():
+            raise ValueError("`sys` must have an associated mesh\n" + 
+                             "(This is used to implement integration, " + 
+                             "store and handle results etc.)")
+            
+        mesh_obj = sys.mesh
+        
+    
+        
+        
+    # -------
+    @property
+    def sys(self):
+        """
+        Instance of `ModalSys` class used to define system to be analysed
+        """
+        return self._sys
+    
+    @sys.setter
+    def sys(self,obj):
+        check_class(obj,ModalSys)
+        self._sys = obj
+        
+    # -------
+    @property
+    def wind_env(self):
+        """
+        Instance of `WindEnv` class, used to define wind environment
+        """
+        return self._wind_env
+    
+    @wind_env.setter
+    def wind_env(self,obj):
+        check_class(obj,WindEnv)
+        self._wind_env = obj
+    
+    # -------
+            
+    def plot(self,verbose=True,custom_settings={}):
+        """
+        Produces plots required to document buffeting analysis
+        """
+        
+        if verbose: print("Producing summary plots to document analysis...")
+        
+        # Define default plot settings
+        settings = {}
+        settings['plot_wind_profiles'] = True
+        
+        # Overide with any settings passed in
+        settings = {**settings, **custom_settings}
+        
+        fig_list = []
+        if settings['plot_wind_profiles']:
+            fig_list.append(self.wind_env.plot_profiles())
+            
+        if len(fig_list)==0:
+            if verbose: print("(No plots produced)")
+            
+        return fig_list
         
         
     def run(self):
@@ -370,13 +436,17 @@ class WindEnv():
     Base class used to defines those attributes and methods required to 
     define a 'wind environment' for a given site
     
-    _Note: this is intended to serve as a abstract class, i.e. it is not 
-    possible to instatiate an object of this class_
+    _Note: implemented as an abstract class. Objects cannot be instantiated_
     """
-    pass
+    
+    def __init__(self):
+        
+        # Prevent direct instatiation of this class
+        if type(self) == WindEnv:
+            raise Exception("<WindEnv> must be subclassed.")
 
 
-class WindEnv_equilibrium():
+class WindEnv_equilibrium(WindEnv):
     """
     Defines all attributes and methods required to define wind environment
     """
@@ -1327,6 +1397,8 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         * `z0_X`, ground roughness at distance `X` upwind (m)
         
         """
+        
+        print("***** WARNING: REQUIRES VALIDATION / FURTHER WORK ******")
                 
         self.X = X
         """
