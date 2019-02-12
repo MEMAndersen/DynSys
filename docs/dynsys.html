@@ -1104,6 +1104,7 @@ table {
     <li class="mono"><a href="#dynsys.DynSys.freqVals">freqVals</a></li>
     <li class="mono"><a href="#dynsys.DynSys.get_output_mtrx">get_output_mtrx</a></li>
     <li class="mono"><a href="#dynsys.DynSys.hasConstraints">hasConstraints</a></li>
+    <li class="mono"><a href="#dynsys.DynSys.has_mesh">has_mesh</a></li>
     <li class="mono"><a href="#dynsys.DynSys.has_output_mtrx">has_output_mtrx</a></li>
   </ul>
 
@@ -1152,7 +1153,8 @@ table {
 <span class="c1"># DynSys module imports</span>
 <span class="kn">from</span> <span class="nn">eig_results</span> <span class="kn">import</span> <span class="n">Eig_Results</span>
 <span class="kn">from</span> <span class="nn">freq_response_results</span> <span class="kn">import</span> <span class="n">FreqResponse_Results</span>
-<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">convert2matrix</span>
+<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">convert2matrix</span><span class="p">,</span> <span class="n">check_class</span>
+<span class="kn">from</span> <span class="nn">mesh</span> <span class="kn">import</span> <span class="n">Mesh</span>
 
 
 <span class="k">class</span> <span class="nc">DynSys</span><span class="p">:</span>
@@ -1171,7 +1173,8 @@ table {
                  <span class="n">isModal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                 <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dynamic systems, which may have constraints, are defined by the </span>
 <span class="sd">        following:</span>
@@ -1197,6 +1200,13 @@ table {
 <span class="sd">            </span>
 <span class="sd">        * `J_dict`, _dict_ of constraint equations matrices. Shape of each </span>
 <span class="sd">        entry must be _[mxn]_</span>
+<span class="sd">        </span>
+<span class="sd">        * `mesh_obj`, instance of `Mesh` class. Allows mesh to be associated </span>
+<span class="sd">          with system</span>
+<span class="sd">          </span>
+<span class="sd">          _This is obviously useful for visualisation of results, but also </span>
+<span class="sd">          facilates certain analyses, e.g. integration of loads on a </span>
+<span class="sd">          system represented by modal properties_</span>
 <span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -1277,6 +1287,8 @@ table {
             <span class="n">output_names</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
                             
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh_obj</span>
+        
         <span class="c1"># Check definitions are consistent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
@@ -1334,6 +1346,32 @@ table {
             <span class="n">value</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="c1"># convert to list</span>
             <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>     <span class="c1"># make nested list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_names_list</span> <span class="o">=</span> <span class="n">value</span>
+        
+        
+    <span class="c1"># --------------   </span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns instance of `Mesh` class, used to define mesh that relates to </span>
+<span class="sd">        system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span>
+    
+    <span class="nd">@mesh.setter</span>
+    <span class="k">def</span> <span class="nf">mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>
+        
+        <span class="n">check_class</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span><span class="n">Mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span> <span class="o">=</span> <span class="n">obj</span>
+        
+    
+    <span class="k">def</span> <span class="nf">has_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if object has `Mesh` instance associated with it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
         
     <span class="c1"># --------------                 </span>
         
@@ -4066,7 +4104,8 @@ required to characterise a generic dynamic (2nd order) system</p></div>
                  <span class="n">isModal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                 <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dynamic systems, which may have constraints, are defined by the </span>
 <span class="sd">        following:</span>
@@ -4092,6 +4131,13 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">            </span>
 <span class="sd">        * `J_dict`, _dict_ of constraint equations matrices. Shape of each </span>
 <span class="sd">        entry must be _[mxn]_</span>
+<span class="sd">        </span>
+<span class="sd">        * `mesh_obj`, instance of `Mesh` class. Allows mesh to be associated </span>
+<span class="sd">          with system</span>
+<span class="sd">          </span>
+<span class="sd">          _This is obviously useful for visualisation of results, but also </span>
+<span class="sd">          facilates certain analyses, e.g. integration of loads on a </span>
+<span class="sd">          system represented by modal properties_</span>
 <span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -4172,6 +4218,8 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             <span class="n">output_names</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
                             
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh_obj</span>
+        
         <span class="c1"># Check definitions are consistent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
@@ -4229,6 +4277,32 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="c1"># convert to list</span>
             <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>     <span class="c1"># make nested list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_names_list</span> <span class="o">=</span> <span class="n">value</span>
+        
+        
+    <span class="c1"># --------------   </span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns instance of `Mesh` class, used to define mesh that relates to </span>
+<span class="sd">        system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span>
+    
+    <span class="nd">@mesh.setter</span>
+    <span class="k">def</span> <span class="nf">mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">obj</span><span class="p">):</span>
+        
+        <span class="n">check_class</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span><span class="n">Mesh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span> <span class="o">=</span> <span class="n">obj</span>
+        
+    
+    <span class="k">def</span> <span class="nf">has_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if object has `Mesh` instance associated with it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
         
     <span class="c1"># --------------                 </span>
         
@@ -5779,7 +5853,7 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             
   <div class="item">
     <div class="name def" id="dynsys.DynSys.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, M, C, K, J_dict=None, output_mtrx=None, output_names=None, isLinear=True, isModal=False, isSparse=False, name=None, showMsgs=True)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, M, C, K, J_dict=None, output_mtrx=None, output_names=None, isLinear=True, isModal=False, isSparse=False, name=None, showMsgs=True, mesh_obj=None)</p>
     </div>
     
 
@@ -5813,7 +5887,14 @@ $$ J\ddot{y} = 0 $$</p>
 <p><code>J_dict</code>, <em>dict</em> of constraint equations matrices. Shape of each 
 entry must be <em>[mxn]</em></p>
 </li>
-</ul></div>
+<li>
+<p><code>mesh_obj</code>, instance of <code>Mesh</code> class. Allows mesh to be associated 
+  with system</p>
+</li>
+</ul>
+<p><em>This is obviously useful for visualisation of results, but also 
+  facilates certain analyses, e.g. integration of loads on a 
+  system represented by modal properties</em></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.__init__', this);">Show source &equiv;</a></p>
   <div id="source-dynsys.DynSys.__init__" class="source">
@@ -5825,7 +5906,8 @@ entry must be <em>[mxn]</em></p>
              <span class="n">isModal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+             <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dynamic systems, which may have constraints, are defined by the </span>
 <span class="sd">    following:</span>
@@ -5851,6 +5933,13 @@ entry must be <em>[mxn]</em></p>
 <span class="sd">        </span>
 <span class="sd">    * `J_dict`, _dict_ of constraint equations matrices. Shape of each </span>
 <span class="sd">    entry must be _[mxn]_</span>
+<span class="sd">    </span>
+<span class="sd">    * `mesh_obj`, instance of `Mesh` class. Allows mesh to be associated </span>
+<span class="sd">      with system</span>
+<span class="sd">      </span>
+<span class="sd">      _This is obviously useful for visualisation of results, but also </span>
+<span class="sd">      facilates certain analyses, e.g. integration of loads on a </span>
+<span class="sd">      system represented by modal properties_</span>
 <span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -5931,6 +6020,8 @@ entry must be <em>[mxn]</em></p>
         <span class="n">output_names</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
                         
+    <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh_obj</span>
+    
     <span class="c1"># Check definitions are consistent</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
@@ -8241,6 +8332,34 @@ Define frequency values to evaluate frequency response G(f) at</p>
   
             
   <div class="item">
+    <div class="name def" id="dynsys.DynSys.has_mesh">
+    <p>def <span class="ident">has_mesh</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns True if object has <code>Mesh</code> instance associated with it</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.has_mesh', this);">Show source &equiv;</a></p>
+  <div id="source-dynsys.DynSys.has_mesh" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if object has `Mesh` instance associated with it</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="dynsys.DynSys.has_output_mtrx">
     <p>def <span class="ident">has_output_mtrx</span>(</p><p>self)</p>
     </div>
@@ -8313,6 +8432,16 @@ ensemble of <code>dynSys</code> class instances (or derived classes)</p>
   
     <div class="desc"><p>Boolean, denotes whether system matrices should be stored and 
 manipulated as sparse matrices</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="dynsys.DynSys.mesh" class="name">var <span class="ident">mesh</span></p>
+            
+
+            
+  
   <div class="source_cont">
 </div>
 

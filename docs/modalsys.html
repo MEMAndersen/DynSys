@@ -1099,6 +1099,7 @@ table {
     <li class="mono"><a href="#modalsys.ModalSys.freqVals">freqVals</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.get_output_mtrx">get_output_mtrx</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.hasConstraints">hasConstraints</a></li>
+    <li class="mono"><a href="#modalsys.ModalSys.has_mesh">has_mesh</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.has_output_mtrx">has_output_mtrx</a></li>
     <li class="mono"><a href="#modalsys.ModalSys.plot_modeshapes">plot_modeshapes</a></li>
   </ul>
@@ -5732,6 +5733,34 @@ Define frequency values to evaluate frequency response G(f) at</p>
   
             
   <div class="item">
+    <div class="name def" id="modalsys.ModalSys.has_mesh">
+    <p>def <span class="ident">has_mesh</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns True if object has <code>Mesh</code> instance associated with it</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-modalsys.ModalSys.has_mesh', this);">Show source &equiv;</a></p>
+  <div id="source-modalsys.ModalSys.has_mesh" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if object has `Mesh` instance associated with it</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="modalsys.ModalSys.has_output_mtrx">
     <p>def <span class="ident">has_output_mtrx</span>(</p><p>self)</p>
     </div>
@@ -5907,6 +5936,18 @@ Define frequency values to evaluate frequency response G(f) at</p>
             
   
     <div class="desc"><p>Defines overall chainage</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="modalsys.ModalSys.mesh" class="name">var <span class="ident">mesh</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Returns instance of <code>Mesh</code> class, used to define mesh that relates to 
+system</p></div>
   <div class="source_cont">
 </div>
 
