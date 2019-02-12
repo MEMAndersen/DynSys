@@ -52,7 +52,7 @@ def check_is_class(obj):
                          "type(obj): {0}".format(type(obj)))
         
         
-def check_class(obj,expected_class:str):
+def check_class(obj,expected_class):
     """
     Returns exception if supplied object is not of the expected class
     """
