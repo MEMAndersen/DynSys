@@ -1047,7 +1047,22 @@ table {
   <div id="sidebar">
     <h1>Index</h1>
     <ul id="index">
+    <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
+      
+  <ul>
+    <li class="mono"><a href="#wind_section.v_air">v_air</a></li>
+  </ul>
 
+    </li>
+
+    <li class="set"><h3><a href="#header-functions">Functions</a></h3>
+      
+  <ul>
+    <li class="mono"><a href="#wind_section.calc_Re">calc_Re</a></li>
+    <li class="mono"><a href="#wind_section.test_calc_C_d">test_calc_C_d</a></li>
+  </ul>
+
+    </li>
 
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
@@ -1057,6 +1072,24 @@ table {
           
   <ul>
     <li class="mono"><a href="#wind_section.WindSection.__init__">__init__</a></li>
+    <li class="mono"><a href="#wind_section.WindSection.calc_R_D">calc_R_D</a></li>
+    <li class="mono"><a href="#wind_section.WindSection.calc_R_L">calc_R_L</a></li>
+    <li class="mono"><a href="#wind_section.WindSection.calc_R_M">calc_R_M</a></li>
+    <li class="mono"><a href="#wind_section.WindSection.plot_resistances">plot_resistances</a></li>
+  </ul>
+
+        </li>
+        <li class="mono">
+        <span class="class_name"><a href="#wind_section.WindSection_Circular">WindSection_Circular</a></span>
+        
+          
+  <ul>
+    <li class="mono"><a href="#wind_section.WindSection_Circular.__init__">__init__</a></li>
+    <li class="mono"><a href="#wind_section.WindSection_Circular.calc_C_d">calc_C_d</a></li>
+    <li class="mono"><a href="#wind_section.WindSection_Circular.calc_R_D">calc_R_D</a></li>
+    <li class="mono"><a href="#wind_section.WindSection_Circular.calc_R_L">calc_R_L</a></li>
+    <li class="mono"><a href="#wind_section.WindSection_Circular.calc_R_M">calc_R_M</a></li>
+    <li class="mono"><a href="#wind_section.WindSection_Circular.plot_resistances">plot_resistances</a></li>
   </ul>
 
         </li>
@@ -1090,7 +1123,13 @@ table {
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 
+<span class="n">v_air</span> <span class="o">=</span> <span class="mf">15e-6</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Kinematic viscocity of air [m2/s]</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="k">class</span> <span class="nc">WindSection</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1147,7 +1186,7 @@ table {
                                  <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
             
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">R_D</span> <span class="o">=</span> <span class="n">R_D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span> <span class="o">=</span> <span class="n">R_D</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Wind resistance for calculation of drag load, i.e. load in the </span>
 <span class="sd">        direction of the mean wind vector, projected into the section plane</span>
@@ -1162,7 +1201,7 @@ table {
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`R_L` must have first argument `alpha`&quot;</span> <span class="o">+</span> 
                                  <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">R_L</span> <span class="o">=</span> <span class="n">R_L</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span> <span class="o">=</span> <span class="n">R_L</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Wind resistance for calculation of lift load, i.e. load perpendicular </span>
 <span class="sd">        to the mean wind vector, but in the section plane</span>
@@ -1177,12 +1216,318 @@ table {
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`R_M` must have first argument `alpha`&quot;</span> <span class="o">+</span> 
                                  <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">R_M</span> <span class="o">=</span> <span class="n">R_M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span> <span class="o">=</span> <span class="n">R_M</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Wind resistance for calculation of moment load. Note: when expressed </span>
 <span class="sd">        as a vector moment is about the (-x) section axis. Refer image included </span>
 <span class="sd">        in `__init__()` doctring</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for drag loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for lift loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for moment loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">plot_resistances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">U</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots variation in wind resistances with angle of attack for given </span>
+<span class="sd">        mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">alpha_deg</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+        
+        <span class="n">R_D</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_D</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+        <span class="n">R_L</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_L</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+        <span class="n">R_M</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_M</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+        
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_D</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_D$&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_L</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_L$&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_M</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Angle of attack (degrees)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">361</span><span class="p">,</span><span class="mi">60</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_M$&quot;</span><span class="p">)</span>
+        
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Variation of wind-aligned wind resistances &quot;</span> <span class="o">+</span> 
+                     <span class="s2">&quot;with angle of attack&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">WindSection_Circular</span><span class="p">(</span><span class="n">WindSection</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Derived class to implement WindSection for circular section</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">C_d</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines wind resistances for a circular section</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `d`, outer diameter of section [m]</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * `C_d`, drag coefficient to be used in conjunction with `d`. If None </span>
+<span class="sd">          appropriate drag coefficient will be determined based on mean wind </span>
+<span class="sd">          speed and surface roughness `k` (see below)</span>
+<span class="sd">        </span>
+<span class="sd">        * `k`, surface roughness [m]. Only required if `C_d`=None        </span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_d</span> <span class="o">=</span> <span class="n">C_d</span>
+        
+        <span class="k">if</span> <span class="n">C_d</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `C_d` is None, `k` must be provided&quot;</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        
+    <span class="c1"># ------------------ PROPERTIES -------------------------------------------</span>
+    <span class="c1"># ----------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Outer diameter of section [m]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span>
+    
+    <span class="nd">@d.setter</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="c1"># ----------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Drag coefficient</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_C_d</span>
+    
+    <span class="nd">@C_d.setter</span>
+    <span class="k">def</span> <span class="nf">C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`C_d` must be either float or None</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                             <span class="s2">&quot;C_d : {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">_C_d</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="c1"># ---------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Surface roughness [m]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k</span>
+    
+    <span class="nd">@k.setter</span>
+    <span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`k` must be a float&quot;</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="c1"># ----------------- CLASS METHODS -----------------------------------------</span>
+    
+    <span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for drag loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        </span>
+<span class="sd">        If `C_d` has not been defined for section explicitly, appropriate drag </span>
+<span class="sd">        coefficient will be calculated given `U` and surface roughness `k` for </span>
+<span class="sd">        section</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">C_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_d</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+        
+        <span class="k">if</span> <span class="n">C_d</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c1"># Calculate C_d given Reynold number and surface roughness k</span>
+            <span class="n">C_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_C_d</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">d</span><span class="o">*</span><span class="n">C_d</span>
+    
+    
+    <span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for lift loading</span>
+<span class="sd">        </span>
+<span class="sd">        _Always equals 0.0 for circles, due to symmetry_</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    
+    
+    <span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for moment loading</span>
+<span class="sd">        </span>
+<span class="sd">        _Always equals 0.0 for circles, due to symmetry_</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    
+        
+    <span class="k">def</span> <span class="nf">calc_C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">U</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates drag coefficient in accordance with Fig 7.28 BS EN </span>
+<span class="sd">        1991-1-4:2005</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`U` must be a float&quot;</span><span class="p">)</span>
+        
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+        <span class="n">k_b</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="n">b</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">)</span>
+        
+        <span class="n">Re</span> <span class="o">=</span> <span class="n">calc_Re</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+        
+        <span class="c1"># Curve 1</span>
+        <span class="n">c_f0_1</span> <span class="o">=</span> <span class="mf">0.11</span> <span class="o">/</span> <span class="p">(</span><span class="n">Re</span><span class="o">/</span><span class="mf">1e6</span><span class="p">)</span><span class="o">**</span><span class="mf">1.4</span>
+        <span class="n">c_f0_1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">c_f0_1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span><span class="mf">1.2</span><span class="p">)</span>
+        
+        <span class="c1"># Curve 2</span>
+        <span class="n">c_f0_2</span> <span class="o">=</span> <span class="mf">1.2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.18</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">k_b</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mf">0.4</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">Re</span><span class="o">/</span><span class="mf">1e6</span><span class="p">))</span>
+    
+        <span class="c1"># Return maximum of curve 1 and 2</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">c_f0_1</span><span class="p">,</span><span class="n">c_f0_2</span><span class="p">)</span>
+    
+    
+    
+        
+<span class="c1"># ------------------ FUNCTIONS -------------------</span>
+        
+<span class="k">def</span> <span class="nf">calc_Re</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_air</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Reynold number given wind speed `U` and characterstic </span>
+<span class="sd">    diameter `d`.</span>
+<span class="sd">    </span>
+<span class="sd">    `v` can be used to specify kinematic viscocity. Default value relates </span>
+<span class="sd">    to air</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">U</span><span class="o">*</span><span class="n">d</span><span class="o">/</span><span class="n">v</span>
+
+
+<span class="k">def</span> <span class="nf">test_calc_C_d</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test routine to demonstrate accuracy of `calc_C_d()` method for circles, </span>
+<span class="sd">    by re-creating Fig 7.28, BS EN 1991-1-4</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">b</span><span class="o">=</span><span class="mf">0.1</span> <span class="c1">#arbitrary</span>
+    
+    <span class="c1"># List k/b, Re values per figure</span>
+    <span class="n">k_b_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-2</span><span class="p">,</span><span class="mf">1e-3</span><span class="p">,</span><span class="mf">1e-4</span><span class="p">,</span><span class="mf">1e-5</span><span class="p">,</span><span class="mf">1e-6</span><span class="p">])</span>
+    <span class="n">Re_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    
+    <span class="c1"># Convert to inputs required</span>
+    <span class="n">k_vals</span> <span class="o">=</span>  <span class="n">k_b_vals</span> <span class="o">*</span> <span class="n">b</span>
+    <span class="n">U_vals</span> <span class="o">=</span> <span class="n">Re_vals</span> <span class="o">*</span> <span class="n">v_air</span> <span class="o">/</span> <span class="n">b</span>
+    
+    <span class="c1"># Evaluate c_f0 for each k,U pair</span>
+    <span class="n">outer_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vals</span><span class="p">:</span>
+        
+        <span class="n">inner_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">U</span> <span class="ow">in</span> <span class="n">U_vals</span><span class="p">:</span>
+            
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">WindSection_Circular</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+            <span class="n">c_f0</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calc_C_d</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+            <span class="n">inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_f0</span><span class="p">)</span>
+            
+        <span class="n">outer_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_list</span><span class="p">)</span>
+        
+    <span class="n">c_f0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outer_list</span><span class="p">)</span>
+    
+    <span class="c1"># Re-create Fig. 7.28 to test calc_C_d() method</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    
+    <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Re_vals</span><span class="p">,</span><span class="n">c_f0</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">h</span><span class="p">,[</span><span class="s2">&quot;</span><span class="si">%.0e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k_b_vals</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;$k/b$&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.4</span><span class="p">])</span> <span class="c1"># per Fig 7.28</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">Re_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">Re_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="c1"># per Fig 7.28</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$Re$&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$c_{f0}$&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Drag coefficients for circles</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                 <span class="s2">&quot;according to Fig 7.28, BS EN 1991-1-4:2005&quot;</span><span class="p">)</span>
+
+
+
+<span class="c1"># ---------------- TEST ROUTINES ----------------------------------------------</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    
+    <span class="n">testroutine</span> <span class="o">=</span> <span class="mi">2</span>
+    
+    <span class="k">if</span> <span class="n">testroutine</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Test routine to check drag factor calculation for circles&quot;</span><span class="p">)</span>
+        <span class="n">test_calc_C_d</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="n">testroutine</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="mf">1.5</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">WindSection_Circular</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+        <span class="n">circle</span><span class="o">.</span><span class="n">plot_resistances</span><span class="p">(</span><span class="n">U</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid `testroutine` specified&quot;</span><span class="p">)</span>
+        <span class="k">pass</span>
 </pre></div>
 
   </div>
@@ -1190,7 +1535,121 @@ table {
   </header>
 
   <section id="section-items">
+    <h2 class="section-title" id="header-variables">Module variables</h2>
+      <div class="item">
+      <p id="wind_section.v_air" class="name">var <span class="ident">v_air</span></p>
+      
+  
+    <div class="desc"><p>Kinematic viscocity of air [m2/s]</p></div>
+  <div class="source_cont">
+</div>
 
+      </div>
+
+    <h2 class="section-title" id="header-functions">Functions</h2>
+      
+  <div class="item">
+    <div class="name def" id="wind_section.calc_Re">
+    <p>def <span class="ident">calc_Re</span>(</p><p>U, d, v=1.5e-05)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates Reynold number given wind speed <code>U</code> and characterstic 
+diameter <code>d</code>.</p>
+<p><code>v</code> can be used to specify kinematic viscocity. Default value relates 
+to air</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.calc_Re', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.calc_Re" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_Re</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_air</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates Reynold number given wind speed `U` and characterstic </span>
+<span class="sd">    diameter `d`.</span>
+<span class="sd">    </span>
+<span class="sd">    `v` can be used to specify kinematic viscocity. Default value relates </span>
+<span class="sd">    to air</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">U</span><span class="o">*</span><span class="n">d</span><span class="o">/</span><span class="n">v</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="wind_section.test_calc_C_d">
+    <p>def <span class="ident">test_calc_C_d</span>(</p><p>)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Test routine to demonstrate accuracy of <code>calc_C_d()</code> method for circles, 
+by re-creating Fig 7.28, BS EN 1991-1-4</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.test_calc_C_d', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.test_calc_C_d" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">test_calc_C_d</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test routine to demonstrate accuracy of `calc_C_d()` method for circles, </span>
+<span class="sd">    by re-creating Fig 7.28, BS EN 1991-1-4</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">b</span><span class="o">=</span><span class="mf">0.1</span> <span class="c1">#arbitrary</span>
+    
+    <span class="c1"># List k/b, Re values per figure</span>
+    <span class="n">k_b_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-2</span><span class="p">,</span><span class="mf">1e-3</span><span class="p">,</span><span class="mf">1e-4</span><span class="p">,</span><span class="mf">1e-5</span><span class="p">,</span><span class="mf">1e-6</span><span class="p">])</span>
+    <span class="n">Re_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    
+    <span class="c1"># Convert to inputs required</span>
+    <span class="n">k_vals</span> <span class="o">=</span>  <span class="n">k_b_vals</span> <span class="o">*</span> <span class="n">b</span>
+    <span class="n">U_vals</span> <span class="o">=</span> <span class="n">Re_vals</span> <span class="o">*</span> <span class="n">v_air</span> <span class="o">/</span> <span class="n">b</span>
+    
+    <span class="c1"># Evaluate c_f0 for each k,U pair</span>
+    <span class="n">outer_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vals</span><span class="p">:</span>
+        
+        <span class="n">inner_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">U</span> <span class="ow">in</span> <span class="n">U_vals</span><span class="p">:</span>
+            
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">WindSection_Circular</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+            <span class="n">c_f0</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calc_C_d</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+            <span class="n">inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_f0</span><span class="p">)</span>
+            
+        <span class="n">outer_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_list</span><span class="p">)</span>
+        
+    <span class="n">c_f0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outer_list</span><span class="p">)</span>
+    
+    <span class="c1"># Re-create Fig. 7.28 to test calc_C_d() method</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    
+    <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Re_vals</span><span class="p">,</span><span class="n">c_f0</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">h</span><span class="p">,[</span><span class="s2">&quot;</span><span class="si">%.0e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k_b_vals</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;$k/b$&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.4</span><span class="p">])</span> <span class="c1"># per Fig 7.28</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">Re_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">Re_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="c1"># per Fig 7.28</span>
+    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$Re$&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$c_{f0}$&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Drag coefficients for circles</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                 <span class="s2">&quot;according to Fig 7.28, BS EN 1991-1-4:2005&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
 
     <h2 class="section-title" id="header-classes">Classes</h2>
       
@@ -1258,7 +1717,7 @@ defined explicitly</p></div>
                                  <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
             
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">R_D</span> <span class="o">=</span> <span class="n">R_D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span> <span class="o">=</span> <span class="n">R_D</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Wind resistance for calculation of drag load, i.e. load in the </span>
 <span class="sd">        direction of the mean wind vector, projected into the section plane</span>
@@ -1273,7 +1732,7 @@ defined explicitly</p></div>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`R_L` must have first argument `alpha`&quot;</span> <span class="o">+</span> 
                                  <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">R_L</span> <span class="o">=</span> <span class="n">R_L</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span> <span class="o">=</span> <span class="n">R_L</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Wind resistance for calculation of lift load, i.e. load perpendicular </span>
 <span class="sd">        to the mean wind vector, but in the section plane</span>
@@ -1288,12 +1747,82 @@ defined explicitly</p></div>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`R_M` must have first argument `alpha`&quot;</span> <span class="o">+</span> 
                                  <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">R_M</span> <span class="o">=</span> <span class="n">R_M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span> <span class="o">=</span> <span class="n">R_M</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Wind resistance for calculation of moment load. Note: when expressed </span>
 <span class="sd">        as a vector moment is about the (-x) section axis. Refer image included </span>
 <span class="sd">        in `__init__()` doctring</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for drag loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for lift loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for moment loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">plot_resistances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">U</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots variation in wind resistances with angle of attack for given </span>
+<span class="sd">        mean wind speed `U`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">alpha_deg</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+        
+        <span class="n">R_D</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_D</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+        <span class="n">R_L</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_L</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+        <span class="n">R_M</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_M</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+        
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_D</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_D$&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_L</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_L$&quot;</span><span class="p">)</span>
+        
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_M</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Angle of attack (degrees)&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">361</span><span class="p">,</span><span class="mi">60</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_M$&quot;</span><span class="p">)</span>
+        
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Variation of wind-aligned wind resistances &quot;</span> <span class="o">+</span> 
+                     <span class="s2">&quot;with angle of attack&quot;</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -1398,7 +1927,7 @@ This is important to ensure accurate calculation of deriviatives.</p>
                              <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
         
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">R_D</span> <span class="o">=</span> <span class="n">R_D</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span> <span class="o">=</span> <span class="n">R_D</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wind resistance for calculation of drag load, i.e. load in the </span>
 <span class="sd">    direction of the mean wind vector, projected into the section plane</span>
@@ -1413,7 +1942,7 @@ This is important to ensure accurate calculation of deriviatives.</p>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`R_L` must have first argument `alpha`&quot;</span> <span class="o">+</span> 
                              <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">R_L</span> <span class="o">=</span> <span class="n">R_L</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span> <span class="o">=</span> <span class="n">R_L</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wind resistance for calculation of lift load, i.e. load perpendicular </span>
 <span class="sd">    to the mean wind vector, but in the section plane</span>
@@ -1428,7 +1957,7 @@ This is important to ensure accurate calculation of deriviatives.</p>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`R_M` must have first argument `alpha`&quot;</span> <span class="o">+</span> 
                              <span class="s2">&quot; denoting the angle of attack (radians)&quot;</span><span class="p">)</span>
     
-    <span class="bp">self</span><span class="o">.</span><span class="n">R_M</span> <span class="o">=</span> <span class="n">R_M</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span> <span class="o">=</span> <span class="n">R_M</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wind resistance for calculation of moment load. Note: when expressed </span>
 <span class="sd">    as a vector moment is about the (-x) section axis. Refer image included </span>
@@ -1441,40 +1970,603 @@ This is important to ensure accurate calculation of deriviatives.</p>
 
   </div>
   
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection.calc_R_D">
+    <p>def <span class="ident">calc_R_D</span>(</p><p>self, alpha, U, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates wind resistance for drag loading, given angle of attack
+<code>alpha</code> and mean wind speed <code>U</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection.calc_R_D', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection.calc_R_D" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates wind resistance for drag loading, given angle of attack</span>
+<span class="sd">    `alpha` and mean wind speed `U`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection.calc_R_L">
+    <p>def <span class="ident">calc_R_L</span>(</p><p>self, alpha, U, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates wind resistance for lift loading, given angle of attack
+<code>alpha</code> and mean wind speed <code>U</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection.calc_R_L', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection.calc_R_L" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates wind resistance for lift loading, given angle of attack</span>
+<span class="sd">    `alpha` and mean wind speed `U`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection.calc_R_M">
+    <p>def <span class="ident">calc_R_M</span>(</p><p>self, alpha, U, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates wind resistance for moment loading, given angle of attack
+<code>alpha</code> and mean wind speed <code>U</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection.calc_R_M', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection.calc_R_M" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates wind resistance for moment loading, given angle of attack</span>
+<span class="sd">    `alpha` and mean wind speed `U`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection.plot_resistances">
+    <p>def <span class="ident">plot_resistances</span>(</p><p>self, U)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plots variation in wind resistances with angle of attack for given 
+mean wind speed <code>U</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection.plot_resistances', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection.plot_resistances" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_resistances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">U</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots variation in wind resistances with angle of attack for given </span>
+<span class="sd">    mean wind speed `U`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="n">alpha_deg</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+    
+    <span class="n">R_D</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_D</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+    <span class="n">R_L</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_L</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+    <span class="n">R_M</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_M</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+    
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_D</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_D$&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_L</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_L$&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_M</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Angle of attack (degrees)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">361</span><span class="p">,</span><span class="mi">60</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_M$&quot;</span><span class="p">)</span>
+    
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Variation of wind-aligned wind resistances &quot;</span> <span class="o">+</span> 
+                 <span class="s2">&quot;with angle of attack&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+      </div>
+      </div>
+      
+      <div class="item">
+      <p id="wind_section.WindSection_Circular" class="name">class <span class="ident">WindSection_Circular</span></p>
+      
+  
+    <div class="desc"><p>Derived class to implement WindSection for circular section</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Circular', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection_Circular" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">WindSection_Circular</span><span class="p">(</span><span class="n">WindSection</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Derived class to implement WindSection for circular section</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">C_d</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines wind resistances for a circular section</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Required:</span>
+<span class="sd">            </span>
+<span class="sd">        * `d`, outer diameter of section [m]</span>
+<span class="sd">        </span>
+<span class="sd">        ***</span>
+<span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * `C_d`, drag coefficient to be used in conjunction with `d`. If None </span>
+<span class="sd">          appropriate drag coefficient will be determined based on mean wind </span>
+<span class="sd">          speed and surface roughness `k` (see below)</span>
+<span class="sd">        </span>
+<span class="sd">        * `k`, surface roughness [m]. Only required if `C_d`=None        </span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C_d</span> <span class="o">=</span> <span class="n">C_d</span>
+        
+        <span class="k">if</span> <span class="n">C_d</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `C_d` is None, `k` must be provided&quot;</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        
+    <span class="c1"># ------------------ PROPERTIES -------------------------------------------</span>
+    <span class="c1"># ----------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Outer diameter of section [m]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span>
+    
+    <span class="nd">@d.setter</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="c1"># ----------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Drag coefficient</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_C_d</span>
+    
+    <span class="nd">@C_d.setter</span>
+    <span class="k">def</span> <span class="nf">C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`C_d` must be either float or None</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                             <span class="s2">&quot;C_d : {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">_C_d</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="c1"># ---------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Surface roughness [m]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k</span>
+    
+    <span class="nd">@k.setter</span>
+    <span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`k` must be a float&quot;</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k</span> <span class="o">=</span> <span class="n">val</span>
+        
+    <span class="c1"># ----------------- CLASS METHODS -----------------------------------------</span>
+    
+    <span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for drag loading, given angle of attack</span>
+<span class="sd">        `alpha` and mean wind speed `U`</span>
+<span class="sd">        </span>
+<span class="sd">        If `C_d` has not been defined for section explicitly, appropriate drag </span>
+<span class="sd">        coefficient will be calculated given `U` and surface roughness `k` for </span>
+<span class="sd">        section</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">C_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_d</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+        
+        <span class="k">if</span> <span class="n">C_d</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c1"># Calculate C_d given Reynold number and surface roughness k</span>
+            <span class="n">C_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_C_d</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">d</span><span class="o">*</span><span class="n">C_d</span>
+    
+    
+    <span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for lift loading</span>
+<span class="sd">        </span>
+<span class="sd">        _Always equals 0.0 for circles, due to symmetry_</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    
+    
+    <span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates wind resistance for moment loading</span>
+<span class="sd">        </span>
+<span class="sd">        _Always equals 0.0 for circles, due to symmetry_</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    
+        
+    <span class="k">def</span> <span class="nf">calc_C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">U</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates drag coefficient in accordance with Fig 7.28 BS EN </span>
+<span class="sd">        1991-1-4:2005</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`U` must be a float&quot;</span><span class="p">)</span>
+        
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+        <span class="n">k_b</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="n">b</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">)</span>
+        
+        <span class="n">Re</span> <span class="o">=</span> <span class="n">calc_Re</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+        
+        <span class="c1"># Curve 1</span>
+        <span class="n">c_f0_1</span> <span class="o">=</span> <span class="mf">0.11</span> <span class="o">/</span> <span class="p">(</span><span class="n">Re</span><span class="o">/</span><span class="mf">1e6</span><span class="p">)</span><span class="o">**</span><span class="mf">1.4</span>
+        <span class="n">c_f0_1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">c_f0_1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span><span class="mf">1.2</span><span class="p">)</span>
+        
+        <span class="c1"># Curve 2</span>
+        <span class="n">c_f0_2</span> <span class="o">=</span> <span class="mf">1.2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.18</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">k_b</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mf">0.4</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">Re</span><span class="o">/</span><span class="mf">1e6</span><span class="p">))</span>
+    
+        <span class="c1"># Return maximum of curve 1 and 2</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">c_f0_1</span><span class="p">,</span><span class="n">c_f0_2</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+
+      <div class="class">
+          <h3>Ancestors (in MRO)</h3>
+          <ul class="class_list">
+          <li><a href="#wind_section.WindSection_Circular">WindSection_Circular</a></li>
+          <li><a href="#wind_section.WindSection">WindSection</a></li>
+          <li>builtins.object</li>
+          </ul>
+          <h3>Static methods</h3>
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection_Circular.__init__">
+    <p>def <span class="ident">__init__</span>(</p><p>self, d, C_d=None, k=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Defines wind resistances for a circular section</p>
+<hr />
+<p>Required:</p>
+<ul>
+<li><code>d</code>, outer diameter of section [m]</li>
+</ul>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>C_d</code>, drag coefficient to be used in conjunction with <code>d</code>. If None 
+  appropriate drag coefficient will be determined based on mean wind 
+  speed and surface roughness <code>k</code> (see below)</p>
+</li>
+<li>
+<p><code>k</code>, surface roughness [m]. Only required if <code>C_d</code>=None</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Circular.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection_Circular.__init__" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">C_d</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines wind resistances for a circular section</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required:</span>
+<span class="sd">        </span>
+<span class="sd">    * `d`, outer diameter of section [m]</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `C_d`, drag coefficient to be used in conjunction with `d`. If None </span>
+<span class="sd">      appropriate drag coefficient will be determined based on mean wind </span>
+<span class="sd">      speed and surface roughness `k` (see below)</span>
+<span class="sd">    </span>
+<span class="sd">    * `k`, surface roughness [m]. Only required if `C_d`=None        </span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">d</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">C_d</span> <span class="o">=</span> <span class="n">C_d</span>
+    
+    <span class="k">if</span> <span class="n">C_d</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given `C_d` is None, `k` must be provided&quot;</span><span class="p">)</span>
+        
+    <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection_Circular.calc_C_d">
+    <p>def <span class="ident">calc_C_d</span>(</p><p>self, U)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates drag coefficient in accordance with Fig 7.28 BS EN 
+1991-1-4:2005</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Circular.calc_C_d', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection_Circular.calc_C_d" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">U</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates drag coefficient in accordance with Fig 7.28 BS EN </span>
+<span class="sd">    1991-1-4:2005</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`U` must be a float&quot;</span><span class="p">)</span>
+    
+    <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+    <span class="n">k_b</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="n">b</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">)</span>
+    
+    <span class="n">Re</span> <span class="o">=</span> <span class="n">calc_Re</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    
+    <span class="c1"># Curve 1</span>
+    <span class="n">c_f0_1</span> <span class="o">=</span> <span class="mf">0.11</span> <span class="o">/</span> <span class="p">(</span><span class="n">Re</span><span class="o">/</span><span class="mf">1e6</span><span class="p">)</span><span class="o">**</span><span class="mf">1.4</span>
+    <span class="n">c_f0_1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">c_f0_1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span><span class="mf">1.2</span><span class="p">)</span>
+    
+    <span class="c1"># Curve 2</span>
+    <span class="n">c_f0_2</span> <span class="o">=</span> <span class="mf">1.2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.18</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">k_b</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mf">0.4</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">Re</span><span class="o">/</span><span class="mf">1e6</span><span class="p">))</span>
+
+    <span class="c1"># Return maximum of curve 1 and 2</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">c_f0_1</span><span class="p">,</span><span class="n">c_f0_2</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection_Circular.calc_R_D">
+    <p>def <span class="ident">calc_R_D</span>(</p><p>self, alpha, U, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates wind resistance for drag loading, given angle of attack
+<code>alpha</code> and mean wind speed <code>U</code></p>
+<p>If <code>C_d</code> has not been defined for section explicitly, appropriate drag 
+coefficient will be calculated given <code>U</code> and surface roughness <code>k</code> for 
+section</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Circular.calc_R_D', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection_Circular.calc_R_D" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates wind resistance for drag loading, given angle of attack</span>
+<span class="sd">    `alpha` and mean wind speed `U`</span>
+<span class="sd">    </span>
+<span class="sd">    If `C_d` has not been defined for section explicitly, appropriate drag </span>
+<span class="sd">    coefficient will be calculated given `U` and surface roughness `k` for </span>
+<span class="sd">    section</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">C_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_d</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+    
+    <span class="k">if</span> <span class="n">C_d</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Calculate C_d given Reynold number and surface roughness k</span>
+        <span class="n">C_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_C_d</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">d</span><span class="o">*</span><span class="n">C_d</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection_Circular.calc_R_L">
+    <p>def <span class="ident">calc_R_L</span>(</p><p>self, alpha, U, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates wind resistance for lift loading</p>
+<p><em>Always equals 0.0 for circles, due to symmetry</em></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Circular.calc_R_L', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection_Circular.calc_R_L" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates wind resistance for lift loading</span>
+<span class="sd">    </span>
+<span class="sd">    _Always equals 0.0 for circles, due to symmetry_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">0.0</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection_Circular.calc_R_M">
+    <p>def <span class="ident">calc_R_M</span>(</p><p>self, alpha, U, **kwargs)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Calculates wind resistance for moment loading</p>
+<p><em>Always equals 0.0 for circles, due to symmetry</em></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Circular.calc_R_M', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection_Circular.calc_R_M" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">U</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates wind resistance for moment loading</span>
+<span class="sd">    </span>
+<span class="sd">    _Always equals 0.0 for circles, due to symmetry_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">0.0</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="wind_section.WindSection_Circular.plot_resistances">
+    <p>def <span class="ident">plot_resistances</span>(</p><p>self, U)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Plots variation in wind resistances with angle of attack for given 
+mean wind speed <code>U</code></p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Circular.plot_resistances', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.WindSection_Circular.plot_resistances" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_resistances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">U</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots variation in wind resistances with angle of attack for given </span>
+<span class="sd">    mean wind speed `U`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="n">alpha_deg</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+    
+    <span class="n">R_D</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_D</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+    <span class="n">R_L</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_L</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+    <span class="n">R_M</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_R_M</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">U</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alpha</span><span class="p">]</span>
+    
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_D</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_D$&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_L</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_L$&quot;</span><span class="p">)</span>
+    
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alpha_deg</span><span class="p">,</span><span class="n">R_M</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Angle of attack (degrees)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">361</span><span class="p">,</span><span class="mi">60</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$R_M$&quot;</span><span class="p">)</span>
+    
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Variation of wind-aligned wind resistances &quot;</span> <span class="o">+</span> 
+                 <span class="s2">&quot;with angle of attack&quot;</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
           <h3>Instance variables</h3>
             <div class="item">
-            <p id="wind_section.WindSection.R_D" class="name">var <span class="ident">R_D</span></p>
+            <p id="wind_section.WindSection_Circular.C_d" class="name">var <span class="ident">C_d</span></p>
             
 
             
   
-    <div class="desc"><p>Wind resistance for calculation of drag load, i.e. load in the 
-direction of the mean wind vector, projected into the section plane</p></div>
   <div class="source_cont">
 </div>
 
             </div>
             <div class="item">
-            <p id="wind_section.WindSection.R_L" class="name">var <span class="ident">R_L</span></p>
+            <p id="wind_section.WindSection_Circular.d" class="name">var <span class="ident">d</span></p>
             
 
             
   
-    <div class="desc"><p>Wind resistance for calculation of lift load, i.e. load perpendicular 
-to the mean wind vector, but in the section plane</p></div>
   <div class="source_cont">
 </div>
 
             </div>
             <div class="item">
-            <p id="wind_section.WindSection.R_M" class="name">var <span class="ident">R_M</span></p>
+            <p id="wind_section.WindSection_Circular.k" class="name">var <span class="ident">k</span></p>
             
 
             
   
-    <div class="desc"><p>Wind resistance for calculation of moment load. Note: when expressed 
-as a vector moment is about the (-x) section axis. Refer image included 
-in <code>__init__()</code> doctring</p></div>
   <div class="source_cont">
 </div>
 

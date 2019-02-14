@@ -8,7 +8,6 @@ Classes used to define wind cross-sections
 
 import inspect
 import numpy
-from numpy import log10
 import matplotlib.pyplot as plt
 
 v_air = 15e-6
@@ -143,7 +142,40 @@ class WindSection():
         
         else:
             return self._R_M(alpha,U)
+        
+        
+    def plot_resistances(self,U):
+        """
+        Plots variation in wind resistances with angle of attack for given 
+        mean wind speed `U`
+        """
 
+        alpha = numpy.linspace(0,2*numpy.pi)
+        alpha_deg = alpha * 180 / numpy.pi
+        
+        R_D = [self.calc_R_D(a,U) for a in alpha]
+        R_L = [self.calc_R_L(a,U) for a in alpha]
+        R_M = [self.calc_R_M(a,U) for a in alpha]
+        
+        fig, axarr = plt.subplots(3,sharex=True)
+        
+        ax = axarr[0]
+        ax.plot(alpha_deg,R_D)
+        ax.set_ylabel("$R_D$")
+        
+        ax = axarr[1]
+        ax.plot(alpha_deg,R_L)
+        ax.set_ylabel("$R_L$")
+        
+        ax = axarr[2]
+        ax.plot(alpha_deg,R_M)
+        ax.set_xlim([0,360])
+        ax.set_xlabel("Angle of attack (degrees)")
+        ax.set_xticks(numpy.arange(0,361,60))
+        ax.set_ylabel("$R_M$")
+        
+        fig.suptitle("Variation of wind-aligned wind resistances " + 
+                     "with angle of attack")
 
 
 class WindSection_Circular(WindSection):
@@ -245,6 +277,24 @@ class WindSection_Circular(WindSection):
             
         return d*C_d
     
+    
+    def calc_R_L(self,alpha,U,**kwargs):
+        """
+        Calculates wind resistance for lift loading
+        
+        _Always equals 0.0 for circles, due to symmetry_
+        """
+        return 0.0
+    
+    
+    def calc_R_M(self,alpha,U,**kwargs):
+        """
+        Calculates wind resistance for moment loading
+        
+        _Always equals 0.0 for circles, due to symmetry_
+        """
+        return 0.0
+    
         
     def calc_C_d(self,U):
         """
@@ -255,7 +305,9 @@ class WindSection_Circular(WindSection):
         if not isinstance(U,float):
             raise ValueError("`U` must be a float")
         
-        k_b = max(self.k/self.d, 1e-5)
+        k = self.k
+        b = self.d
+        k_b = max(k/b, 1e-5)
         
         Re = calc_Re(U,b)
         
@@ -264,12 +316,15 @@ class WindSection_Circular(WindSection):
         c_f0_1 = min(max(c_f0_1, 0.4),1.2)
         
         # Curve 2
-        c_f0_2 = 1.2 + (0.18 * log10(10*k_b)) / (1 + 0.4 * log10(Re/1e6))
+        c_f0_2 = 1.2 + (0.18*numpy.log10(10*k_b)) / (1+0.4*numpy.log10(Re/1e6))
     
         # Return maximum of curve 1 and 2
         return max(c_f0_1,c_f0_2)
+    
+    
+    
         
-        
+# ------------------ FUNCTIONS -------------------
         
 def calc_Re(U,d,v=v_air):
     """
@@ -282,6 +337,58 @@ def calc_Re(U,d,v=v_air):
     return U*d/v
 
 
+def test_calc_C_d():
+    """
+    Test routine to demonstrate accuracy of `calc_C_d()` method for circles, 
+    by re-creating Fig 7.28, BS EN 1991-1-4
+    """
+    
+    b=0.1 #arbitrary
+    
+    # List k/b, Re values per figure
+    k_b_vals = numpy.array([1e-2,1e-3,1e-4,1e-5,1e-6])
+    Re_vals = numpy.logspace(5,7,num=100)
+    
+    # Convert to inputs required
+    k_vals =  k_b_vals * b
+    U_vals = Re_vals * v_air / b
+    
+    # Evaluate c_f0 for each k,U pair
+    outer_list = []
+    
+    for k in k_vals:
+        
+        inner_list = []
+        
+        for U in U_vals:
+            
+            obj = WindSection_Circular(d=b,k=k)
+            c_f0 = obj.calc_C_d(U)
+            inner_list.append(c_f0)
+            
+        outer_list.append(inner_list)
+        
+    c_f0 = numpy.array(outer_list)
+    
+    # Re-create Fig. 7.28 to test calc_C_d() method
+    fig, ax = plt.subplots()
+    
+    h = ax.plot(Re_vals,c_f0.T)
+    h[-1].set_linestyle('--')
+    
+    ax.set_xscale('log')
+    
+    ax.legend(h,["%.0e" % x for x in k_b_vals],title="$k/b$")
+    
+    ax.set_ylim([0,1.4]) # per Fig 7.28
+    ax.set_xlim([Re_vals[0],Re_vals[-1]]) # per Fig 7.28
+    
+    ax.set_xlabel("$Re$")
+    ax.set_ylabel("$c_{f0}$")
+    ax.set_title("Drag coefficients for circles\n" + 
+                 "according to Fig 7.28, BS EN 1991-1-4:2005")
+
+
 
 # ---------------- TEST ROUTINES ----------------------------------------------
 
@@ -289,52 +396,17 @@ if __name__ == "__main__":
     
     plt.close('all')
     
-    testroutine = 1
+    testroutine = 2
     
     if testroutine == 1:
         
-        print("*** Test routine to re-create Fig 7.28, BS EN 1991-1-4 ***")
+        print("Test routine to check drag factor calculation for circles")
+        test_calc_C_d()
         
-        b = 0.1
-        
-        k_b_vals = numpy.array([1e-2,1e-3,1e-4,1e-5,1e-6])
-        k_vals =  k_b_vals * b
-        Re_vals = numpy.logspace(5,7,num=100)
-        U_vals = Re_vals * v_air / b
-        
-        outer_list = []
-        
-        for k in k_vals:
-            
-            inner_list = []
-            
-            for U in U_vals:
-                
-                obj = WindSection_Circular(d=b,k=k)
-                c_f0 = obj.calc_C_d(U)
-                inner_list.append(c_f0)
-                
-            outer_list.append(inner_list)
-            
-        c_f0 = numpy.array(outer_list)
-        
-        # Re-create Fig. 7.28 to test calc_C_d() method
-        fig, ax = plt.subplots()
-        
-        h = ax.plot(Re_vals,c_f0.T)
-        h[-1].set_linestyle('--')
-        
-        ax.set_xscale('log')
-        
-        ax.legend(h,["%.0e" % x for x in k_b_vals],title="$k/b$")
-        
-        ax.set_ylim([0,1.4]) # per Fig 7.28
-        ax.set_xlim([Re_vals[0],Re_vals[-1]]) # per Fig 7.28
-        
-        ax.set_xlabel("$Re$")
-        ax.set_ylabel("$c_{f0}$")
-        ax.set_title("Drag coefficients for circles\n" + 
-                     "according to Fig 7.28, BS EN 1991-1-4:2005")
+    if testroutine == 2:
+        d = 1.5
+        circle = WindSection_Circular(d=d,k=1e-4)
+        circle.plot_resistances(U=10.0)
         
     else:
         
