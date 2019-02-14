@@ -61,6 +61,8 @@ and this project adheres to:
 
 * `LatSync_McRobie().calc_Np_crit()`: parameters / key results at 
   Np=Np_crit instability point extracted and held as attributes
+  
+* New module `wind_section.py` added to define wind sections / resistances
 
 ### Fixed
 
