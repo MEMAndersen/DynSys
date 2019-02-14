@@ -8,17 +8,29 @@ Classes used to define wind cross-sections
 
 import inspect
 import numpy
+import scipy
+from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
+
+#%%
+# ------------------- MODULE-LEVEL VARIABLES ----------------------------------
 
 v_air = 15e-6
 """
 Kinematic viscocity of air [m2/s]
 """
 
+
+#%%
+# ------------------- CLASSES ------------------------------------------------
+
 class WindSection():
     """
     Generic cross-section, where (drag, lift, moment) resistances are 
     defined explicitly
+    
+    _Note: this is intended to be an abstract class. Objects cannot be 
+    instantiated. Use derived classes instead._
     """
     
     def __init__(self,R_D, R_L=0.0, R_M=0.0):
@@ -58,49 +70,34 @@ class WindSection():
         
         """
         
+        # Prevent direct instatiation of this class
+        if type(self) == WindSection:
+            raise Exception("<WindSection> must be subclassed.")
+        
         # Evaluate drag at zero angle of attack
-        if not isinstance(R_D,float):
-            
-            # Check function supplied as expected
-            if not inspect.isfunction(R_D):
+        if not isinstance(R_D,float) and not callable(R_D):
                 raise ValueError("`R_D` must be either a float or a function")
             
-            if R_D.signature[0]!="alpha":
-                raise ValueError("`R_D` must have first argument `alpha`" + 
-                                 " denoting the angle of attack (radians)")
-            
         
-        self._R_D = R_D
+        self.R_D = R_D
         """
         Wind resistance for calculation of drag load, i.e. load in the 
         direction of the mean wind vector, projected into the section plane
         """
         
-        if not isinstance(R_L,float):
-            
-            if not inspect.isfunction(R_L):
-                raise ValueError("`R_L` must be either a float or a function")
-            
-            if R_L.signature[0]!="alpha":
-                raise ValueError("`R_L` must have first argument `alpha`" + 
-                                 " denoting the angle of attack (radians)")
+        if not isinstance(R_L,float) and not callable(R_L):
+            raise ValueError("`R_L` must be either a float or a callable")
         
-        self._R_L = R_L
+        self.R_L = R_L
         """
         Wind resistance for calculation of lift load, i.e. load perpendicular 
         to the mean wind vector, but in the section plane
         """
         
-        if not isinstance(R_M,float):
-            
-            if not inspect.isfunction(R_M):
-                raise ValueError("`R_M` must be either a float or a function")
-                
-            if R_M.signature[0]!="alpha":
-                raise ValueError("`R_M` must have first argument `alpha`" + 
-                                 " denoting the angle of attack (radians)")
+        if not isinstance(R_M,float) and not callable(R_M):
+            raise ValueError("`R_M` must be either a float or a callable")
         
-        self._R_M = R_M
+        self.R_M = R_M
         """
         Wind resistance for calculation of moment load. Note: when expressed 
         as a vector moment is about the (-x) section axis. Refer image included 
@@ -108,76 +105,202 @@ class WindSection():
         """
 
 
-    def calc_R_D(self,alpha,U,**kwargs):
+    def calc_R_D(self,alpha,**kwargs):
         """
         Calculates wind resistance for drag loading, given angle of attack
         `alpha` and mean wind speed `U`
         """
-        if isinstance(self._R_D, float):
-            return self._R_D
-        
-        else:
-            return self._R_D(alpha,U)
+        return _func_or_float(self.R_D,alpha)
         
         
-    def calc_R_L(self,alpha,U,**kwargs):
+    def calc_R_D_derivative(self,alpha,order=1,**kwargs):
+        """
+        Evaluate derivative of drag resistance with respect to angle of attack 
+        at the specified angle `alpha`
+        """
+        return _derivative_func(self.R_D,alpha,order=order)
+        
+        
+    def calc_R_L(self,alpha,**kwargs):
         """
         Calculates wind resistance for lift loading, given angle of attack
         `alpha` and mean wind speed `U`
         """
-        if isinstance(self._R_L, float):
-            return self._R_L
+        return _func_or_float(self.R_L,alpha)
         
-        else:
-            return self._R_L(alpha,U)
+        
+    def calc_R_L_derivative(self,alpha,order=1,**kwargs):
+        """
+        Evaluate derivative of lift resistance with respect to angle of attack 
+        at the specified angle `alpha`
+        """
+        return _derivative_func(self.R_L,alpha,order=order)
         
     
-    def calc_R_M(self,alpha,U,**kwargs):
+    def calc_R_M(self,alpha,**kwargs):
         """
         Calculates wind resistance for moment loading, given angle of attack
         `alpha` and mean wind speed `U`
         """
-        if isinstance(self._R_M, float):
-            return self._R_M
-        
-        else:
-            return self._R_M(alpha,U)
+        return _func_or_float(self.R_M,alpha)
         
         
-    def plot_resistances(self,U):
+    def calc_R_M_derivative(self,alpha,order=1,**kwargs):
         """
-        Plots variation in wind resistances with angle of attack for given 
-        mean wind speed `U`
+        Evaluate derivative of lift resistance with respect to angle of attack 
+        at the specified angle `alpha`
+        """
+        return _derivative_func(self.R_M,alpha,order=order)
+    
+    
+    def calc_denHertog(self,alpha,find_roots=True,**kwargs):
+        """
+        Evaluates the following function at angles of attack `alpha`
+        
+        $$ H = dR_L/d\alpha + R_D $$
+        
+        """
+        
+        def H_func(alpha):
+            
+            RL_derivative = self.calc_R_L_derivative(alpha,order=1,**kwargs)
+            RD = self.calc_R_D(alpha,**kwargs)
+            return RL_derivative + RD
+        
+        H = H_func(alpha)
+        
+        if find_roots:
+            
+            # Detect zero-crossings first
+            brackets = []
+            for i in range(len(H)-1):
+                
+                H1 = H[i+1]
+                H0 = H[i]
+                
+                if numpy.sign(H1)!=numpy.sign(H0):
+                    # Zero-crossing detected
+                    brackets.append([alpha[i],alpha[i+1]])
+                    
+            # Use bisection method to obtain precise zero-crossings
+            roots = []
+            for (a,b) in brackets:
+                roots.append(scipy.optimize.bisect(H_func,a,b))
+                
+            # Identify instability regions (with H<0)
+            regions = []
+            roots = [roots[-1]-2*numpy.pi] + roots + [roots[0]+2*numpy.pi]
+            
+            for i in range(len(roots)-1):
+                H_mid = H_func(0.5*(roots[i]+roots[i+1]))
+                if H_mid < 0:
+                    regions.append([roots[i],roots[i+1]])
+            
+            return H, roots, regions
+            
+        else:
+            return H
+    
+    
+    def plot_denHertog(self,ax=None,**kwargs):
+        """
+        Plots so-called den Hertog parameter H against all angles of attack
+        """
+        
+        alpha = numpy.linspace(0,2*numpy.pi,61)
+        H, roots, regions = self.calc_denHertog(alpha,find_roots=True,**kwargs)
+        
+        alpha = numpy.rad2deg(alpha)
+        roots = numpy.rad2deg(roots)
+        regions = numpy.rad2deg(regions)
+        
+        if ax is None:
+            fig,ax = plt.subplots()
+            fig.set_size_inches((8,4))
+                        
+        else:
+            fig = ax.get_figure()
+            
+        ax.plot(alpha,H)
+        ax.set_xlim([0,360])
+        ax.axhline(0.0,color='k',alpha=0.5)
+        
+        [ax.axvline(r,color='r') for r in roots]
+        [ax.axvspan(a,b,color='r', alpha=0.1) for (a,b) in regions]
+         
+        ax.set_title("Den Hertog parameter $H$\n" + 
+                     r"$ H = dR_L/d\alpha + R_D $")
+            
+        return fig
+    
+    
+    def plot_resistances(self,U=20.0, alpha=numpy.linspace(0,2*numpy.pi,50)):
+        """
+        Plots variation in wind resistances with angle of attack 
+        
+        ***
+        Optional:
+            
+        * `U`, mean wind speed used for resistances calculation (note: for some 
+          sections, e.g. circles, wind resistance is Re-dependent)
+        
+        * `alpha`, specific angle of attack values to evaluate resistance at. 
+          By default `alpha` will be plotted in range [0, 2*pi]
+          
         """
 
-        alpha = numpy.linspace(0,2*numpy.pi)
-        alpha_deg = alpha * 180 / numpy.pi
+        alpha_deg = numpy.rad2deg(alpha)
         
-        R_D = [self.calc_R_D(a,U) for a in alpha]
-        R_L = [self.calc_R_L(a,U) for a in alpha]
-        R_M = [self.calc_R_M(a,U) for a in alpha]
+        R_D = [self.calc_R_D(a,U=U) for a in alpha]
+        R_D_deriv = [self.calc_R_D_derivative(a,U=U) for a in alpha]
         
-        fig, axarr = plt.subplots(3,sharex=True)
+        R_L = [self.calc_R_L(a,U=U) for a in alpha]
+        R_L_deriv = [self.calc_R_L_derivative(a,U=U) for a in alpha]
         
-        ax = axarr[0]
+        R_M = [self.calc_R_M(a,U=U) for a in alpha]
+        R_M_deriv = [self.calc_R_M_derivative(a,U=U) for a in alpha]
+        
+        fig, axarr = plt.subplots(3,2,sharex=True)
+        fig.set_size_inches((12,8))
+        fig.subplots_adjust(wspace=0.3)
+        
+        ax = axarr[0,0]
         ax.plot(alpha_deg,R_D)
         ax.set_ylabel("$R_D$")
         
-        ax = axarr[1]
+        ax = axarr[0,1]
+        ax.plot(alpha_deg,R_D_deriv)
+        ax.set_ylabel(r"$dR_D/d\alpha}$")
+        
+        ax = axarr[1,0]
         ax.plot(alpha_deg,R_L)
         ax.set_ylabel("$R_L$")
         
-        ax = axarr[2]
+        ax = axarr[1,1]
+        ax.plot(alpha_deg,R_L_deriv)
+        ax.set_ylabel(r"$dR_L/d\alpha$")
+        
+        ax = axarr[2,0]
         ax.plot(alpha_deg,R_M)
-        ax.set_xlim([0,360])
-        ax.set_xlabel("Angle of attack (degrees)")
-        ax.set_xticks(numpy.arange(0,361,60))
         ax.set_ylabel("$R_M$")
+        
+        ax = axarr[2,1]
+        ax.plot(alpha_deg,R_M_deriv)
+        ax.set_ylabel(r"$dR_M/d\alpha$")
+        
+        ax = axarr[2,0]
+        ax.set_xlim([alpha_deg[0],alpha_deg[-1]])
+        ax.set_xlabel(r"Angle of attack $\alpha$ (degrees)")
+        ax.set_ylabel("$R_M$")
+        
+        if ax.get_xlim()==(0,360):
+            ax.set_xticks(numpy.arange(0,361,60))
         
         fig.suptitle("Variation of wind-aligned wind resistances " + 
                      "with angle of attack")
 
-
+#%%
+        
 class WindSection_Circular(WindSection):
     """
     Derived class to implement WindSection for circular section
@@ -278,7 +401,7 @@ class WindSection_Circular(WindSection):
         return d*C_d
     
     
-    def calc_R_L(self,alpha,U,**kwargs):
+    def calc_R_L(self,alpha,**kwargs):
         """
         Calculates wind resistance for lift loading
         
@@ -287,7 +410,7 @@ class WindSection_Circular(WindSection):
         return 0.0
     
     
-    def calc_R_M(self,alpha,U,**kwargs):
+    def calc_R_M(self,alpha,**kwargs):
         """
         Calculates wind resistance for moment loading
         
@@ -321,10 +444,83 @@ class WindSection_Circular(WindSection):
         # Return maximum of curve 1 and 2
         return max(c_f0_1,c_f0_2)
     
+#%%
+        
+class WindSection_Custom(WindSection):
+    """
+    Class to define custom wind section by explicitly defining variation of 
+    drag, lift and moment resistance with angle of attack
+    """
+    
+    def __init__(self,alpha:list,R_D:list,R_L:list=None,R_M:list=None):
+        """
+        Initialise custom wind section 
+        
+        ***
+        Required:
+        
+        * `alpha`, list-like, gives specific values of angle of attack 
+          values [radians]
+          
+        * `R_D`, list-like, gives specific values of drag wind resistance [m] 
+          at angles of attack corresponding to `alpha`
+          
+        ***
+        Optional:
+            
+        * `R_L`, list-like, gives specific values of lift wind resistance [m]
+          at angles of attack corresponding to `alpha`. If None (default) then 
+          zero values assumed for all `alpha`
+          
+        * `R_M`, list-like, gives specific values of moment wind resistance 
+          [m2] at angles of attack corresponding to `alpha`. If None (default) 
+          then zero values assumed for all `alpha`
+    
+        """
+        
+        
+        # Check array dimensions
+        N = len(alpha)
+        
+        if len(R_D)!= N:
+            raise ValueError("`len(R_D)` must agree with `len(alpha)`")
+            
+        if R_L is not None and len(R_L)!= N:
+            raise ValueError("`len(R_L)` must agree with `len(alpha)`")
+        
+        if R_M is not None and len(R_M)!= N:
+            raise ValueError("`len(R_M)` must agree with `len(alpha)`")
+            
+        # Check limits
+        if alpha[-1] > 2*numpy.pi or alpha[0]<0:
+            raise ValueError("`alpha` to be in the range [0,2*pi]")
+        
+        
+        # Define cubic splines through passed-in list data
+        
+        settings = {'bc_type':'periodic'}   # n.b. must be periodic in alpha
+        
+        interpolation_class = CubicSpline   # class to use for interpolation
+        # note use of cubic spline is advantageous as allows derivatives calc
+        
+        R_D_func = interpolation_class(alpha,R_D,**settings)
+        
+        if R_L is not None:
+            R_L_func = interpolation_class(alpha,R_L,**settings)
+        else:
+            R_L_func = lambda x : 0.0
+            
+        if R_M is not None:
+            R_M_func = interpolation_class(alpha,R_M,**settings)
+        else:
+            R_M_func = lambda x : 0.0
+            
+        # WindSection init method
+        super().__init__(R_D=R_D_func, R_L=R_L_func, R_M=R_M_func)
     
     
         
-# ------------------ FUNCTIONS -------------------
+#%% ------------------ FUNCTIONS -------------------
         
 def calc_Re(U,d,v=v_air):
     """
@@ -335,6 +531,37 @@ def calc_Re(U,d,v=v_air):
     to air
     """
     return U*d/v
+
+
+def _func_or_float(f,x):
+    """
+    Evaluates `f` at x. If `f` is float, value is returned
+    """
+    if isinstance(f, float):
+        return f
+    else:
+        return f(x)
+
+
+def _derivative_func(val,alpha,order=1):
+    """
+    Private function, used to evaluate derivatives
+    (avoids code repetition)
+    """
+    
+    if isinstance(val, float):
+        return 0.0 # constant R_L thus derivative = 0.0 for all alpha
+    
+    elif isinstance(val,CubicSpline):
+        
+        if order > 2:
+            raise ValueError("Cubic spline cannot be used to evaluate 3rd " + 
+                             "derivatives or greater")
+            
+        return val(alpha,order)
+    
+    else:
+        raise ValueError("Unexpected type. Cannot evaluate derivative")
 
 
 def test_calc_C_d():
@@ -396,17 +623,34 @@ if __name__ == "__main__":
     
     plt.close('all')
     
-    testroutine = 2
+    test_routine = 3
     
-    if testroutine == 1:
+    if test_routine == 1:
         
         print("Test routine to check drag factor calculation for circles")
         test_calc_C_d()
         
-    if testroutine == 2:
+    elif test_routine == 2:
+        
         d = 1.5
         circle = WindSection_Circular(d=d,k=1e-4)
         circle.plot_resistances(U=10.0)
+        
+    elif test_routine == 3:
+        
+        # Define angles of attack to define resistances at
+        alpha = numpy.linspace(0,2*numpy.pi,100)
+        
+        # Define some arbitrary resistances
+        R_D = numpy.sin(alpha)
+        R_L = numpy.cos(alpha)**2
+        R_M = 0.1*alpha*(2*numpy.pi - alpha)*(numpy.pi - alpha)
+        
+        # Define wind section and plot resistances and their derivatives
+        section = WindSection_Custom(alpha,R_D,R_L,R_M)
+        section.plot_resistances()#alpha=numpy.linspace(-1.5,7.5,100))
+        
+        section.plot_denHertog()
         
     else:
         
