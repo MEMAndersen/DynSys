@@ -1086,6 +1086,7 @@ COWI UK's large displacement frame analysis software</p>
 
 <span class="kn">import</span> <span class="nn">pandas</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">xlrd</span> <span class="c1"># for reading from Excel</span>
 <span class="kn">from</span> <span class="nn">mesh</span> <span class="kn">import</span> <span class="n">Mesh</span><span class="p">,</span> <span class="n">DispResults</span>
 <span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">read_block</span>
 
@@ -1134,6 +1135,22 @@ COWI UK's large displacement frame analysis software</p>
                            <span class="n">skiprows</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
                            <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span>
                            <span class="n">usecols</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)))</span>
+    
+    <span class="c1"># Check which axis is vertical</span>
+    <span class="n">wb</span> <span class="o">=</span> <span class="n">xlrd</span><span class="o">.</span><span class="n">open_workbook</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="n">on_demand</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">sheet_by_name</span><span class="p">(</span><span class="s1">&#39;OPT&#39;</span><span class="p">)</span>
+    <span class="n">vertical_direction</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">cell_value</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="c1"># n.b zero-indexed</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">vertical_direction</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">vertical_direction</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;NODLE model is defined with &#39;Y&#39; vertical</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+              <span class="s2">&quot;Input coordinates converted such that Y-&gt;Z, Z-&gt;(-Y)&quot;</span><span class="p">)</span>
+        
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z_temp&#39;</span><span class="p">]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;Z_temp&#39;</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">df</span>
 
@@ -1342,6 +1359,22 @@ COWI UK's large displacement frame analysis software</p>
                            <span class="n">skiprows</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
                            <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span>
                            <span class="n">usecols</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)))</span>
+    
+    <span class="c1"># Check which axis is vertical</span>
+    <span class="n">wb</span> <span class="o">=</span> <span class="n">xlrd</span><span class="o">.</span><span class="n">open_workbook</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="n">on_demand</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">sheet_by_name</span><span class="p">(</span><span class="s1">&#39;OPT&#39;</span><span class="p">)</span>
+    <span class="n">vertical_direction</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">cell_value</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="c1"># n.b zero-indexed</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">vertical_direction</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">vertical_direction</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;NODLE model is defined with &#39;Y&#39; vertical</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+              <span class="s2">&quot;Input coordinates converted such that Y-&gt;Z, Z-&gt;(-Y)&quot;</span><span class="p">)</span>
+        
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Z_temp&#39;</span><span class="p">]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;Z_temp&#39;</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">df</span>
 </pre></div>

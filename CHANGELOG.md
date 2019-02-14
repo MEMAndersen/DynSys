@@ -12,6 +12,19 @@ and this project adheres to:
 
 ### Changed
 
+* Previous module `wind.py` split across three new modules:
+
+    * `wind_response.py` houses functions/classes concerned with calculation 
+      of response to wind loading
+      
+    * `wind_env.py` houses functions/classes concerned with defining wind 
+      environments
+      
+    * `wind_misc.py` houses all other functions not allocated to the above. 
+      The intention is that these will be sorted-through and relocated / 
+      deleted eventually
+      
+
 ### Added
 
 * New module `hysteresis.py`, together with related example, to provide 

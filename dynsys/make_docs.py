@@ -49,9 +49,9 @@ make_html("ped_dyn")
 make_html("damper")
 make_html("mesh")
 make_html("nodle")
-make_html("wind")
-#%%
 make_html("wind_section")
+make_html("wind_env")
+make_html("wind_response")
 
 #%%
 # List markdown files in root folder to be rendered

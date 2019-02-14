@@ -8,6 +8,7 @@ COWI UK's large displacement frame analysis software
 
 import pandas
 import numpy
+import xlrd # for reading from Excel
 from mesh import Mesh, DispResults
 from common import read_block
 
@@ -56,6 +57,22 @@ def read_COO(fname):
                            skiprows=4,
                            comment=':',
                            usecols=list(range(1,5)))
+    
+    # Check which axis is vertical
+    wb = xlrd.open_workbook(fname,on_demand=True)
+    ws = wb.sheet_by_name('OPT')
+    vertical_direction = ws.cell_value(7,3) # n.b zero-indexed
+    print(vertical_direction)
+    
+    if vertical_direction.upper() == 'Y':
+        
+        print("NODLE model is defined with 'Y' vertical\n" + 
+              "Input coordinates converted such that Y->Z, Z->(-Y)")
+        
+        df['Z_temp'] = df['Y']
+        df['Y'] = - df['Z']
+        df['Z'] = df['Z_temp']
+        df = df.drop('Z_temp',axis=1)
     
     return df
 
