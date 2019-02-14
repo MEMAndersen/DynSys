@@ -153,12 +153,38 @@ class WindSection():
         return _derivative_func(self.R_M,alpha,order=order)
     
     
-    def calc_denHertog(self,alpha,find_roots=True,**kwargs):
-        """
-        Evaluates the following function at angles of attack `alpha`
+    def calc_denHertog(self,alpha,find_roots:bool=True,**kwargs):
+        r"""
+        Evaluates the 'den Hertog stability criterion' at angles of attack 
+        `alpha`, i.e. the following function: 
         
-        $$ H = dR_L/d\alpha + R_D $$
+        $$ H(\alpha) = dR_L/d\alpha|_{\alpha} + R_D(\alpha) $$
         
+        ***
+        **Required:**
+            
+        * `alpha`, array of angle of attack values at which to evaluate H
+        
+        ***
+        **Optional**
+        
+        * `find_roots`: if True, method will seek all roots (where H=0) and
+          return list to define regions of instablity (where H<0 between roots)
+
+        ***
+        **Returns:**
+            
+        If `find_roots` is False, returns array of H(alpha) values
+        
+        Otherwise returns tuple consisting of the following:
+            
+        * Array of H(alpha) values
+        
+        * List of roots, i.e. alpha values where H(alpha)=0
+        
+        * List of 2-item lists, defining bounding alpha values for regions 
+          where H(alpha) < 0
+          
         """
         
         def H_func(alpha):
@@ -189,12 +215,19 @@ class WindSection():
                 
             # Identify instability regions (with H<0)
             regions = []
-            roots = [roots[-1]-2*numpy.pi] + roots + [roots[0]+2*numpy.pi]
             
-            for i in range(len(roots)-1):
-                H_mid = H_func(0.5*(roots[i]+roots[i+1]))
-                if H_mid < 0:
-                    regions.append([roots[i],roots[i+1]])
+            if len(roots)>0:
+                
+                # Wrap list around
+                roots = [roots[-1]-2*numpy.pi] + roots + [roots[0]+2*numpy.pi]
+                
+                # Identify regions where H<0
+                for i in range(len(roots)-1):
+                    
+                    H_mid = H_func(0.5*(roots[i]+roots[i+1]))
+                    
+                    if H_mid < 0:
+                        regions.append([roots[i],roots[i+1]])
             
             return H, roots, regions
             
@@ -204,7 +237,9 @@ class WindSection():
     
     def plot_denHertog(self,ax=None,**kwargs):
         """
-        Plots so-called den Hertog parameter H against all angles of attack
+        Plots the den Hertog parameter H for all angles of attack
+        
+        Where unstable regions (H<0) exist, these are annotated via shading
         """
         
         alpha = numpy.linspace(0,2*numpy.pi,61)
@@ -234,7 +269,7 @@ class WindSection():
         return fig
     
     
-    def plot_resistances(self,U=20.0, alpha=numpy.linspace(0,2*numpy.pi,50)):
+    def plot_resistances(self,U=20.0, alpha=None):
         """
         Plots variation in wind resistances with angle of attack 
         
@@ -248,7 +283,8 @@ class WindSection():
           By default `alpha` will be plotted in range [0, 2*pi]
           
         """
-
+        
+        if alpha is None: alpha = numpy.linspace(0,2*numpy.pi,61)
         alpha_deg = numpy.rad2deg(alpha)
         
         R_D = [self.calc_R_D(a,U=U) for a in alpha]
@@ -380,9 +416,22 @@ class WindSection_Circular(WindSection):
             
         self._k = val
         
+    # --------- RE-DIRECT GETTER METHODS --------------------------------------
+    @property
+    def R_D(self):
+        return self.calc_R_D
+    
+    @property
+    def R_L(self):
+        return self.calc_R_L
+    
+    @property
+    def R_M(self):
+        return self.calc_R_M
+        
     # ----------------- CLASS METHODS -----------------------------------------
     
-    def calc_R_D(self,alpha,U,**kwargs):
+    def calc_R_D(self,alpha,U=20.0,**kwargs):
         """
         Calculates wind resistance for drag loading, given angle of attack
         `alpha` and mean wind speed `U`
@@ -401,13 +450,21 @@ class WindSection_Circular(WindSection):
         return d*C_d
     
     
+    def calc_R_D_derivative(self,alpha,**kwargs):
+        return numpy.zeros_like(alpha)
+    
+    
     def calc_R_L(self,alpha,**kwargs):
         """
         Calculates wind resistance for lift loading
         
         _Always equals 0.0 for circles, due to symmetry_
         """
-        return 0.0
+        return numpy.zeros_like(alpha)
+    
+    
+    def calc_R_L_derivative(self,alpha,**kwargs):
+        return numpy.zeros_like(alpha)
     
     
     def calc_R_M(self,alpha,**kwargs):
@@ -416,7 +473,11 @@ class WindSection_Circular(WindSection):
         
         _Always equals 0.0 for circles, due to symmetry_
         """
-        return 0.0
+        return numpy.zeros_like(alpha)
+    
+    
+    def calc_R_M_derivative(self,alpha,**kwargs):
+        return numpy.zeros_like(alpha)
     
         
     def calc_C_d(self,U):
@@ -635,6 +696,7 @@ if __name__ == "__main__":
         d = 1.5
         circle = WindSection_Circular(d=d,k=1e-4)
         circle.plot_resistances(U=10.0)
+        circle.plot_denHertog()
         
     elif test_routine == 3:
         
