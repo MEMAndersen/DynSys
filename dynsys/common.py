@@ -63,6 +63,13 @@ def check_class(obj,expected_class):
                          "provided:\t{0}\n".format(type(obj)) + 
                          "expected:\t{0}".format(expected_class))
                          
+
+def check_float_or_callable(obj,var_name):
+    
+    if not isinstance(obj,float) and not callable(obj):
+        raise ValueError("`%s` must be either a float or a function" %var_name)
+
+
     
 def check_shape(value,expected_shape:tuple):
     
@@ -169,6 +176,23 @@ def read_block(f, start_str, end_str):
             data.append(data_vals)
             
     return data
+
+
+# ------------ GEOMETRY --------------
+    
+def rotate_about_axis(v,k,theta):
+    """
+    Rotate a vector `v` about axis vector `k` by angle `theta` [radians]
+    
+    _Rotation is in a clockwise sense per right-hand rule_
+    
+    Refer https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+    """
+    v_rot = v * npy.cos(theta)
+    v_rot += npy.cross(k,v) * npy.sin(theta)
+    v_rot += k * npy.dot(k,v) * (1-npy.cos(theta))
+    return v_rot
+
 
 # ------------ PLOTTING --------------
     
