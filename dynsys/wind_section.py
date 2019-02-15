@@ -1047,7 +1047,7 @@ if __name__ == "__main__":
         coeffs_section.plot_coefficients()
         
         # Define multiple similar sections
-        nSections = 3
+        nSections = 1000 # to test how fast implementation is!
         b_vals = numpy.linspace(5.0,20.0,nSections)
         h_vals = numpy.linspace(2.0,1.2,nSections)
         
@@ -1059,9 +1059,7 @@ if __name__ == "__main__":
         angles = numpy.linspace(-pi,+pi,61)
         RL_vals = numpy.array([x.R_L(angles) for x in wind_sections])
         
-        fig,ax = plt.subplots()
-        h = ax.plot(angles,RL_vals.T)
-        ax.legend(h,b_vals,title='b')
+        wind_sections = wind_sections[:4] # keep front of list only
         
         # Show how coeffs_section is used by all wind_sections
         print("`wind_sections`:\n{0}\n".format(wind_sections))
@@ -1071,7 +1069,6 @@ if __name__ == "__main__":
         print("***NOTE: Same object is being used by all sections***")
         
         # Show how all the usual methods still work!
-        ws = wind_sections[0]
         [ws.plot_resistances() for ws in wind_sections]
         
     else:
