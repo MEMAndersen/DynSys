@@ -10,7 +10,7 @@ import pandas
 from itertools import count
 from inspect import getmro
 from numpy.linalg import norm
-from common import check_class, set_equal_aspect_3d
+from common import check_class, set_equal_aspect_3d, rotate_about_axis
 
 vertical_direction = npy.array([0.0,0.0,1.0])
 default_y_direction = npy.array([0.0,1.0,0.0])
@@ -614,6 +614,18 @@ class LineElement(Element):
     """
     
     _nNodes_expected = 2
+
+
+    def __init__(self,parent_mesh,connected_nodes:list,
+                 skew_angle=0.0,**kwargs):
+        
+        self.skew_angle = skew_angle
+        """
+        Clockwise angle [radians] by which the local y- and -z axes of the 
+        element are rotated, about the local x-axis.
+        """
+        
+        super().__init__(parent_mesh, connected_nodes,**kwargs)
             
 
     def get_axes(self,verbose=False):
@@ -638,6 +650,12 @@ class LineElement(Element):
             
         # Calculate z-axis to be orthogonal to x and y
         z = npy.cross(x,y)
+        
+        # Rotate axes if required
+        phi = self.skew_angle
+        if phi != 0.0:
+            y = rotate_about_axis(y,x,phi)
+            z = rotate_about_axis(z,x,phi)
     
         return x, y, z
         
@@ -1200,7 +1218,7 @@ def integrate_gauss(f:callable,x,
         
 if __name__ == "__main__":
     
-    testRoutine2Run=3
+    testRoutine2Run=4
     
     if testRoutine2Run==1:
         
@@ -1248,7 +1266,7 @@ if __name__ == "__main__":
         
     if testRoutine2Run==3:
         
-        print("*** TEST ROUTINE 2 COMMENCED *****")
+        print("*** TEST ROUTINE 3 COMMENCED *****")
         print("--- Test of integration by gauss quadrature ---")
         
         # Define arbitrary polynomial
@@ -1275,7 +1293,33 @@ if __name__ == "__main__":
         ax1.legend()
         ax2.legend()
         
-        # Define some nodes
+    if testRoutine2Run==4:
+        
+        print("*** TEST ROUTINE 4 COMMENCED *****")
+        print("--- Test of element skew angles ---")
+        
+        # Define new mesh
+        meshObj1 = Mesh(name="Skew angles test")
+        
+        xyz = npy.array([[0,0,0],[1,1,1]])
+        offset = npy.array([0.0,0.5,0])
+        
+        nElements = 9
+        xyz_arr = npy.array([xyz+i*offset for i in range(nElements)])
+        
+        phi_vals = npy.deg2rad(npy.linspace(0,360,nElements))
+        
+        element_list = []
+        
+        for phi, (xyz1,xyz2) in zip(phi_vals,xyz_arr):
+            
+            node1 = Node(meshObj1,xyz1)
+            node2 = Node(meshObj1,xyz2)
+            element = LineElement(meshObj1,[node1,node2],skew_angle = phi)
+            element_list.append(element)
+        
+        # Plot mesh
+        meshObj1.plot(plot_axes=True)
         
             
 #        # Define some elements
