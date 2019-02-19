@@ -20,6 +20,7 @@ ws_dict = read_wind_sections('wind_sections.csv')
 
 # Associate wind sections with mesh elements, reading data from input file
 assign_wind_sections('wind_section_assignments.csv', mesh_obj, ws_dict)
+#mesh_obj.print_wind_sections()
 
 # Define modal system and link-in mesh object
 sys_obj = modalsys.ModalSys(name='Emley Moor Tower',

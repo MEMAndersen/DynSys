@@ -466,6 +466,19 @@ class Mesh:
         return len(self.element_objs)>=1
     
     
+    def print_wind_sections(self):
+        """
+        Prints details of wind section objects associated with all elements 
+        in mesh
+        """
+        for element_obj in self.element_objs.values():
+    
+            ws1_name, ws2_name = [x.name for x in element_obj.wind_sections]
+            
+            print("Element: %s\tWind section 1: %s\tWind section 2: %s" 
+                  % (element_obj.name, ws1_name, ws2_name))
+    
+    
 class MeshChain(Mesh):
     """
     Class to implement a chain mesh, i.e. series of elements forming a chain
@@ -648,8 +661,12 @@ class LineElement(Element):
         to define wind section at each end of the element
         """
         # Duplicate WindSection object to define uniform cross-secton
-        if not isinstance(obj_list,list) or len(obj_list)==1:
+        if not isinstance(obj_list,list):
             obj = obj_list
+            obj_list = [obj,obj]
+            
+        if len(obj_list)==1:
+            obj = obj_list[0]
             obj_list = [obj,obj]
                         
         self._wind_section_end1 = obj_list[0]
