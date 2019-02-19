@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 from common import check_class, check_float_or_callable, func_or_float
 from numpy import pi
 
+import pandas as pd
+
 #%%
 # ------------------- MODULE-LEVEL VARIABLES ----------------------------------
 
@@ -34,7 +36,7 @@ class WindSection_Resistances():
     instantiated. Use derived classes instead._
     """
     
-    def __init__(self,R_D, R_L=0.0, R_M=0.0):
+    def __init__(self,R_D, R_L=0.0, R_M=0.0, name=None):
         """
         Defines general cross-section via functions that define variation in
         wind resistances with angle of attack
@@ -83,6 +85,9 @@ class WindSection_Resistances():
         self.R_D = R_D
         self.R_L = R_L
         self.R_M = R_M
+        
+        self.name = name
+        
         
         
     @property
@@ -361,7 +366,7 @@ class WindSection_Circular(WindSection_Resistances):
     Derived class to implement WindSection for circular section
     """
     
-    def __init__(self,d,C_D=None,k=None):
+    def __init__(self,d,C_D=None,k=None,**kwargs):
         """
         Defines wind resistances for a circular section
         
@@ -379,6 +384,8 @@ class WindSection_Circular(WindSection_Resistances):
         
         * `k`, surface roughness [m]. Only required if `C_d`=None        
                 
+        Any additional keyword arguments are passed to `__init__()` method of 
+        parent class
         """
         
         self.d = d
@@ -388,6 +395,12 @@ class WindSection_Circular(WindSection_Resistances):
             raise ValueError("Given `C_d` is None, `k` must be provided")
             
         self.k = k
+        
+        super().__init__(R_D=self.calc_R_D,
+                         R_L=self.calc_R_L,
+                         R_M=self.calc_R_M,
+                         **kwargs)
+        
         
     # ------------------ PROPERTIES -------------------------------------------
     # ----------
@@ -435,18 +448,7 @@ class WindSection_Circular(WindSection_Resistances):
             
         self._k = val
         
-    # --------- RE-DIRECT GETTER METHODS --------------------------------------
-    @property
-    def R_D(self):
-        return self.calc_R_D
-    
-    @property
-    def R_L(self):
-        return self.calc_R_L
-    
-    @property
-    def R_M(self):
-        return self.calc_R_M
+
         
     # ----------------- CLASS METHODS -----------------------------------------
     
@@ -889,6 +891,64 @@ def calc_U_from_Re(d,Re,v=v_air):
     """
     return Re * v / d
 
+
+def read_wind_sections(fname,verbose=True):
+    """
+    Reads section definitions from .csv file `fname`
+    
+    Expected input file to have the following columns:
+        
+    Name | Type | Dim1 | Dim2 |
+    ---------------------------
+         |      |      |      |
+         
+    Usage of columns 'Dim1', 'Dim2' depends on 'Type', i.e. the type of wind 
+    section being defined:
+        
+    * `Type=Cylinder`:
+        
+        * `Dim1` defines outer diameter [m]
+        
+        * `Dim2` defines surface roughness [m]
+        
+    Other `Type` values not (yet) accepted.
+
+    ***
+    Returns:
+        
+    Dict of WindSection objects
+    """
+    
+    if verbose:
+        print("Reading wind section definitions from '%s'..." % fname)
+    
+    df = pd.read_csv(fname,index_col=0)
+    
+    ws_dict = {}
+    
+    for section_name, section_data in df.iterrows():
+        
+        section_type = section_data['Type']
+        
+        if section_type=='Circular':
+            
+            d = section_data['Dim1'] # Dim1 specifies diameter of cylinder
+            k = section_data['Dim2'] # Dim2 specifies surface roughness of cylinder
+            ws_obj = WindSection_Circular(name=section_name, d=d, k=k)
+            
+        
+        else:
+            print("Section '%s' is of unsupported 'Type': %s" 
+                  % (section_name, section_type))
+            break
+            
+        ws_dict[section_name] = ws_obj
+    
+    if verbose:
+        print("Number of wind sections defined: %d" % len(ws_dict))
+    
+    return ws_dict
+
 #%% ------------------ PRIVATE FUNCTIONS -------------------
 
 def _convert_to_cubic_splines(x:list,y:list):
@@ -959,7 +1019,7 @@ if __name__ == "__main__":
     
     plt.close('all')
     
-    test_routine = 3
+    test_routine = 2
 
     if test_routine == 1:
         
