@@ -62,6 +62,19 @@ def check_class(obj,expected_class):
         raise ValueError("Unexpected object provided!\n" + 
                          "provided:\t{0}\n".format(type(obj)) + 
                          "expected:\t{0}".format(expected_class))
+        
+def check_class_name(obj,expected_class_name:str):
+    """
+    Returns exception if supplied object is not of the expected class name
+    """
+    
+    class_name = obj.__class__.__name__
+    
+    if class_name != expected_class_name:
+        
+        raise ValueError("Unexpected object provided!\n" + 
+                         "provided:\t{0}\n".format(class_name) + 
+                         "expected:\t{0}".format(expected_class_name))
                          
 
 def check_float_or_callable(obj,var_name):
