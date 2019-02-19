@@ -62,12 +62,11 @@ def read_COO(fname):
     wb = xlrd.open_workbook(fname,on_demand=True)
     ws = wb.sheet_by_name('OPT')
     vertical_direction = ws.cell_value(7,3) # n.b zero-indexed
-    print(vertical_direction)
     
     if vertical_direction.upper() == 'Y':
         
         print("NODLE model is defined with 'Y' vertical\n" + 
-              "Input coordinates converted such that Y->Z, Z->(-Y)")
+              "Input coordinates will be converted such that Y->Z, Z->(-Y)")
         
         df['Z_temp'] = df['Y']
         df['Y'] = - df['Z']
