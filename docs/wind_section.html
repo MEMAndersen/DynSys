@@ -1060,7 +1060,7 @@ table {
       
   <ul>
     <li class="mono"><a href="#wind_section.calc_Re">calc_Re</a></li>
-    <li class="mono"><a href="#wind_section.test_calc_C_D">test_calc_C_D</a></li>
+    <li class="mono"><a href="#wind_section.calc_U_from_Re">calc_U_from_Re</a></li>
   </ul>
 
     </li>
@@ -1195,12 +1195,11 @@ table {
 <span class="sd">@author: RIHY</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">scipy</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">CubicSpline</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">check_class</span><span class="p">,</span> <span class="n">check_float_or_callable</span>
+<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">check_class</span><span class="p">,</span> <span class="n">check_float_or_callable</span><span class="p">,</span> <span class="n">func_or_float</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
 
 <span class="c1">#%%</span>
@@ -1318,7 +1317,7 @@ table {
 <span class="sd">        Calculates wind resistance for drag loading, given angle of attack</span>
 <span class="sd">        `alpha` and mean wind speed `U`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">calc_R_D_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1334,7 +1333,7 @@ table {
 <span class="sd">        Calculates wind resistance for lift loading, given angle of attack</span>
 <span class="sd">        `alpha` and mean wind speed `U`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">calc_R_L_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1350,7 +1349,7 @@ table {
 <span class="sd">        Calculates wind resistance for moment loading, given angle of attack</span>
 <span class="sd">        `alpha` and mean wind speed `U`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">calc_R_M_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -2019,36 +2018,44 @@ table {
     
     
     <span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">h</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
     <span class="k">def</span> <span class="nf">calc_R_D_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                     <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">h</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
     
     <span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
     <span class="k">def</span> <span class="nf">calc_R_L_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                     <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
         
     <span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
     <span class="k">def</span> <span class="nf">calc_R_M_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_M_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_M_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     
     
         
-<span class="c1">#%% ------------------ FUNCTIONS -------------------</span>
+<span class="c1">#%% ------------------ PUBLIC FUNCTIONS -------------------</span>
         
 <span class="k">def</span> <span class="nf">calc_Re</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_air</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -2061,16 +2068,18 @@ table {
     <span class="k">return</span> <span class="n">U</span><span class="o">*</span><span class="n">d</span><span class="o">/</span><span class="n">v</span>
 
 
-<span class="k">def</span> <span class="nf">_func_or_float</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">calc_U_from_Re</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">Re</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_air</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluates `f` at x. If `f` is float, value is returned</span>
+<span class="sd">    Calculates mean wind speed, given characteristic diameter &#39;d&#39; and Reynolds </span>
+<span class="sd">    number `Re`</span>
+<span class="sd">    </span>
+<span class="sd">    `v` can be used to specify kinematic viscocity. Default value relates </span>
+<span class="sd">    to air</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">f</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    
-    
+    <span class="k">return</span> <span class="n">Re</span> <span class="o">*</span> <span class="n">v</span> <span class="o">/</span> <span class="n">d</span>
+
+<span class="c1">#%% ------------------ PRIVATE FUNCTIONS -------------------</span>
+
 <span class="k">def</span> <span class="nf">_convert_to_cubic_splines</span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span><span class="n">y</span><span class="p">:</span><span class="nb">list</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts interpolated functions as described by `x`, `y` into a series of </span>
@@ -2132,80 +2141,23 @@ table {
                          <span class="s2">&quot;{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
 
 
-<span class="k">def</span> <span class="nf">test_calc_C_D</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Test routine to demonstrate accuracy of `calc_C_d()` method for circles, </span>
-<span class="sd">    by re-creating Fig 7.28, BS EN 1991-1-4</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="n">b</span><span class="o">=</span><span class="mf">0.1</span> <span class="c1">#arbitrary</span>
-    
-    <span class="c1"># List k/b, Re values per figure</span>
-    <span class="n">k_b_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-2</span><span class="p">,</span><span class="mf">1e-3</span><span class="p">,</span><span class="mf">1e-4</span><span class="p">,</span><span class="mf">1e-5</span><span class="p">,</span><span class="mf">1e-6</span><span class="p">])</span>
-    <span class="n">Re_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-    
-    <span class="c1"># Convert to inputs required</span>
-    <span class="n">k_vals</span> <span class="o">=</span>  <span class="n">k_b_vals</span> <span class="o">*</span> <span class="n">b</span>
-    <span class="n">U_vals</span> <span class="o">=</span> <span class="n">Re_vals</span> <span class="o">*</span> <span class="n">v_air</span> <span class="o">/</span> <span class="n">b</span>
-    
-    <span class="c1"># Evaluate c_f0 for each k,U pair</span>
-    <span class="n">outer_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vals</span><span class="p">:</span>
-        
-        <span class="n">inner_list</span> <span class="o">=</span> <span class="p">[]</span>
-        
-        <span class="k">for</span> <span class="n">U</span> <span class="ow">in</span> <span class="n">U_vals</span><span class="p">:</span>
-            
-            <span class="n">obj</span> <span class="o">=</span> <span class="n">WindSection_Circular</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
-            <span class="n">c_f0</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
-            <span class="n">inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_f0</span><span class="p">)</span>
-            
-        <span class="n">outer_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_list</span><span class="p">)</span>
-        
-    <span class="n">c_f0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outer_list</span><span class="p">)</span>
-    
-    <span class="c1"># Re-create Fig. 7.28 to test calc_C_d() method</span>
-    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-    
-    <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Re_vals</span><span class="p">,</span><span class="n">c_f0</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">h</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">h</span><span class="p">,[</span><span class="s2">&quot;</span><span class="si">%.0e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k_b_vals</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;$k/b$&quot;</span><span class="p">)</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.4</span><span class="p">])</span> <span class="c1"># per Fig 7.28</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">Re_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">Re_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="c1"># per Fig 7.28</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$Re$&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$c_{f0}$&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Drag coefficients for circles</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                 <span class="s2">&quot;according to Fig 7.28, BS EN 1991-1-4:2005&quot;</span><span class="p">)</span>
-
-
-
+<span class="c1">#%%</span>
 <span class="c1"># ---------------- TEST ROUTINES ----------------------------------------------</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
     
-    <span class="n">test_routine</span> <span class="o">=</span> <span class="mi">4</span>
-    
+    <span class="n">test_routine</span> <span class="o">=</span> <span class="mi">3</span>
+
     <span class="k">if</span> <span class="n">test_routine</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Test routine to check drag factor calculation for circles&quot;</span><span class="p">)</span>
-        <span class="n">test_calc_C_D</span><span class="p">()</span>
-        
-    <span class="k">elif</span> <span class="n">test_routine</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
         
         <span class="n">d</span> <span class="o">=</span> <span class="mf">1.5</span>
         <span class="n">circle</span> <span class="o">=</span> <span class="n">WindSection_Circular</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
         <span class="n">circle</span><span class="o">.</span><span class="n">plot_resistances</span><span class="p">(</span><span class="n">U</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
         <span class="n">circle</span><span class="o">.</span><span class="n">plot_denHertog</span><span class="p">()</span>
         
-    <span class="k">elif</span> <span class="n">test_routine</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">test_routine</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
         
         <span class="c1"># Define angles of attack to define resistances at</span>
         <span class="n">alpha</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
@@ -2221,7 +2173,7 @@ table {
         
         <span class="n">section</span><span class="o">.</span><span class="n">plot_denHertog</span><span class="p">()</span>
         
-    <span class="k">elif</span> <span class="n">test_routine</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">test_routine</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
         
         <span class="c1"># Define angles of attack to define resistances at</span>
         <span class="n">alpha</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
@@ -2236,7 +2188,7 @@ table {
         <span class="n">coeffs_section</span><span class="o">.</span><span class="n">plot_coefficients</span><span class="p">()</span>
         
         <span class="c1"># Define multiple similar sections</span>
-        <span class="n">nSections</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">nSections</span> <span class="o">=</span> <span class="mi">1000</span> <span class="c1"># to test how fast implementation is!</span>
         <span class="n">b_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">5.0</span><span class="p">,</span><span class="mf">20.0</span><span class="p">,</span><span class="n">nSections</span><span class="p">)</span>
         <span class="n">h_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="n">nSections</span><span class="p">)</span>
         
@@ -2248,19 +2200,16 @@ table {
         <span class="n">angles</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span><span class="o">+</span><span class="n">pi</span><span class="p">,</span><span class="mi">61</span><span class="p">)</span>
         <span class="n">RL_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">R_L</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">wind_sections</span><span class="p">])</span>
         
-        <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span><span class="n">RL_vals</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">b_vals</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="n">wind_sections</span> <span class="o">=</span> <span class="n">wind_sections</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="c1"># keep front of list only</span>
         
         <span class="c1"># Show how coeffs_section is used by all wind_sections</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;`wind_sections`:</span><span class="se">\n</span><span class="s2">{0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wind_sections</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;`coeffs_section`:</span><span class="se">\n</span><span class="s2">{0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">coeffs_section</span><span class="p">))</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;`wind_sections.wind_section_coeffs`:</span><span class="se">\n</span><span class="s2">{0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">wind_section_coeffs</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">wind_sections</span><span class="p">]))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***NOTE: Same object is being used by all sections***&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Note: same object is being used by all sections&quot;</span><span class="p">)</span>
         
         <span class="c1"># Show how all the usual methods still work!</span>
-        <span class="n">ws</span> <span class="o">=</span> <span class="n">wind_sections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="p">[</span><span class="n">ws</span><span class="o">.</span><span class="n">plot_resistances</span><span class="p">()</span> <span class="k">for</span> <span class="n">ws</span> <span class="ow">in</span> <span class="n">wind_sections</span><span class="p">]</span>
         
     <span class="k">else</span><span class="p">:</span>
@@ -2328,68 +2277,29 @@ to air</p></div>
   
       
   <div class="item">
-    <div class="name def" id="wind_section.test_calc_C_D">
-    <p>def <span class="ident">test_calc_C_D</span>(</p><p>)</p>
+    <div class="name def" id="wind_section.calc_U_from_Re">
+    <p>def <span class="ident">calc_U_from_Re</span>(</p><p>d, Re, v=1.5e-05)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Test routine to demonstrate accuracy of <code>calc_C_d()</code> method for circles, 
-by re-creating Fig 7.28, BS EN 1991-1-4</p></div>
+    <div class="desc"><p>Calculates mean wind speed, given characteristic diameter 'd' and Reynolds 
+number <code>Re</code></p>
+<p><code>v</code> can be used to specify kinematic viscocity. Default value relates 
+to air</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.test_calc_C_D', this);">Show source &equiv;</a></p>
-  <div id="source-wind_section.test_calc_C_D" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">test_calc_C_D</span><span class="p">():</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.calc_U_from_Re', this);">Show source &equiv;</a></p>
+  <div id="source-wind_section.calc_U_from_Re" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_U_from_Re</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">Re</span><span class="p">,</span><span class="n">v</span><span class="o">=</span><span class="n">v_air</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Test routine to demonstrate accuracy of `calc_C_d()` method for circles, </span>
-<span class="sd">    by re-creating Fig 7.28, BS EN 1991-1-4</span>
+<span class="sd">    Calculates mean wind speed, given characteristic diameter &#39;d&#39; and Reynolds </span>
+<span class="sd">    number `Re`</span>
+<span class="sd">    </span>
+<span class="sd">    `v` can be used to specify kinematic viscocity. Default value relates </span>
+<span class="sd">    to air</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="n">b</span><span class="o">=</span><span class="mf">0.1</span> <span class="c1">#arbitrary</span>
-    
-    <span class="c1"># List k/b, Re values per figure</span>
-    <span class="n">k_b_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-2</span><span class="p">,</span><span class="mf">1e-3</span><span class="p">,</span><span class="mf">1e-4</span><span class="p">,</span><span class="mf">1e-5</span><span class="p">,</span><span class="mf">1e-6</span><span class="p">])</span>
-    <span class="n">Re_vals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-    
-    <span class="c1"># Convert to inputs required</span>
-    <span class="n">k_vals</span> <span class="o">=</span>  <span class="n">k_b_vals</span> <span class="o">*</span> <span class="n">b</span>
-    <span class="n">U_vals</span> <span class="o">=</span> <span class="n">Re_vals</span> <span class="o">*</span> <span class="n">v_air</span> <span class="o">/</span> <span class="n">b</span>
-    
-    <span class="c1"># Evaluate c_f0 for each k,U pair</span>
-    <span class="n">outer_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vals</span><span class="p">:</span>
-        
-        <span class="n">inner_list</span> <span class="o">=</span> <span class="p">[]</span>
-        
-        <span class="k">for</span> <span class="n">U</span> <span class="ow">in</span> <span class="n">U_vals</span><span class="p">:</span>
-            
-            <span class="n">obj</span> <span class="o">=</span> <span class="n">WindSection_Circular</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
-            <span class="n">c_f0</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
-            <span class="n">inner_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_f0</span><span class="p">)</span>
-            
-        <span class="n">outer_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inner_list</span><span class="p">)</span>
-        
-    <span class="n">c_f0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outer_list</span><span class="p">)</span>
-    
-    <span class="c1"># Re-create Fig. 7.28 to test calc_C_d() method</span>
-    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-    
-    <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Re_vals</span><span class="p">,</span><span class="n">c_f0</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">h</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">h</span><span class="p">,[</span><span class="s2">&quot;</span><span class="si">%.0e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k_b_vals</span><span class="p">],</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;$k/b$&quot;</span><span class="p">)</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.4</span><span class="p">])</span> <span class="c1"># per Fig 7.28</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="n">Re_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">Re_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span> <span class="c1"># per Fig 7.28</span>
-    
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$Re$&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$c_{f0}$&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Drag coefficients for circles</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                 <span class="s2">&quot;according to Fig 7.28, BS EN 1991-1-4:2005&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Re</span> <span class="o">*</span> <span class="n">v</span> <span class="o">/</span> <span class="n">d</span>
 </pre></div>
 
   </div>
@@ -3682,7 +3592,7 @@ attack, at angles <code>alpha</code></p></div>
 <span class="sd">    Calculates wind resistance for drag loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -3736,7 +3646,7 @@ at the specified angle <code>alpha</code></p></div>
 <span class="sd">    Calculates wind resistance for lift loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -3790,7 +3700,7 @@ at the specified angle <code>alpha</code></p></div>
 <span class="sd">    Calculates wind resistance for moment loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -4473,7 +4383,7 @@ in <code>__init__()</code> doctring</p></div>
 <span class="sd">    Calculates wind resistance for drag loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -4527,7 +4437,7 @@ at the specified angle <code>alpha</code></p></div>
 <span class="sd">    Calculates wind resistance for lift loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -4581,7 +4491,7 @@ at the specified angle <code>alpha</code></p></div>
 <span class="sd">    Calculates wind resistance for moment loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -5053,7 +4963,7 @@ instantiated. Use derived classes instead.</em></p></div>
 <span class="sd">        Calculates wind resistance for drag loading, given angle of attack</span>
 <span class="sd">        `alpha` and mean wind speed `U`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">calc_R_D_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -5069,7 +4979,7 @@ instantiated. Use derived classes instead.</em></p></div>
 <span class="sd">        Calculates wind resistance for lift loading, given angle of attack</span>
 <span class="sd">        `alpha` and mean wind speed `U`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">calc_R_L_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -5085,7 +4995,7 @@ instantiated. Use derived classes instead.</em></p></div>
 <span class="sd">        Calculates wind resistance for moment loading, given angle of attack</span>
 <span class="sd">        `alpha` and mean wind speed `U`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
         
         
     <span class="k">def</span> <span class="nf">calc_R_M_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -5407,7 +5317,7 @@ This is important to ensure accurate calculation of deriviatives.</p>
 <span class="sd">    Calculates wind resistance for drag loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_D</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -5461,7 +5371,7 @@ at the specified angle <code>alpha</code></p></div>
 <span class="sd">    Calculates wind resistance for lift loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_L</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -5515,7 +5425,7 @@ at the specified angle <code>alpha</code></p></div>
 <span class="sd">    Calculates wind resistance for moment loading, given angle of attack</span>
 <span class="sd">    `alpha` and mean wind speed `U`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_or_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_R_M</span><span class="p">,</span><span class="n">alpha</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -5930,31 +5840,39 @@ moment) force coefficients vary with angle of attack</p></div>
     
     
     <span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">h</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
     <span class="k">def</span> <span class="nf">calc_R_D_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                     <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">h</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
     
     <span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
     <span class="k">def</span> <span class="nf">calc_R_L_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                     <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
         
     <span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
     <span class="k">def</span> <span class="nf">calc_R_M_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_M_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                        <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+        <span class="k">return</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_M_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -6069,7 +5987,9 @@ moment) force coefficients vary with angle of attack</p>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Similar.calc_R_D', this);">Show source &equiv;</a></p>
   <div id="source-wind_section.WindSection_Similar.calc_R_D" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+    <span class="k">return</span> <span class="n">h</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -6092,9 +6012,9 @@ at the specified angle <code>alpha</code></p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Similar.calc_R_D_derivative', this);">Show source &equiv;</a></p>
   <div id="source-wind_section.WindSection_Similar.calc_R_D_derivative" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_D_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                 <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+    <span class="k">return</span> <span class="n">h</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -6117,7 +6037,9 @@ at the specified angle <code>alpha</code></p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Similar.calc_R_L', this);">Show source &equiv;</a></p>
   <div id="source-wind_section.WindSection_Similar.calc_R_L" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+    <span class="k">return</span> <span class="n">b</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_L</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -6140,9 +6062,9 @@ at the specified angle <code>alpha</code></p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Similar.calc_R_L_derivative', this);">Show source &equiv;</a></p>
   <div id="source-wind_section.WindSection_Similar.calc_R_L_derivative" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_L_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                 <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+    <span class="k">return</span> <span class="n">b</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_D_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -6165,7 +6087,9 @@ at the specified angle <code>alpha</code></p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Similar.calc_R_M', this);">Show source &equiv;</a></p>
   <div id="source-wind_section.WindSection_Similar.calc_R_M" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_M</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_M</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -6188,9 +6112,9 @@ at the specified angle <code>alpha</code></p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-wind_section.WindSection_Similar.calc_R_M_derivative', this);">Show source &equiv;</a></p>
   <div id="source-wind_section.WindSection_Similar.calc_R_M_derivative" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_R_M_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span><span class="o">.</span><span class="n">calc_C_M_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
-                                                                    <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
-                                                                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wind_section_coeffs</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ws</span><span class="o">.</span><span class="n">calc_C_M_derivative</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>

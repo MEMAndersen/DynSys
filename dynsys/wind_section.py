@@ -6,12 +6,11 @@ Classes used to define wind cross-sections
 @author: RIHY
 """
 
-import inspect
 import numpy
 import scipy
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
-from common import check_class, check_float_or_callable
+from common import check_class, check_float_or_callable, func_or_float
 from numpy import pi
 
 #%%
@@ -129,7 +128,7 @@ class WindSection_Resistances():
         Calculates wind resistance for drag loading, given angle of attack
         `alpha` and mean wind speed `U`
         """
-        return _func_or_float(self._R_D,alpha)
+        return func_or_float(self._R_D,alpha)
         
         
     def calc_R_D_derivative(self,alpha,order=1,**kwargs):
@@ -145,7 +144,7 @@ class WindSection_Resistances():
         Calculates wind resistance for lift loading, given angle of attack
         `alpha` and mean wind speed `U`
         """
-        return _func_or_float(self._R_L,alpha)
+        return func_or_float(self._R_L,alpha)
         
         
     def calc_R_L_derivative(self,alpha,order=1,**kwargs):
@@ -161,7 +160,7 @@ class WindSection_Resistances():
         Calculates wind resistance for moment loading, given angle of attack
         `alpha` and mean wind speed `U`
         """
-        return _func_or_float(self._R_M,alpha)
+        return func_or_float(self._R_M,alpha)
         
         
     def calc_R_M_derivative(self,alpha,order=1,**kwargs):
@@ -830,36 +829,44 @@ class WindSection_Similar(WindSection_Resistances):
     
     
     def calc_R_D(self,alpha,**kwargs):
-        return self.h * self.wind_section_coeffs.calc_C_D(alpha,**kwargs)
+        h = self.h
+        ws = self.wind_section_coeffs
+        return h * ws.calc_C_D(alpha,**kwargs)
     
     
     def calc_R_D_derivative(self,alpha,order=1,**kwargs):
-        return self.h * self.wind_section_coeffs.calc_C_D_derivative(alpha,
-                                                                     order=order,
-                                                                     **kwargs)
+        h = self.h
+        ws = self.wind_section_coeffs
+        return h * ws.calc_C_D_derivative(alpha,order=order,**kwargs)
+    
     
     def calc_R_L(self,alpha,**kwargs):
-        return self.b * self.wind_section_coeffs.calc_C_L(alpha,**kwargs)
+        b = self.b
+        ws = self.wind_section_coeffs
+        return b * ws.calc_C_L(alpha,**kwargs)
     
     
     def calc_R_L_derivative(self,alpha,order=1,**kwargs):
-        return self.b * self.wind_section_coeffs.calc_C_D_derivative(alpha,
-                                                                     order=order,
-                                                                     **kwargs)
+        b = self.b
+        ws = self.wind_section_coeffs
+        return b * ws.calc_C_D_derivative(alpha,order=order,**kwargs)
+    
         
     def calc_R_M(self,alpha,**kwargs):
-        return self.b**2 * self.wind_section_coeffs.calc_C_M(alpha,**kwargs)
+        b = self.b
+        ws = self.wind_section_coeffs
+        return b**2 * ws.calc_C_M(alpha,**kwargs)
     
     
     def calc_R_M_derivative(self,alpha,order=1,**kwargs):
-        return self.b**2 * self.wind_section_coeffs.calc_C_M_derivative(alpha,
-                                                                        order=order,
-                                                                        **kwargs)
+        b = self.b
+        ws = self.wind_section_coeffs
+        return b**2 * ws.calc_C_M_derivative(alpha,order=order,**kwargs)
 
     
     
         
-#%% ------------------ FUNCTIONS -------------------
+#%% ------------------ PUBLIC FUNCTIONS -------------------
         
 def calc_Re(U,d,v=v_air):
     """
@@ -872,16 +879,18 @@ def calc_Re(U,d,v=v_air):
     return U*d/v
 
 
-def _func_or_float(f,x):
+def calc_U_from_Re(d,Re,v=v_air):
     """
-    Evaluates `f` at x. If `f` is float, value is returned
+    Calculates mean wind speed, given characteristic diameter 'd' and Reynolds 
+    number `Re`
+    
+    `v` can be used to specify kinematic viscocity. Default value relates 
+    to air
     """
-    if isinstance(f, float):
-        return f
-    else:
-        return f(x)
-    
-    
+    return Re * v / d
+
+#%% ------------------ PRIVATE FUNCTIONS -------------------
+
 def _convert_to_cubic_splines(x:list,y:list):
     """
     Converts interpolated functions as described by `x`, `y` into a series of 
@@ -943,80 +952,23 @@ def _derivative_func(val,alpha,order=1):
                          "{0}".format(type(val)))
 
 
-def test_calc_C_D():
-    """
-    Test routine to demonstrate accuracy of `calc_C_d()` method for circles, 
-    by re-creating Fig 7.28, BS EN 1991-1-4
-    """
-    
-    b=0.1 #arbitrary
-    
-    # List k/b, Re values per figure
-    k_b_vals = numpy.array([1e-2,1e-3,1e-4,1e-5,1e-6])
-    Re_vals = numpy.logspace(5,7,num=100)
-    
-    # Convert to inputs required
-    k_vals =  k_b_vals * b
-    U_vals = Re_vals * v_air / b
-    
-    # Evaluate c_f0 for each k,U pair
-    outer_list = []
-    
-    for k in k_vals:
-        
-        inner_list = []
-        
-        for U in U_vals:
-            
-            obj = WindSection_Circular(d=b,k=k)
-            c_f0 = obj.calc_C_D(U)
-            inner_list.append(c_f0)
-            
-        outer_list.append(inner_list)
-        
-    c_f0 = numpy.array(outer_list)
-    
-    # Re-create Fig. 7.28 to test calc_C_d() method
-    fig, ax = plt.subplots()
-    
-    h = ax.plot(Re_vals,c_f0.T)
-    h[-1].set_linestyle('--')
-    
-    ax.set_xscale('log')
-    
-    ax.legend(h,["%.0e" % x for x in k_b_vals],title="$k/b$")
-    
-    ax.set_ylim([0,1.4]) # per Fig 7.28
-    ax.set_xlim([Re_vals[0],Re_vals[-1]]) # per Fig 7.28
-    
-    ax.set_xlabel("$Re$")
-    ax.set_ylabel("$c_{f0}$")
-    ax.set_title("Drag coefficients for circles\n" + 
-                 "according to Fig 7.28, BS EN 1991-1-4:2005")
-
-
-
+#%%
 # ---------------- TEST ROUTINES ----------------------------------------------
 
 if __name__ == "__main__":
     
     plt.close('all')
     
-    test_routine = 4
-    
+    test_routine = 3
+
     if test_routine == 1:
-        
-        print("Test routine to check drag factor calculation for circles")
-        test_calc_C_D()
-        
-    elif test_routine == 2:
         
         d = 1.5
         circle = WindSection_Circular(d=d,k=1e-4)
         circle.plot_resistances(U=10.0)
         circle.plot_denHertog()
         
-    elif test_routine == 3:
+    elif test_routine == 2:
         
         # Define angles of attack to define resistances at
         alpha = numpy.linspace(0,2*pi,100)
@@ -1032,7 +984,7 @@ if __name__ == "__main__":
         
         section.plot_denHertog()
         
-    elif test_routine == 4:
+    elif test_routine == 3:
         
         # Define angles of attack to define resistances at
         alpha = numpy.linspace(0,2*pi,100)
@@ -1066,7 +1018,7 @@ if __name__ == "__main__":
         print("`coeffs_section`:\n{0}\n".format(coeffs_section))
         print("`wind_sections.wind_section_coeffs`:\n{0}\n".format(
                 [x.wind_section_coeffs for x in wind_sections]))
-        print("***NOTE: Same object is being used by all sections***")
+        print("Note: same object is being used by all sections")
         
         # Show how all the usual methods still work!
         [ws.plot_resistances() for ws in wind_sections]

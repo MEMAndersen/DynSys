@@ -85,6 +85,18 @@ def check_is_square(value):
     if value.shape[0] != value.shape[1]:
         raise ValueError("Non-square matrix provided!")
 
+
+
+def func_or_float(f,x):
+    """
+    Evaluates `f` at x. If `f` is float, value is returned
+    """
+    if isinstance(f, float):
+        return f
+    else:
+        return f(x)
+
+
 # ----------- DEPRECATION -----------------
 
 def deprecation_warning(old_method:str,new_method):
