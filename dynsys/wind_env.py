@@ -16,6 +16,7 @@ from scipy import spatial
 from scipy import interpolate
 from scipy import optimize
 
+from common import rotate_about_axis
 
 #%%
 
@@ -46,6 +47,7 @@ class WindEnv_equilibrium(WindEnv):
                  V_ref:float,
                  z0:float,
                  phi:float,
+                 direction:float,
                  
                  d=None,
                  z_ref:float=10.0,
@@ -53,9 +55,7 @@ class WindEnv_equilibrium(WindEnv):
                  pointset_obj=None,
                  points_arr=None,
                  z_min:float=0.1, z_max:float=500, nz=100,
-                 
-                 mean_wind_dir=numpy.array([1,0,0]),
-                 
+                                  
                  A=-1.0, B=6.0,
                  u_star=None,
                  
@@ -72,6 +72,9 @@ class WindEnv_equilibrium(WindEnv):
           'Country' terrain
           
         * `phi`, site latitude (degrees)
+        
+        * `direction`, bearing angle in range [0,360] degrees, defines 
+          the direction that wind is coming _from_.
         
         ***
         Optional:
@@ -199,10 +202,8 @@ class WindEnv_equilibrium(WindEnv):
         Mean wind speed (m/s) at points
         """
         
-        self.mean_vector = None
-        """
-        Mean wind velocity vector at each point: shape (Np,3)
-        """
+        self.direction = direction
+        
         
         self.i_u = None
         """
@@ -333,10 +334,22 @@ class WindEnv_equilibrium(WindEnv):
         
         # Evaluate wind params at point set currently defined
         if calc_wind_params:
-            self.calculate_wind_params(mean_wind_dir)
+            self.calculate_wind_params()
+        
+    @property
+    def direction(self):
+        """
+        Mean wind direction, expressed as angle in degrees clockwise from North
+        """
+        return self._direction
+    
+    @direction.setter
+    def direction(self,value):
+        value = numpy.mod(value,360.0) # force to be in range [0,360]
+        self._direction  = value
         
         
-    def calculate_wind_params(self,mean_wind_dir):
+    def calculate_wind_params(self):
         """
         Evaluate wind parameters at current point set
         
@@ -345,7 +358,7 @@ class WindEnv_equilibrium(WindEnv):
           
         """
         self.calc_mean_speed()
-        self.calc_mean_vector(mean_wind_dir)
+        self.calc_mean_vector()
         self.calc_iu()
         self.calc_RMS_turbulence()
         self.calc_turbulence_length_scales()
@@ -492,7 +505,7 @@ class WindEnv_equilibrium(WindEnv):
         
             
         
-    def calc_mean_speed(self,z=None):
+    def calc_mean_speed(self,z=None,**kwargs):
         """
         Calculate mean wind speed at height `z`, given wind environment 
         parameters already defined
@@ -510,18 +523,29 @@ class WindEnv_equilibrium(WindEnv):
         return U_z
     
     
-    
-    def calc_mean_vector(self,mean_wind_dir):
+    def calc_mean_direction(self,**kwargs):
         """
-        Calculates mean wind vector at each point        
+        Calculates mean wind direction as vector    
         """
         
-        U = self.U
-        mean_vector = numpy.array([x * mean_wind_dir for x in U])
-        self.mean_vector = mean_vector
-        return mean_vector
+        angle_rad = numpy.deg2rad(self.direction)
+        wind_direction = numpy.array([0.0,-1.0,0.0]) # wind from North
+        axis = numpy.array([0.0,0.0,-1.0]) # downward vertical direction
+        
+        # Rotate clockwise by angle
+        wind_direction = rotate_about_axis(wind_direction,axis,angle_rad)
+        
+        return wind_direction
         
     
+    def calc_mean_vector(self,**kwargs):
+        """
+        Calculates mean wind vector, in a generalised sense where mean speed 
+        and direction may vary with spatial coordinates
+        """
+        speed_vals = numpy.asmatrix(self.calc_mean_speed(**kwargs))
+        direction_vectors = numpy.asmatrix(self.calc_mean_direction(**kwargs))
+        return speed_vals.T * direction_vectors # matrix of shape [Npoints,3]
     
     
     def calc_iu(self,apply_cook_correction=True):
