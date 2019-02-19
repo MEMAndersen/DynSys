@@ -466,6 +466,38 @@ class Mesh:
         return len(self.element_objs)>=1
     
     
+    def get_object(self,obj_type:str,obj_name,raise_exception=True):
+        """
+        Returns object of name and type
+        """
+
+        obj_type = obj_type.lower()
+        
+        # Get object dict to search
+        if obj_type == 'element':
+            obj_dict = self.element_objs
+            
+        elif obj_type == 'node':
+            obj_dict = self.node_objs
+            
+        else:
+            raise ValueError("Unexpected object type requested")
+        
+        # Search for requested object
+        try:
+            obj = obj_dict[obj_name]
+        
+        except KeyError:
+            
+            if raise_exception:
+                raise KeyError("Could not find %s '%s' within mesh '%s'"
+                               % (obj_type, obj_name, self.name))
+                
+            obj = None
+            
+        return obj
+        
+    
     def print_wind_sections(self):
         """
         Prints details of wind section objects associated with all elements 

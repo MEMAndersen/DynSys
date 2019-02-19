@@ -14,7 +14,7 @@ from common import read_block
 
 # -------------- PUBLIC FUCTIONS ------------------
 
-def read_mesh(fname,name=None):
+def read_mesh(fname,name=None,verbose=True):
     """
     Defines mesh based on data provided in COO and MEM tabs
     """
@@ -26,14 +26,14 @@ def read_mesh(fname,name=None):
     mesh_obj = Mesh(name=name)
     
     # Read in node data from Excel file
-    COO_df = read_COO(fname)
+    COO_df = read_COO(fname,verbose=verbose)
     
     # Define nodes and append to mesh
     mesh_obj.define_nodes(df=COO_df)
     del COO_df
     
     # Read in member data from Excel file
-    MEM_df = read_MEM(fname)
+    MEM_df = read_MEM(fname,verbose=verbose)
     
     # Define elements and append to mesh   
     mesh_obj.define_line_elements(df=MEM_df)
@@ -43,10 +43,13 @@ def read_mesh(fname,name=None):
     
     
 
-def read_COO(fname):
+def read_COO(fname,verbose=True):
     """
     Reads node data from COO tab and returns as Pandas dataframe
     """
+    
+    if verbose:
+        print("Reading node coordinates from COO tab of '%s'..." % fname)
     
     _check_is_xlsx(fname)
     
@@ -65,8 +68,8 @@ def read_COO(fname):
     
     if vertical_direction.upper() == 'Y':
         
-        print("NODLE model is defined with 'Y' vertical\n" + 
-              "Input coordinates will be converted such that Y->Z, Z->(-Y)")
+        print("\tNODLE model is defined with 'Y' vertical\n" + 
+              "\tInput coordinates will be converted such that Y->Z, Z->(-Y)")
         
         df['Z_temp'] = df['Y']
         df['Y'] = - df['Z']
@@ -76,10 +79,13 @@ def read_COO(fname):
     return df
 
 
-def read_MEM(fname):
+def read_MEM(fname,verbose=True):
     """
     Reads member data from MEM tab and returns as Pandas dataframe
     """ 
+    
+    if verbose:
+        print("Reading element topology from MEM tab of '%s'..." % fname)
     
     _check_is_xlsx(fname)
     

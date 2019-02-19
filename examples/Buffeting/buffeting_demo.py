@@ -30,10 +30,10 @@ sys_obj = modalsys.ModalSys(name='Emley Moor Tower',
 
 # Define wind environments
 wind_obj = wind_env.WindEnv_equilibrium(V_ref=25.0,
-                                    z_ref=10.0,
-                                    phi=53.0,
-                                    direction=30.0,
-                                    z0=0.03)
+                                        z_ref=10.0,
+                                        phi=53.0,
+                                        direction=30.0,
+                                        z0=0.03)
 
 # Initialise buffeting analysis
 gb_analysis = wind_response.Buffeting(sys_obj,wind_obj)

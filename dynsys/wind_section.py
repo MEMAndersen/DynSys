@@ -922,7 +922,8 @@ def read_wind_sections(fname,verbose=True):
     """
     
     if verbose:
-        print("Reading wind section definitions from '%s'..." % fname)
+        print("Reading wind section definitions from file...\n" + 
+              "\tDefinitions file:\t'%s'" % fname)
     
     df = pd.read_csv(fname,index_col=0)
     
@@ -947,7 +948,7 @@ def read_wind_sections(fname,verbose=True):
         ws_dict[section_name] = ws_obj
     
     if verbose:
-        print("Number of wind sections defined: %d" % len(ws_dict))
+        print("\tNo sections defined:\t%d" % len(ws_dict))
     
     return ws_dict
 
@@ -963,8 +964,9 @@ def assign_wind_sections(fname:str, mesh_obj:object, ws_dict:dict,
     check_class_name(mesh_obj,'Mesh')
     
     if verbose:
-        print("Assigning wind sections to elements defined within mesh '%s'..." 
-              % mesh_obj.name)
+        print("Assigning wind sections to mesh...\n" + 
+              "\tMesh:\t\t\t'%s'\n" % mesh_obj.name + 
+              "\tDefinitions file:\t'%s'" % fname)
     
     # Read data from .csv file
     df = pd.read_csv(fname,index_col=0)
@@ -972,7 +974,7 @@ def assign_wind_sections(fname:str, mesh_obj:object, ws_dict:dict,
     for element_name, row in df.iterrows():
         
         # Get element from mesh
-        element_obj = mesh_obj.element_objs[element_name]
+        element_obj = mesh_obj.get_object('Element',element_name)
         
         # Get names of wind sections
         ws_name_end1 = row['Section 1']
@@ -980,10 +982,22 @@ def assign_wind_sections(fname:str, mesh_obj:object, ws_dict:dict,
         
         # Get wind section objects from provided dict
         ws_list = []
-        ws_list.append(ws_dict[ws_name_end1])
         
+        # Define function for handling key errors in a nice way
+        def get_wind_section(name):
+            try:
+                obj = ws_dict[name]
+            except KeyError as e:
+                raise KeyError("Wind section '%s' has not been defined" % e)
+                
+            return obj
+                
+        # Append wind section for end 1 / uniform wind section for element
+        ws_list.append(get_wind_section(ws_name_end1))
+        
+        # Append wind section for end 2, if defined
         if not numpy.isnan(ws_name_end2):
-            ws_list.append(ws_dict[ws_name_end2])
+            ws_list.append(get_wind_section(ws_name_end2))
         
         # Associate wind sections with element object
         element_obj.define_wind_sections(ws_list)
