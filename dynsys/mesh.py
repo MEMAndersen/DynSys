@@ -648,10 +648,10 @@ class LineElement(Element):
         to define wind section at each end of the element
         """
         # Duplicate WindSection object to define uniform cross-secton
-        if not isinstance(obj_list,list):
+        if not isinstance(obj_list,list) or len(obj_list)==1:
             obj = obj_list
             obj_list = [obj,obj]
-            
+                        
         self._wind_section_end1 = obj_list[0]
         self._wind_section_end2 = obj_list[1]
             
