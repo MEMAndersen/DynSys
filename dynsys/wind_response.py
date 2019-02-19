@@ -30,6 +30,7 @@ class Buffeting():
         * `wind_env`, instance of `WindEnv` class (or derived classes)
         """
         
+        print("Initialising buffeting analysis...")
         print("**** UNDER DEVELOPMENT ****")
         
         self.sys = sys
@@ -76,7 +77,8 @@ class Buffeting():
         Produces plots required to document buffeting analysis
         """
         
-        if verbose: print("Producing summary plots to document analysis...")
+        if verbose:
+            print("Producing summary plots from buffeting analysis...")
         
         # Define default plot settings
         settings = {}
@@ -99,7 +101,8 @@ class Buffeting():
         """
         Runs analysis
         """
-        pass
+        print("Running buffeting analysis...")
+        print("**** UNDER DEVELOPMENT ****")
 
 #%%
         

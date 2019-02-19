@@ -11,6 +11,8 @@ import scipy
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from common import check_class, check_float_or_callable, func_or_float
+from common import check_class_name
+
 from numpy import pi
 
 import pandas as pd
@@ -948,6 +950,44 @@ def read_wind_sections(fname,verbose=True):
         print("Number of wind sections defined: %d" % len(ws_dict))
     
     return ws_dict
+
+
+def assign_wind_sections(fname:str, mesh_obj:object, ws_dict:dict, 
+                         verbose=True):
+    """
+    Assign wind sections, as supplied via `ws_dict` argument, to line elements 
+    with mesh `mesh_obj`, using assignment data as supplied via `fname` .csv 
+    file
+    """
+    
+    check_class_name(mesh_obj,'Mesh')
+    
+    if verbose:
+        print("Assigning wind sections to elements defined within mesh '%s'..." 
+              % mesh_obj.name)
+    
+    # Read data from .csv file
+    df = pd.read_csv(fname,index_col=0)
+    
+    for element_name, row in df.iterrows():
+        
+        # Get element from mesh
+        element_obj = mesh_obj.element_objs[element_name]
+        
+        # Get names of wind sections
+        ws_name_end1 = row['Section 1']
+        ws_name_end2 = row['Section 2']
+        
+        # Get wind section objects from provided dict
+        ws_list = []
+        ws_list.append(ws_dict[ws_name_end1])
+        
+        if not numpy.isnan(ws_name_end2):
+            ws_list.append(ws_dict[ws_name_end2])
+        
+        # Associate wind sections with element object
+        element_obj.define_wind_sections(ws_list)
+        
 
 #%% ------------------ PRIVATE FUNCTIONS -------------------
 
