@@ -11,6 +11,7 @@ from itertools import count
 from inspect import getmro
 from numpy.linalg import norm
 from common import check_class, set_equal_aspect_3d, rotate_about_axis
+from wind_section import WindSection
 
 vertical_direction = npy.array([0.0,0.0,1.0])
 default_y_direction = npy.array([0.0,1.0,0.0])
@@ -626,6 +627,24 @@ class LineElement(Element):
         """
         
         super().__init__(parent_mesh, connected_nodes,**kwargs)
+        
+    
+    @property
+    def wind_section(self):
+        """
+        Instance of `WindSection` class, defining aerodynamic properties 
+        """
+        return self._wind_section
+    
+    @wind_section.setter
+    def wind_section(self,obj):
+        
+        # Check passed object is valid
+        if not isinstance(obj,WindSection):
+            raise ValueError("Object must be instance of " + 
+                             "`WindSection` class, or a derived class")
+            
+        self._wind_section = obj
             
 
     def get_axes(self,verbose=False):
@@ -684,6 +703,7 @@ class LineElement(Element):
         """
         r1, r2 = self.get_end_positions()
         return 0.5*(r1+r2)
+
     
     
     def define_gauss_points(self,N_gp:int=3,verbose=False):
@@ -994,6 +1014,7 @@ class MeshResults():
         if verbose:
             print("New instance of '%s' created" % self.__class__.__name__)
             
+            
     def __repr__(self):
         
         print_str = ""
@@ -1002,6 +1023,7 @@ class MeshResults():
         print_str += "Shape of values array:\n{0}".format(self.values.shape)
         print_str += "\n"
         return print_str
+    
         
     @property
     def values(self):
@@ -1028,6 +1050,7 @@ class MeshResults():
             print("Appending new results to location {0}".format(self.name))
             
         self._values = npy.vstack((self.values, new_results))
+        
         
     def clear(self):
         """
