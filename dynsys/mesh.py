@@ -11,7 +11,6 @@ from itertools import count
 from inspect import getmro
 from numpy.linalg import norm
 from common import check_class, set_equal_aspect_3d, rotate_about_axis
-from wind_section import WindSection
 
 vertical_direction = npy.array([0.0,0.0,1.0])
 default_y_direction = npy.array([0.0,1.0,0.0])
@@ -630,21 +629,31 @@ class LineElement(Element):
         
     
     @property
-    def wind_section(self):
+    def wind_sections(self):
         """
-        Instance of `WindSection` class, defining aerodynamic properties 
+        Object list (len=2) of `WindSection` class instances, which 
+        define aerodynamic properties of element at each end.
         """
-        return self._wind_section
+        return [self._wind_section_end1, self._wind_section_end2]
     
-    @wind_section.setter
-    def wind_section(self,obj):
-        
-        # Check passed object is valid
-        if not isinstance(obj,WindSection):
-            raise ValueError("Object must be instance of " + 
-                             "`WindSection` class, or a derived class")
+    
+    def define_wind_sections(self,obj_list):
+        """
+        Object or object list (len=2) of `WindSection` class instances, which 
+        define the aerodynamic properties of the line element.
             
-        self._wind_section = obj
+        If an object is provided, section is considered 'uniform', i.e. has 
+        the same properties at both ends. Alternatively, if an object list is 
+        provided, this must be of length=2 and consist of a pair of objects 
+        to define wind section at each end of the element
+        """
+        # Duplicate WindSection object to define uniform cross-secton
+        if not isinstance(obj_list,list):
+            obj = obj_list
+            obj_list = [obj,obj]
+            
+        self._wind_section_end1 = obj_list[0]
+        self._wind_section_end2 = obj_list[1]
             
 
     def get_axes(self,verbose=False):
