@@ -16,7 +16,8 @@ from scipy import spatial
 from scipy import interpolate
 from scipy import optimize
 
-from common import rotate_about_axis
+from mesh import Point
+from common import rotate_about_axis, check_class
 
 #%%
 
@@ -31,11 +32,263 @@ class WindEnv():
     _Note: implemented as an abstract class. Objects cannot be instantiated_
     """
     
-    def __init__(self):
+    def __init__(self,
+                 points_list=None,
+                 z_min:float=10.0, z_max:float=300.0, nz=100
+                 ):
+        """
+        Base class initialisation function for defining wind enviroments
+        
+        ***
+        Optional:
+        
+        * `points_list` : list of `Point` instances, defining the points (in 
+          3D space) to evaluate wind properties at
+            
+        * `z_min`, `z_max`; height limits used for basis wind profiles plot. 
+          Only used if `points_list` is None
+        
+        * `nz`, number of height increments, used in conjunction with `z_min` 
+          and `z_max`
+        
+        """
         
         # Prevent direct instatiation of this class
         if type(self) == WindEnv:
             raise Exception("<WindEnv> must be subclassed.")
+            
+        # Define points to evaluate wind properties at
+        if points_list is None:
+            z_vals = numpy.linspace(z_min,z_max,nz)
+            points_list = [Point(xyz=[0.0,0.0,z]) for z in z_vals]
+            
+        self._points_list = points_list
+        
+            
+    # -------------------- PROPERTIES ----------------------------------------
+    
+    @property
+    def points(self):
+        """
+        List of `Point` instances, defining locations (in 3D space) at which 
+        wind properties are to be evaluated
+        """
+        return self._points_list
+    
+    @points.setter
+    def points(self,a):
+        
+        check_class(a,list)
+        self._points_list = a
+        
+    # ---------
+    
+    @property
+    def mean_speed(self)->list:
+        """
+        Mean wind speed (m/s), evaluated at each point
+        """
+        return self._U
+    
+    @property
+    def U(self):
+        """
+        _Psuedonym for `mean_speed`_
+        """
+        return self.mean_speed
+    
+    # --------
+    
+    @property
+    def i_u(self)->list:
+        """
+        Along-wind turbulence intensity, evaluated at each point
+        """
+        return self._i_u
+    
+    @property
+    def i_v(self)->list:
+        """
+        Horizontal across-wind turbulence intensity
+        """
+        return self._i_v
+    
+    @property
+    def i_w(self)->list:
+        """
+        Vertical across-wind turbulence intensity
+        """
+        return self._i_w
+    
+    # ------------------------
+    
+    @property
+    def sigma_u(self)->list:
+        """
+        Along-wind RMS turbulence (m/s)
+        """
+        return self._sigma_u
+    
+    @property
+    def sigma_v(self)->list:
+        """
+        Horizontal across-wind RMS turbulence (m/s)
+        """
+        return self._sigma_v
+    
+    @property
+    def sigma_w(self)->list:
+        """
+        Vertical across-wind RMS turbulence (m/s)
+        """
+        return self._sigma_w
+    
+    # ------------------------
+    
+    @property
+    def xLu(self)->list:
+        """
+        Integral turbulence length scale (m):
+        
+        * Along-wind component (u)
+        
+        * Along-wind direction (x)
+        """        
+        return self._xLu
+    
+    @property
+    def yLu(self)->list:
+        """
+        Integral turbulence length scale (m):
+        
+        * Along-wind component (u)
+        
+        * Horizontal across-wind direction (y)
+        """
+        return self._yLu
+    
+    @property
+    def zLu(self)->list:
+        """
+        Integral turbulence length scale (m):
+        
+        * Along-wind component (u)
+        
+        * Vertical across-wind direction (z)
+        """ 
+        return self._zLu
+    
+    # ----
+    
+    @property
+    def xLv(self)->list:
+        """
+        Integral turbulence length scale (m):
+        
+        * Horizontal across-wind component (v)
+        
+        * Along-wind direction (x)
+        """        
+        return self._xLv
+    
+    @property
+    def yLv(self)->list:
+        """
+        Integral turbulence length scale (m):
+        
+        * Horizontal across-wind component (v)
+        
+        * Horizontal across-wind direction (y)
+        """ 
+        return self._yLv
+    
+    @property
+    def zLv(self)->list:
+        """
+        Integral turbulence length scale (m):
+        
+        * Horizontal across-wind component (v)
+        
+        * Vertical across-wind direction (z)
+        """ 
+        return self._zLv
+    
+    # ----
+    
+    @property
+    def xLw(self)->list:
+        """
+        Integral turbulence length scale (m):
+        
+        * Vertical across-wind component (w)
+        
+        * Along-wind direction (x)
+        """        
+        return self._xLw
+    
+    @property
+    def yLw(self)->list:
+        """
+        Integral turbulence length scale (m):
+            
+        * Vertical across-wind component (w)
+        
+        * Horizontal across-wind direction (y)
+        """ 
+        return self._yLw
+    
+    @property
+    def zLw(self)->list:
+        """
+        Integral turbulence length scale (m):
+            
+        * Vertical across-wind component (w)
+        
+        * Vertical across-wind direction (z)
+        """ 
+        return self._zLw
+    
+    
+    # --------------- METHODS TO BE IMPLEMENTED BY DERIVED CLASSES ------------
+    @property
+    def calc_mean_speed(self):
+        raise NotImplementedError()
+        
+    @property
+    def calc_iu(self):
+        raise NotImplementedError()
+        
+    # -------------- CLASS METHODS --------------------------------------------
+    
+    def get_x(self):
+        """
+        Returns 1d array giving x-coordinates of points at which wind 
+        properties are evaluated
+        """
+        return numpy.array([p.x for p in self.points])
+
+    def get_y(self):
+        """
+        Returns 1d array giving y-coordinates of points at which wind 
+        properties are evaluated
+        """
+        return numpy.array([p.y for p in self.points])
+
+    def get_z(self):
+        """
+        Returns 1d array giving z-coordinates of points at which wind 
+        properties are evaluated
+        """
+        return numpy.array([p.z for p in self.points])
+        
+    def get_xyz(self):
+        """
+        Returns 2d array giving xyz-coordinates of points at which wind 
+        properties are evaluated
+        """
+        return numpy.array([p.xyz for p in self.points])
+    
+    
 
 #%%
 class WindEnv_equilibrium(WindEnv):
@@ -47,19 +300,14 @@ class WindEnv_equilibrium(WindEnv):
                  V_ref:float,
                  z0:float,
                  phi:float,
-                 direction:float,
-                 
+                 direction:float=0.0,
                  d=None,
                  z_ref:float=10.0,
-                 
-                 pointset_obj=None,
-                 points_arr=None,
-                 z_min:float=0.1, z_max:float=500, nz=100,
-                                  
                  A=-1.0, B=6.0,
                  u_star=None,
                  
-                 calc_wind_params=True):
+                 calc_wind_params=True,
+                 **kwargs):
         """
         Defines equilibrium wind environment
         
@@ -73,33 +321,30 @@ class WindEnv_equilibrium(WindEnv):
           
         * `phi`, site latitude (degrees)
         
-        * `direction`, bearing angle in range [0,360] degrees, defines 
-          the direction that wind is coming _from_.
-        
         ***
         Optional:
+            
+        * `direction`, bearing angle in range [0,360] degrees, defines 
+          the direction that wind is coming _from_. Default = 0.0, i.e. wind 
+          from North
           
         * `z_ref`, reference height to which `V_ref` relates. Default = 10m
         
         * `d`, displacement height (m). If None (default) value consistent with 
           `z0` is determined
-        
-        * `z_min`, `z_max`; height limits used for basis wind profiles plot
-        
-        * `nz`, number of height increments used 
           
-        * `points_arr` : (Np,3) array defining points to evaluate wind 
-          properties at (these might be gauss points, say)
-        
-        
-        
-        zg     : initial guess at gradient height (m). _This is determined iteratively_
+        _Additional keyword arguments will be passed to parent `__init__()` 
+        method._
         
         ***
-        Configuration parameters (which will not normally be provided):
+        Optional configuration parameters (which will not normally be 
+        provided):
             
         * `A`, `B`, parameters required for use in Deaves & Harris log-law 
           formula
+          
+        * `zg`, initial guess at gradient height (m). _This is determined 
+        iteratively_
           
         * `u_star`, friction velocity (m/s), which in essence defines the mean 
           wind profile. If None (default) then `u_star` will be determined 
@@ -107,19 +352,8 @@ class WindEnv_equilibrium(WindEnv):
         
         """
         
-        if pointset_obj is None:
-            
-            if points_arr is None:
-                # Create default points set, e.g. for checking wind profile
-                z_vals = numpy.geomspace(z_min,z_max,nz)
-                Np = len(z_vals)
-                points_arr = numpy.zeros((Np,3))
-                points_arr[:,2]=z_vals
-                
-            pointset_obj = PointSet(points_arr)
-        
-        self.pointset_obj = pointset_obj
-        Np = self.pointset_obj.nPoints
+        # Run parent init method using any additional keyword arguments
+        super().__init__(**kwargs)
         
         self.zg = None
         """
@@ -196,172 +430,90 @@ class WindEnv_equilibrium(WindEnv):
         Friction velocity (m/s)
         """
         
-        # Initialise variables defined later
-        self.U = None
-        """
-        Mean wind speed (m/s) at points
-        """
-        
-        self.direction = direction
-        
-        
-        self.i_u = None
-        """
-        Along-wind turbulence intensity
-        """
-        
-        self.i_v = None
-        """
-        Horizontal across-wind turbulence intensity
-        """
-        
-        self.i_w = None
-        """
-        Vertical across-wind turbulence intensity
-        """
-        
-        self.sigma_u = None
-        """
-        Along-wind RMS turbulence (m/s)
-        """
-        
-        self.sigma_v = None
-        """
-        Horizontal across-wind RMS turbulence (m/s)
-        """
-        
-        self.sigma_w = None
-        """
-        Vertical across-wind RMS turbulence (m/s)
-        """
-        
-        # ------------------------
-        
-        self.xLu = None
-        """
-        Integral turbulence length scale (m):
-        
-        * Along-wind component (u)
-        
-        * Along-wind direction (x)
-        """        
-        
-        self.yLu = None
-        """
-        Integral turbulence length scale (m):
-        
-        * Along-wind component (u)
-        
-        * Horizontal across-wind direction (y)
-        """ 
-        
-        self.zLu = None
-        """
-        Integral turbulence length scale (m):
-        
-        * Along-wind component (u)
-        
-        * Vertical across-wind direction (z)
-        """ 
-        
-        # ----
-        
-        self.xLv = None
-        """
-        Integral turbulence length scale (m):
-        
-        * Horizontal across-wind component (v)
-        
-        * Along-wind direction (x)
-        """        
-        
-        self.yLv = None
-        """
-        Integral turbulence length scale (m):
-        
-        * Horizontal across-wind component (v)
-        
-        * Horizontal across-wind direction (y)
-        """ 
-        
-        self.zLv = None
-        """
-        Integral turbulence length scale (m):
-        
-        * Horizontal across-wind component (v)
-        
-        * Vertical across-wind direction (z)
-        """ 
-        
-        # ----
-        
-        self.xLw = None
-        """
-        Integral turbulence length scale (m):
-        
-        * Vertical across-wind component (w)
-        
-        * Along-wind direction (x)
-        """        
-        
-        self.yLw = None
-        """
-        Integral turbulence length scale (m):
-            
-        * Vertical across-wind component (w)
-        
-        * Horizontal across-wind direction (y)
-        """ 
-        
-        self.zLw = None
-        """
-        Integral turbulence length scale (m):
-            
-        * Vertical across-wind component (w)
-        
-        * Vertical across-wind direction (z)
-        """ 
-        
-        self.S_exposure = None
-        """
-        Ratio of the local mean speed at 10m to the basic mean wind speed in 
-        standard terrain
-        """
-        
-        # ---------------------------
-        
+        self.mean_direction = direction        
         self.calc_exposure_factor()
         
         # Evaluate wind params at point set currently defined
         if calc_wind_params:
             self.calculate_wind_params()
-        
+      
+    
+    
+    # -----
+    
     @property
-    def direction(self):
+    def mean_direction(self):
         """
-        Mean wind direction, expressed as angle in degrees clockwise from North
+        Mean wind direction, expressed as an angle in plan, in degrees 
+        clockwise from North
         """
         return self._direction
     
-    @direction.setter
-    def direction(self,value):
+    @property
+    def direction(self):
+        """
+        _Psuedonym for `mean_direction`_
+        """
+        return self.mean_direction
+    
+    @mean_direction.setter
+    def mean_direction(self,value):
         value = numpy.mod(value,360.0) # force to be in range [0,360]
         self._direction  = value
         
+    # ------- GETTER METHODS OVERRIDING PARENT CLASS METHODS ------------------
+    
+    @property
+    def sigma_u(self)->list:
+        """
+        Along-wind RMS turbulence (m/s)
+        
+        _Note: defined indirectly via mean speed and turbulence intensity_
+        """
+        return self.calc_sigma_u()
+    
+    @property
+    def i_v(self)->list:
+        """
+        Horizonal across-wind turbulence intensity
+        
+        _Note: defined indirectly via mean speed and RMS turbulence_
+        """
+        return self.sigma_v / self.U
+    
+    @property
+    def i_w(self)->list:
+        """
+        Vertical across-wind turbulence intensity
+        
+        _Note: defined indirectly via mean speed and RMS turbulence_
+        """
+        return self.sigma_w / self.U
+    
+    # -------- PROPERTIES -----------------------------------------------------
+    
+    @property
+    def S_exposure(self)->float:
+        """
+        Ratio of the local mean speed at 10m to the basic mean wind speed in 
+        standard terrain
+        """
+        return self._S_exposure
+    
+    
+    # -------------------- PUBLIC CLASS METHODS -------------------------------
         
     def calculate_wind_params(self):
         """
-        Evaluate wind parameters at current point set
-        
-        * `mean_wind_dir`, vector defining mean wind direction in world coords
-          (xyz), as per point set
-          
+        Evaluates all wind parameters at current list of points          
         """
         self.calc_mean_speed()
         self.calc_mean_vector()
         self.calc_iu()
         self.calc_RMS_turbulence()
         self.calc_turbulence_length_scales()
+        
+        self._recalculate = False
                
     
     def print_details(self):
@@ -421,7 +573,7 @@ class WindEnv_equilibrium(WindEnv):
             param_list = [param_list]
             
         # Get z values at which parameter defined
-        z = self.pointset_obj.z
+        z = self.get_z()
         
         # Prepare plot window
         if ax is None:
@@ -518,7 +670,7 @@ class WindEnv_equilibrium(WindEnv):
         K_z = self._calc_K_z(z=z)
         U_z = K_z * u_star
         
-        self.U = U_z
+        self._U = U_z
         
         return U_z
     
@@ -573,7 +725,7 @@ class WindEnv_equilibrium(WindEnv):
         
         i_u = num / (denom1 * denom2)
         
-        self.i_u = i_u
+        self._i_u = i_u
         
         return i_u
     
@@ -599,7 +751,7 @@ class WindEnv_equilibrium(WindEnv):
         i_u = self.i_u
             
         sigma_u = i_u * U        
-        self.sigma_u = sigma_u        
+        
         return sigma_u
     
     
@@ -610,15 +762,14 @@ class WindEnv_equilibrium(WindEnv):
         """
         
         z = self.get_z()
-        U = self.U
         sigma_u = self.sigma_u
             
         # eqn (6.5), ESDU 86010
         h = self.zg
         sigma_v = sigma_u * (1 - 0.22 * numpy.cos(numpy.pi/2 * z/h)**4)
     
-        self.sigma_v = sigma_v
-        self.i_v = sigma_v / U
+        self._sigma_v = sigma_v
+        
         return sigma_v
     
     
@@ -629,31 +780,18 @@ class WindEnv_equilibrium(WindEnv):
         """
         
         z = self.get_z()
-        U = self.U
         sigma_u = self.sigma_u
             
         # eqn (6.5), ESDU 86010
         h = self.zg
         sigma_w = sigma_u * (1 - 0.45 * numpy.cos(numpy.pi/2 * z/h)**4)
     
-        self.sigma_w = sigma_w
-        self.i_w = sigma_w / U
+        self._sigma_w = sigma_w
         
         return sigma_w
     
     
-    def get_x(self):
-        return self.pointset_obj.x
 
-    def get_y(self):
-        return self.pointset_obj.y
-
-    def get_z(self):
-        return self.pointset_obj.z
-        
-    def get_xyz(self):
-        return self.get_x(), self.get_y(), self.get_z()
-    
     
     def calc_exposure_factor(self):
         """
@@ -674,7 +812,7 @@ class WindEnv_equilibrium(WindEnv):
         term2 = ln(10.0/z0) / ln(10.0/z0_std)
         SE = term1 * term2
         
-        self.S_exposure = SE
+        self._S_exposure = SE
         return SE
         
         
@@ -737,7 +875,7 @@ class WindEnv_equilibrium(WindEnv):
             
         zg = self.zg            
         d = self.d
-        
+
         z_rel = (z-d)/zg
         
         return numpy.min([numpy.ones_like(z_rel),z_rel],axis=0)
@@ -915,8 +1053,8 @@ class WindEnv_equilibrium(WindEnv):
         
         zLu = xLu * (0.5 - 0.34 * numpy.exp(-35 * (z/h)**1.7))      # eqn (6.3)
         yLu = xLu * (0.16 + 0.68 * (zLu/zLu))                       # eqn (6.4)       
-        self.yLu = yLu
-        self.zLu = zLu
+        self._yLu = yLu
+        self._zLu = zLu
         
         # Evaluate turbulence RMS
         sigma_u = self.calc_sigma_u()
@@ -928,18 +1066,18 @@ class WindEnv_equilibrium(WindEnv):
         yLv = xLu * (1.0 * (2 * yLu / xLu) * (sigma_v/sigma_u)**3)  #eqn (6.10)
         zLv = xLu * (0.5 * (2 * zLu / xLu) * (sigma_v/sigma_u)**3)  #eqn (6.11)
         
-        self.xLv = xLv
-        self.yLv = yLv
-        self.zLv = zLv
+        self._xLv = xLv
+        self._yLv = yLv
+        self._zLv = zLv
         
         # Evaluate vertical component length scales
         xLw = xLu * (0.5 * (sigma_w/sigma_u)**3)                    #eqn (6.12)
         yLw = xLu * (0.5 * (2 * yLu / xLu) * (sigma_w/sigma_u)**3)  #eqn (6.13)
         zLw = xLu * (1.0 * (2 * zLu / xLu) * (sigma_w/sigma_u)**3)  #eqn (6.14)
         
-        self.xLv = xLv
-        self.yLv = yLv
-        self.zLv = zLv
+        self._xLv = xLv
+        self._yLv = yLv
+        self._zLv = zLv
                      
         # Return as ndarray
         Nz = len(z)
@@ -980,7 +1118,8 @@ class WindEnv_equilibrium(WindEnv):
         num = A**(3/2) * (sigma_u/u_star)**3 * z
         denom = 2.5 * K**(3/2) * (1 - z/zg)**2 * (1 + 5.75*z/zg)
         xLu = num / denom
-        self.xLu = xLu
+        
+        self._xLu = xLu
         
         return xLu
         
@@ -1076,7 +1215,7 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         # Define equilibrium wind model for upwind terrain
         upwind_kwargs = kwargs.copy()
         upwind_kwargs['z0']=z0_X # overrides value at site
-        upwind_kwargs['pointset_obj'] = self.pointset_obj
+        upwind_kwargs['points_list'] = self.points
         upwind_we = WindEnv_equilibrium(**upwind_kwargs)
         
         self.upwind_we = upwind_we
@@ -1296,84 +1435,6 @@ class WindEnv_single_fetch(WindEnv_equilibrium):
         print("SX(X) = %.3f" % self.S_fetch)
     
     
-#%% ------------------------------
-    
-class PointSet():
-    """
-    Class used to collect point properties
-    """
-    
-    def __init__(self,points):
-        """
-        points to be of shape (Np,3)
-        """
-        
-        self.nPoints = points.shape[0]
-        if points.shape[1]!=3:
-            raise ValueError("`points` to be of shape (nPoints,3)")
-        
-        # Unpack coordinates
-        x,y,z = [points[:,i] for i in range(3)]
-        self.x = x
-        self.y = y
-        self.z = z
-        
-        # Run methods
-        self.calc_average_position()
-        self.calc_seperation()
-        
-    
-    
-    def calc_average_position(self):
-        """
-        Calculates average position of pairs of points in set
-        """
-        
-        x = self.x
-        y = self.y
-        z = self.z
-        
-        vm = []
-        
-        for v in [x,y,z]:
-            
-            V1, V2 = numpy.meshgrid(v,v)
-            vm.append(numpy.mean([V1,V2],axis=0))
-        
-        xm,ym,zm = vm
-        
-        self.xm = xm
-        self.ym = ym
-        self.zm = zm
-        
-        return xm,ym,zm
-        
-        
-    def calc_seperation(self):
-        """
-        Calculates distance seperation in component directions, for pairs of 
-        points in set
-        """
-        
-        x = self.x
-        y = self.y
-        z = self.z
-        
-        dv = []
-        
-        for v in [x,y,z]:
-            
-            V1, V2 = numpy.meshgrid(v,v)
-            dv.append(numpy.subtract(V2,V1))
-        
-        dx,dy,dz = dv
-        dr = (dx**2 + dy**2 + dz**2)**0.5
-        
-        self.dx = dx
-        self.dy = dy
-        self.dz = dz
-        self.dr = dr
-        
     
 #%% --------------- FUNCTIONS -----------------
     
@@ -1453,7 +1514,9 @@ def plot_fetch_factor(phi):
                                       z0=z0_1,
                                       X=X,
                                       z0_X=z0_0,
-                                      phi=phi)
+                                      phi=phi,
+                                      direction=0.0 #arbitary)
+                                      )
             
             SX_vals_inner.append(we.S_fetch)
             
@@ -1482,11 +1545,18 @@ if __name__ == "__main__":
     
     test_routine = 4
     
+    wind_params = {}
+    wind_params['V_ref']=28.2
+    wind_params['z0']=0.03
+    wind_params['phi']=53.0
+    wind_params['direction']=90.0
+    
     if test_routine == 1:
         
         print("Demo #1: Equilibrium Wind profiles")
+            
+        we = WindEnv_equilibrium(**wind_params)
         
-        we = WindEnv_equilibrium(V_ref=28.2,z0=0.03,phi=53.0)
         Se = we.calc_exposure_factor()
         we.print_details()
         we.plot_profiles()
@@ -1497,19 +1567,14 @@ if __name__ == "__main__":
         
     elif test_routine == 3:
     
-        we = WindEnv_single_fetch(V_ref=20.0,
-                                  z0=0.300,
-                                  X=500,
-                                  z0_X=0.003,
-                                  phi=60.0)
-        
+        we = WindEnv_single_fetch(X=500,z0_X=0.003,**wind_params)
         we.calc_mean_speed()
         
     elif test_routine == 4:
         
         print("TEST #4: Check of Sw, Sv methods")
               
-        we = WindEnv_equilibrium(V_ref=28.2,z0=0.03,phi=30.0) 
+        we = WindEnv_equilibrium(**wind_params)
         z_vals = numpy.arange(10,301,10)
         n_vals = [0.1,0.15,0.5,1.5]
         Sv, Sw, fig = we.calc_Sv_Sw(z_vals,n_vals,make_plot=True)
