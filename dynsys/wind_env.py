@@ -267,12 +267,14 @@ class WindEnv():
         """
         return numpy.array([p.x for p in self.points])
 
+
     def get_y(self):
         """
         Returns 1d array giving y-coordinates of points at which wind 
         properties are evaluated
         """
         return numpy.array([p.y for p in self.points])
+
 
     def get_z(self):
         """
@@ -281,6 +283,7 @@ class WindEnv():
         """
         return numpy.array([p.z for p in self.points])
         
+    
     def get_xyz(self):
         """
         Returns 2d array giving xyz-coordinates of points at which wind 
@@ -288,6 +291,23 @@ class WindEnv():
         """
         return numpy.array([p.xyz for p in self.points])
     
+    
+    def get_point_index(self,point_obj):
+        """
+        Returns index of `point_obj` within `points` list
+        """
+
+        indexes = [i for i,x in enumerate(self.points) if x is point_obj]
+        
+        if len(indexes)==0:
+            raise IndexError("Requested gauss point is not associated " + 
+                             "with `WindEnv` instance")
+        
+        if len(indexes)>=2:
+            raise IndexError("Requested gauss point is associated more than" + 
+                             " once with `WindEnv` instance!")
+            
+        return indexes[0]
     
 
 #%%
