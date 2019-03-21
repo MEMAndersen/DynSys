@@ -57,11 +57,13 @@ def check_class(obj,expected_class):
     Returns exception if supplied object is not of the expected class
     """
     
-    if not isinstance(obj, expected_class):
-        
-        raise ValueError("Unexpected object provided!\n" + 
-                         "provided:\t{0}\n".format(type(obj)) + 
-                         "expected:\t{0}".format(expected_class))
+    if obj is not None:
+    
+        if not isinstance(obj, expected_class):
+            
+            raise ValueError("Unexpected object provided!\n" + 
+                             "provided:\t{0}\n".format(type(obj)) + 
+                             "expected:\t{0}".format(expected_class))
                          
     
 def check_shape(value,expected_shape:tuple):
