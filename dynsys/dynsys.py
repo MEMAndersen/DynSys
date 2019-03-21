@@ -1092,6 +1092,10 @@ class DynSys:
     
         
     def CalcEigenproperties(self,*args,**kwargs):
+        """
+        Deprecated method name. 
+        Refer docstring for `calc_eigenproperties()` method
+        """
         return self.calc_eigenproperties(*args,**kwargs)
     
     
@@ -1146,33 +1150,7 @@ class DynSys:
         ***
         **Returns:**
              
-        _Dict_ containing the following entries:
-            
-        * 's', _array_ containing the eigenvalues of 'A'
-        
-        * 'X', _matrix_, the columns of which are the right-eigenvectors of 'A'
-        
-        * 'Y', _matrix_, the columns of which are the left-eigenvectors of 'A'
-        
-        The above entries will in general be complex-valued and represent the 
-        eigenproperties of 'A'.
-        
-        The following entries are real-valued and 
-        express the complex eigenvalues 's' in terms which should be more 
-        familiar to structural/mechanical engineers:
-        
-        * 'f_n', _array_ of _undamped natural frequencies_, in Hz. 
-          
-        Note as 's' comprises conjugate pairs, there will be N pairs of 
-        positive and negative frequencies for a system with N degrees of 
-        freedom (i.e. 'A' matrix of shape [2N x 2N])
-          
-        * 'f_d', _array_ of _damped_ natural frequencies_, in Hz
-        
-        * 'w_n', 'w_d'; circular natural natural frequencies related to the 
-          above, in rad/s
-          
-        * 'eta', damping ratio (1.0=critical)
+        Instance of `Eig_Results` class
                 
         """
         
