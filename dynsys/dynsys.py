@@ -933,6 +933,8 @@ class DynSys:
             nDOF = x.nDOF
                         
             # Loop over all output matrices
+            output_mtrx = None
+            
             for i, (om, names) in enumerate(zip(x.output_mtrx,x.output_names)):
                                 
                 if i==0:
@@ -943,16 +945,18 @@ class DynSys:
                     output_mtrx = npy.vstack((output_mtrx,om))
                     output_names = output_names + names
                                 
-            # Decompose into groups relating to (disp,vel,accn)
-            disp_cols = output_mtrx[:,:nDOF]
-            vel_cols = output_mtrx[:,nDOF:2*nDOF]
-            accn_cols = output_mtrx[:,2*nDOF:]
-            
-            # Append to lists
-            disp_cols_list.append(disp_cols)
-            vel_cols_list.append(vel_cols)
-            accn_cols_list.append(accn_cols)
-            output_names_list.append([x.name+" : "+y for y in output_names])
+            if output_mtrx is not None:
+                
+                # Decompose into groups relating to (disp,vel,accn)
+                disp_cols = output_mtrx[:,:nDOF]
+                vel_cols = output_mtrx[:,nDOF:2*nDOF]
+                accn_cols = output_mtrx[:,2*nDOF:]
+                
+                # Append to lists
+                disp_cols_list.append(disp_cols)
+                vel_cols_list.append(vel_cols)
+                accn_cols_list.append(accn_cols)
+                output_names_list.append([x.name+" : "+y for y in output_names])
             
         # Break out of function if no output matrices defined
         if output_names_list==[]:
@@ -1264,18 +1268,25 @@ class DynSys:
             return True
     
     
-    def AppendSystem(self,
-                     child_sys,
-                     J_key:str=None,
+    def AppendSystem(self,*args,**kwargs):
+        """
+        Deprecated function. Use `append_system()` instead in the future!
+        """
+        return self.append_system(*args,**kwargs)
+    
+    
+    def append_system(self,
+                      child_sys,
+                      J_key:str=None,
                      
-                     Xpos_parent:float=None,
-                     modeshapes_parent=None,
-                     DOF_parent:int=None,
+                      Xpos_parent:float=None,
+                      modeshapes_parent=None,
+                      DOF_parent:int=None,
                      
-                     Xpos_child:float=None,
-                     modeshapes_child=None,
-                     DOF_child:int=None,
-                     ):
+                      Xpos_child:float=None,
+                      modeshapes_child=None,
+                      DOF_child:int=None,
+                      ):
         """
         Function is used to join two dynamic systems by establishing 
         appropriate constraint equations
