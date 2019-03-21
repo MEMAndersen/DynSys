@@ -1483,14 +1483,21 @@ class DynSys:
         return fVals
     
     
-    # Define frequency response
-    def CalcFreqResponse(self,
-                         fVals=None, fmax=None,
-                         A=None, B=None, 
-                         C=None, D=None,
-                         output_names:list=None,
-                         verbose=False
-                         ):
+    def CalcFreqResponse(self,*args,**kwargs):
+        """
+        Deprecated method name.
+        See docstring for `calc_freq_response()`; this should be used instead
+        """    
+        return self.calc_freq_response(*args,**kwargs)
+    
+
+    def calc_freq_response(self,
+                           fVals=None, fmax=None,
+                           A=None, B=None, 
+                           C=None, D=None,
+                           output_names:list=None,
+                           verbose=False
+                           ):
         """
         Evaluates frequency response G(f) at specified frequencies
         
@@ -1519,12 +1526,7 @@ class DynSys:
         
         **Returns:**
         
-        * `f_vals`, _array_ of frequency values to which `G_f` relates
-        
-        * `G_f`, _ndarray_, usually of shape 
-          (C.shape[0], B.shape[1], f_vals.shape[0]), 
-          i.e. at each frequency there is a matrix described the complex-valued 
-          frequency transfer function mapping applied loads to outputs
+        Instance of `FreqResponse_Results` class
         
         """
         
