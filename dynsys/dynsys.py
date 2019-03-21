@@ -42,8 +42,9 @@ class DynSys:
                  isModal=False,
                  isSparse=False,
                  name=None,
-                 showMsgs=True,
-                 mesh_obj=None):
+                 mesh_obj=None,
+                 verbose=True,
+                 **kwargs):
         """
         Dynamic systems, which may have constraints, are defined by the 
         following:
@@ -78,6 +79,11 @@ class DynSys:
           system represented by modal properties_
             
         """
+    
+        # Handle old keyword to maintain backward compatibility
+        attr = 'showMsgs'
+        if hasattr(kwargs,attr):
+            verbose = getattr(kwargs,attr)
         
         # Convert to numpy matrix format
         M = npy.asmatrix(M)
@@ -162,10 +168,10 @@ class DynSys:
         self._CheckSystemMatrices()
         self.check_outputs()
         
-        if showMsgs:
+        if verbose:
             print("%s `%s` initialised." % (self.description,self.name))
         
-        if isSparse:
+        if isSparse and verbose:
             print("Note: sparse matrix functionality as provided by Scipy "
                   "will be used for system matrices")
             
@@ -933,6 +939,8 @@ class DynSys:
             nDOF = x.nDOF
                         
             # Loop over all output matrices
+            output_mtrx = None
+            
             for i, (om, names) in enumerate(zip(x.output_mtrx,x.output_names)):
                                 
                 if i==0:
@@ -943,16 +951,18 @@ class DynSys:
                     output_mtrx = npy.vstack((output_mtrx,om))
                     output_names = output_names + names
                                 
-            # Decompose into groups relating to (disp,vel,accn)
-            disp_cols = output_mtrx[:,:nDOF]
-            vel_cols = output_mtrx[:,nDOF:2*nDOF]
-            accn_cols = output_mtrx[:,2*nDOF:]
-            
-            # Append to lists
-            disp_cols_list.append(disp_cols)
-            vel_cols_list.append(vel_cols)
-            accn_cols_list.append(accn_cols)
-            output_names_list.append([x.name+" : "+y for y in output_names])
+            if output_mtrx is not None:
+                
+                # Decompose into groups relating to (disp,vel,accn)
+                disp_cols = output_mtrx[:,:nDOF]
+                vel_cols = output_mtrx[:,nDOF:2*nDOF]
+                accn_cols = output_mtrx[:,2*nDOF:]
+                
+                # Append to lists
+                disp_cols_list.append(disp_cols)
+                vel_cols_list.append(vel_cols)
+                accn_cols_list.append(accn_cols)
+                output_names_list.append([x.name+" : "+y for y in output_names])
             
         # Break out of function if no output matrices defined
         if output_names_list==[]:
@@ -1092,6 +1102,10 @@ class DynSys:
     
         
     def CalcEigenproperties(self,*args,**kwargs):
+        """
+        Deprecated method name. 
+        Refer docstring for `calc_eigenproperties()` method
+        """
         return self.calc_eigenproperties(*args,**kwargs)
     
     
@@ -1146,33 +1160,7 @@ class DynSys:
         ***
         **Returns:**
              
-        _Dict_ containing the following entries:
-            
-        * 's', _array_ containing the eigenvalues of 'A'
-        
-        * 'X', _matrix_, the columns of which are the right-eigenvectors of 'A'
-        
-        * 'Y', _matrix_, the columns of which are the left-eigenvectors of 'A'
-        
-        The above entries will in general be complex-valued and represent the 
-        eigenproperties of 'A'.
-        
-        The following entries are real-valued and 
-        express the complex eigenvalues 's' in terms which should be more 
-        familiar to structural/mechanical engineers:
-        
-        * 'f_n', _array_ of _undamped natural frequencies_, in Hz. 
-          
-        Note as 's' comprises conjugate pairs, there will be N pairs of 
-        positive and negative frequencies for a system with N degrees of 
-        freedom (i.e. 'A' matrix of shape [2N x 2N])
-          
-        * 'f_d', _array_ of _damped_ natural frequencies_, in Hz
-        
-        * 'w_n', 'w_d'; circular natural natural frequencies related to the 
-          above, in rad/s
-          
-        * 'eta', damping ratio (1.0=critical)
+        Instance of `Eig_Results` class
                 
         """
         
@@ -1286,18 +1274,25 @@ class DynSys:
             return True
     
     
-    def AppendSystem(self,
-                     child_sys,
-                     J_key:str=None,
+    def AppendSystem(self,*args,**kwargs):
+        """
+        Deprecated function. Use `append_system()` instead in the future!
+        """
+        return self.append_system(*args,**kwargs)
+    
+    
+    def append_system(self,
+                      child_sys,
+                      J_key:str=None,
                      
-                     Xpos_parent:float=None,
-                     modeshapes_parent=None,
-                     DOF_parent:int=None,
+                      Xpos_parent:float=None,
+                      modeshapes_parent=None,
+                      DOF_parent:int=None,
                      
-                     Xpos_child:float=None,
-                     modeshapes_child=None,
-                     DOF_child:int=None,
-                     ):
+                      Xpos_child:float=None,
+                      modeshapes_child=None,
+                      DOF_child:int=None,
+                      ):
         """
         Function is used to join two dynamic systems by establishing 
         appropriate constraint equations
@@ -1505,14 +1500,21 @@ class DynSys:
         return fVals
     
     
-    # Define frequency response
-    def CalcFreqResponse(self,
-                         fVals=None, fmax=None,
-                         A=None, B=None, 
-                         C=None, D=None,
-                         output_names:list=None,
-                         verbose=False
-                         ):
+    def CalcFreqResponse(self,*args,**kwargs):
+        """
+        Deprecated method name.
+        See docstring for `calc_freq_response()`; this should be used instead
+        """    
+        return self.calc_freq_response(*args,**kwargs)
+    
+
+    def calc_freq_response(self,
+                           fVals=None, fmax=None,
+                           A=None, B=None, 
+                           C=None, D=None,
+                           output_names:list=None,
+                           verbose=False
+                           ):
         """
         Evaluates frequency response G(f) at specified frequencies
         
@@ -1541,12 +1543,7 @@ class DynSys:
         
         **Returns:**
         
-        * `f_vals`, _array_ of frequency values to which `G_f` relates
-        
-        * `G_f`, _ndarray_, usually of shape 
-          (C.shape[0], B.shape[1], f_vals.shape[0]), 
-          i.e. at each frequency there is a matrix described the complex-valued 
-          frequency transfer function mapping applied loads to outputs
+        Instance of `FreqResponse_Results` class
         
         """
         
@@ -1600,14 +1597,14 @@ class DynSys:
         if C is None:
                 
             # Outputs are (extended) state vector
-            output_names =  ["DIS #%d" % i for i in range(nDOF_full)]
-            output_names += ["VEL #%d" % i for i in range(nDOF_full)]
-            output_names += ["ACC #%d" % i for i in range(nDOF_full)]
+            output_names =  ["DIS #%d" % i+1 for i in range(nDOF_full)]
+            output_names += ["VEL #%d" % i+1 for i in range(nDOF_full)]
+            output_names += ["ACC #%d" % i+1 for i in range(nDOF_full)]
             output_names = npy.array(output_names)
                 
         # Provide default names to outputs, if not defined above
         if output_names is None:
-            output_names =  ["(Unnamed output #%d)" % i 
+            output_names =  ["(Unnamed output #%d)" % i+1 
                              for i in range(C.shape[0])]
                         
         # Define C and D matrices required to compute transfer matrices
@@ -1681,9 +1678,16 @@ class DynSys:
         # Convert to numpy ndarray format
         Gf_list = npy.asarray(Gf_list)
                     
+        # Define input names
+        input_names = []
+        for obj in self.DynSys_list:
+            for i in range(obj.nDOF):
+                input_names.append("%s : Force %d" % (obj.name,i+1) )
+        
         # Return values as class instance
         obj = FreqResponse_Results(f=fVals,
                                    Gf=Gf_list,
+                                   input_names=input_names,
                                    output_names=output_names)        
         return obj
     

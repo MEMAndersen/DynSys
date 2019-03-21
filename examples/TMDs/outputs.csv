@@ -1,0 +1,3 @@
+Description, DISP1, VEL1, ACC1
+Disp [m] - Midspan - Span1, 1,0,0
+Accn [$m/s^2$] - Midspan - Span1, 0,0,1

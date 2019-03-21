@@ -80,14 +80,24 @@ class ModalSys(DynSys):
             
         # Define mode IDs, if not already provided
         if not 'ModeIDs' in modalParams_dict.keys():
-            nModes = len(modalParams_dict['Mass'])
+            
+            mass_vals = modalParams_dict['Mass']
+            
+            if isinstance(mass_vals,(int,float)):
+                nModes = 1
+            else:
+                nModes = len(mass_vals)
+            
             mode_IDs = ["Mode %d" % (i+1) for i in range(nModes)]
             modalParams_dict['ModeIDs'] = mode_IDs
             
+        
         self.modalParams_dict = modalParams_dict
+        self._CheckModalParams()
         """
         _Dict_ containing modal parameters used to define system
         """
+        
         
         self.mode_IDs = modalParams_dict['ModeIDs']
         """
@@ -173,22 +183,52 @@ class ModalSys(DynSys):
         return d
     
     
-    def _CheckModalParams(self,modalParams_dict=None):
+    def _CheckModalParams(self):
         
         # Bring modal parameters dict into function
-        if modalParams_dict is None:
-            modalParams_dict = self.modalParams_dict
-            
-        M_vals = modalParams_dict['Mass']
-        nDOF = M_vals.shape[0]
+        mp_dict = self.modalParams_dict
         
-        if modalParams_dict['Freq'].shape[0]!=nDOF:
-            raise ValueError("Error: length of 'Freq' list " + 
-                             "does not agree with expected nDOF!")
+        # Check dict contains expected entries
+        M_vals = mp_dict['Mass']
+        mp_dict['Mass'] = npy.ravel(M_vals)
+        
+        if isinstance(M_vals,(int,float)):
+            nDOF=1
+        else:
+            nDOF = M_vals.shape[0]
+        
+        # Handle pseudonyms of frequency
+        freq_attr_list = ['freq','frequency']
+        for attr in freq_attr_list:
+            if hasattr(mp_dict,attr.lower()):
+                mp_dict['Freq'] = npy.ravel(getattr(attr))
+                
+        # Handle pseudonyms of damping ratio
+        damping_attr_list = ['damping_ratio','dampingratio','eta']
+        for d in damping_attr_list:
+            if hasattr(d,d.lower()):
+                mp_dict['DampingRatio'] = npy.ravel(getattr(mp_dict,d))   
+        
+        # Check shapes are consistent
+        attr_list = ['Freq','DampingRatio']
+        
+        for attr in attr_list:
             
-        if modalParams_dict['DampingRatio'].shape[0]!=nDOF:
-            raise ValueError("Error: length of 'DampingRatio' list " + 
-                             "does not agree with expected nDOF!")
+            vals = mp_dict[attr]
+            
+            if nDOF==1 :
+                if not isinstance(vals,(int,float)):
+                    raise ValueError("Error: float expected for '%s' value" 
+                                     % attr)
+            
+            else:
+                
+                if vals.shape!=(nDOF,):
+                    raise ValueError("Error: shape of '%s' array " % attr + 
+                                     "does not agree with expected nDOF!")
+                    
+        # Update class attribute
+        self.modalParams_dict = mp_dict
                 
     
     def _FilterByFreq(fLimit,modalParams_dict=None):
@@ -240,9 +280,17 @@ class ModalSys(DynSys):
         C_vals = SDOF_dashpot(M_vals,K_vals,eta_vals)
         
         # Assemble system matrices, which are diagonal due to modal decomposition
-        M_mtrx = npy.asmatrix(npy.diag(M_vals))
-        C_mtrx = npy.asmatrix(npy.diag(C_vals))
-        K_mtrx = npy.asmatrix(npy.diag(K_vals))
+        nDOF = M_vals.shape[0]
+        
+        if nDOF != 0:
+            M_mtrx = npy.asmatrix(npy.diag(M_vals))
+            C_mtrx = npy.asmatrix(npy.diag(C_vals))
+            K_mtrx = npy.asmatrix(npy.diag(K_vals))
+            
+        else:
+            M_mtrx = M_vals
+            C_mtrx = C_vals
+            K_mtrx = K_vals
         
         # Return matrices and other properties using dict
         d = {}

@@ -1,4 +1,4 @@
-Version: 1.7.1
+Version: 1.7.2
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1031,9 +1031,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1200,9 +1197,9 @@ table {
                                     <span class="n">plotPhase</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">(),</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;xx-small&#39;</span><span class="p">)</span>
             
                 <span class="c1"># Tidy-up plot, removing labels etc.</span>
+                
                 <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">[</span><span class="n">_i</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1216,6 +1213,23 @@ table {
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">col</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
                         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                        
+                <span class="c1"># Define formatting of labels etc</span>
+                
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">(),</span>
+                              <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
+                              <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                              <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                              <span class="n">verticalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                              <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_title</span><span class="p">(),</span>
+                             <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
+                             <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                             <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                        
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
                     
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span>
                                     
@@ -1478,9 +1492,9 @@ table {
                                     <span class="n">plotPhase</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">(),</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;xx-small&#39;</span><span class="p">)</span>
             
                 <span class="c1"># Tidy-up plot, removing labels etc.</span>
+                
                 <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">[</span><span class="n">_i</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1494,6 +1508,23 @@ table {
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">col</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
                         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                        
+                <span class="c1"># Define formatting of labels etc</span>
+                
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">(),</span>
+                              <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
+                              <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                              <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                              <span class="n">verticalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                              <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_title</span><span class="p">(),</span>
+                             <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
+                             <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                             <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                        
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
                     
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span>
                                     
@@ -1739,9 +1770,9 @@ table {
                                 <span class="n">plotPhase</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">(),</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;xx-small&#39;</span><span class="p">)</span>
         
             <span class="c1"># Tidy-up plot, removing labels etc.</span>
+            
             <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">[</span><span class="n">_i</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1755,6 +1786,23 @@ table {
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">col</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    
+            <span class="c1"># Define formatting of labels etc</span>
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">(),</span>
+                          <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
+                          <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                          <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                          <span class="n">verticalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                          <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_title</span><span class="p">(),</span>
+                         <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
+                         <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                         <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                    
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
                 
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span>
 </pre></div>
