@@ -42,8 +42,9 @@ class DynSys:
                  isModal=False,
                  isSparse=False,
                  name=None,
-                 showMsgs=True,
-                 mesh_obj=None):
+                 mesh_obj=None,
+                 verbose=True,
+                 **kwargs):
         """
         Dynamic systems, which may have constraints, are defined by the 
         following:
@@ -78,6 +79,11 @@ class DynSys:
           system represented by modal properties_
             
         """
+    
+        # Handle old keyword to maintain backward compatibility
+        attr = 'showMsgs'
+        if hasattr(kwargs,attr):
+            verbose = getattr(kwargs,attr)
         
         # Convert to numpy matrix format
         M = npy.asmatrix(M)
@@ -162,10 +168,10 @@ class DynSys:
         self._CheckSystemMatrices()
         self.check_outputs()
         
-        if showMsgs:
+        if verbose:
             print("%s `%s` initialised." % (self.description,self.name))
         
-        if isSparse:
+        if isSparse and verbose:
             print("Note: sparse matrix functionality as provided by Scipy "
                   "will be used for system matrices")
             
@@ -1591,14 +1597,14 @@ class DynSys:
         if C is None:
                 
             # Outputs are (extended) state vector
-            output_names =  ["DIS #%d" % i for i in range(nDOF_full)]
-            output_names += ["VEL #%d" % i for i in range(nDOF_full)]
-            output_names += ["ACC #%d" % i for i in range(nDOF_full)]
+            output_names =  ["DIS #%d" % i+1 for i in range(nDOF_full)]
+            output_names += ["VEL #%d" % i+1 for i in range(nDOF_full)]
+            output_names += ["ACC #%d" % i+1 for i in range(nDOF_full)]
             output_names = npy.array(output_names)
                 
         # Provide default names to outputs, if not defined above
         if output_names is None:
-            output_names =  ["(Unnamed output #%d)" % i 
+            output_names =  ["(Unnamed output #%d)" % i+1 
                              for i in range(C.shape[0])]
                         
         # Define C and D matrices required to compute transfer matrices
@@ -1672,9 +1678,16 @@ class DynSys:
         # Convert to numpy ndarray format
         Gf_list = npy.asarray(Gf_list)
                     
+        # Define input names
+        input_names = []
+        for obj in self.DynSys_list:
+            for i in range(obj.nDOF):
+                input_names.append("%s : Force %d" % (obj.name,i+1) )
+        
         # Return values as class instance
         obj = FreqResponse_Results(f=fVals,
                                    Gf=Gf_list,
+                                   input_names=input_names,
                                    output_names=output_names)        
         return obj
     
