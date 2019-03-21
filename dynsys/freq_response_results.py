@@ -120,7 +120,11 @@ class FreqResponse_Results():
                                     plotPhase=False,
                                     **kwargs)
                 
-                ax.set_ylabel(ax.get_ylabel(),fontsize='xx-small')
+                ax.set_ylabel(ax.get_ylabel(),
+                              fontsize='x-small',
+                              rotation=0,
+                              horizontalAlignment='right',
+                              wrap=True)
             
                 # Tidy-up plot, removing labels etc.
                 if col==0:
@@ -136,6 +140,9 @@ class FreqResponse_Results():
                 else:
                     if col!=0:
                         ax.set_xlabel("")
+                        
+            fig.subplots_adjust(left=0.20)
+            fig.align_ylabels()
                     
         return fig, axarr
                                     
