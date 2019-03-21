@@ -8,6 +8,12 @@ and this project adheres to:
 
 ***
 
+## [1.7.1] - 2019-03-21 - RIHY
+
+### Fixed
+
+* Hotfix to `check_class()` method in `common.py`
+
 ## [1.7] - 2019-03-21 - RIHY
 
 ### Changed
