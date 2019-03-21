@@ -1,4 +1,4 @@
-Version: 1.7.1
+Version: 1.7.2
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1033,9 +1033,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1099,7 +1096,9 @@ table {
     <li class="mono"><a href="#dynsys.DynSys.PrintSystemMatrices">PrintSystemMatrices</a></li>
     <li class="mono"><a href="#dynsys.DynSys.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
     <li class="mono"><a href="#dynsys.DynSys.add_outputs">add_outputs</a></li>
+    <li class="mono"><a href="#dynsys.DynSys.append_system">append_system</a></li>
     <li class="mono"><a href="#dynsys.DynSys.calc_eigenproperties">calc_eigenproperties</a></li>
+    <li class="mono"><a href="#dynsys.DynSys.calc_freq_response">calc_freq_response</a></li>
     <li class="mono"><a href="#dynsys.DynSys.check_outputs">check_outputs</a></li>
     <li class="mono"><a href="#dynsys.DynSys.freqVals">freqVals</a></li>
     <li class="mono"><a href="#dynsys.DynSys.get_output_mtrx">get_output_mtrx</a></li>
@@ -1173,8 +1172,9 @@ table {
                  <span class="n">isModal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                 <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dynamic systems, which may have constraints, are defined by the </span>
 <span class="sd">        following:</span>
@@ -1209,6 +1209,11 @@ table {
 <span class="sd">          system represented by modal properties_</span>
 <span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="c1"># Handle old keyword to maintain backward compatibility</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="s1">&#39;showMsgs&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+            <span class="n">verbose</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
         
         <span class="c1"># Convert to numpy matrix format</span>
         <span class="n">M</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
@@ -1293,10 +1298,10 @@ table {
         <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
         
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> `</span><span class="si">%s</span><span class="s2">` initialised.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
         
-        <span class="k">if</span> <span class="n">isSparse</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">isSparse</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Note: sparse matrix functionality as provided by Scipy &quot;</span>
                   <span class="s2">&quot;will be used for system matrices&quot;</span><span class="p">)</span>
             
@@ -2064,6 +2069,8 @@ table {
             <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
                         
             <span class="c1"># Loop over all output matrices</span>
+            <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">None</span>
+            
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">x</span><span class="o">.</span><span class="n">output_names</span><span class="p">)):</span>
                                 
                 <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -2074,16 +2081,18 @@ table {
                     <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">om</span><span class="p">))</span>
                     <span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span> <span class="o">+</span> <span class="n">names</span>
                                 
-            <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
-            <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
-            <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
-            <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
-            
-            <span class="c1"># Append to lists</span>
-            <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
-            <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
-            <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
-            <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                
+                <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
+                <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
+                <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+                <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
+                
+                <span class="c1"># Append to lists</span>
+                <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
+                <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
+                <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
+                <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
             
         <span class="c1"># Break out of function if no output matrices defined</span>
         <span class="k">if</span> <span class="n">output_names_list</span><span class="o">==</span><span class="p">[]:</span>
@@ -2223,6 +2232,10 @@ table {
     
         
     <span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated method name. </span>
+<span class="sd">        Refer docstring for `calc_eigenproperties()` method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
@@ -2277,33 +2290,7 @@ table {
 <span class="sd">        ***</span>
 <span class="sd">        **Returns:**</span>
 <span class="sd">             </span>
-<span class="sd">        _Dict_ containing the following entries:</span>
-<span class="sd">            </span>
-<span class="sd">        * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
-<span class="sd">        </span>
-<span class="sd">        The above entries will in general be complex-valued and represent the </span>
-<span class="sd">        eigenproperties of &#39;A&#39;.</span>
-<span class="sd">        </span>
-<span class="sd">        The following entries are real-valued and </span>
-<span class="sd">        express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
-<span class="sd">        familiar to structural/mechanical engineers:</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
-<span class="sd">          </span>
-<span class="sd">        Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
-<span class="sd">        positive and negative frequencies for a system with N degrees of </span>
-<span class="sd">        freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
-<span class="sd">          </span>
-<span class="sd">        * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
-<span class="sd">          above, in rad/s</span>
-<span class="sd">          </span>
-<span class="sd">        * &#39;eta&#39;, damping ratio (1.0=critical)</span>
+<span class="sd">        Instance of `Eig_Results` class</span>
 <span class="sd">                </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -2417,18 +2404,25 @@ table {
             <span class="k">return</span> <span class="bp">True</span>
     
     
-    <span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                     <span class="n">child_sys</span><span class="p">,</span>
-                     <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated function. Use `append_system()` instead in the future!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_system</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    
+    <span class="k">def</span> <span class="nf">append_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">child_sys</span><span class="p">,</span>
+                      <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                      
-                     <span class="n">Xpos_parent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">modeshapes_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">DOF_parent</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">Xpos_parent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">modeshapes_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">DOF_parent</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                      
-                     <span class="n">Xpos_child</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">modeshapes_child</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">DOF_child</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="p">):</span>
+                      <span class="n">Xpos_child</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">modeshapes_child</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">DOF_child</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function is used to join two dynamic systems by establishing </span>
 <span class="sd">        appropriate constraint equations</span>
@@ -2636,14 +2630,21 @@ table {
         <span class="k">return</span> <span class="n">fVals</span>
     
     
-    <span class="c1"># Define frequency response</span>
-    <span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                         <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
-                         <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
-                         <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated method name.</span>
+<span class="sd">        See docstring for `calc_freq_response()`; this should be used instead</span>
+<span class="sd">        &quot;&quot;&quot;</span>    
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_freq_response</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+
+    <span class="k">def</span> <span class="nf">calc_freq_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                           <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
+                           <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Evaluates frequency response G(f) at specified frequencies</span>
 <span class="sd">        </span>
@@ -2672,12 +2673,7 @@ table {
 <span class="sd">        </span>
 <span class="sd">        **Returns:**</span>
 <span class="sd">        </span>
-<span class="sd">        * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
-<span class="sd">        </span>
-<span class="sd">        * `G_f`, _ndarray_, usually of shape </span>
-<span class="sd">          (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
-<span class="sd">          i.e. at each frequency there is a matrix described the complex-valued </span>
-<span class="sd">          frequency transfer function mapping applied loads to outputs</span>
+<span class="sd">        Instance of `FreqResponse_Results` class</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -2731,14 +2727,14 @@ table {
         <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 
             <span class="c1"># Outputs are (extended) state vector</span>
-            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
-            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
-            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
             <span class="n">output_names</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
                 
         <span class="c1"># Provide default names to outputs, if not defined above</span>
         <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span> 
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> 
                              <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
                         
         <span class="c1"># Define C and D matrices required to compute transfer matrices</span>
@@ -2812,9 +2808,16 @@ table {
         <span class="c1"># Convert to numpy ndarray format</span>
         <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
                     
+        <span class="c1"># Define input names</span>
+        <span class="n">input_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">):</span>
+                <span class="n">input_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> : Force </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+        
         <span class="c1"># Return values as class instance</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span>
                                    <span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">,</span>
+                                   <span class="n">input_names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span>
                                    <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>        
         <span class="k">return</span> <span class="n">obj</span>
     
@@ -4104,8 +4107,9 @@ required to characterise a generic dynamic (2nd order) system</p></div>
                  <span class="n">isModal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+                 <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dynamic systems, which may have constraints, are defined by the </span>
 <span class="sd">        following:</span>
@@ -4140,6 +4144,11 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">          system represented by modal properties_</span>
 <span class="sd">            </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="c1"># Handle old keyword to maintain backward compatibility</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="s1">&#39;showMsgs&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+            <span class="n">verbose</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
         
         <span class="c1"># Convert to numpy matrix format</span>
         <span class="n">M</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
@@ -4224,10 +4233,10 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
         
-        <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> `</span><span class="si">%s</span><span class="s2">` initialised.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
         
-        <span class="k">if</span> <span class="n">isSparse</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">isSparse</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Note: sparse matrix functionality as provided by Scipy &quot;</span>
                   <span class="s2">&quot;will be used for system matrices&quot;</span><span class="p">)</span>
             
@@ -4995,6 +5004,8 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
                         
             <span class="c1"># Loop over all output matrices</span>
+            <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">None</span>
+            
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">x</span><span class="o">.</span><span class="n">output_names</span><span class="p">)):</span>
                                 
                 <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -5005,16 +5016,18 @@ required to characterise a generic dynamic (2nd order) system</p></div>
                     <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">om</span><span class="p">))</span>
                     <span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span> <span class="o">+</span> <span class="n">names</span>
                                 
-            <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
-            <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
-            <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
-            <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
-            
-            <span class="c1"># Append to lists</span>
-            <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
-            <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
-            <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
-            <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                
+                <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
+                <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
+                <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+                <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
+                
+                <span class="c1"># Append to lists</span>
+                <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
+                <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
+                <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
+                <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
             
         <span class="c1"># Break out of function if no output matrices defined</span>
         <span class="k">if</span> <span class="n">output_names_list</span><span class="o">==</span><span class="p">[]:</span>
@@ -5154,6 +5167,10 @@ required to characterise a generic dynamic (2nd order) system</p></div>
     
         
     <span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated method name. </span>
+<span class="sd">        Refer docstring for `calc_eigenproperties()` method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
     
@@ -5208,33 +5225,7 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">        ***</span>
 <span class="sd">        **Returns:**</span>
 <span class="sd">             </span>
-<span class="sd">        _Dict_ containing the following entries:</span>
-<span class="sd">            </span>
-<span class="sd">        * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
-<span class="sd">        </span>
-<span class="sd">        The above entries will in general be complex-valued and represent the </span>
-<span class="sd">        eigenproperties of &#39;A&#39;.</span>
-<span class="sd">        </span>
-<span class="sd">        The following entries are real-valued and </span>
-<span class="sd">        express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
-<span class="sd">        familiar to structural/mechanical engineers:</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
-<span class="sd">          </span>
-<span class="sd">        Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
-<span class="sd">        positive and negative frequencies for a system with N degrees of </span>
-<span class="sd">        freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
-<span class="sd">          </span>
-<span class="sd">        * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
-<span class="sd">        </span>
-<span class="sd">        * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
-<span class="sd">          above, in rad/s</span>
-<span class="sd">          </span>
-<span class="sd">        * &#39;eta&#39;, damping ratio (1.0=critical)</span>
+<span class="sd">        Instance of `Eig_Results` class</span>
 <span class="sd">                </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -5348,18 +5339,25 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             <span class="k">return</span> <span class="bp">True</span>
     
     
-    <span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                     <span class="n">child_sys</span><span class="p">,</span>
-                     <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated function. Use `append_system()` instead in the future!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_system</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    
+    <span class="k">def</span> <span class="nf">append_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">child_sys</span><span class="p">,</span>
+                      <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                      
-                     <span class="n">Xpos_parent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">modeshapes_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">DOF_parent</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">Xpos_parent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">modeshapes_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">DOF_parent</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                      
-                     <span class="n">Xpos_child</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">modeshapes_child</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">DOF_child</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="p">):</span>
+                      <span class="n">Xpos_child</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">modeshapes_child</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">DOF_child</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function is used to join two dynamic systems by establishing </span>
 <span class="sd">        appropriate constraint equations</span>
@@ -5567,14 +5565,21 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="k">return</span> <span class="n">fVals</span>
     
     
-    <span class="c1"># Define frequency response</span>
-    <span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                         <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
-                         <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                         <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
-                         <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated method name.</span>
+<span class="sd">        See docstring for `calc_freq_response()`; this should be used instead</span>
+<span class="sd">        &quot;&quot;&quot;</span>    
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_freq_response</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+
+    <span class="k">def</span> <span class="nf">calc_freq_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                           <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
+                           <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Evaluates frequency response G(f) at specified frequencies</span>
 <span class="sd">        </span>
@@ -5603,12 +5608,7 @@ required to characterise a generic dynamic (2nd order) system</p></div>
 <span class="sd">        </span>
 <span class="sd">        **Returns:**</span>
 <span class="sd">        </span>
-<span class="sd">        * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
-<span class="sd">        </span>
-<span class="sd">        * `G_f`, _ndarray_, usually of shape </span>
-<span class="sd">          (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
-<span class="sd">          i.e. at each frequency there is a matrix described the complex-valued </span>
-<span class="sd">          frequency transfer function mapping applied loads to outputs</span>
+<span class="sd">        Instance of `FreqResponse_Results` class</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
@@ -5662,14 +5662,14 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 
             <span class="c1"># Outputs are (extended) state vector</span>
-            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
-            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
-            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+            <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
             <span class="n">output_names</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
                 
         <span class="c1"># Provide default names to outputs, if not defined above</span>
         <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span> 
+            <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> 
                              <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
                         
         <span class="c1"># Define C and D matrices required to compute transfer matrices</span>
@@ -5743,9 +5743,16 @@ required to characterise a generic dynamic (2nd order) system</p></div>
         <span class="c1"># Convert to numpy ndarray format</span>
         <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
                     
+        <span class="c1"># Define input names</span>
+        <span class="n">input_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">):</span>
+                <span class="n">input_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> : Force </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+        
         <span class="c1"># Return values as class instance</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span>
                                    <span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">,</span>
+                                   <span class="n">input_names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span>
                                    <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>        
         <span class="k">return</span> <span class="n">obj</span>
     
@@ -5853,7 +5860,7 @@ required to characterise a generic dynamic (2nd order) system</p></div>
             
   <div class="item">
     <div class="name def" id="dynsys.DynSys.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, M, C, K, J_dict=None, output_mtrx=None, output_names=None, isLinear=True, isModal=False, isSparse=False, name=None, showMsgs=True, mesh_obj=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, M, C, K, J_dict=None, output_mtrx=None, output_names=None, isLinear=True, isModal=False, isSparse=False, name=None, mesh_obj=None, verbose=True, **kwargs)</p>
     </div>
     
 
@@ -5906,8 +5913,9 @@ entry must be <em>[mxn]</em></p>
              <span class="n">isModal</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">isSparse</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-             <span class="n">showMsgs</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-             <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+             <span class="n">mesh_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dynamic systems, which may have constraints, are defined by the </span>
 <span class="sd">    following:</span>
@@ -5942,6 +5950,11 @@ entry must be <em>[mxn]</em></p>
 <span class="sd">      system represented by modal properties_</span>
 <span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Handle old keyword to maintain backward compatibility</span>
+    <span class="n">attr</span> <span class="o">=</span> <span class="s1">&#39;showMsgs&#39;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
     
     <span class="c1"># Convert to numpy matrix format</span>
     <span class="n">M</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
@@ -6026,10 +6039,10 @@ entry must be <em>[mxn]</em></p>
     <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSystemMatrices</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
     
-    <span class="k">if</span> <span class="n">showMsgs</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> `</span><span class="si">%s</span><span class="s2">` initialised.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     
-    <span class="k">if</span> <span class="n">isSparse</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">isSparse</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Note: sparse matrix functionality as provided by Scipy &quot;</span>
               <span class="s2">&quot;will be used for system matrices&quot;</span><span class="p">)</span>
 </pre></div>
@@ -6155,258 +6168,21 @@ equations are independent</p></div>
             
   <div class="item">
     <div class="name def" id="dynsys.DynSys.AppendSystem">
-    <p>def <span class="ident">AppendSystem</span>(</p><p>self, child_sys, J_key=None, Xpos_parent=None, modeshapes_parent=None, DOF_parent=None, Xpos_child=None, modeshapes_child=None, DOF_child=None)</p>
+    <p>def <span class="ident">AppendSystem</span>(</p><p>self, *args, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Function is used to join two dynamic systems by establishing 
-appropriate constraint equations</p>
-<hr />
-<p>Required arguments:</p>
-<ul>
-<li><code>child_sys</code>, _ DynSys_ instance describing child system, i.e. system 
-  to be appended</li>
-</ul>
-<hr />
-<p>Optional arguments:</p>
-<ul>
-<li><code>J_key</code>, <em>string</em> identifier used in constraints dict. If <em>None</em> then 
-  default key will be established</li>
-</ul>
-<p>Usage of optional arguments depends on the properties of the parent 
-and child systems, as follows:</p>
-<p><strong>Parent system:</strong></p>
-<ul>
-<li>
-<p>If <em>isModal</em>:</p>
-<ul>
-<li>
-<p><code>Xpos_parent</code> can be used to define the point on the <em>parent 
-  system</em> at which the child system is to be attached. 
-  Note: usage of this parameter requires the <em>parent system</em> to 
-  have function attribute <code>modeshapeFunc</code>, i.e. a function 
-  describing how modeshapes vary with chainage.</p>
-</li>
-<li>
-<p>Alternatively <code>modeshapes_parent</code> can be used to directly 
-  provide modeshape vector relevant to the point on the <em>parent 
-  system</em> at which the child system is to be attached</p>
-</li>
-</ul>
-<p>If both are provided, <code>modeshapes_parent</code> is used to define 
-modeshapes, i.e. take precedence.</p>
-</li>
-<li>
-<p>Else:</p>
-<ul>
-<li><code>DOF_parent</code> should be used to specify the index of the DOF in 
-  the <em>parent system</em> to which the child system is to be attached</li>
-</ul>
-</li>
-</ul>
-<p><strong>Child system:</strong></p>
-<p>Similar logic applies as per parent systems:</p>
-<ul>
-<li>
-<p>If <em>isModal</em>:</p>
-<ul>
-<li>
-<p><code>Xpos_child</code> can be used to define the point on the <em>child 
-  system</em> at which the parent system is to be attached. 
-  Note: usage of this parameter requires the <em>child system</em> to have 
-  function attribute <code>modeshapeFunc</code>, i.e. a function describing 
-  how modeshapes vary with chainage.</p>
-</li>
-<li>
-<p>Alternatively <code>modeshapes_child</code> can be used to directly 
-  provide modeshape vector relevant to the point on the <em>child 
-  system</em> at which the parent system is to be attached</p>
-</li>
-</ul>
-</li>
-<li>
-<p>Else:</p>
-<ul>
-<li><code>DOF_child</code> should be used to specify the index of the DOF in 
-  the <em>child system</em> to which the parent system is to be attached</li>
-</ul>
-</li>
-</ul>
-<p><strong>Note</strong>: this function can only be used with <em>linear</em> systems 
-with constant <code>M</code>, <code>C</code>, <code>K</code> system matrices.
-(This is checked: an exception will be raised if attempt is made to use 
-with nonlinear systems).</p></div>
+    <div class="desc"><p>Deprecated function. Use <code>append_system()</code> instead in the future!</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.AppendSystem', this);">Show source &equiv;</a></p>
   <div id="source-dynsys.DynSys.AppendSystem" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">child_sys</span><span class="p">,</span>
-                 <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 
-                 <span class="n">Xpos_parent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">modeshapes_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">DOF_parent</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 
-                 <span class="n">Xpos_child</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">modeshapes_child</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="n">DOF_child</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                 <span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AppendSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function is used to join two dynamic systems by establishing </span>
-<span class="sd">    appropriate constraint equations</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Required arguments:</span>
-<span class="sd">        </span>
-<span class="sd">    * `child_sys`, _ DynSys_ instance describing child system, i.e. system </span>
-<span class="sd">      to be appended</span>
-<span class="sd">      </span>
-<span class="sd">    ***</span>
-<span class="sd">    Optional arguments:</span>
-<span class="sd">        </span>
-<span class="sd">    * `J_key`, _string_ identifier used in constraints dict. If _None_ then </span>
-<span class="sd">      default key will be established</span>
-<span class="sd">        </span>
-<span class="sd">    Usage of optional arguments depends on the properties of the parent </span>
-<span class="sd">    and child systems, as follows:</span>
-<span class="sd">        </span>
-<span class="sd">    **Parent system:**</span>
-<span class="sd">        </span>
-<span class="sd">    * If _isModal_:</span>
-<span class="sd">        </span>
-<span class="sd">        * `Xpos_parent` can be used to define the point on the _parent </span>
-<span class="sd">          system_ at which the child system is to be attached. </span>
-<span class="sd">          Note: usage of this parameter requires the _parent system_ to </span>
-<span class="sd">          have function attribute `modeshapeFunc`, i.e. a function </span>
-<span class="sd">          describing how modeshapes vary with chainage.</span>
-<span class="sd">          </span>
-<span class="sd">        * Alternatively `modeshapes_parent` can be used to directly </span>
-<span class="sd">          provide modeshape vector relevant to the point on the _parent </span>
-<span class="sd">          system_ at which the child system is to be attached</span>
-<span class="sd">          </span>
-<span class="sd">        If both are provided, `modeshapes_parent` is used to define </span>
-<span class="sd">        modeshapes, i.e. take precedence.</span>
-<span class="sd">        </span>
-<span class="sd">    * Else:</span>
-<span class="sd">        </span>
-<span class="sd">        * `DOF_parent` should be used to specify the index of the DOF in </span>
-<span class="sd">          the _parent system_ to which the child system is to be attached</span>
-<span class="sd">          </span>
-<span class="sd">    **Child system:**</span>
-<span class="sd">    </span>
-<span class="sd">    Similar logic applies as per parent systems:</span>
-<span class="sd">    </span>
-<span class="sd">    * If _isModal_:</span>
-<span class="sd">        </span>
-<span class="sd">        * `Xpos_child` can be used to define the point on the _child </span>
-<span class="sd">          system_ at which the parent system is to be attached. </span>
-<span class="sd">          Note: usage of this parameter requires the _child system_ to have </span>
-<span class="sd">          function attribute `modeshapeFunc`, i.e. a function describing </span>
-<span class="sd">          how modeshapes vary with chainage.</span>
-<span class="sd">          </span>
-<span class="sd">        * Alternatively `modeshapes_child` can be used to directly </span>
-<span class="sd">          provide modeshape vector relevant to the point on the _child </span>
-<span class="sd">          system_ at which the parent system is to be attached</span>
-<span class="sd">        </span>
-<span class="sd">    * Else:</span>
-<span class="sd">        </span>
-<span class="sd">        * `DOF_child` should be used to specify the index of the DOF in </span>
-<span class="sd">          the _child system_ to which the parent system is to be attached</span>
-<span class="sd">    </span>
-<span class="sd">    **Note**: this function can only be used with *linear* systems </span>
-<span class="sd">    with constant `M`, `C`, `K` system matrices.</span>
-<span class="sd">    (This is checked: an exception will be raised if attempt is made to use </span>
-<span class="sd">    with nonlinear systems).</span>
-<span class="sd">    </span>
+<span class="sd">    Deprecated function. Use `append_system()` instead in the future!</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="n">parent_sys</span> <span class="o">=</span> <span class="bp">self</span>   <span class="c1"># for clarity in the following code</span>
-    
-    <span class="c1"># Add child system to parent system&#39;s list</span>
-    <span class="n">parent_sys</span><span class="o">.</span><span class="n">DynSys_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_sys</span><span class="p">)</span>
-    
-    <span class="c1"># Define default key</span>
-    <span class="k">if</span> <span class="n">J_key</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">J_key</span> <span class="o">=</span> <span class="s2">&quot;0_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parent_sys</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-    
-    <span class="k">def</span> <span class="nf">link_sys</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span> <span class="n">sys_type</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">Xpos</span><span class="p">,</span> <span class="n">modeshapes</span><span class="p">,</span> <span class="n">DOF</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function to carry out the necessary tasks to link either</span>
-<span class="sd">        parent or child system</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># Check system is linear</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;{0} system &#39;{1}&#39; is not linear!&quot;</span>
-                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-    
-        <span class="c1"># Factor to apply to give equal and opposite behaviour</span>
-        <span class="k">if</span> <span class="n">sys_type</span> <span class="o">==</span> <span class="s2">&quot;parent&quot;</span><span class="p">:</span>
-            <span class="n">factor</span> <span class="o">=</span> <span class="o">+</span><span class="mi">1</span>
-        <span class="k">elif</span> <span class="n">sys_type</span> <span class="o">==</span> <span class="s2">&quot;child&quot;</span><span class="p">:</span>
-            <span class="n">factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected `sys_type`!&quot;</span><span class="p">)</span>
-    
-        <span class="c1"># Logic as per docstring</span>
-        <span class="k">if</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
-            
-            <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                
-                <span class="k">if</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                    
-                    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
-                    
-                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                        <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
-                    
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
-                                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
-                                         <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
-            
-                <span class="c1"># Save as attributes</span>
-                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                    <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Xpos</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">,[</span><span class="n">Xpos</span><span class="p">])</span>
-                    
-                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapes_attachedSystems&quot;</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
-                    <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">modeshapes</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">,[</span><span class="n">modeshapes</span><span class="p">])</span>
-            
-            <span class="k">elif</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;{0} system is modal. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;Either `Xpos_{0}` &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;or `modeshapes_{0}` &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;arguments are required&quot;</span><span class="p">)</span>
-                
-            <span class="c1"># Define new constraint equation submatrix</span>
-            <span class="n">J_new</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">modeshapes</span>
-                
-        <span class="k">else</span><span class="p">:</span> <span class="c1"># for non-modal systems</span>
-            
-            <span class="c1"># Check DOF index is valid</span>
-            <span class="n">sys_obj</span><span class="o">.</span><span class="n">CheckDOF</span><span class="p">(</span><span class="n">DOF</span><span class="p">)</span>
-            
-            <span class="c1"># Define new constraint equation submatrix</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">nDOF</span>
-            <span class="n">J_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,)))</span>
-            <span class="n">J_new</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="mi">1</span>
-    
-        <span class="c1"># Define new constraint equation to link systems </span>
-        <span class="n">sys_obj</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">J_new</span><span class="p">,</span><span class="n">J_key</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-        
-    <span class="c1"># Use function defined above to process optional arguments</span>
-    <span class="n">link_sys</span><span class="p">(</span><span class="n">parent_sys</span><span class="p">,</span><span class="s2">&quot;parent&quot;</span><span class="p">,</span><span class="n">Xpos_parent</span><span class="p">,</span><span class="n">modeshapes_parent</span><span class="p">,</span><span class="n">DOF_parent</span><span class="p">)</span>
-    <span class="n">link_sys</span><span class="p">(</span><span class="n">child_sys</span><span class="p">,</span><span class="s2">&quot;child&quot;</span><span class="p">,</span><span class="n">Xpos_child</span><span class="p">,</span><span class="n">modeshapes_child</span><span class="p">,</span><span class="n">DOF_child</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append_system</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -6423,10 +6199,16 @@ with nonlinear systems).</p></div>
 
     
   
+    <div class="desc"><p>Deprecated method name. 
+Refer docstring for <code>calc_eigenproperties()</code> method</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.CalcEigenproperties', this);">Show source &equiv;</a></p>
   <div id="source-dynsys.DynSys.CalcEigenproperties" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deprecated method name. </span>
+<span class="sd">    Refer docstring for `calc_eigenproperties()` method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -6438,233 +6220,23 @@ with nonlinear systems).</p></div>
             
   <div class="item">
     <div class="name def" id="dynsys.DynSys.CalcFreqResponse">
-    <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, fVals=None, fmax=None, A=None, B=None, C=None, D=None, output_names=None, verbose=False)</p>
+    <p>def <span class="ident">CalcFreqResponse</span>(</p><p>self, *args, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Evaluates frequency response G(f) at specified frequencies</p>
-<p>Refer 
-<a href="../references/Frequency response from state-space representation.pdf">derivation</a> 
-for the basis of the implementation.</p>
-<hr />
-<p><strong>Optional:</strong></p>
-<ul>
-<li>
-<p><code>fVals</code>: <em>array-like</em> of frequencies (Hz) to evaluate G(f) at.
-If <code>None</code> (default) then frequencies list will be obtained using 
-<code>freqVals()</code> member function.</p>
-</li>
-<li>
-<p><code>A</code>, <code>B</code>: allows overriding of system and load matrices 
-held as attributes.</p>
-</li>
-<li>
-<p><code>C</code>, <code>D</code>: allows custom output matrices to be provided. 
-If None, <code>output_mtrx</code> attribute will be used as <code>C</code> and <code>D</code> 
-will be ignored.</p>
-</li>
-<li>
-<p><code>output_names</code>, <em>list</em> of strings defining names of outputs</p>
-</li>
-</ul>
-<hr />
-<p><strong>Returns:</strong></p>
-<ul>
-<li>
-<p><code>f_vals</code>, <em>array</em> of frequency values to which <code>G_f</code> relates</p>
-</li>
-<li>
-<p><code>G_f</code>, <em>ndarray</em>, usually of shape 
-  (C.shape[0], B.shape[1], f_vals.shape[0]), 
-  i.e. at each frequency there is a matrix described the complex-valued 
-  frequency transfer function mapping applied loads to outputs</p>
-</li>
-</ul></div>
+    <div class="desc"><p>Deprecated method name.
+See docstring for <code>calc_freq_response()</code>; this should be used instead</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.CalcFreqResponse', this);">Show source &equiv;</a></p>
   <div id="source-dynsys.DynSys.CalcFreqResponse" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                     <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
-                     <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                     <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
-                     <span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcFreqResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluates frequency response G(f) at specified frequencies</span>
-<span class="sd">    </span>
-<span class="sd">    Refer </span>
-<span class="sd">    [derivation](../references/Frequency response from state-space representation.pdf) </span>
-<span class="sd">    for the basis of the implementation.</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    **Optional:**</span>
-<span class="sd">        </span>
-<span class="sd">    * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
-<span class="sd">    If `None` (default) then frequencies list will be obtained using </span>
-<span class="sd">    `freqVals()` member function.</span>
-<span class="sd">    </span>
-<span class="sd">    * `A`, `B`: allows overriding of system and load matrices </span>
-<span class="sd">    held as attributes.</span>
-<span class="sd">    </span>
-<span class="sd">    * `C`, `D`: allows custom output matrices to be provided. </span>
-<span class="sd">    If None, `output_mtrx` attribute will be used as `C` and `D` </span>
-<span class="sd">    will be ignored.</span>
-<span class="sd">    </span>
-<span class="sd">    * `output_names`, _list_ of strings defining names of outputs</span>
-<span class="sd">            </span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    **Returns:**</span>
-<span class="sd">    </span>
-<span class="sd">    * `f_vals`, _array_ of frequency values to which `G_f` relates</span>
-<span class="sd">    </span>
-<span class="sd">    * `G_f`, _ndarray_, usually of shape </span>
-<span class="sd">      (C.shape[0], B.shape[1], f_vals.shape[0]), </span>
-<span class="sd">      i.e. at each frequency there is a matrix described the complex-valued </span>
-<span class="sd">      frequency transfer function mapping applied loads to outputs</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
-    
-    <span class="c1"># Get key properties of system </span>
-    <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
-    <span class="n">nDOF_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
-            
-    <span class="c1"># Handle optional arguments</span>
-    <span class="k">if</span> <span class="n">fVals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">fVals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
-        
-    <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
-    
-    <span class="c1"># Define state matrix, if not provided via input arg</span>
-    <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
-                                <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        
-    <span class="c1"># Define load matrix, if not provided via input arg</span>
-    <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
-                               <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    
-    <span class="c1"># Define output matrix, if not provided via input arg</span>
-    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="c1"># Get output matrix for full system, if defined</span>
-        <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_output_mtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                               <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-        
-        <span class="c1"># Check shape</span>
-        <span class="n">expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span>
-        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="n">expected</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: C matrix of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                             <span class="s2">&quot;C.shape: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> 
-                             <span class="s2">&quot;Expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected</span><span class="p">))</span>
-                
-    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***</span><span class="se">\n</span><span class="s2">Warning: no output matrix defined. &quot;</span><span class="o">+</span>
-                  <span class="s2">&quot;Output matrix Gf will hence relate to state &quot;</span> <span class="o">+</span> 
-                  <span class="s2">&quot;displacements and velocities</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
-        
-        <span class="n">C</span> <span class="o">=</span> <span class="bp">None</span>
-        
-    <span class="c1"># Define names of outputs </span>
-    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-        <span class="c1"># Outputs are (extended) state vector</span>
-        <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
-        <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
-        <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
-        <span class="n">output_names</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
-            
-    <span class="c1"># Provide default names to outputs, if not defined above</span>
-    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span> 
-                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
-                    
-    <span class="c1"># Define C and D matrices required to compute transfer matrices</span>
-    <span class="c1"># relating applied loads to state accelerations</span>
-    
-    <span class="c1"># Obtain A and B matrices for the full system</span>
-    <span class="n">A_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                                 <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-    
-    <span class="n">B_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                                <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        
-    <span class="c1"># Define C and D matrices based on rows relating to state accelerations</span>
-    <span class="n">C_acc</span> <span class="o">=</span> <span class="n">A_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span> 
-    <span class="n">D_acc</span> <span class="o">=</span> <span class="n">B_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span>
-
-    <span class="c1"># Get nullspace basis matrix (which will already have been calculated)</span>
-    <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
-        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Null_J</span>
-        <span class="n">zeros_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
-        <span class="n">Z2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span><span class="n">zeros_mtrx</span><span class="p">)),</span>
-                         <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">zeros_mtrx</span><span class="p">,</span><span class="n">Z</span><span class="p">))))</span>
-        
-    <span class="c1"># Loop through frequencies</span>
-    <span class="n">Gf_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)):</span>
-        
-        <span class="c1"># Define jw</span>
-        <span class="n">jw</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="o">+</span><span class="mi">1j</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">fVals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        
-        <span class="c1"># Define G(jw) at this frequency</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
-            <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
-            
-        <span class="c1"># Convert to map loads to state variables of constrained problem</span>
-        <span class="c1"># i.e. full set of freedoms</span>
-        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
-            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf_states</span>
-            
-        <span class="c1"># Compute matrix to map applied loads to state acceleration</span>
-        <span class="n">Gf_acc</span> <span class="o">=</span> <span class="n">C_acc</span> <span class="err">@</span> <span class="n">Gf_states</span> <span class="o">+</span> <span class="n">D_acc</span>
-        
-        <span class="c1"># Stack to obtain matrix mapping applied loads to states {disp,vel}</span>
-        <span class="c1"># plus state acceletation</span>
-        <span class="n">Gf_states_extended</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Gf_states</span><span class="p">,</span><span class="n">Gf_acc</span><span class="p">))</span>
-        
-        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            
-             <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_states_extended</span>
-            
-        <span class="k">else</span><span class="p">:</span>
-            
-            <span class="c1"># Compute matrix to map applied loads to outputs</span>
-            <span class="n">Gf_outputs</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf_states_extended</span>
-            
-            <span class="c1"># Adjust for direct mapping between loads and outputs</span>
-            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">Gf_outputs</span> <span class="o">+=</span> <span class="n">D</span>    
-        
-            <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_outputs</span>
-            
-        <span class="c1"># Store in array</span>
-        <span class="n">Gf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Gf_rslt</span><span class="p">)</span>
-        
-    <span class="c1"># Convert to numpy ndarray format</span>
-    <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
-                
-    <span class="c1"># Return values as class instance</span>
-    <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span>
-                               <span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">,</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>        
-    <span class="k">return</span> <span class="n">obj</span>
+<span class="sd">    Deprecated method name.</span>
+<span class="sd">    See docstring for `calc_freq_response()`; this should be used instead</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_freq_response</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -7843,6 +7415,268 @@ provided. Otherwise an attempt will be made to read data from <code>fName</code>
   
             
   <div class="item">
+    <div class="name def" id="dynsys.DynSys.append_system">
+    <p>def <span class="ident">append_system</span>(</p><p>self, child_sys, J_key=None, Xpos_parent=None, modeshapes_parent=None, DOF_parent=None, Xpos_child=None, modeshapes_child=None, DOF_child=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Function is used to join two dynamic systems by establishing 
+appropriate constraint equations</p>
+<hr />
+<p>Required arguments:</p>
+<ul>
+<li><code>child_sys</code>, _ DynSys_ instance describing child system, i.e. system 
+  to be appended</li>
+</ul>
+<hr />
+<p>Optional arguments:</p>
+<ul>
+<li><code>J_key</code>, <em>string</em> identifier used in constraints dict. If <em>None</em> then 
+  default key will be established</li>
+</ul>
+<p>Usage of optional arguments depends on the properties of the parent 
+and child systems, as follows:</p>
+<p><strong>Parent system:</strong></p>
+<ul>
+<li>
+<p>If <em>isModal</em>:</p>
+<ul>
+<li>
+<p><code>Xpos_parent</code> can be used to define the point on the <em>parent 
+  system</em> at which the child system is to be attached. 
+  Note: usage of this parameter requires the <em>parent system</em> to 
+  have function attribute <code>modeshapeFunc</code>, i.e. a function 
+  describing how modeshapes vary with chainage.</p>
+</li>
+<li>
+<p>Alternatively <code>modeshapes_parent</code> can be used to directly 
+  provide modeshape vector relevant to the point on the <em>parent 
+  system</em> at which the child system is to be attached</p>
+</li>
+</ul>
+<p>If both are provided, <code>modeshapes_parent</code> is used to define 
+modeshapes, i.e. take precedence.</p>
+</li>
+<li>
+<p>Else:</p>
+<ul>
+<li><code>DOF_parent</code> should be used to specify the index of the DOF in 
+  the <em>parent system</em> to which the child system is to be attached</li>
+</ul>
+</li>
+</ul>
+<p><strong>Child system:</strong></p>
+<p>Similar logic applies as per parent systems:</p>
+<ul>
+<li>
+<p>If <em>isModal</em>:</p>
+<ul>
+<li>
+<p><code>Xpos_child</code> can be used to define the point on the <em>child 
+  system</em> at which the parent system is to be attached. 
+  Note: usage of this parameter requires the <em>child system</em> to have 
+  function attribute <code>modeshapeFunc</code>, i.e. a function describing 
+  how modeshapes vary with chainage.</p>
+</li>
+<li>
+<p>Alternatively <code>modeshapes_child</code> can be used to directly 
+  provide modeshape vector relevant to the point on the <em>child 
+  system</em> at which the parent system is to be attached</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Else:</p>
+<ul>
+<li><code>DOF_child</code> should be used to specify the index of the DOF in 
+  the <em>child system</em> to which the parent system is to be attached</li>
+</ul>
+</li>
+</ul>
+<p><strong>Note</strong>: this function can only be used with <em>linear</em> systems 
+with constant <code>M</code>, <code>C</code>, <code>K</code> system matrices.
+(This is checked: an exception will be raised if attempt is made to use 
+with nonlinear systems).</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.append_system', this);">Show source &equiv;</a></p>
+  <div id="source-dynsys.DynSys.append_system" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">append_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">child_sys</span><span class="p">,</span>
+                  <span class="n">J_key</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 
+                  <span class="n">Xpos_parent</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">modeshapes_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">DOF_parent</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 
+                  <span class="n">Xpos_child</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">modeshapes_child</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">DOF_child</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function is used to join two dynamic systems by establishing </span>
+<span class="sd">    appropriate constraint equations</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Required arguments:</span>
+<span class="sd">        </span>
+<span class="sd">    * `child_sys`, _ DynSys_ instance describing child system, i.e. system </span>
+<span class="sd">      to be appended</span>
+<span class="sd">      </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional arguments:</span>
+<span class="sd">        </span>
+<span class="sd">    * `J_key`, _string_ identifier used in constraints dict. If _None_ then </span>
+<span class="sd">      default key will be established</span>
+<span class="sd">        </span>
+<span class="sd">    Usage of optional arguments depends on the properties of the parent </span>
+<span class="sd">    and child systems, as follows:</span>
+<span class="sd">        </span>
+<span class="sd">    **Parent system:**</span>
+<span class="sd">        </span>
+<span class="sd">    * If _isModal_:</span>
+<span class="sd">        </span>
+<span class="sd">        * `Xpos_parent` can be used to define the point on the _parent </span>
+<span class="sd">          system_ at which the child system is to be attached. </span>
+<span class="sd">          Note: usage of this parameter requires the _parent system_ to </span>
+<span class="sd">          have function attribute `modeshapeFunc`, i.e. a function </span>
+<span class="sd">          describing how modeshapes vary with chainage.</span>
+<span class="sd">          </span>
+<span class="sd">        * Alternatively `modeshapes_parent` can be used to directly </span>
+<span class="sd">          provide modeshape vector relevant to the point on the _parent </span>
+<span class="sd">          system_ at which the child system is to be attached</span>
+<span class="sd">          </span>
+<span class="sd">        If both are provided, `modeshapes_parent` is used to define </span>
+<span class="sd">        modeshapes, i.e. take precedence.</span>
+<span class="sd">        </span>
+<span class="sd">    * Else:</span>
+<span class="sd">        </span>
+<span class="sd">        * `DOF_parent` should be used to specify the index of the DOF in </span>
+<span class="sd">          the _parent system_ to which the child system is to be attached</span>
+<span class="sd">          </span>
+<span class="sd">    **Child system:**</span>
+<span class="sd">    </span>
+<span class="sd">    Similar logic applies as per parent systems:</span>
+<span class="sd">    </span>
+<span class="sd">    * If _isModal_:</span>
+<span class="sd">        </span>
+<span class="sd">        * `Xpos_child` can be used to define the point on the _child </span>
+<span class="sd">          system_ at which the parent system is to be attached. </span>
+<span class="sd">          Note: usage of this parameter requires the _child system_ to have </span>
+<span class="sd">          function attribute `modeshapeFunc`, i.e. a function describing </span>
+<span class="sd">          how modeshapes vary with chainage.</span>
+<span class="sd">          </span>
+<span class="sd">        * Alternatively `modeshapes_child` can be used to directly </span>
+<span class="sd">          provide modeshape vector relevant to the point on the _child </span>
+<span class="sd">          system_ at which the parent system is to be attached</span>
+<span class="sd">        </span>
+<span class="sd">    * Else:</span>
+<span class="sd">        </span>
+<span class="sd">        * `DOF_child` should be used to specify the index of the DOF in </span>
+<span class="sd">          the _child system_ to which the parent system is to be attached</span>
+<span class="sd">    </span>
+<span class="sd">    **Note**: this function can only be used with *linear* systems </span>
+<span class="sd">    with constant `M`, `C`, `K` system matrices.</span>
+<span class="sd">    (This is checked: an exception will be raised if attempt is made to use </span>
+<span class="sd">    with nonlinear systems).</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">parent_sys</span> <span class="o">=</span> <span class="bp">self</span>   <span class="c1"># for clarity in the following code</span>
+    
+    <span class="c1"># Add child system to parent system&#39;s list</span>
+    <span class="n">parent_sys</span><span class="o">.</span><span class="n">DynSys_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_sys</span><span class="p">)</span>
+    
+    <span class="c1"># Define default key</span>
+    <span class="k">if</span> <span class="n">J_key</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">J_key</span> <span class="o">=</span> <span class="s2">&quot;0_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parent_sys</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">link_sys</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span> <span class="n">sys_type</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">Xpos</span><span class="p">,</span> <span class="n">modeshapes</span><span class="p">,</span> <span class="n">DOF</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to carry out the necessary tasks to link either</span>
+<span class="sd">        parent or child system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Check system is linear</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">isLinear</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;{0} system &#39;{1}&#39; is not linear!&quot;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    
+        <span class="c1"># Factor to apply to give equal and opposite behaviour</span>
+        <span class="k">if</span> <span class="n">sys_type</span> <span class="o">==</span> <span class="s2">&quot;parent&quot;</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="o">+</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">sys_type</span> <span class="o">==</span> <span class="s2">&quot;child&quot;</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unexpected `sys_type`!&quot;</span><span class="p">)</span>
+    
+        <span class="c1"># Logic as per docstring</span>
+        <span class="k">if</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">isModal</span><span class="p">:</span>
+            
+            <span class="k">if</span> <span class="n">Xpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                
+                <span class="k">if</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    
+                    <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapeFunc&quot;</span>
+                    
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                        <span class="n">modeshapes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)(</span><span class="n">Xpos</span><span class="p">)</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`Xpos` argument provided but &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;{0} system &#39;{1}&#39;&quot;</span>
+                                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">,</span><span class="n">sys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;does not have function &quot;</span> <span class="o">+</span> 
+                                         <span class="s2">&quot;attribute `</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">attr</span><span class="p">)</span>    
+            
+                <span class="c1"># Save as attributes</span>
+                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;Xpos_attachedSystems&quot;</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Xpos</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">,[</span><span class="n">Xpos</span><span class="p">])</span>
+                    
+                <span class="n">attr</span> <span class="o">=</span> <span class="s2">&quot;modeshapes_attachedSystems&quot;</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">):</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">modeshapes</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sys_obj</span><span class="p">,</span><span class="n">attr</span><span class="p">,[</span><span class="n">modeshapes</span><span class="p">])</span>
+            
+            <span class="k">elif</span> <span class="n">modeshapes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;{0} system is modal. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;Either `Xpos_{0}` &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;or `modeshapes_{0}` &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys_type</span><span class="p">)</span> <span class="o">+</span> 
+                                 <span class="s2">&quot;arguments are required&quot;</span><span class="p">)</span>
+                
+            <span class="c1"># Define new constraint equation submatrix</span>
+            <span class="n">J_new</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">modeshapes</span>
+                
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># for non-modal systems</span>
+            
+            <span class="c1"># Check DOF index is valid</span>
+            <span class="n">sys_obj</span><span class="o">.</span><span class="n">CheckDOF</span><span class="p">(</span><span class="n">DOF</span><span class="p">)</span>
+            
+            <span class="c1"># Define new constraint equation submatrix</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">sys_obj</span><span class="o">.</span><span class="n">nDOF</span>
+            <span class="n">J_new</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,)))</span>
+            <span class="n">J_new</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="mi">1</span>
+    
+        <span class="c1"># Define new constraint equation to link systems </span>
+        <span class="n">sys_obj</span><span class="o">.</span><span class="n">AddConstraintEqns</span><span class="p">(</span><span class="n">J_new</span><span class="p">,</span><span class="n">J_key</span><span class="p">,</span><span class="n">checkConstraints</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+    <span class="c1"># Use function defined above to process optional arguments</span>
+    <span class="n">link_sys</span><span class="p">(</span><span class="n">parent_sys</span><span class="p">,</span><span class="s2">&quot;parent&quot;</span><span class="p">,</span><span class="n">Xpos_parent</span><span class="p">,</span><span class="n">modeshapes_parent</span><span class="p">,</span><span class="n">DOF_parent</span><span class="p">)</span>
+    <span class="n">link_sys</span><span class="p">(</span><span class="n">child_sys</span><span class="p">,</span><span class="s2">&quot;child&quot;</span><span class="p">,</span><span class="n">Xpos_child</span><span class="p">,</span><span class="n">modeshapes_child</span><span class="p">,</span><span class="n">DOF_child</span><span class="p">)</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="dynsys.DynSys.calc_eigenproperties">
     <p>def <span class="ident">calc_eigenproperties</span>(</p><p>self, normalise=True, verbose=False, makePlots=False, axarr=None)</p>
     </div>
@@ -7890,41 +7724,7 @@ matrices held as attributes of the system will be used.</p>
 </ul>
 <hr />
 <p><strong>Returns:</strong></p>
-<p><em>Dict</em> containing the following entries:</p>
-<ul>
-<li>
-<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
-</li>
-<li>
-<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
-</li>
-<li>
-<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
-</li>
-</ul>
-<p>The above entries will in general be complex-valued and represent the 
-eigenproperties of 'A'.</p>
-<p>The following entries are real-valued and 
-express the complex eigenvalues 's' in terms which should be more 
-familiar to structural/mechanical engineers:</p>
-<ul>
-<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
-</ul>
-<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
-positive and negative frequencies for a system with N degrees of 
-freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
-<ul>
-<li>
-<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
-</li>
-<li>
-<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
-  above, in rad/s</p>
-</li>
-<li>
-<p>'eta', damping ratio (1.0=critical)</p>
-</li>
-</ul></div>
+<p>Instance of <code>Eig_Results</code> class</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.calc_eigenproperties', this);">Show source &equiv;</a></p>
   <div id="source-dynsys.DynSys.calc_eigenproperties" class="source">
@@ -7979,33 +7779,7 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
 <span class="sd">    ***</span>
 <span class="sd">    **Returns:**</span>
 <span class="sd">         </span>
-<span class="sd">    _Dict_ containing the following entries:</span>
-<span class="sd">        </span>
-<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    The above entries will in general be complex-valued and represent the </span>
-<span class="sd">    eigenproperties of &#39;A&#39;.</span>
-<span class="sd">    </span>
-<span class="sd">    The following entries are real-valued and </span>
-<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
-<span class="sd">    familiar to structural/mechanical engineers:</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
-<span class="sd">      </span>
-<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
-<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
-<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
-<span class="sd">      above, in rad/s</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
+<span class="sd">    Instance of `Eig_Results` class</span>
 <span class="sd">            </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
@@ -8036,6 +7810,235 @@ freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
         <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
                 
     <span class="k">return</span> <span class="n">eig_rslts_obj</span> 
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="dynsys.DynSys.calc_freq_response">
+    <p>def <span class="ident">calc_freq_response</span>(</p><p>self, fVals=None, fmax=None, A=None, B=None, C=None, D=None, output_names=None, verbose=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Evaluates frequency response G(f) at specified frequencies</p>
+<p>Refer 
+<a href="../references/Frequency response from state-space representation.pdf">derivation</a> 
+for the basis of the implementation.</p>
+<hr />
+<p><strong>Optional:</strong></p>
+<ul>
+<li>
+<p><code>fVals</code>: <em>array-like</em> of frequencies (Hz) to evaluate G(f) at.
+If <code>None</code> (default) then frequencies list will be obtained using 
+<code>freqVals()</code> member function.</p>
+</li>
+<li>
+<p><code>A</code>, <code>B</code>: allows overriding of system and load matrices 
+held as attributes.</p>
+</li>
+<li>
+<p><code>C</code>, <code>D</code>: allows custom output matrices to be provided. 
+If None, <code>output_mtrx</code> attribute will be used as <code>C</code> and <code>D</code> 
+will be ignored.</p>
+</li>
+<li>
+<p><code>output_names</code>, <em>list</em> of strings defining names of outputs</p>
+</li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<p>Instance of <code>FreqResponse_Results</code> class</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dynsys.DynSys.calc_freq_response', this);">Show source &equiv;</a></p>
+  <div id="source-dynsys.DynSys.calc_freq_response" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_freq_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">fVals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">A</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                       <span class="n">C</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">output_names</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span>
+                       <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates frequency response G(f) at specified frequencies</span>
+<span class="sd">    </span>
+<span class="sd">    Refer </span>
+<span class="sd">    [derivation](../references/Frequency response from state-space representation.pdf) </span>
+<span class="sd">    for the basis of the implementation.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    **Optional:**</span>
+<span class="sd">        </span>
+<span class="sd">    * `fVals`: _array-like_ of frequencies (Hz) to evaluate G(f) at.</span>
+<span class="sd">    If `None` (default) then frequencies list will be obtained using </span>
+<span class="sd">    `freqVals()` member function.</span>
+<span class="sd">    </span>
+<span class="sd">    * `A`, `B`: allows overriding of system and load matrices </span>
+<span class="sd">    held as attributes.</span>
+<span class="sd">    </span>
+<span class="sd">    * `C`, `D`: allows custom output matrices to be provided. </span>
+<span class="sd">    If None, `output_mtrx` attribute will be used as `C` and `D` </span>
+<span class="sd">    will be ignored.</span>
+<span class="sd">    </span>
+<span class="sd">    * `output_names`, _list_ of strings defining names of outputs</span>
+<span class="sd">            </span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">    </span>
+<span class="sd">    Instance of `FreqResponse_Results` class</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Calculating frequency response matrices..&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Get key properties of system </span>
+    <span class="n">hasConstraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">()</span>
+    <span class="n">nDOF_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="s2">&quot;nDOF&quot;</span><span class="p">]</span>
+            
+    <span class="c1"># Handle optional arguments</span>
+    <span class="k">if</span> <span class="n">fVals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fVals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqVals</span><span class="p">(</span><span class="n">fmax</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
+        
+    <span class="n">fVals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">fVals</span><span class="p">)</span>
+    
+    <span class="c1"># Define state matrix, if not provided via input arg</span>
+    <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
+                                <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+    <span class="c1"># Define load matrix, if not provided via input arg</span>
+    <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">hasConstraints</span><span class="p">,</span>
+                               <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c1"># Define output matrix, if not provided via input arg</span>
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="c1"># Get output matrix for full system, if defined</span>
+        <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_output_mtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                               <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+        <span class="c1"># Check shape</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span>
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="n">expected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: C matrix of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                             <span class="s2">&quot;C.shape: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> 
+                             <span class="s2">&quot;Expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected</span><span class="p">))</span>
+                
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***</span><span class="se">\n</span><span class="s2">Warning: no output matrix defined. &quot;</span><span class="o">+</span>
+                  <span class="s2">&quot;Output matrix Gf will hence relate to state &quot;</span> <span class="o">+</span> 
+                  <span class="s2">&quot;displacements and velocities</span><span class="se">\n</span><span class="s2">***&quot;</span><span class="p">)</span>
+        
+        <span class="n">C</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="c1"># Define names of outputs </span>
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+        <span class="c1"># Outputs are (extended) state vector</span>
+        <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;DIS #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+        <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;VEL #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+        <span class="n">output_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;ACC #</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDOF_full</span><span class="p">)]</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+            
+    <span class="c1"># Provide default names to outputs, if not defined above</span>
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span>  <span class="p">[</span><span class="s2">&quot;(Unnamed output #</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> 
+                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+                    
+    <span class="c1"># Define C and D matrices required to compute transfer matrices</span>
+    <span class="c1"># relating applied loads to state accelerations</span>
+    
+    <span class="c1"># Obtain A and B matrices for the full system</span>
+    <span class="n">A_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetStateMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                 <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="n">B_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                <span class="n">recalculate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+    <span class="c1"># Define C and D matrices based on rows relating to state accelerations</span>
+    <span class="n">C_acc</span> <span class="o">=</span> <span class="n">A_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span> 
+    <span class="n">D_acc</span> <span class="o">=</span> <span class="n">B_full</span><span class="p">[</span><span class="n">nDOF_full</span><span class="p">:,:]</span>
+
+    <span class="c1"># Get nullspace basis matrix (which will already have been calculated)</span>
+    <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Null_J</span>
+        <span class="n">zeros_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+        <span class="n">Z2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span><span class="n">zeros_mtrx</span><span class="p">)),</span>
+                         <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">zeros_mtrx</span><span class="p">,</span><span class="n">Z</span><span class="p">))))</span>
+        
+    <span class="c1"># Loop through frequencies</span>
+    <span class="n">Gf_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fVals</span><span class="p">)):</span>
+        
+        <span class="c1"># Define jw</span>
+        <span class="n">jw</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="o">+</span><span class="mi">1j</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">fVals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        
+        <span class="c1"># Define G(jw) at this frequency</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isSparse</span><span class="p">:</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">jw</span> <span class="o">*</span> <span class="n">I</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="err">@</span> <span class="n">B</span>
+            
+        <span class="c1"># Convert to map loads to state variables of constrained problem</span>
+        <span class="c1"># i.e. full set of freedoms</span>
+        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
+            <span class="n">Gf_states</span> <span class="o">=</span> <span class="n">Z2</span> <span class="err">@</span> <span class="n">Gf_states</span>
+            
+        <span class="c1"># Compute matrix to map applied loads to state acceleration</span>
+        <span class="n">Gf_acc</span> <span class="o">=</span> <span class="n">C_acc</span> <span class="err">@</span> <span class="n">Gf_states</span> <span class="o">+</span> <span class="n">D_acc</span>
+        
+        <span class="c1"># Stack to obtain matrix mapping applied loads to states {disp,vel}</span>
+        <span class="c1"># plus state acceletation</span>
+        <span class="n">Gf_states_extended</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Gf_states</span><span class="p">,</span><span class="n">Gf_acc</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            
+             <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_states_extended</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="c1"># Compute matrix to map applied loads to outputs</span>
+            <span class="n">Gf_outputs</span> <span class="o">=</span> <span class="n">C</span> <span class="err">@</span> <span class="n">Gf_states_extended</span>
+            
+            <span class="c1"># Adjust for direct mapping between loads and outputs</span>
+            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">Gf_outputs</span> <span class="o">+=</span> <span class="n">D</span>    
+        
+            <span class="n">Gf_rslt</span> <span class="o">=</span> <span class="n">Gf_outputs</span>
+            
+        <span class="c1"># Store in array</span>
+        <span class="n">Gf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Gf_rslt</span><span class="p">)</span>
+        
+    <span class="c1"># Convert to numpy ndarray format</span>
+    <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
+                
+    <span class="c1"># Define input names</span>
+    <span class="n">input_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">):</span>
+            <span class="n">input_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> : Force </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+    
+    <span class="c1"># Return values as class instance</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span>
+                               <span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">,</span>
+                               <span class="n">input_names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span>
+                               <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>        
+    <span class="k">return</span> <span class="n">obj</span>
 </pre></div>
 
   </div>
@@ -8251,6 +8254,8 @@ Define frequency values to evaluate frequency response G(f) at</p>
         <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
                     
         <span class="c1"># Loop over all output matrices</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">None</span>
+        
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">x</span><span class="o">.</span><span class="n">output_names</span><span class="p">)):</span>
                             
             <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -8261,16 +8266,18 @@ Define frequency values to evaluate frequency response G(f) at</p>
                 <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">om</span><span class="p">))</span>
                 <span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span> <span class="o">+</span> <span class="n">names</span>
                             
-        <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
-        <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
-        <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
-        <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
-        
-        <span class="c1"># Append to lists</span>
-        <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
-        <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
-        <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
-        <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            
+            <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
+            <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
+            <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+            <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
+            
+            <span class="c1"># Append to lists</span>
+            <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
+            <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
+            <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
+            <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
         
     <span class="c1"># Break out of function if no output matrices defined</span>
     <span class="k">if</span> <span class="n">output_names_list</span><span class="o">==</span><span class="p">[]:</span>

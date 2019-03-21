@@ -8,13 +8,27 @@ and this project adheres to:
 
 ***
 
+## [1.7.2] - 2019-03-21 - RIHY
+
+### Fixed
+
+* Fixed bugs in `modalsys.py` for case of system with only 1 mode
+
+* Improved plotting in `freq_response_rslts.py`
+
+### Added
+
+* TMD example script added
+
+
 ## [1.7.1] - 2019-03-21 - RIHY
 
 ### Fixed
 
 * Hotfix to `check_class()` method in `common.py`
 
-## [1.7] - 2019-03-21 - RIHY
+
+## [1.7.0] - 2019-03-21 - RIHY
 
 ### Changed
 
@@ -30,7 +44,6 @@ and this project adheres to:
       The intention is that these will be sorted-through and relocated / 
       deleted eventually
       
-
 ### Added
 
 * New module `hysteresis.py`, together with related example, to provide 
@@ -62,14 +75,9 @@ and this project adheres to:
 * New module `nodle.py`, to provide methods for importing data from NODLE 
   Excel input files (COO and MEM data) and .res files (DIS data)
 
-### Fixed
-
-### Removed
-
+***
 
 ## [1.6.2] - 2018-10-19 - RIHY
-
-### Changed
 
 ### Added
 
@@ -83,23 +91,14 @@ and this project adheres to:
   
 * New module `wind_section.py` added to define wind sections / resistances
 
-### Fixed
-
-### Removed
-
 
 ## [1.6.1] - 2018-10-18 - RIHY
-
-### Changed
-
-### Added
 
 ### Fixed
 
 * Default mp(f) curve corrected; had previously mis-interpeted Fig 9(b) of 
   MacDonald's paper
 
-### Removed
 
 ## [1.6.0] - 2018-10-18 - RIHY
 
@@ -120,8 +119,7 @@ and this project adheres to:
 
 * Minor bug fixed, relating to selection of correct S_eff for mode
 
-### Removed
-
+***
 
 ## [1.5.1] - 2018-09-20 - RIHY
 
@@ -133,16 +131,8 @@ and this project adheres to:
 * Train analysis example updated to illustrate usage of `AnimateResults()` with 
   animation customisation
 
-### Added
-
-### Fixed
-
-### Removed
-
 
 ## [1.5.0] - 2018-09-19 - RIHY
-
-### Changed
 
 ### Added
 
@@ -152,10 +142,7 @@ and this project adheres to:
 * `PlotEnergyResults()` and related calculation methods added to `TStep_results`
   class
 
-### Fixed
-
-### Removed
-
+***
 
 ## [1.4.2] - 2018-09-17 - RIHY
 
@@ -186,12 +173,8 @@ and this project adheres to:
   has been implemented. Option added to select values according to each 
   standard, but default behaviour is to use the PD6688-2 correction.
 
-### Removed
-
 
 ## [1.4.1] - 2018-07-23 - RIHY
-
-### Changed
 
 ### Added
 
@@ -201,13 +184,8 @@ and this project adheres to:
 
 * Improvements to related plotting routines; Np_crit overlaid onto plots
 
-### Fixed
-
-### Removed
 
 ## [1.4.0] - 2018-07-23 - RIHY
-
-### Changed
 
 ### Added
 
@@ -225,13 +203,9 @@ and this project adheres to:
   footbridge paper (refer `/references`). See also validation script, which 
   obtains excellent agreement with figures presented in McRobie's paper.
 
-### Fixed
-
-### Removed
+***
 
 ## [1.3.0] - 2018-07-20 - RIHY
-
-### Changed
 
 ### Added
 
@@ -247,17 +221,9 @@ and this project adheres to:
   constraints. Accuracy of the implementation has been validated by extension 
   of Warburton TMD validation script.
 
-### Fixed
-
-### Removed
-
-
+***
 
 ## [1.2.2] - 2018-07-19 - RIHY
-
-### Changed
-
-### Added
 
 ### Fixed
 
@@ -271,12 +237,8 @@ and this project adheres to:
   crowd loading analysis. Bugs relates to plotting and results reporting, i.e. 
   no impact on the accuracy of calculations made using previous versions.
 
-### Removed
-
 
 ## [1.2.1] - 2018-07-17 - RIHY
-
-### Changed
 
 ### Added
 
@@ -287,8 +249,6 @@ and this project adheres to:
 
 * Bug associated with calculation of lambda factor for UK NA steady-state crowd 
   loading analysis fixed.
-
-### Removed
 
 
 ## [1.2.0] - 2018-06-12 - RIHY
@@ -333,8 +293,7 @@ and this project adheres to:
 * Bug associated with output matrices fixed; was only an issue when re-defining 
   systems
 
-### Removed
-
+***
 
 ## [1.1.1] - 2018-05-22 - RIHY
 
@@ -344,6 +303,7 @@ _Hotfix responding to BNCY's 21/05/2018 email_
 
 * Tempororary fix implemented to address bug, by commenting-out rows.
   To be addressed properly in future releases.
+  
 
 ## [1.1.0] - 2018-04-23 - RIHY
 
@@ -366,45 +326,51 @@ _Hotfix responding to BNCY's 21/05/2018 email_
     * Example added to `examples\Pedestrian dynamics\UK NA walkers joggers` to 
       test and illustrate the use of these number classes and functions   
 
-### Fixed
-
-### Removed
-
+***
 
 ## [1.0.0] - 2018-04-17 - RIHY
 
 ### Changed
-* `warburton_TMD.py` validation script moved to subfolder. In future all validation
-  scripts should be kept in subfolders to avoid confusion / cross-over of inputs
+
+* `warburton_TMD.py` validation script moved to subfolder. In future all 
+  validation scripts should be kept in subfolders to avoid confusion / 
+  cross-over of inputs
+  
 * System matrices (e.g. M_mtrx, K_mtrx etc) now intended to be held as private 
   attributes; renames _M_mtrx, _C_mtrx to denote this change in intent. 
   `GetSystemMatrices()` member function of `DynSys` class re-instated (this 
   was previously marked as deprecated) and overhauled to act as the primary 
   get() function for obtaining system matrices
+  
 * Significant non backwards-compatible overhaul of how constraints are defined 
   and handled internally within the `DynSys` class. Constraint matrices are 
   now held within a dict and kept local to each dynamic system. This allows for 
   straightforward addition/removal of constraints and improves modularity. 
+  
 * Improved functionality for systems with sub-systems appended using 
   `AppendSystem()` method
+  
 * Plotting methods and response / response stats calculation methods revised to 
   be more structured and cater for systems with multiple subsystems
-* `Graphviz` package used to produce call graphs for train analysis example script.
-  This type of testing was found to be very assistive in diagnosing slow steps in 
-  the analysis and allowed overall runtime to be dramatically improved. Tests like 
-  this should be carried out periodically in the future. Dedicted subfolder made in 
-  /tests folder for this purpose.
+  
+* `Graphviz` package used to produce call graphs for train analysis example 
+  script. This type of testing was found to be very assistive in diagnosing 
+  slow steps in the analysis and allowed overall runtime to be dramatically 
+  improved. Tests like this should be carried out periodically in the future. 
+  Dedicted subfolder made in /tests folder for this purpose.
    
-
 ### Added
+
 * Validation example added to verify accuracy or revised ResponseSpectrum()
   function. Example computes response spectra for the classic El-Centro (1940)
   earthquake and makes comparison against published plots. Excellent agreement 
   found!
+  
 * New method `PrintResponseStats()` added to `tstep_results` class, to allow 
   response statistics to be printed to text window in a nice manner
 
 ### Fixed
+
 * Bug fix for ResponseSpectrum() function in `dyn_analysis`. 
   Equation of motion corrected to be -M.a (minus sign previously omitted)
   Acceleration spectrum now based on _absolute_ acceleration, as is conventional
@@ -416,118 +382,146 @@ _Hotfix responding to BNCY's 21/05/2018 email_
 * GetRealWorldDOFs() method removed from DynSys class (this had been marked as 
   deprecated since v0.1.0)
 
+***
+
 ## [0.5.1] - 2018-03-19 - RIHY
 
 ### Changed
+
 * `docs` remade (forgot to do this before releasing v0.5.0)
 
 ## [0.5.0] - 2018-03-19 - RIHY
 
 ### Added
+
 * `ResponseSpectrum` function added to `dyn_analysis` module, to allow 
   calculation of SDOF response spectrum (per seismic analysis) based on ground 
   motion acceleration time series
 
 ### Fixed
+
 * Bugs in plotting routines within `tstep_results` arising from change to 
   response results internal storage structure
 * Miscellaneous fixes associated with `None` optional arguments
 
 ### Changed
+
 * Statistics calculated using `CalcResponseStats()` within `tstep_results` 
   module are now returned as a dict, rather than list of dicts
 
 ### Removed
 
+***
 
 ## [0.4.0] - 2018-03-19 - RIHY
 
 ### Added
+
 * `tstep_results.WriteResults2File()` method allows time-series results to 
   be written to file. Linking to this function made in `tstep` and 
   `dyn_analysis` class methods. Files exported have QA-relevant headers (date, 
   version etc)
+  
 * `dyn_analysis.Dyn_Analysis`and `dyn_analysis.Multiple` objects can now be 
   saved and loaded using `dill` module (similar to `pickle`). 
   This allows objects (incl results) to be stored as binary files and 
   reloaded later. This is very useful when carrying out lots of analyses, as 
   it allows all data to be saved and reloaded later e.g. for further 
   manuipluation
+  
 * Optional argument `fLimit` added to `modalsys.ModalSys()`, to allow maximum 
   modal natural frequency to be specified. Modes with fn > fLimit will not be 
   included in analysis (a warning message is printed to show this)
+  
 * `DynSys.PlotResponsePSD()` added to implement plotting of PSDs of response 
   time series
 * Git version control used now
 
 ### Fixed
+
 * Code hide x_axis within `tstep_results.PlotResponseResults()` function 
   removed as obsolete: subplots now use `sharex=True`
 
-### Changed
-
-### Removed
-
 ***
+
 ## [0.3.0] - 2018-03-16 - RIHY
 
 ### Added
+
 * In `DynSys.__init__()` option added to represent system matrices as sparse 
   matrices (which they usually are), using `scipy.sparse.csc_matrix` format. 
   Code updates implemented in all modules to handle sparse matrices. However 
   current dense methods are used by default as this is regarded as a work in 
   progress
+  
 * New module `tstep_analysis` added. This modules contains classes to implement 
   certain forms of time-history analysis
+  
 * `setup.py` created, per PyPi guidance
+
 * Within `dynsys` and derived classes, output matrix and corresponding names no 
   longer stored as a list of matrices / list of names, as this was proving 
   unnecessarily confusing! Corrections made in all modules (I think...)
 
 ### Fixed
+
 * When `modalsys.AppendTMDs` is used, this has the effect of increasing the 
   nDOF of system. Need therefore to adjust structure of `output_mtrx`. This is 
   now done
 
 ### Changed
+
 * If `J_mtrx=None` is passed into DynSys() __init__ function then `J_mtrx` is 
   now initialised as an array of shape [0,nDOF]
+  
 * Significant overhaul of `tstep` and `tstep_results`
+
 * Package version now in `__init__.py` as single point of reference
+
 * Treatment of response / output matrices in `tstep_results`, `tstep` and 
   `dynsys` harmonised
+  
 * Miscellaneous improvements / options added to results plotting routines
 
-### Removed
-
 ***
+
 ## [0.2.0] - 2018-03-02 - RIHY
 
 ### Added
+
 * `/tests/tests_basic.py`, to contain test functions
+
 * `/tests/test_docs.py`, to auto-generate documentation concerning tests
 * SDOF properties conversion functions added to `dynsys` for common use in 
   other modules
+  
 * `tstep` added to package, to provide time-stepping analysis functionality. 
   This was previously a seperate package, but given inter-dependecies it makes 
   more sense for this to be part of `dynsys`
 
 ### Changed
+
 * Package folder structure extended:
+
     * `validation` subfolder created, to contain scripts which are more 
     involved than simple `unittest` routines and serve to validate the library 
     by comparing results obtained using `dynsys` routines against published 
     results given in classical dynamics literature
+    
     * `docs`, `img`, `ref` subfolders created in `tests`
 
 ***
+
 ## [0.1.0] - 2018-02-28 - RIHY
 
 ### Added
+
 * `CHANGELOG.md` (this file) created for the first time
+
 * `README.md` created for the first time
 
 ### Changed
+
 * Package folder structure changed:
 
     * All modules in `dynsys`: `import` statements revised accordingly
