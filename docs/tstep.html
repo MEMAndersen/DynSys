@@ -1,4 +1,4 @@
-Version: 1.6.2
+Version: 1.7
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1129,8 +1129,7 @@ systems</p>
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">tStart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tEnd</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_dt</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-                 <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">tstep_results_kwargs</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">writeResults2File</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;results.csv&quot;</span><span class="p">,</span>
                  <span class="n">plotResponseResults</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
@@ -1308,9 +1307,7 @@ systems</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Create object to write results to</span>
-        <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                                <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
-                                                <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">tstep_results_kwargs</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">results_obj</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1343,15 +1340,8 @@ systems</p>
             <span class="n">force_func</span> <span class="o">=</span> <span class="n">force_func_dict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
             
             <span class="c1"># Check force_func is a function</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` is not a function!&quot;</span><span class="p">)</span>
-                
-            <span class="c1"># Check force_func has `t` as first argument</span>
-            <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;t&#39;</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;1st argument of `force_func` must be `t`</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;i.e. `force_func` must take the form &quot;</span> <span class="o">+</span>
-                                 <span class="s2">&quot;force_func(t,*args,**kwargs)&quot;</span><span class="p">)</span>
                 
             <span class="c1"># Check dimension of vector returned by force_func is of the correct shape</span>
             <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tStart</span>
@@ -1679,9 +1669,9 @@ systems</p>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integration failed.&quot;</span><span class="p">)</span>
                 
         <span class="c1"># Calculate responses</span>
-        <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
-                                  <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
-                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">calc_responses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
+                                   <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
+                                   <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
@@ -1797,8 +1787,7 @@ for further details:</p></div>
                  <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">tStart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tEnd</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
                  <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_dt</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-                 <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                 <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">tstep_results_kwargs</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">writeResults2File</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                  <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;results.csv&quot;</span><span class="p">,</span>
                  <span class="n">plotResponseResults</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
@@ -1976,9 +1965,7 @@ for further details:</p></div>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Create object to write results to</span>
-        <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                                <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
-                                                <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">tstep_results_kwargs</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">results_obj</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2011,15 +1998,8 @@ for further details:</p></div>
             <span class="n">force_func</span> <span class="o">=</span> <span class="n">force_func_dict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
             
             <span class="c1"># Check force_func is a function</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isfunction</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">force_func</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`force_func` is not a function!&quot;</span><span class="p">)</span>
-                
-            <span class="c1"># Check force_func has `t` as first argument</span>
-            <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">force_func</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;t&#39;</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;1st argument of `force_func` must be `t`</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
-                                 <span class="s2">&quot;i.e. `force_func` must take the form &quot;</span> <span class="o">+</span>
-                                 <span class="s2">&quot;force_func(t,*args,**kwargs)&quot;</span><span class="p">)</span>
                 
             <span class="c1"># Check dimension of vector returned by force_func is of the correct shape</span>
             <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tStart</span>
@@ -2347,9 +2327,9 @@ for further details:</p></div>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integration failed.&quot;</span><span class="p">)</span>
                 
         <span class="c1"># Calculate responses</span>
-        <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
-                                  <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
-                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">results_obj</span><span class="o">.</span><span class="n">calc_responses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
+                                   <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
+                                   <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>
@@ -2372,7 +2352,7 @@ for further details:</p></div>
             
   <div class="item">
     <div class="name def" id="tstep.TStep.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, dynsys_obj, name=None, tStart=0, tEnd=30.0, dt=None, max_dt=0.1, retainDOFTimeSeries=True, retainResponseTimeSeries=True, writeResults2File=False, results_fName=&#39;results.csv&#39;, plotResponseResults=True, responsePlot_kwargs={}, x0=None, force_func_dict={}, event_funcs=None, post_event_funcs=None, max_events=None, **kwargs)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, dynsys_obj, name=None, tStart=0, tEnd=30.0, dt=None, max_dt=0.1, tstep_results_kwargs={}, writeResults2File=False, results_fName=&#39;results.csv&#39;, plotResponseResults=True, responsePlot_kwargs={}, x0=None, force_func_dict={}, event_funcs=None, post_event_funcs=None, max_events=None, **kwargs)</p>
     </div>
     
 
@@ -2436,8 +2416,7 @@ otherwise the dynamic system in question will not do anything!</p></div>
              <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">tStart</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tEnd</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
              <span class="n">dt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">max_dt</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-             <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-             <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">tstep_results_kwargs</span><span class="o">=</span><span class="p">{},</span>
              <span class="n">writeResults2File</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">results_fName</span><span class="o">=</span><span class="s2">&quot;results.csv&quot;</span><span class="p">,</span>
              <span class="n">plotResponseResults</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
@@ -2614,9 +2593,7 @@ otherwise the dynamic system in question will not do anything!</p></div>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Create object to write results to</span>
-    <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                            <span class="n">retainDOFTimeSeries</span><span class="o">=</span><span class="n">retainDOFTimeSeries</span><span class="p">,</span>
-                                            <span class="n">retainResponseTimeSeries</span><span class="o">=</span><span class="n">retainResponseTimeSeries</span><span class="p">)</span>
+    <span class="n">results_obj</span><span class="o">=</span><span class="n">tstep_results</span><span class="o">.</span><span class="n">TStep_Results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">tstep_results_kwargs</span><span class="p">)</span>
     
     <span class="bp">self</span><span class="o">.</span><span class="n">results_obj</span><span class="o">=</span><span class="n">results_obj</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -2892,9 +2869,9 @@ and methods avaliable.</p></div>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integration failed.&quot;</span><span class="p">)</span>
             
     <span class="c1"># Calculate responses</span>
-    <span class="n">results_obj</span><span class="o">.</span><span class="n">CalcResponses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
-                              <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
-                              <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">results_obj</span><span class="o">.</span><span class="n">calc_responses</span><span class="p">(</span><span class="n">write_results_to_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">writeResults2File</span><span class="p">,</span>
+                               <span class="n">results_fName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results_fName</span><span class="p">,</span>
+                               <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Total time steps: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_obj</span><span class="o">.</span><span class="n">nResults</span><span class="p">))</span>        
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Overall solution time: </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span> <span class="o">%</span> <span class="n">solve_time</span><span class="p">)</span>

@@ -8,7 +8,60 @@ and this project adheres to:
 
 ***
 
-## Unreleased
+## [1.7] - 2019-03-21 - RIHY
+
+### Changed
+
+* Previous module `wind.py` split across three new modules:
+
+    * `wind_response.py` houses functions/classes concerned with calculation 
+      of response to wind loading
+      
+    * `wind_env.py` houses functions/classes concerned with defining wind 
+      environments
+      
+    * `wind_misc.py` houses all other functions not allocated to the above. 
+      The intention is that these will be sorted-through and relocated / 
+      deleted eventually
+      
+
+### Added
+
+* New module `hysteresis.py`, together with related example, to provide 
+  classes to model hysteretic behaviour
+
+* New module `eig_results.py`, with class to act as container for 
+  eigenvalue results, to replace previous dict usage. Coding is intended to be  
+  backwards-compatible, but allows eigenproperties plot methods previously 
+  housed as `DynSys()` class methods to more logically be implemented as 
+  methods associated with the new `Eig_Results()` class.
+  
+* Note with this change, the `Eig_Results()` class only holds unique data, i.e. 
+  eigenvalues and left- and right-eigenvectors. All other eigenproperties are 
+  calculated upon request. This is intended to be more robust and will ensure 
+  consistent properties are always obtained.
+  
+* Lots of alternative getter methods defined for `Eig_Results()` to be more 
+  flexible with spellings / names when requesting certain attributes
+  
+* New module `freq_response_results.py`, with class to act as container 
+  for frequency response results, to replace previous dict usage. Coding is 
+  backwards-compatible, except `PlotFrequencyResponse()` method previously 
+  implemented within `dynsys.py` now used as `FreqResponse_Results.plot()` 
+  method
+  
+* New module `mesh.py`, to faciliate definition or and manipulation of meshes
+  (i.e. interconnected nodes and elements)
+  
+* New module `nodle.py`, to provide methods for importing data from NODLE 
+  Excel input files (COO and MEM data) and .res files (DIS data)
+
+### Fixed
+
+### Removed
+
+
+## [1.6.2] - 2018-10-19 - RIHY
 
 ### Changed
 
@@ -21,6 +74,8 @@ and this project adheres to:
 
 * `LatSync_McRobie().calc_Np_crit()`: parameters / key results at 
   Np=Np_crit instability point extracted and held as attributes
+  
+* New module `wind_section.py` added to define wind sections / resistances
 
 ### Fixed
 

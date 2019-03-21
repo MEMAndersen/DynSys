@@ -84,15 +84,19 @@ class TMD(msd_chain.MSD_Chain):
         
         # Add output matrix entry to compute relative displacement
         # (as this is commonly of interest)
-        if outputs['rel disp']:
-            self.AddOutputMtrx(output_mtrx=[-1,1,0,0,0,0],
-                               output_names=["Relative disp [m]"])
-        
-        # Add output matrix to compute damper force
-        # given by K.v_relative + C.vdot_relative
-        if outputs['linkage force']:
-            self.AddOutputMtrx(output_mtrx=[-K,+K,-C,+C,0,0],
-                               output_names=["TMD linkage force [N]"])
+        if outputs is not None:
+            
+            #print("Defining default output matrices for '%s'..." % self.name)
+            
+            if outputs['rel disp']:
+                self.add_outputs(output_mtrx=[-1,1,0,0,0,0],
+                                   output_names=["Relative disp [m]"])
+            
+            # Add output matrix to compute damper force
+            # given by K.v_relative + C.vdot_relative
+            if outputs['linkage force']:
+                self.add_outputs(output_mtrx=[-K,+K,-C,+C,0,0],
+                                   output_names=["TMD linkage force [N]"])
         
         
     def PlotSystem(self,ax,v,
@@ -151,12 +155,15 @@ class TMD(msd_chain.MSD_Chain):
 # --------------- FUNCTIONS -------------------
         
 def append_TMDs(modal_sys,
-                fname:str,
+                fname:str=None,
+                tmd_list=None,
+                tmd_pos=None,
                 append:bool=True,
                 verbose:bool=True):
     """
     Define and append multiple TMDs to 'parent' modal system.
-    TMD 'child' systems are defined using inputs read-in from .csv file
+    TMD 'child' systems are either provided via `tmd_list` or else 
+    are defined using inputs read-in from .csv file
     
     ***
     Required:
@@ -164,10 +171,16 @@ def append_TMDs(modal_sys,
     * `modal_sys`, instance of `ModalSys` class; 'parent' modal system to which 
       TMDs are to be appended
       
-    * `fname`, _string_; filename of file in which TMD definitions are provided
-      
     ***
     Optional:
+        
+    * `tmd_list`, list of TMD instances to append to modal_sys. If None 
+      (default) then TMD objects will be defined based on input from `fname`
+      
+    * `tmd_pos`, list of locations of TMD instances. Only required if TMDs 
+      defined via `tmd_list`. Otherwise will be read-in from .csv file
+      
+    * `fname`, _string_; filename of file in which TMD definitions are provided
         
     * `append`, _boolean_; if False then TMD systems will only be defined, not 
       appended to the parent modal system. In this case the `modal_sys` 
@@ -180,36 +193,54 @@ def append_TMDs(modal_sys,
     
     """
     
-    if verbose:
-        print("Defining TMD system using input provided in '%s'..." % fname)
     
-    # Read in TMD defintions from datafile
-    TMD_defs = pandas.read_csv(fname)
     
-    # Parse dataframe for specific details
-    M = TMD_defs["Mass (kg)"].values
-    f = TMD_defs["Freq (Hz)"].values
-    eta = TMD_defs["Damping ratio"].values
+    if not append and tmd_list is not None:
+        append = True # override input parameter if tmds provided via tmd_list
     
-    Xpos = TMD_defs["Chainage (m)"].values
-    modeshapes_TMD = TMD_defs.values[:,4:]
-    
-    if modeshapes_TMD.shape[1]==0:
-        modeshapes_TMD = None #' no input provided
-      
-    # Loop through to define all TMD systems
-    sys_list = []
-    
-    for i, (_M, _f, _eta) in enumerate(zip(M,f,eta)):
+    if tmd_list is None:
         
-        sys_list.append(TMD(sprung_mass=_M,
-                            nat_freq=_f,
-                            damping_ratio=_eta,
-                            name="TMD#%d" % (i+1)))    
+        tmd_list = []
+        
+        if verbose:
+            print("Defining TMD system using input provided in '%s'" % fname)
     
+        # Read in TMD defintions from datafile
+        TMD_defs = pandas.read_csv(fname)
+        
+        # Parse dataframe for specific details
+        M = TMD_defs["Mass (kg)"].values
+        f = TMD_defs["Freq (Hz)"].values
+        eta = TMD_defs["Damping ratio"].values
+        
+        tmd_pos = TMD_defs["Chainage (m)"].values
+        modeshapes_TMD = TMD_defs.values[:,4:]
+        
+        if modeshapes_TMD.shape[1]==0:
+            modeshapes_TMD = None #' no input provided
+          
+        # Loop through to define all TMD systems
+        for i, (_M, _f, _eta) in enumerate(zip(M,f,eta)):
+            
+            tmd_list.append(TMD(sprung_mass=_M,
+                                nat_freq=_f,
+                                damping_ratio=_eta,
+                                name="TMD#%d" % (i+1)))    
+        
     
-    nTMD = len(sys_list)
-    print("Number of TMDs defined: %d" % nTMD)  
+        nTMD = len(tmd_list = [])
+        print("Number of TMDs defined: %d" % nTMD)  
+    
+    else:    
+        modeshapes_TMD=None # ensures modeshapes at TMD positions determined 
+                            # from supplied modal system
+        
+    
+    if tmd_pos is None:
+        raise ValueError("TMD locations must be specified via `tmd_pos`")
+        
+    if len(tmd_pos)!=len(tmd_list):
+        raise ValueError("Inconsistent `tmd_pos` and `tmd_list` list lengths")
     
     # Append TMDs to parent modal system
     if append:
@@ -220,7 +251,7 @@ def append_TMDs(modal_sys,
                              "must be instance of 'ModalSys' class!")
             
         # Loop over all new TMD systems to append
-        for i, TMD_sys in enumerate(sys_list):
+        for i, TMD_sys in enumerate(tmd_list):
             
             if modeshapes_TMD is None:
                 mTMD = None
@@ -228,12 +259,12 @@ def append_TMDs(modal_sys,
                 mTMD = modeshapes_TMD[i,:]
                         
             modal_sys.AppendSystem(child_sys=TMD_sys,
-                                   Xpos_parent=Xpos[i],
+                                   Xpos_parent=tmd_pos[i],
                                    modeshapes_parent=mTMD,
                                    DOF_child=0)
                 
     # Return list of TMD system objects
-    return sys_list
+    return tmd_list
         
  
 # TEST ROUTINES

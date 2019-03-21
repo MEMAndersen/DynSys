@@ -41,10 +41,17 @@ make_html("msd_chain")
 make_html("hanging_1d_chain")
 make_html("tstep")
 make_html("tstep_results")
+make_html("eig_results")
+make_html("freq_response_results")
 make_html("dyn_analysis")
 make_html("loading")
 make_html("ped_dyn")
 make_html("damper")
+make_html("mesh")
+make_html("nodle")
+make_html("wind_section")
+make_html("wind_env")
+make_html("wind_response")
 
 #%%
 # List markdown files in root folder to be rendered

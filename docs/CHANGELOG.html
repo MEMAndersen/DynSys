@@ -5,7 +5,70 @@
 and this project adheres to: 
 <a href="http://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <hr />
-<h2>Unreleased</h2>
+<h2>[1.7] - 2019-03-21 - RIHY</h2>
+<h3>Changed</h3>
+<ul>
+<li>
+<p>Previous module <code>wind.py</code> split across three new modules:</p>
+<ul>
+<li>
+<p><code>wind_response.py</code> houses functions/classes concerned with calculation 
+  of response to wind loading</p>
+</li>
+<li>
+<p><code>wind_env.py</code> houses functions/classes concerned with defining wind 
+  environments</p>
+</li>
+<li>
+<p><code>wind_misc.py</code> houses all other functions not allocated to the above. 
+  The intention is that these will be sorted-through and relocated / 
+  deleted eventually</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>
+<p>New module <code>hysteresis.py</code>, together with related example, to provide 
+  classes to model hysteretic behaviour</p>
+</li>
+<li>
+<p>New module <code>eig_results.py</code>, with class to act as container for 
+  eigenvalue results, to replace previous dict usage. Coding is intended to be<br />
+  backwards-compatible, but allows eigenproperties plot methods previously 
+  housed as <code>DynSys()</code> class methods to more logically be implemented as 
+  methods associated with the new <code>Eig_Results()</code> class.</p>
+</li>
+<li>
+<p>Note with this change, the <code>Eig_Results()</code> class only holds unique data, i.e. 
+  eigenvalues and left- and right-eigenvectors. All other eigenproperties are 
+  calculated upon request. This is intended to be more robust and will ensure 
+  consistent properties are always obtained.</p>
+</li>
+<li>
+<p>Lots of alternative getter methods defined for <code>Eig_Results()</code> to be more 
+  flexible with spellings / names when requesting certain attributes</p>
+</li>
+<li>
+<p>New module <code>freq_response_results.py</code>, with class to act as container 
+  for frequency response results, to replace previous dict usage. Coding is 
+  backwards-compatible, except <code>PlotFrequencyResponse()</code> method previously 
+  implemented within <code>dynsys.py</code> now used as <code>FreqResponse_Results.plot()</code> 
+  method</p>
+</li>
+<li>
+<p>New module <code>mesh.py</code>, to faciliate definition or and manipulation of meshes
+  (i.e. interconnected nodes and elements)</p>
+</li>
+<li>
+<p>New module <code>nodle.py</code>, to provide methods for importing data from NODLE 
+  Excel input files (COO and MEM data) and .res files (DIS data)</p>
+</li>
+</ul>
+<h3>Fixed</h3>
+<h3>Removed</h3>
+<h2>[1.6.2] - 2018-10-19 - RIHY</h2>
 <h3>Changed</h3>
 <h3>Added</h3>
 <ul>
@@ -19,6 +82,9 @@ and this project adheres to:
 <li>
 <p><code>LatSync_McRobie().calc_Np_crit()</code>: parameters / key results at 
   Np=Np_crit instability point extracted and held as attributes</p>
+</li>
+<li>
+<p>New module <code>wind_section.py</code> added to define wind sections / resistances</p>
 </li>
 </ul>
 <h3>Fixed</h3>

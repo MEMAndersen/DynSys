@@ -41,8 +41,7 @@ class TStep:
                  name=None,
                  tStart=0, tEnd=30.0,
                  dt=None, max_dt=0.1,
-                 retainDOFTimeSeries=True,
-                 retainResponseTimeSeries=True,
+                 tstep_results_kwargs={},
                  writeResults2File=False,
                  results_fName="results.csv",
                  plotResponseResults=True,
@@ -220,9 +219,7 @@ class TStep:
         """
         
         # Create object to write results to
-        results_obj=tstep_results.TStep_Results(self,
-                                                retainDOFTimeSeries=retainDOFTimeSeries,
-                                                retainResponseTimeSeries=retainResponseTimeSeries)
+        results_obj=tstep_results.TStep_Results(self,**tstep_results_kwargs)
         
         self.results_obj=results_obj
         """
@@ -255,15 +252,8 @@ class TStep:
             force_func = force_func_dict[x]
             
             # Check force_func is a function
-            if not inspect.isfunction(force_func):
+            if not callable(force_func):
                 raise ValueError("`force_func` is not a function!")
-                
-            # Check force_func has `t` as first argument
-            sig = inspect.signature(force_func)
-            if not 't' in sig.parameters:
-                raise ValueError("1st argument of `force_func` must be `t`\n" + 
-                                 "i.e. `force_func` must take the form " +
-                                 "force_func(t,*args,**kwargs)")
                 
             # Check dimension of vector returned by force_func is of the correct shape
             t0 = self.tStart
@@ -591,9 +581,9 @@ class TStep:
                 raise ValueError("Integration failed.")
                 
         # Calculate responses
-        results_obj.CalcResponses(write_results_to_file=self.writeResults2File,
-                                  results_fName=self.results_fName,
-                                  verbose=verbose)
+        results_obj.calc_responses(write_results_to_file=self.writeResults2File,
+                                   results_fName=self.results_fName,
+                                   verbose=verbose)
         
         if verbose: print("Total time steps: {0}".format(results_obj.nResults))        
         if verbose: print("Overall solution time: %.3f seconds" % solve_time)

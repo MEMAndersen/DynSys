@@ -1,4 +1,4 @@
-Version: 1.6.2
+Version: 1.7
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1079,10 +1079,8 @@ table {
     <li class="mono"><a href="#damper.TMD.CalcStateMatrix">CalcStateMatrix</a></li>
     <li class="mono"><a href="#damper.TMD.CheckConstraints">CheckConstraints</a></li>
     <li class="mono"><a href="#damper.TMD.CheckDOF">CheckDOF</a></li>
-    <li class="mono"><a href="#damper.TMD.CheckOutputMtrx">CheckOutputMtrx</a></li>
     <li class="mono"><a href="#damper.TMD.EqnOfMotion">EqnOfMotion</a></li>
     <li class="mono"><a href="#damper.TMD.GetLoadMatrix">GetLoadMatrix</a></li>
-    <li class="mono"><a href="#damper.TMD.GetOutputMtrx">GetOutputMtrx</a></li>
     <li class="mono"><a href="#damper.TMD.GetStateMatrix">GetStateMatrix</a></li>
     <li class="mono"><a href="#damper.TMD.GetSystemMatrices">GetSystemMatrices</a></li>
     <li class="mono"><a href="#damper.TMD.PlotSystem">PlotSystem</a></li>
@@ -1090,8 +1088,14 @@ table {
     <li class="mono"><a href="#damper.TMD.PlotSystem_update_plot">PlotSystem_update_plot</a></li>
     <li class="mono"><a href="#damper.TMD.PrintSystemMatrices">PrintSystemMatrices</a></li>
     <li class="mono"><a href="#damper.TMD.ReadOutputMtrxFromFile">ReadOutputMtrxFromFile</a></li>
+    <li class="mono"><a href="#damper.TMD.add_outputs">add_outputs</a></li>
+    <li class="mono"><a href="#damper.TMD.calc_eigenproperties">calc_eigenproperties</a></li>
+    <li class="mono"><a href="#damper.TMD.check_outputs">check_outputs</a></li>
     <li class="mono"><a href="#damper.TMD.freqVals">freqVals</a></li>
+    <li class="mono"><a href="#damper.TMD.get_output_mtrx">get_output_mtrx</a></li>
     <li class="mono"><a href="#damper.TMD.hasConstraints">hasConstraints</a></li>
+    <li class="mono"><a href="#damper.TMD.has_mesh">has_mesh</a></li>
+    <li class="mono"><a href="#damper.TMD.has_output_mtrx">has_output_mtrx</a></li>
   </ul>
 
         </li>
@@ -1202,15 +1206,19 @@ be appended to another system (e.g. a modal system)</p>
         
         <span class="c1"># Add output matrix entry to compute relative displacement</span>
         <span class="c1"># (as this is commonly of interest)</span>
-        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
-        
-        <span class="c1"># Add output matrix to compute damper force</span>
-        <span class="c1"># given by K.v_relative + C.vdot_relative</span>
-        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            
+            <span class="c1">#print(&quot;Defining default output matrices for &#39;%s&#39;...&quot; % self.name)</span>
+            
+            <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
+            
+            <span class="c1"># Add output matrix to compute damper force</span>
+            <span class="c1"># given by K.v_relative + C.vdot_relative</span>
+            <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
         
         
     <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span>
@@ -1269,12 +1277,15 @@ be appended to another system (e.g. a modal system)</p>
 <span class="c1"># --------------- FUNCTIONS -------------------</span>
         
 <span class="k">def</span> <span class="nf">append_TMDs</span><span class="p">(</span><span class="n">modal_sys</span><span class="p">,</span>
-                <span class="n">fname</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">fname</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">tmd_list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">tmd_pos</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                 <span class="n">append</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                 <span class="n">verbose</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define and append multiple TMDs to &#39;parent&#39; modal system.</span>
-<span class="sd">    TMD &#39;child&#39; systems are defined using inputs read-in from .csv file</span>
+<span class="sd">    TMD &#39;child&#39; systems are either provided via `tmd_list` or else </span>
+<span class="sd">    are defined using inputs read-in from .csv file</span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    Required:</span>
@@ -1282,10 +1293,16 @@ be appended to another system (e.g. a modal system)</p>
 <span class="sd">    * `modal_sys`, instance of `ModalSys` class; &#39;parent&#39; modal system to which </span>
 <span class="sd">      TMDs are to be appended</span>
 <span class="sd">      </span>
-<span class="sd">    * `fname`, _string_; filename of file in which TMD definitions are provided</span>
-<span class="sd">      </span>
 <span class="sd">    ***</span>
 <span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `tmd_list`, list of TMD instances to append to modal_sys. If None </span>
+<span class="sd">      (default) then TMD objects will be defined based on input from `fname`</span>
+<span class="sd">      </span>
+<span class="sd">    * `tmd_pos`, list of locations of TMD instances. Only required if TMDs </span>
+<span class="sd">      defined via `tmd_list`. Otherwise will be read-in from .csv file</span>
+<span class="sd">      </span>
+<span class="sd">    * `fname`, _string_; filename of file in which TMD definitions are provided</span>
 <span class="sd">        </span>
 <span class="sd">    * `append`, _boolean_; if False then TMD systems will only be defined, not </span>
 <span class="sd">      appended to the parent modal system. In this case the `modal_sys` </span>
@@ -1298,36 +1315,54 @@ be appended to another system (e.g. a modal system)</p>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Defining TMD system using input provided in &#39;</span><span class="si">%s</span><span class="s2">&#39;...&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
     
-    <span class="c1"># Read in TMD defintions from datafile</span>
-    <span class="n">TMD_defs</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
     
-    <span class="c1"># Parse dataframe for specific details</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Mass (kg)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">f</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Freq (Hz)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">eta</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">append</span> <span class="ow">and</span> <span class="n">tmd_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">append</span> <span class="o">=</span> <span class="bp">True</span> <span class="c1"># override input parameter if tmds provided via tmd_list</span>
     
-    <span class="n">Xpos</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
-    
-    <span class="k">if</span> <span class="n">modeshapes_TMD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-        <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1">#&#39; no input provided</span>
-      
-    <span class="c1"># Loop through to define all TMD systems</span>
-    <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_M</span><span class="p">,</span> <span class="n">_f</span><span class="p">,</span> <span class="n">_eta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">eta</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">tmd_list</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
-        <span class="n">sys_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TMD</span><span class="p">(</span><span class="n">sprung_mass</span><span class="o">=</span><span class="n">_M</span><span class="p">,</span>
-                            <span class="n">nat_freq</span><span class="o">=</span><span class="n">_f</span><span class="p">,</span>
-                            <span class="n">damping_ratio</span><span class="o">=</span><span class="n">_eta</span><span class="p">,</span>
-                            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TMD#</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>    
+        <span class="n">tmd_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Defining TMD system using input provided in &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
     
+        <span class="c1"># Read in TMD defintions from datafile</span>
+        <span class="n">TMD_defs</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        
+        <span class="c1"># Parse dataframe for specific details</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Mass (kg)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Freq (Hz)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        
+        <span class="n">tmd_pos</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
+        
+        <span class="k">if</span> <span class="n">modeshapes_TMD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1">#&#39; no input provided</span>
+          
+        <span class="c1"># Loop through to define all TMD systems</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_M</span><span class="p">,</span> <span class="n">_f</span><span class="p">,</span> <span class="n">_eta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">eta</span><span class="p">)):</span>
+            
+            <span class="n">tmd_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TMD</span><span class="p">(</span><span class="n">sprung_mass</span><span class="o">=</span><span class="n">_M</span><span class="p">,</span>
+                                <span class="n">nat_freq</span><span class="o">=</span><span class="n">_f</span><span class="p">,</span>
+                                <span class="n">damping_ratio</span><span class="o">=</span><span class="n">_eta</span><span class="p">,</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TMD#</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>    
+        
     
-    <span class="n">nTMD</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys_list</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of TMDs defined: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nTMD</span><span class="p">)</span>  
+        <span class="n">nTMD</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmd_list</span> <span class="o">=</span> <span class="p">[])</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of TMDs defined: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nTMD</span><span class="p">)</span>  
+    
+    <span class="k">else</span><span class="p">:</span>    
+        <span class="n">modeshapes_TMD</span><span class="o">=</span><span class="bp">None</span> <span class="c1"># ensures modeshapes at TMD positions determined </span>
+                            <span class="c1"># from supplied modal system</span>
+        
+    
+    <span class="k">if</span> <span class="n">tmd_pos</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;TMD locations must be specified via `tmd_pos`&quot;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmd_pos</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">tmd_list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inconsistent `tmd_pos` and `tmd_list` list lengths&quot;</span><span class="p">)</span>
     
     <span class="c1"># Append TMDs to parent modal system</span>
     <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
@@ -1338,7 +1373,7 @@ be appended to another system (e.g. a modal system)</p>
                              <span class="s2">&quot;must be instance of &#39;ModalSys&#39; class!&quot;</span><span class="p">)</span>
             
         <span class="c1"># Loop over all new TMD systems to append</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">TMD_sys</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sys_list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">TMD_sys</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tmd_list</span><span class="p">):</span>
             
             <span class="k">if</span> <span class="n">modeshapes_TMD</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">mTMD</span> <span class="o">=</span> <span class="bp">None</span>
@@ -1346,12 +1381,12 @@ be appended to another system (e.g. a modal system)</p>
                 <span class="n">mTMD</span> <span class="o">=</span> <span class="n">modeshapes_TMD</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
                         
             <span class="n">modal_sys</span><span class="o">.</span><span class="n">AppendSystem</span><span class="p">(</span><span class="n">child_sys</span><span class="o">=</span><span class="n">TMD_sys</span><span class="p">,</span>
-                                   <span class="n">Xpos_parent</span><span class="o">=</span><span class="n">Xpos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                   <span class="n">Xpos_parent</span><span class="o">=</span><span class="n">tmd_pos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                                    <span class="n">modeshapes_parent</span><span class="o">=</span><span class="n">mTMD</span><span class="p">,</span>
                                    <span class="n">DOF_child</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 
     <span class="c1"># Return list of TMD system objects</span>
-    <span class="k">return</span> <span class="n">sys_list</span>
+    <span class="k">return</span> <span class="n">tmd_list</span>
         
  
 <span class="c1"># TEST ROUTINES</span>
@@ -1386,31 +1421,40 @@ be appended to another system (e.g. a modal system)</p>
       
   <div class="item">
     <div class="name def" id="damper.append_TMDs">
-    <p>def <span class="ident">append_TMDs</span>(</p><p>modal_sys, fname, append=True, verbose=True)</p>
+    <p>def <span class="ident">append_TMDs</span>(</p><p>modal_sys, fname=None, tmd_list=None, tmd_pos=None, append=True, verbose=True)</p>
     </div>
     
 
     
   
     <div class="desc"><p>Define and append multiple TMDs to 'parent' modal system.
-TMD 'child' systems are defined using inputs read-in from .csv file</p>
+TMD 'child' systems are either provided via <code>tmd_list</code> or else 
+are defined using inputs read-in from .csv file</p>
 <hr />
 <p>Required:</p>
 <ul>
-<li>
-<p><code>modal_sys</code>, instance of <code>ModalSys</code> class; 'parent' modal system to which 
-  TMDs are to be appended</p>
-</li>
-<li>
-<p><code>fname</code>, <em>string</em>; filename of file in which TMD definitions are provided</p>
-</li>
+<li><code>modal_sys</code>, instance of <code>ModalSys</code> class; 'parent' modal system to which 
+  TMDs are to be appended</li>
 </ul>
 <hr />
 <p>Optional:</p>
 <ul>
-<li><code>append</code>, <em>boolean</em>; if False then TMD systems will only be defined, not 
+<li>
+<p><code>tmd_list</code>, list of TMD instances to append to modal_sys. If None 
+  (default) then TMD objects will be defined based on input from <code>fname</code></p>
+</li>
+<li>
+<p><code>tmd_pos</code>, list of locations of TMD instances. Only required if TMDs 
+  defined via <code>tmd_list</code>. Otherwise will be read-in from .csv file</p>
+</li>
+<li>
+<p><code>fname</code>, <em>string</em>; filename of file in which TMD definitions are provided</p>
+</li>
+<li>
+<p><code>append</code>, <em>boolean</em>; if False then TMD systems will only be defined, not 
   appended to the parent modal system. In this case the <code>modal_sys</code> 
-  argument should be set as <code>None</code>.</li>
+  argument should be set as <code>None</code>.</p>
+</li>
 </ul>
 <hr />
 <p>Returns:</p>
@@ -1419,12 +1463,15 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.append_TMDs', this);">Show source &equiv;</a></p>
   <div id="source-damper.append_TMDs" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">append_TMDs</span><span class="p">(</span><span class="n">modal_sys</span><span class="p">,</span>
-                <span class="n">fname</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">fname</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">tmd_list</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">tmd_pos</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                 <span class="n">append</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                 <span class="n">verbose</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define and append multiple TMDs to &#39;parent&#39; modal system.</span>
-<span class="sd">    TMD &#39;child&#39; systems are defined using inputs read-in from .csv file</span>
+<span class="sd">    TMD &#39;child&#39; systems are either provided via `tmd_list` or else </span>
+<span class="sd">    are defined using inputs read-in from .csv file</span>
 <span class="sd">    </span>
 <span class="sd">    ***</span>
 <span class="sd">    Required:</span>
@@ -1432,10 +1479,16 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
 <span class="sd">    * `modal_sys`, instance of `ModalSys` class; &#39;parent&#39; modal system to which </span>
 <span class="sd">      TMDs are to be appended</span>
 <span class="sd">      </span>
-<span class="sd">    * `fname`, _string_; filename of file in which TMD definitions are provided</span>
-<span class="sd">      </span>
 <span class="sd">    ***</span>
 <span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `tmd_list`, list of TMD instances to append to modal_sys. If None </span>
+<span class="sd">      (default) then TMD objects will be defined based on input from `fname`</span>
+<span class="sd">      </span>
+<span class="sd">    * `tmd_pos`, list of locations of TMD instances. Only required if TMDs </span>
+<span class="sd">      defined via `tmd_list`. Otherwise will be read-in from .csv file</span>
+<span class="sd">      </span>
+<span class="sd">    * `fname`, _string_; filename of file in which TMD definitions are provided</span>
 <span class="sd">        </span>
 <span class="sd">    * `append`, _boolean_; if False then TMD systems will only be defined, not </span>
 <span class="sd">      appended to the parent modal system. In this case the `modal_sys` </span>
@@ -1448,36 +1501,54 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Defining TMD system using input provided in &#39;</span><span class="si">%s</span><span class="s2">&#39;...&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
     
-    <span class="c1"># Read in TMD defintions from datafile</span>
-    <span class="n">TMD_defs</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
     
-    <span class="c1"># Parse dataframe for specific details</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Mass (kg)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">f</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Freq (Hz)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">eta</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">append</span> <span class="ow">and</span> <span class="n">tmd_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">append</span> <span class="o">=</span> <span class="bp">True</span> <span class="c1"># override input parameter if tmds provided via tmd_list</span>
     
-    <span class="n">Xpos</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
-    
-    <span class="k">if</span> <span class="n">modeshapes_TMD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-        <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1">#&#39; no input provided</span>
-      
-    <span class="c1"># Loop through to define all TMD systems</span>
-    <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_M</span><span class="p">,</span> <span class="n">_f</span><span class="p">,</span> <span class="n">_eta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">eta</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">tmd_list</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
-        <span class="n">sys_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TMD</span><span class="p">(</span><span class="n">sprung_mass</span><span class="o">=</span><span class="n">_M</span><span class="p">,</span>
-                            <span class="n">nat_freq</span><span class="o">=</span><span class="n">_f</span><span class="p">,</span>
-                            <span class="n">damping_ratio</span><span class="o">=</span><span class="n">_eta</span><span class="p">,</span>
-                            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TMD#</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>    
+        <span class="n">tmd_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Defining TMD system using input provided in &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
     
+        <span class="c1"># Read in TMD defintions from datafile</span>
+        <span class="n">TMD_defs</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        
+        <span class="c1"># Parse dataframe for specific details</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Mass (kg)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Freq (Hz)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Damping ratio&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        
+        <span class="n">tmd_pos</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="p">[</span><span class="s2">&quot;Chainage (m)&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="n">TMD_defs</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span><span class="mi">4</span><span class="p">:]</span>
+        
+        <span class="k">if</span> <span class="n">modeshapes_TMD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">modeshapes_TMD</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1">#&#39; no input provided</span>
+          
+        <span class="c1"># Loop through to define all TMD systems</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_M</span><span class="p">,</span> <span class="n">_f</span><span class="p">,</span> <span class="n">_eta</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">eta</span><span class="p">)):</span>
+            
+            <span class="n">tmd_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TMD</span><span class="p">(</span><span class="n">sprung_mass</span><span class="o">=</span><span class="n">_M</span><span class="p">,</span>
+                                <span class="n">nat_freq</span><span class="o">=</span><span class="n">_f</span><span class="p">,</span>
+                                <span class="n">damping_ratio</span><span class="o">=</span><span class="n">_eta</span><span class="p">,</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TMD#</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>    
+        
     
-    <span class="n">nTMD</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys_list</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of TMDs defined: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nTMD</span><span class="p">)</span>  
+        <span class="n">nTMD</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmd_list</span> <span class="o">=</span> <span class="p">[])</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of TMDs defined: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nTMD</span><span class="p">)</span>  
+    
+    <span class="k">else</span><span class="p">:</span>    
+        <span class="n">modeshapes_TMD</span><span class="o">=</span><span class="bp">None</span> <span class="c1"># ensures modeshapes at TMD positions determined </span>
+                            <span class="c1"># from supplied modal system</span>
+        
+    
+    <span class="k">if</span> <span class="n">tmd_pos</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;TMD locations must be specified via `tmd_pos`&quot;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmd_pos</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">tmd_list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inconsistent `tmd_pos` and `tmd_list` list lengths&quot;</span><span class="p">)</span>
     
     <span class="c1"># Append TMDs to parent modal system</span>
     <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
@@ -1488,7 +1559,7 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
                              <span class="s2">&quot;must be instance of &#39;ModalSys&#39; class!&quot;</span><span class="p">)</span>
             
         <span class="c1"># Loop over all new TMD systems to append</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">TMD_sys</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sys_list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">TMD_sys</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tmd_list</span><span class="p">):</span>
             
             <span class="k">if</span> <span class="n">modeshapes_TMD</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="n">mTMD</span> <span class="o">=</span> <span class="bp">None</span>
@@ -1496,12 +1567,12 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
                 <span class="n">mTMD</span> <span class="o">=</span> <span class="n">modeshapes_TMD</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
                         
             <span class="n">modal_sys</span><span class="o">.</span><span class="n">AppendSystem</span><span class="p">(</span><span class="n">child_sys</span><span class="o">=</span><span class="n">TMD_sys</span><span class="p">,</span>
-                                   <span class="n">Xpos_parent</span><span class="o">=</span><span class="n">Xpos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                   <span class="n">Xpos_parent</span><span class="o">=</span><span class="n">tmd_pos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                                    <span class="n">modeshapes_parent</span><span class="o">=</span><span class="n">mTMD</span><span class="p">,</span>
                                    <span class="n">DOF_child</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 
     <span class="c1"># Return list of TMD system objects</span>
-    <span class="k">return</span> <span class="n">sys_list</span>
+    <span class="k">return</span> <span class="n">tmd_list</span>
 </pre></div>
 
   </div>
@@ -1587,15 +1658,19 @@ TMD 'child' systems are defined using inputs read-in from .csv file</p>
         
         <span class="c1"># Add output matrix entry to compute relative displacement</span>
         <span class="c1"># (as this is commonly of interest)</span>
-        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
-        
-        <span class="c1"># Add output matrix to compute damper force</span>
-        <span class="c1"># given by K.v_relative + C.vdot_relative</span>
-        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            
+            <span class="c1">#print(&quot;Defining default output matrices for &#39;%s&#39;...&quot; % self.name)</span>
+            
+            <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
+            
+            <span class="c1"># Add output matrix to compute damper force</span>
+            <span class="c1"># given by K.v_relative + C.vdot_relative</span>
+            <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
         
         
     <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span>
@@ -1789,15 +1864,19 @@ for that class for further details</p></div>
     
     <span class="c1"># Add output matrix entry to compute relative displacement</span>
     <span class="c1"># (as this is commonly of interest)</span>
-    <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                           <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
-    
-    <span class="c1"># Add output matrix to compute damper force</span>
-    <span class="c1"># given by K.v_relative + C.vdot_relative</span>
-    <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">AddOutputMtrx</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                           <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        
+        <span class="c1">#print(&quot;Defining default output matrices for &#39;%s&#39;...&quot; % self.name)</span>
+        
+        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
+        
+        <span class="c1"># Add output matrix to compute damper force</span>
+        <span class="c1"># given by K.v_relative + C.vdot_relative</span>
+        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
 </pre></div>
 
   </div>
@@ -1900,72 +1979,17 @@ equations are independent</p></div>
             
   <div class="item">
     <div class="name def" id="damper.TMD.AddOutputMtrx">
-    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, overwrite=False, fName=&#39;outputs.csv&#39;, verbose=False)</p>
+    <p>def <span class="ident">AddOutputMtrx</span>(</p><p>self, *args, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Appends <code>output_mtrx</code> to <code>outputsList</code></p>
-<hr />
-<p><code>output_mtrx</code> can either be supplied directly or else read from file 
-(as denoted by <code>fName</code>)</p>
-<p><code>output_mtrx</code> can be a list of matrices; each will be appended in turn</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.AddOutputMtrx', this);">Show source &equiv;</a></p>
   <div id="source-damper.TMD.AddOutputMtrx" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                  <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                  <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                  <span class="n">overwrite</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                  <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">,</span>
-                  <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Appends `output_mtrx` to `outputsList`</span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    `output_mtrx` can either be supplied directly or else read from file </span>
-<span class="sd">    (as denoted by `fName`)</span>
-<span class="sd">    </span>
-<span class="sd">    `output_mtrx` can be a list of matrices; each will be appended in turn</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;AddOutputMtrx() method invoked.&quot;</span><span class="p">)</span>
-    
-    <span class="c1"># Read from file if no output_mtrx provided</span>
-    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">)</span>
-        
-    <span class="c1"># Create default output names if none provided</span>
-    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Response {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
-        
-    
-    <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New output matrix replaces previous output matrix, if defined&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">output_mtrx</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New output matrix appended to previous output matrix, if defined&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">+=</span> <span class="n">output_names</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output matrix shape:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output names list:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span>
-    
-    <span class="c1"># Check dimensions of all output matrices defined</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">CheckOutputMtrx</span><span class="p">()</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AddOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -2238,237 +2262,17 @@ with nonlinear systems).</p></div>
             
   <div class="item">
     <div class="name def" id="damper.TMD.CalcEigenproperties">
-    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, normaliseEigenvectors=True, verbose=False, makePlots=False, axarr=None)</p>
+    <p>def <span class="ident">CalcEigenproperties</span>(</p><p>self, *args, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>General method for determining damped eigenvectors and eigenvalues 
-of system</p>
-<hr />
-<p>Note in general eigenproperties will be complex due to non-proportional
-damping.</p>
-<p>Eigendecomposition of the system state matrix 'A' is carried out to 
-obtain eigenvalues and displacement-velocity eigenvectors.</p>
-<p>Engineers who are not familiar with the background theory should read
-the following excellent paper:</p>
-<p><em>An Engineering Interpretation of the Complex 
-Eigensolution of Linear Dynamic Systems</em></p>
-<p>by Christopher Hoen. </p>
-<p><a href="../references/An Engineering Interpretation of the Complex 
-Eigensolution of Linear Dynamic Systems.pdf">PDF</a></p>
-<hr />
-<p><strong>Required:</strong></p>
-<p>No arguments; the mass, stiffness, damping and (if defined) constraint 
-matrices held as attributes of the system will be used.</p>
-<hr />
-<p><strong>Optional:</strong></p>
-<ul>
-<li>
-<p><code>normaliseEigenvectors</code>, <em>boolean</em>, dictates whether eigenvectors 
-  should be normalised, such that Y.T @ X = I</p>
-</li>
-<li>
-<p><code>makePlots</code>, <em>boolean</em>, if True plots will be produced to illustrate 
-  the eigensolution obtained</p>
-</li>
-<li>
-<p><code>axarr</code>, list of <em>axes</em> onto which plots should be made. If None 
-  plots will be made onto new figures</p>
-</li>
-<li>
-<p><code>verbose</code>, <em>boolean</em>, if True intermediate output &amp; text will be 
-  printed to the console</p>
-</li>
-</ul>
-<hr />
-<p><strong>Returns:</strong></p>
-<p><em>Dict</em> containing the following entries:</p>
-<ul>
-<li>
-<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
-</li>
-<li>
-<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
-</li>
-<li>
-<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
-</li>
-</ul>
-<p>The above entries will in general be complex-valued and represent the 
-eigenproperties of 'A'.</p>
-<p>The following entries are real-valued and 
-express the complex eigenvalues 's' in terms which should be more 
-familiar to structural/mechanical engineers:</p>
-<ul>
-<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
-</ul>
-<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
-positive and negative frequencies for a system with N degrees of 
-freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
-<ul>
-<li>
-<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
-</li>
-<li>
-<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
-  above, in rad/s</p>
-</li>
-<li>
-<p>'eta', damping ratio (1.0=critical)</p>
-</li>
-</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CalcEigenproperties', this);">Show source &equiv;</a></p>
   <div id="source-damper.TMD.CalcEigenproperties" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">normaliseEigenvectors</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                        <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                        <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                        <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
-<span class="sd">    of system</span>
-<span class="sd">    ***</span>
-<span class="sd">    </span>
-<span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
-<span class="sd">    damping.</span>
-<span class="sd">    </span>
-<span class="sd">    Eigendecomposition of the system state matrix &#39;A&#39; is carried out to </span>
-<span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
-<span class="sd">    </span>
-<span class="sd">    Engineers who are not familiar with the background theory should read</span>
-<span class="sd">    the following excellent paper:</span>
-<span class="sd">        </span>
-<span class="sd">    *An Engineering Interpretation of the Complex </span>
-<span class="sd">    Eigensolution of Linear Dynamic Systems*</span>
-<span class="sd">    </span>
-<span class="sd">    by Christopher Hoen. </span>
-<span class="sd">    </span>
-<span class="sd">    [PDF](../references/An Engineering Interpretation of the Complex </span>
-<span class="sd">    Eigensolution of Linear Dynamic Systems.pdf)</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Required:**</span>
-<span class="sd">        </span>
-<span class="sd">    No arguments; the mass, stiffness, damping and (if defined) constraint </span>
-<span class="sd">    matrices held as attributes of the system will be used.</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Optional:**</span>
-<span class="sd">        </span>
-<span class="sd">    * `normaliseEigenvectors`, _boolean_, dictates whether eigenvectors </span>
-<span class="sd">      should be normalised, such that Y.T @ X = I</span>
-<span class="sd">      </span>
-<span class="sd">    * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
-<span class="sd">      the eigensolution obtained</span>
-<span class="sd">      </span>
-<span class="sd">    * `axarr`, list of _axes_ onto which plots should be made. If None </span>
-<span class="sd">      plots will be made onto new figures</span>
-<span class="sd">      </span>
-<span class="sd">    * `verbose`, _boolean_, if True intermediate output &amp; text will be </span>
-<span class="sd">      printed to the console</span>
-<span class="sd">     </span>
-<span class="sd">    ***</span>
-<span class="sd">    **Returns:**</span>
-<span class="sd">         </span>
-<span class="sd">    _Dict_ containing the following entries:</span>
-<span class="sd">        </span>
-<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
-<span class="sd">    </span>
-<span class="sd">    The above entries will in general be complex-valued and represent the </span>
-<span class="sd">    eigenproperties of &#39;A&#39;.</span>
-<span class="sd">    </span>
-<span class="sd">    The following entries are real-valued and </span>
-<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
-<span class="sd">    familiar to structural/mechanical engineers:</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
-<span class="sd">      </span>
-<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
-<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
-<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
-<span class="sd">    </span>
-<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
-<span class="sd">      above, in rad/s</span>
-<span class="sd">      </span>
-<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
-<span class="sd">            </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Get system matrices</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
-    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
-    
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">J</span> <span class="o">=</span> <span class="bp">None</span>
-        
-    <span class="c1"># Compute eigenproperties of A_c</span>
-    <span class="c1"># s is vector of singular values</span>
-    <span class="c1"># columns of X are right eigenvectors of A</span>
-    <span class="c1"># columns of Y are left eigenvectors of A  </span>
-    <span class="n">s</span><span class="p">,</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-        
-    <span class="c1"># Normalise eigenvectors such that Y.T.X=I</span>
-    <span class="k">if</span> <span class="n">normaliseEigenvectors</span><span class="p">:</span>
-        <span class="n">X</span><span class="p">,</span><span class="n">Y</span> <span class="o">=</span> <span class="n">NormaliseEigenvectors</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
-    
-    <span class="c1"># Extract modal properties of system from eigenvalues</span>
-    <span class="n">f_n_abs</span><span class="p">,</span> <span class="n">f_n</span><span class="p">,</span> <span class="n">f_d</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="n">RealEigenvalueProperties</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-    <span class="c1"># Sort eigenvalues into ascending order of f_n_abs</span>
-    <span class="n">i1</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">f_n_abs</span><span class="p">)</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[:,</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">f_n</span><span class="o">=</span><span class="n">f_n</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    <span class="n">f_d</span><span class="o">=</span><span class="n">f_d</span><span class="p">[</span><span class="n">i1</span><span class="p">]</span>
-    
-    <span class="c1"># Write results to object</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">s</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_n</span> <span class="o">=</span> <span class="n">f_n</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">f_d</span> <span class="o">=</span> <span class="n">f_d</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="n">eta</span>
-    
-    <span class="n">ax_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
-        
-        <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">axarr</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]</span>
-            
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_OrthogonalityPlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-        <span class="n">ax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_EigenvaluePlot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">plotType</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-    
-    <span class="c1"># Return complex eigensolution as dict</span>
-    <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">s</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">X</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">Y</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_n</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_n&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_n</span><span class="p">)</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;eta&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">eta</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;f_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">f_d</span>
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;w_d&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">angularFreq</span><span class="p">(</span><span class="n">f_d</span><span class="p">)</span>
-    
-    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;ax_list&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">ax_list</span>
-    
-    <span class="k">return</span> <span class="n">d</span> 
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CalcEigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_eigenproperties</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -2597,14 +2401,17 @@ will be ignored.</p>
     <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
         <span class="c1"># Get output matrix for full system, if defined</span>
-        <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetOutputMtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                                             <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">C</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_output_mtrx</span><span class="p">(</span><span class="n">all_systems</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                               <span class="n">state_variables_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         
         <span class="c1"># Check shape</span>
-        <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: C matrix of unexpected shape!&quot;</span><span class="p">)</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">nDOF_full</span>
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">!=</span><span class="n">expected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error: C matrix of unexpected shape!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> 
+                             <span class="s2">&quot;C.shape: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> 
+                             <span class="s2">&quot;Expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expected</span><span class="p">))</span>
                 
-    <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
         
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">print</span><span class="p">(</span><span class="s2">&quot;***</span><span class="se">\n</span><span class="s2">Warning: no output matrix defined. &quot;</span><span class="o">+</span>
@@ -2647,28 +2454,6 @@ will be ignored.</p>
         <span class="n">zeros_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
         <span class="n">Z2</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span><span class="n">zeros_mtrx</span><span class="p">)),</span>
                          <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">zeros_mtrx</span><span class="p">,</span><span class="n">Z</span><span class="p">))))</span>
-                
-    <span class="c1"># Print shapes of all arrays</span>
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Shapes of A B C D matrices:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;A: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;B: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        
-        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C: None&quot;</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D: None&quot;</span><span class="p">)</span>
-            
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;C_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">C_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;D_acc: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">D_acc</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        
-        <span class="k">if</span> <span class="n">hasConstraints</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Z2:{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Z2</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>                
         
     <span class="c1"># Loop through frequencies</span>
     <span class="n">Gf_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2720,13 +2505,11 @@ will be ignored.</p>
     <span class="c1"># Convert to numpy ndarray format</span>
     <span class="n">Gf_list</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Gf_list</span><span class="p">)</span>
                 
-    <span class="c1"># Return values as dict</span>
-    <span class="n">rslts_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fVals</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;G_f&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gf_list</span>
-    <span class="n">rslts_dict</span><span class="p">[</span><span class="s2">&quot;output_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_names</span>
-    
-    <span class="k">return</span> <span class="n">rslts_dict</span>
+    <span class="c1"># Return values as class instance</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span>
+                               <span class="n">Gf</span><span class="o">=</span><span class="n">Gf_list</span><span class="p">,</span>
+                               <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>        
+    <span class="k">return</span> <span class="n">obj</span>
 </pre></div>
 
   </div>
@@ -3086,71 +2869,6 @@ system, including any sub-systems, is full rank</p></div>
   
             
   <div class="item">
-    <div class="name def" id="damper.TMD.CheckOutputMtrx">
-    <p>def <span class="ident">CheckOutputMtrx</span>(</p><p>self, output_mtrx=None, output_names=None, verbose=False)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Checks that all defined output matrices are of the correct shape</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.CheckOutputMtrx', this);">Show source &equiv;</a></p>
-  <div id="source-damper.TMD.CheckOutputMtrx" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">CheckOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                    <span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                    <span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                    <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Checks that all defined output matrices are of the correct shape</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Handle option arguments</span>
-    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
-        
-    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
-    
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CheckOutputMtrx() method invoked:&quot;</span><span class="p">)</span>
-    
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;output_mtrx:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;output_names:&quot;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-    
-    <span class="c1"># Check list lengths agree</span>
-    
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span><span class="o">!=</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of lists `output_names` &quot;</span><span class="o">+</span>
-                         <span class="s2">&quot;and rows of `output_mtrx` do not agree!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
-                         <span class="s2">&quot;len(output_names)={0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">))</span><span class="o">+</span>
-                         <span class="s2">&quot;output_mtrx.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-    
-    <span class="c1"># Check shape of output matrix</span>
-    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
-        <span class="k">if</span> <span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nDOF_expected</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;output_mtrx of invalid shape defined!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
-                             <span class="s2">&quot;Shape provided: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
-                             <span class="s2">&quot;Cols expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nDOF_expected</span><span class="p">))</span>
-
-    <span class="k">return</span> <span class="bp">True</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
     <div class="name def" id="damper.TMD.EqnOfMotion">
     <p>def <span class="ident">EqnOfMotion</span>(</p><p>self, x, t, forceFunc, M, C, K, J, nDOF, isSparse, isLinear, hasConstraints)</p>
     </div>
@@ -3344,111 +3062,6 @@ and held as attribute. Otherwise load matrix will be recalculated</p>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">CalcLoadMatrix</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">=</span><span class="n">unconstrained</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="damper.TMD.GetOutputMtrx">
-    <p>def <span class="ident">GetOutputMtrx</span>(</p><p>self, state_variables_only=False, all_systems=True)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Returns output matrix for overall system</p>
-<hr />
-<p>Optional:</p>
-<ul>
-<li>
-<p><code>state_variables_only</code>, <em>boolean</em>, if True, only columns relating to state 
-  variables (i.e. displacements, velocities - but not accelerations)
-  will be returned</p>
-</li>
-<li>
-<p><code>all_systems</code>, <em>boolean</em>, if True output matrices for all subsystems 
-  will be arranged as block diagonal matrix, which represents the 
-  output matrix for the full system</p>
-</li>
-</ul></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.GetOutputMtrx', this);">Show source &equiv;</a></p>
-  <div id="source-damper.TMD.GetOutputMtrx" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">GetOutputMtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                  <span class="n">state_variables_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                  <span class="n">all_systems</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns output matrix for overall system</span>
-<span class="sd">    </span>
-<span class="sd">    ***</span>
-<span class="sd">    Optional:</span>
-<span class="sd">        </span>
-<span class="sd">    * `state_variables_only`, _boolean_, if True, only columns relating to state </span>
-<span class="sd">      variables (i.e. displacements, velocities - but not accelerations)</span>
-<span class="sd">      will be returned</span>
-<span class="sd">      </span>
-<span class="sd">    * `all_systems`, _boolean_, if True output matrices for all subsystems </span>
-<span class="sd">      will be arranged as block diagonal matrix, which represents the </span>
-<span class="sd">      output matrix for the full system</span>
-<span class="sd">      </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Define list over which to loop</span>
-    <span class="k">if</span> <span class="n">all_systems</span><span class="p">:</span>
-        <span class="n">sys_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
-    
-    <span class="c1"># Assemble full output matrix by arranging as block diagonal matrix</span>
-    <span class="c1">#output_mtrx_list = [x.output_mtrx for x in sys_list]</span>
-    <span class="c1">#print(output_mtrx_list)</span>
-    
-    <span class="c1">#for x in output_mtrx_list:</span>
-    <span class="c1">#    print(x)</span>
-    
-    <span class="n">disp_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">vel_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">accn_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">output_names_list</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sys_list</span><span class="p">:</span>
-        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
-        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span>
-        <span class="n">output_names</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">output_names</span>
-        
-        <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
-        <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
-        <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
-        <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
-        
-        <span class="c1"># Append to lists</span>
-        <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
-        <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
-        <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
-        <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
-        
-    <span class="c1"># Assemble submatrices for full system</span>
-    <span class="n">disp_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">disp_cols_list</span><span class="p">)</span>
-    <span class="n">vel_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">vel_cols_list</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
-        <span class="n">accn_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">accn_cols_list</span><span class="p">)</span>
-    
-    <span class="c1"># Concatenate to prepare output matrix for full system</span>
-    <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">disp_cols_full</span><span class="p">,</span><span class="n">vel_cols_full</span><span class="p">))</span>
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
-        <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">output_mtrx_full</span><span class="p">,</span><span class="n">accn_cols_full</span><span class="p">))</span>
-    
-    <span class="c1"># Convert list of names to array format</span>
-    <span class="n">output_names_arr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">output_names_list</span><span class="p">)</span> 
-    
-    <span class="c1"># Return matrix and row names for full system</span>
-    <span class="k">return</span> <span class="n">output_mtrx_full</span><span class="p">,</span> <span class="n">output_names_arr</span>
 </pre></div>
 
   </div>
@@ -4028,6 +3641,372 @@ C is the <em>output matrix</em> mapping <em>state variables</em> <strong>x</stro
   
             
   <div class="item">
+    <div class="name def" id="damper.TMD.add_outputs">
+    <p>def <span class="ident">add_outputs</span>(</p><p>self, output_mtrx=None, output_names=None, fName=&#39;outputs.csv&#39;, append=True, verbose=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Appends new output matrix and associated names to object</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>output_mtrx</code>, numpy matrix expected</p>
+</li>
+<li>
+<p><code>output_names</code>, list or array of strings</p>
+</li>
+<li>
+<p><code>fName</code>, string denoting csv file defining output matrix and names</p>
+</li>
+<li>
+<p><code>append</code>, if True (default) then new output matrices and names will 
+  be appended to any previously-defined outputs.</p>
+</li>
+</ul>
+<p>For normal usage either <code>output_mtrx</code> and <code>output_names</code> to be 
+provided. Otherwise an attempt will be made to read data from <code>fName</code>.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.add_outputs', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.add_outputs" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">add_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">fName</span><span class="o">=</span><span class="s1">&#39;outputs.csv&#39;</span><span class="p">,</span>
+                <span class="n">append</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Appends new output matrix and associated names to object</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `output_mtrx`, numpy matrix expected</span>
+<span class="sd">    </span>
+<span class="sd">    * `output_names`, list or array of strings</span>
+<span class="sd">    </span>
+<span class="sd">    * `fName`, string denoting csv file defining output matrix and names</span>
+<span class="sd">    </span>
+<span class="sd">    * `append`, if True (default) then new output matrices and names will </span>
+<span class="sd">      be appended to any previously-defined outputs.</span>
+<span class="sd">    </span>
+<span class="sd">    For normal usage either `output_mtrx` and `output_names` to be </span>
+<span class="sd">    provided. Otherwise an attempt will be made to read data from `fName`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&#39;add_outputs()&#39; method invoked.&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Read from file if no output_mtrx provided</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;New outputs defined in &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">fName</span><span class="p">)</span>
+        <span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadOutputMtrxFromFile</span><span class="p">(</span><span class="n">fName</span><span class="p">)</span>
+        
+    <span class="c1"># Create default output names if none provided</span>
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Response {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+                
+    <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
+        
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">convert2matrix</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">)</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">output_mtrx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>            
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output matrix shapes:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_om</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Updated output names:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names</span><span class="p">)</span>
+    
+    <span class="c1"># Check dimensions of all output matrices defined</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">check_outputs</span><span class="p">()</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="damper.TMD.calc_eigenproperties">
+    <p>def <span class="ident">calc_eigenproperties</span>(</p><p>self, normalise=True, verbose=False, makePlots=False, axarr=None)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>General method for determining damped eigenvectors and eigenvalues 
+of system</p>
+<hr />
+<p>Note in general eigenproperties will be complex due to non-proportional
+damping.</p>
+<p>Eigendecomposition of the system state matrix 'A' is carried out to 
+obtain eigenvalues and displacement-velocity eigenvectors.</p>
+<p>Engineers who are not familiar with the background theory should read
+the following excellent paper:</p>
+<p><em>An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems</em></p>
+<p>by Christopher Hoen. </p>
+<p><a href="../references/An Engineering Interpretation of the Complex 
+Eigensolution of Linear Dynamic Systems.pdf">PDF</a></p>
+<hr />
+<p><strong>Required:</strong></p>
+<p>No arguments; the mass, stiffness, damping and (if defined) constraint 
+matrices held as attributes of the system will be used.</p>
+<hr />
+<p><strong>Optional:</strong></p>
+<ul>
+<li>
+<p><code>normalise</code>, <em>boolean</em>, dictates whether eigenvectors 
+  should be normalised, such that Y.T @ X = I</p>
+</li>
+<li>
+<p><code>makePlots</code>, <em>boolean</em>, if True plots will be produced to illustrate 
+  the eigensolution obtained</p>
+</li>
+<li>
+<p><code>axarr</code>, list of <em>axes</em> onto which plots should be made. If None 
+  plots will be made onto new figures</p>
+</li>
+<li>
+<p><code>verbose</code>, <em>boolean</em>, if True intermediate output &amp; text will be 
+  printed to the console</p>
+</li>
+</ul>
+<hr />
+<p><strong>Returns:</strong></p>
+<p><em>Dict</em> containing the following entries:</p>
+<ul>
+<li>
+<p>'s', <em>array</em> containing the eigenvalues of 'A'</p>
+</li>
+<li>
+<p>'X', <em>matrix</em>, the columns of which are the right-eigenvectors of 'A'</p>
+</li>
+<li>
+<p>'Y', <em>matrix</em>, the columns of which are the left-eigenvectors of 'A'</p>
+</li>
+</ul>
+<p>The above entries will in general be complex-valued and represent the 
+eigenproperties of 'A'.</p>
+<p>The following entries are real-valued and 
+express the complex eigenvalues 's' in terms which should be more 
+familiar to structural/mechanical engineers:</p>
+<ul>
+<li>'f_n', <em>array</em> of <em>undamped natural frequencies</em>, in Hz. </li>
+</ul>
+<p>Note as 's' comprises conjugate pairs, there will be N pairs of 
+positive and negative frequencies for a system with N degrees of 
+freedom (i.e. 'A' matrix of shape [2N x 2N])</p>
+<ul>
+<li>
+<p>'f_d', <em>array</em> of <em>damped</em> natural frequencies_, in Hz</p>
+</li>
+<li>
+<p>'w_n', 'w_d'; circular natural natural frequencies related to the 
+  above, in rad/s</p>
+</li>
+<li>
+<p>'eta', damping ratio (1.0=critical)</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.calc_eigenproperties', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.calc_eigenproperties" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">calc_eigenproperties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">normalise</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                         <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">makePlots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    General method for determining damped eigenvectors and eigenvalues </span>
+<span class="sd">    of system</span>
+<span class="sd">    ***</span>
+<span class="sd">    </span>
+<span class="sd">    Note in general eigenproperties will be complex due to non-proportional</span>
+<span class="sd">    damping.</span>
+<span class="sd">    </span>
+<span class="sd">    Eigendecomposition of the system state matrix &#39;A&#39; is carried out to </span>
+<span class="sd">    obtain eigenvalues and displacement-velocity eigenvectors.</span>
+<span class="sd">    </span>
+<span class="sd">    Engineers who are not familiar with the background theory should read</span>
+<span class="sd">    the following excellent paper:</span>
+<span class="sd">        </span>
+<span class="sd">    *An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems*</span>
+<span class="sd">    </span>
+<span class="sd">    by Christopher Hoen. </span>
+<span class="sd">    </span>
+<span class="sd">    [PDF](../references/An Engineering Interpretation of the Complex </span>
+<span class="sd">    Eigensolution of Linear Dynamic Systems.pdf)</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Required:**</span>
+<span class="sd">        </span>
+<span class="sd">    No arguments; the mass, stiffness, damping and (if defined) constraint </span>
+<span class="sd">    matrices held as attributes of the system will be used.</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Optional:**</span>
+<span class="sd">        </span>
+<span class="sd">    * `normalise`, _boolean_, dictates whether eigenvectors </span>
+<span class="sd">      should be normalised, such that Y.T @ X = I</span>
+<span class="sd">      </span>
+<span class="sd">    * `makePlots`, _boolean_, if True plots will be produced to illustrate </span>
+<span class="sd">      the eigensolution obtained</span>
+<span class="sd">      </span>
+<span class="sd">    * `axarr`, list of _axes_ onto which plots should be made. If None </span>
+<span class="sd">      plots will be made onto new figures</span>
+<span class="sd">      </span>
+<span class="sd">    * `verbose`, _boolean_, if True intermediate output &amp; text will be </span>
+<span class="sd">      printed to the console</span>
+<span class="sd">     </span>
+<span class="sd">    ***</span>
+<span class="sd">    **Returns:**</span>
+<span class="sd">         </span>
+<span class="sd">    _Dict_ containing the following entries:</span>
+<span class="sd">        </span>
+<span class="sd">    * &#39;s&#39;, _array_ containing the eigenvalues of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;X&#39;, _matrix_, the columns of which are the right-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;Y&#39;, _matrix_, the columns of which are the left-eigenvectors of &#39;A&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    The above entries will in general be complex-valued and represent the </span>
+<span class="sd">    eigenproperties of &#39;A&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    The following entries are real-valued and </span>
+<span class="sd">    express the complex eigenvalues &#39;s&#39; in terms which should be more </span>
+<span class="sd">    familiar to structural/mechanical engineers:</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;f_n&#39;, _array_ of _undamped natural frequencies_, in Hz. </span>
+<span class="sd">      </span>
+<span class="sd">    Note as &#39;s&#39; comprises conjugate pairs, there will be N pairs of </span>
+<span class="sd">    positive and negative frequencies for a system with N degrees of </span>
+<span class="sd">    freedom (i.e. &#39;A&#39; matrix of shape [2N x 2N])</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;f_d&#39;, _array_ of _damped_ natural frequencies_, in Hz</span>
+<span class="sd">    </span>
+<span class="sd">    * &#39;w_n&#39;, &#39;w_d&#39;; circular natural natural frequencies related to the </span>
+<span class="sd">      above, in rad/s</span>
+<span class="sd">      </span>
+<span class="sd">    * &#39;eta&#39;, damping ratio (1.0=critical)</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get system matrices</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSystemMatrices</span><span class="p">()</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;M_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;K_mtrx&quot;</span><span class="p">]</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;C_mtrx&quot;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasConstraints</span><span class="p">():</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;J_mtrx&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="c1"># Compute eigenproperties of A_c</span>
+    <span class="c1"># s is vector of singular values</span>
+    <span class="c1"># columns of X are right eigenvectors of A</span>
+    <span class="c1"># columns of Y are left eigenvectors of A  </span>
+    <span class="n">eig_rslts_obj</span> <span class="o">=</span> <span class="n">solve_eig</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span><span class="n">J</span><span class="o">=</span><span class="n">J</span><span class="p">,</span>
+                              <span class="n">normalise</span><span class="o">=</span><span class="n">normalise</span><span class="p">,</span>
+                              <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    
+    <span class="c1"># Create two-way link between objects</span>
+    <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">dynsys</span> <span class="o">=</span> <span class="bp">self</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eig_rslts</span> <span class="o">=</span> <span class="n">eig_rslts_obj</span>
+    
+    <span class="k">if</span> <span class="n">makePlots</span><span class="p">:</span>
+        <span class="n">eig_rslts_obj</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
+                
+    <span class="k">return</span> <span class="n">eig_rslts_obj</span> 
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="damper.TMD.check_outputs">
+    <p>def <span class="ident">check_outputs</span>(</p><p>self, output_mtrx=None, output_names=None, verbose=False)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Checks that all defined output matrices are of the correct shape</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.check_outputs', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.check_outputs" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">check_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">output_mtrx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">output_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks that all defined output matrices are of the correct shape</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Handle option arguments</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_mtrx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span>
+        
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span>
+        
+    <span class="c1"># Exit early if both none</span>
+    <span class="k">if</span> <span class="n">output_mtrx</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CheckOutputMtrx() method invoked:&quot;</span><span class="p">)</span>
+    
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Output matrix shapes:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_om</span> <span class="ow">in</span> <span class="n">output_mtrx</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Output names:&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+    
+    <span class="c1"># Check list lengths agree</span>
+    <span class="k">for</span> <span class="n">_om</span><span class="p">,</span> <span class="n">_names</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">output_mtrx</span><span class="p">,</span> <span class="n">output_names</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_names</span><span class="p">)</span><span class="o">!=</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of lists `output_names` &quot;</span><span class="o">+</span>
+                             <span class="s2">&quot;and rows of `output_mtrx` do not agree!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">+</span>
+                             <span class="s2">&quot;len(output_names)={0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_names</span><span class="p">))</span><span class="o">+</span>
+                             <span class="s2">&quot;output_mtrx.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    
+        <span class="c1"># Check shape of output matrix </span>
+        <span class="n">nDOF_expected</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nDOF</span>
+        
+        <span class="k">if</span> <span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nDOF_expected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;output_mtrx of invalid shape defined!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                             <span class="s2">&quot;Shape provided: {0}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_om</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="s2">&quot;Cols expected: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nDOF_expected</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="damper.TMD.freqVals">
     <p>def <span class="ident">freqVals</span>(</p><p>self, f_salient=None, nf_pad=400, fmax=None)</p>
     </div>
@@ -4108,6 +4087,119 @@ Define frequency values to evaluate frequency response G(f) at</p>
   
             
   <div class="item">
+    <div class="name def" id="damper.TMD.get_output_mtrx">
+    <p>def <span class="ident">get_output_mtrx</span>(</p><p>self, state_variables_only=False, all_systems=True)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns output matrix for overall system</p>
+<hr />
+<p>Optional:</p>
+<ul>
+<li>
+<p><code>state_variables_only</code>, <em>boolean</em>, if True, only columns relating to 
+  state variables (i.e. displacements, velocities - but not 
+  accelerations) will be returned</p>
+</li>
+<li>
+<p><code>all_systems</code>, <em>boolean</em>, if True output matrices for all subsystems 
+  will be arranged as block diagonal matrix, which represents the 
+  output matrix for the full system</p>
+</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.get_output_mtrx', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.get_output_mtrx" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_output_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">state_variables_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                    <span class="n">all_systems</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns output matrix for overall system</span>
+<span class="sd">    </span>
+<span class="sd">    ***</span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `state_variables_only`, _boolean_, if True, only columns relating to </span>
+<span class="sd">      state variables (i.e. displacements, velocities - but not </span>
+<span class="sd">      accelerations) will be returned</span>
+<span class="sd">      </span>
+<span class="sd">    * `all_systems`, _boolean_, if True output matrices for all subsystems </span>
+<span class="sd">      will be arranged as block diagonal matrix, which represents the </span>
+<span class="sd">      output matrix for the full system</span>
+<span class="sd">      </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Define list over which to loop</span>
+    <span class="k">if</span> <span class="n">all_systems</span><span class="p">:</span>
+        <span class="n">sys_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sys_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+    
+    <span class="c1"># Assemble full output matrix by arranging as block diagonal matrix</span>
+    
+    <span class="n">disp_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">vel_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">accn_cols_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">output_names_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sys_list</span><span class="p">:</span>
+        <span class="n">nDOF</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">nDOF</span>
+                    
+        <span class="c1"># Loop over all output matrices</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">x</span><span class="o">.</span><span class="n">output_names</span><span class="p">)):</span>
+                            
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">om</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="n">names</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output_mtrx</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">output_mtrx</span><span class="p">,</span><span class="n">om</span><span class="p">))</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span> <span class="o">+</span> <span class="n">names</span>
+                            
+        <span class="c1"># Decompose into groups relating to (disp,vel,accn)</span>
+        <span class="n">disp_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,:</span><span class="n">nDOF</span><span class="p">]</span>
+        <span class="n">vel_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="n">nDOF</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">]</span>
+        <span class="n">accn_cols</span> <span class="o">=</span> <span class="n">output_mtrx</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">nDOF</span><span class="p">:]</span>
+        
+        <span class="c1"># Append to lists</span>
+        <span class="n">disp_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">disp_cols</span><span class="p">)</span>
+        <span class="n">vel_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vel_cols</span><span class="p">)</span>
+        <span class="n">accn_cols_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accn_cols</span><span class="p">)</span>
+        <span class="n">output_names_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot; : &quot;</span><span class="o">+</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">])</span>
+        
+    <span class="c1"># Break out of function if no output matrices defined</span>
+    <span class="k">if</span> <span class="n">output_names_list</span><span class="o">==</span><span class="p">[]:</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        
+    <span class="c1"># Assemble submatrices for full system</span>
+    <span class="n">disp_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">disp_cols_list</span><span class="p">)</span>
+    <span class="n">vel_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">vel_cols_list</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
+        <span class="n">accn_cols_full</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">accn_cols_list</span><span class="p">)</span>
+    
+    <span class="c1"># Concatenate to prepare output matrix for full system</span>
+    <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">disp_cols_full</span><span class="p">,</span><span class="n">vel_cols_full</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
+        <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">output_mtrx_full</span><span class="p">,</span><span class="n">accn_cols_full</span><span class="p">))</span>
+    
+    <span class="c1"># Convert list of names to array format</span>
+    <span class="n">output_names_arr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">output_names_list</span><span class="p">)</span> 
+    
+    <span class="c1"># Return matrix and row names for full system</span>
+    <span class="k">return</span> <span class="n">output_mtrx_full</span><span class="p">,</span> <span class="n">output_names_arr</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="damper.TMD.hasConstraints">
     <p>def <span class="ident">hasConstraints</span>(</p><p>self)</p>
     </div>
@@ -4135,6 +4227,101 @@ Define frequency values to evaluate frequency response G(f) at</p>
 
   </div>
   
+            
+  <div class="item">
+    <div class="name def" id="damper.TMD.has_mesh">
+    <p>def <span class="ident">has_mesh</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns True if object has <code>Mesh</code> instance associated with it</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.has_mesh', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.has_mesh" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if object has `Mesh` instance associated with it</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="damper.TMD.has_output_mtrx">
+    <p>def <span class="ident">has_output_mtrx</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns True if system has output matrix</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-damper.TMD.has_output_mtrx', this);">Show source &equiv;</a></p>
+  <div id="source-damper.TMD.has_output_mtrx" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_output_mtrx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if system has output matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_mtrx</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+          <h3>Instance variables</h3>
+            <div class="item">
+            <p id="damper.TMD.mesh" class="name">var <span class="ident">mesh</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Returns instance of <code>Mesh</code> class, used to define mesh that relates to 
+system</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="damper.TMD.output_mtrx" class="name">var <span class="ident">output_mtrx</span></p>
+            
+
+            
+  
+    <div class="desc"><p>List of output matrices</p>
+<p>Use <code>add_outputs()</code> to define append output matrices. 
+<code>check_outputs()</code> can be used to check the validity (shape) of the 
+output matrices defined.</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="damper.TMD.output_names" class="name">var <span class="ident">output_names</span></p>
+            
+
+            
+  
+    <div class="desc"><p>List of string descriptions for rows of <code>output_mtrx</code>.
+Used to label plots etc.</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
       </div>
       </div>
 
