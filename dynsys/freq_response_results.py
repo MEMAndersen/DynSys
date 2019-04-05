@@ -25,6 +25,7 @@ class FreqResponse_Results():
         
         if output_names is None:
             output_names = ['Output %d' % i for i in range(Gf.shape[1])]
+            
         self.output_names = output_names
         """
         List of output names, length No
@@ -32,6 +33,7 @@ class FreqResponse_Results():
         
         if input_names is None:
             input_names = ['Input %d' % i for i in range(Gf.shape[2])]
+            
         self.input_names = input_names
         """
         List of input names, length Ni
@@ -81,28 +83,34 @@ class FreqResponse_Results():
     
     def plot(self,i=None,j=None,
              positive_f_only:bool=True,
+             subplot_kwargs={},
+             logy=False,
              axarr=None,
              **kwargs):
         """
         Function to plot frequency response matrix (f,G_f)
         """
         
+        default_subplot_kwargs={'sharex':'col','sharey':'row'}
+        subplot_kwargs = {**default_subplot_kwargs,**subplot_kwargs}
+        
         # Define rows/columns to plot
         if i is None:
             i = range(self.G_f.shape[1])
         if j is None:
             j = range(self.G_f.shape[2])
-        
+                                    
         # Create plots
         if axarr is None:
-            fig, axarr = plt.subplots(len(i),len(j),sharex=True,sharey='row')
+            fig, axarr = plt.subplots(len(i),len(j),**subplot_kwargs)
+            axarr = npy.matrix(axarr)
             
         else:
             fig = axarr[0,0].get_figure()
             
         fig.set_size_inches((14,8))
         
-        fig.subplots_adjust(hspace=0.0,wspace=0.0)
+        fig.subplots_adjust(hspace=0.0,wspace=0.4)
         
         fig.suptitle("Plot of G(f) frequency response matrix")
         
@@ -120,6 +128,15 @@ class FreqResponse_Results():
                                     plotPhase=False,
                                     **kwargs)
                 
+                if logy:
+                    ax.set_yscale('log')
+                
+                if ax.get_yaxis().get_scale() == 'log':
+                    logy = True
+                
+                if not logy:
+                    ax.ticklabel_format(axis='y',style='sci',scilimits=(0,0))
+                    ax.set_ylim([0.0,ax.get_ylim()[1]])
             
                 # Tidy-up plot, removing labels etc.
                 
@@ -133,9 +150,6 @@ class FreqResponse_Results():
                     
                 if row!=len(i)-1:
                     ax.set_xlabel("")
-                else:
-                    if col!=0:
-                        ax.set_xlabel("")
                         
                 # Define formatting of labels etc
                 
