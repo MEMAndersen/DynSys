@@ -8,6 +8,16 @@ and this project adheres to:
 
 ***
 
+## [1.7.3] - 2019-04-05 - RIHY
+
+### Added
+
+* Absolute displacement output added by default for TMDs
+
+### Changed
+
+* Improvements to plotting in `freq_response_rslts.py` and `eig_results.py`
+
 ## [1.7.2] - 2019-03-21 - RIHY
 
 ### Fixed
