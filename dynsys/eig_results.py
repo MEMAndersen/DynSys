@@ -5,6 +5,7 @@ Classes and methods used to store, present and manipulate eigenproperties
 
 import numpy as npy
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 from functools import wraps
 
 from common import convert2matrix
@@ -258,7 +259,7 @@ class Eig_Results():
         ax = self.plot_eigenvalues(ax=ax,plotType=4)
             
             
-    def plot_eigenvalues(self,ax=None,plotType=1):
+    def plot_eigenvalues(self,ax=None,plotType=1,positive_f=True):
         """
         Plots eigenvalues (assumed to be complex) on the complex plane
         ***
@@ -277,6 +278,9 @@ class Eig_Results():
                     
         if ax is None:
             fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+            
             
         if plotType == 1:
             
@@ -304,13 +308,19 @@ class Eig_Results():
             
         elif plotType == 4:
             
-            ax.plot(self.f_n,self.eta,'.b')
+            ax.plot(self.f_n,self.eta,'.')
             ax.set_xlabel("Frequency (Hz)")
-            ax.set_ylabel("Damping ratio")
+            ax.set_ylabel("Damping ratio\n(% of critical)")
+            ax.yaxis.set_major_formatter(mtick.PercentFormatter())
             ax.set_title("Pole frequency vs damping ratio plot")
+            fig.subplots_adjust(left=0.2)
+            ax.set_xlim([0.0,ax.get_xlim()[1]])
             
         else:
             raise ValueError("Error: unexpected plotType requested!")
+            
+        if positive_f:
+            ax.set_xlim([0.0,ax.get_xlim()[1]])
             
         return ax
             

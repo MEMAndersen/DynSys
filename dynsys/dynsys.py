@@ -981,8 +981,10 @@ class DynSys:
         if not state_variables_only:
             output_mtrx_full = npy.hstack((output_mtrx_full,accn_cols_full))
         
-        # Convert list of names to array format
-        output_names_arr = npy.ravel(output_names_list) 
+        # Convert list of names to list of list format
+        output_names_arr = []
+        for x in output_names_list:
+            output_names_arr += x
         
         # Return matrix and row names for full system
         return output_mtrx_full, output_names_arr
@@ -1682,7 +1684,13 @@ class DynSys:
         input_names = []
         for obj in self.DynSys_list:
             for i in range(obj.nDOF):
-                input_names.append("%s : Force %d" % (obj.name,i+1) )
+                
+                if obj.__class__.__name__ == 'ModalSys':
+                    prefix = "Modal"
+                else:
+                    prefix = ""
+                
+                input_names.append("%s : %s Force %d" % (obj.name,prefix,i+1) )
         
         # Return values as class instance
         obj = FreqResponse_Results(f=fVals,

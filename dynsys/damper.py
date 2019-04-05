@@ -26,7 +26,7 @@ class TMD(msd_chain.MSD_Chain):
     
     def __init__(self,sprung_mass:float,nat_freq:float,
                  fixed_mass:float=None,damping_ratio:float=0.0,
-                 outputs={'rel disp':True,'linkage force':True},
+                 outputs:dict={},
                  **kwargs):
         """
         Initialisation method
@@ -65,6 +65,13 @@ class TMD(msd_chain.MSD_Chain):
         
         """
         
+        # Define default outputs and merge with any passed-in
+        default_outputs = {}
+        default_outputs['disp'] = True
+        default_outputs['rel disp'] = True
+        default_outputs['linkage force'] = False
+        outputs = {**default_outputs, **outputs}
+        
         if fixed_mass is None:
             fixed_mass = sprung_mass / 100 # reasonable value, non-zero required
         
@@ -88,6 +95,12 @@ class TMD(msd_chain.MSD_Chain):
             
             #print("Defining default output matrices for '%s'..." % self.name)
             
+            # Add output matrix for sprung mass displacement
+            if outputs['disp']:
+                self.add_outputs(output_mtrx=[0,1,0,0,0,0],
+                                   output_names=["Disp [m]"])
+            
+            # Add output matrix for relative displacement with attachment point
             if outputs['rel disp']:
                 self.add_outputs(output_mtrx=[-1,1,0,0,0,0],
                                    output_names=["Relative disp [m]"])
