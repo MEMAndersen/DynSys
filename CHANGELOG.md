@@ -10,6 +10,11 @@ and this project adheres to:
 
 ## [1.7.3] - 2019-04-05 - RIHY
 
+### Fixed
+
+* Error with `EigResults()` plot method #4; damping ratio no longer expressed 
+  as percentage
+
 ### Added
 
 * Absolute displacement output added by default for TMDs
