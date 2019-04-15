@@ -12,8 +12,8 @@ and this project adheres to:
 
 ### Fixed
 
-* Error with `EigResults()` plot method #4; damping ratio no longer expressed 
-  as percentage
+* Error with `EigResults()` plot method #4; damping ratio now correctly 
+  expressed as a percentage
 
 ### Added
 

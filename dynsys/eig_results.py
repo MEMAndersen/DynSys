@@ -310,9 +310,11 @@ class Eig_Results():
             
             ax.plot(self.f_n,self.eta,'.')
             ax.set_xlabel("Frequency (Hz)")
-            ax.set_ylabel("Damping ratio")
+            ax.set_ylabel("Damping ratio\n(% of critical)")
            
             ax.set_xlim([0.0,ax.get_xlim()[1]])
+            
+            ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0))
             
             ax.set_title("Pole frequency vs damping ratio plot")
             fig.subplots_adjust(left=0.2)
