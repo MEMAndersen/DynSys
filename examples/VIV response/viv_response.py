@@ -8,20 +8,25 @@ vibrations analysis
 
 import wind_env
 import wind_response 
+from wind_section import read_wind_sections, assign_wind_sections
 import nodle
 import modalsys
 
 # Define mesh of system
-mesh = nodle.read_mesh(fname='EMLEY_MOOR.xlsx')
+mesh_obj = nodle.read_mesh(fname='EMLEY_MOOR.xlsx')
 
-# Define wind sections
+# Define wind sections, reading data from input file
+ws_dict = read_wind_sections('wind_sections.csv')
+
+# Associate wind sections with mesh elements, reading data from input file
+assign_wind_sections('wind_section_assignments.csv', mesh_obj, ws_dict)
 
 
 # Define modal system, assigning the above mesh
 sys = modalsys.ModalSys(name='Emley Moor Tower',
                         fname_modalParams='modal_params.csv',
                         fname_modeshapes='modeshapes.csv',
-                        mesh_obj=mesh)
+                        mesh_obj=mesh_obj)
 
 wind_obj = wind_env.WindEnv_equilibrium(V_ref=25.0,
                                         z_ref=10.0,
