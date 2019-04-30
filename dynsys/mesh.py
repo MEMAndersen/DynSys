@@ -670,8 +670,10 @@ class Element:
             node_obj.connect_elements(self)
             
             # Add location to parent mesh]
-            location_obj = Location(self,node_obj)
-            self.parent_mesh.add_location(location_obj)
+            parent_mesh = self.parent_mesh
+            
+            if parent_mesh is not None:
+                parent_mesh.add_location(Location(element=self,point=node_obj))
             
             
             
@@ -720,13 +722,21 @@ class LineElement(Element):
     def __init__(self,parent_mesh,connected_nodes:list,
                  skew_angle=0.0,**kwargs):
         
+        # Run parent init method
+        super().__init__(parent_mesh=parent_mesh,
+                         connected_nodes=connected_nodes,
+                         **kwargs)
+        
+        # Check element length is not zero
+        if self.length() == 0:
+            raise ValueError("Element '%s' has zero length!" % self.name)
+        
+        # Assin properties specific to this element type
         self.skew_angle = skew_angle
         """
         Clockwise angle [radians] by which the local y- and -z axes of the 
         element are rotated, about the local x-axis.
         """
-        
-        super().__init__(parent_mesh, connected_nodes,**kwargs)
         
     
     @property
@@ -760,14 +770,6 @@ class LineElement(Element):
         self._wind_section_end1 = obj_list[0]
         self._wind_section_end2 = obj_list[1]
             
-    
-    def __init__(self, *args, **kwargs):
-        
-        super().__init__(*args,**kwargs)
-        
-        # Check element length is not zero
-        if self.length() == 0:
-            raise ValueError("Element '%s' has zero length!" % self.name)
     
 
     def get_axes(self,verbose=False):
@@ -1401,9 +1403,8 @@ def integrate_gauss(f:callable,x,
         
 if __name__ == "__main__":
     
-    testRoutine2Run=2
     
-    if testRoutine2Run==1:
+    def test1():
         
         print("*** TEST ROUTINE 1 COMMENCED ***")
         print("")
@@ -1422,7 +1423,7 @@ if __name__ == "__main__":
         meshObj1.plot()
         
         
-    elif testRoutine2Run==2:
+    def test2():
         
         print("*** TEST ROUTINE 2 COMMENCED *****")
         print("--- Test of local element axes ---")
@@ -1457,7 +1458,7 @@ if __name__ == "__main__":
         print(meshObj1.get_location_names())
         
         
-    elif testRoutine2Run==3:
+    def test3():
         
         print("*** TEST ROUTINE 3 COMMENCED *****")
         print("--- Test of integration by gauss quadrature ---")
@@ -1487,7 +1488,7 @@ if __name__ == "__main__":
         ax2.legend()
         
 
-    elif testRoutine2Run==4:
+    def test4():
         
         print("*** TEST ROUTINE 4 COMMENCED *****")
         print("--- Test of element skew angles ---")
@@ -1515,9 +1516,23 @@ if __name__ == "__main__":
         # Plot mesh
         meshObj1.plot(plot_axes=True)
         
+        
+    def run_all_tests():
+        
+        test1()
+        test2()
+        test3()
+        test4()
             
+            
+    # Select test to run
+    test2run = -1
+
+    if test2run == -1:
+        run_all_tests()
+        
     else:
-        print("(No valid test routine selected)")
+        exec("test%d()" % test2run)     
         
    
 
