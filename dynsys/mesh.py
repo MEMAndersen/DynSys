@@ -16,6 +16,7 @@ vertical_direction = npy.array([0.0,0.0,1.0])
 default_y_direction = npy.array([0.0,1.0,0.0])
 
 
+#%%
 class Mesh:
     """
     Class is used to define a mesh, i.e. nodes inter-connected by elements
@@ -73,10 +74,27 @@ class Mesh:
         of each node
         """
         
+        self._locations = {}
+        
         # Append objects passed-in via lists
         self.append_objs(mesh_objs)
         self.append_objs(element_objs)
         self.append_objs(node_objs)
+        
+        
+    @property
+    def locations(self):
+        """
+        List of `Location()` instances, defining distinct locations within the 
+        mesh
+        """
+        return self._locations
+    
+    
+    def add_location(self,obj):
+        
+        check_class(obj,Location)
+        self._locations[obj.get_objects()] = obj
         
         
     def __del__(self):
@@ -464,8 +482,9 @@ class Mesh:
     
     def has_elements(self):
         return len(self.element_objs)>=1
+   
     
-    
+#%%
 class MeshChain(Mesh):
     """
     Class to implement a chain mesh, i.e. series of elements forming a chain
@@ -500,7 +519,8 @@ class MeshChain(Mesh):
                          element_objs=element_list,
                          **kwargs)
     
-        
+    
+#%%     
 class Element:
     """
     Base class used to define elements, i.e. entities connecting nodes 
@@ -578,6 +598,11 @@ class Element:
             # Create two-way linked list
             node_obj.connect_elements(self)
             
+            # Add location to parent mesh]
+            location_obj = Location(self,node_obj)
+            self.parent_mesh.add_location(location_obj)
+            
+            
             
     def _check_node_objs(self,node_objs):
         
@@ -607,7 +632,7 @@ class Element:
         raise ValueError("Not implemented for base class! To be overridden")
         
     
-    
+#%%
 class LineElement(Element):
     """
     Class to implement line elements, i.e. element between two nodes in 3d
@@ -732,8 +757,8 @@ class LineElement(Element):
             
         return self.gauss_points
          
-# *****************************************************************************
-    
+
+#%%
 class Point:
     """
     Base class used to define discrete points in space    
@@ -834,10 +859,7 @@ class Point:
         self._xyz = value
         
     
-        
-        
-# *****************************************************************************
-        
+#%%     
 class Node(Point):
     """
     Class used to define nodes i.e. points in space which define the 
@@ -920,7 +942,7 @@ class Node(Point):
             self.connected_elements[obj.name]=obj
             
     
-
+#%%
 class GaussPoint(Point):
     """
     Defines gauss point, i.e. point at specific position within an element
@@ -948,7 +970,49 @@ class GaussPoint(Point):
         
         super().__init__(**kwargs)
       
+      
+#%%
         
+class Location():
+    """
+    Class to implement definition of a _location_ within a mesh. This is 
+    defined via a mesh _element_ **and** a _point_, be it a _node_ or a 
+    _gauss point_.
+    """
+    
+    def __init__(self,element, point):
+        
+        self.element = element
+        self.point = point
+        
+        
+    @property
+    def element(self):
+        return self._element
+    
+    @element.setter
+    def element(self,obj):
+        check_class(obj,Element)
+        self._element = obj
+        
+    @property
+    def point(self):
+        return self._point
+    
+    @point.setter
+    def point(self,obj):
+        check_class(obj,Point)
+        self._point = obj
+        
+        
+    def get_objects(self):
+        """
+        Returns tuple of (element,point) objects defining location
+        """
+        return (self.element,self.point)
+        
+        
+#%%
 # ------------------- CLASSES TO STORE MESH RESULTS -----------------------
         
 class MeshResults():
@@ -1018,10 +1082,7 @@ class MeshResults():
         self._values = npy.zeros((0,self.nComponents))
         
         
-    
-        
-        
-    
+#%%
 class DispResults(MeshResults):
     """
     Class used to store displacement results, with relation to a given node
@@ -1033,7 +1094,8 @@ class DispResults(MeshResults):
         
         super().__init__([node_obj], results_arr)
         
-        
+
+#%%  
 class ReactionResults(MeshResults):
     """
     Class used to store reaction results, with relation to a given node
@@ -1045,7 +1107,8 @@ class ReactionResults(MeshResults):
         
         super().__init__([node_obj], results_arr)
         
-        
+
+#%%     
 class ForceResults(MeshResults):
     """
     Class used to store force results, with regards to a given [element, node]
@@ -1059,7 +1122,7 @@ class ForceResults(MeshResults):
         super().__init__([element_obj,node_obj], results_arr)
     
 
-
+#%%
 # ********************** FUNCTIONS ****************************************
      
 def integrate_over_mesh(mesh_obj,
@@ -1120,6 +1183,7 @@ def integrate_over_mesh(mesh_obj,
     return integral
             
 
+#%%
 def integrate_gauss(f:callable,x,
                     f_args=[],f_kwargs={},
                     n_gp=3,
@@ -1193,14 +1257,13 @@ def integrate_gauss(f:callable,x,
     
     return integration_mesh, integral_vals
     
-    
-            
-    
+             
+#%%    
 # ********************** TEST ROUTINES ****************************************
         
 if __name__ == "__main__":
     
-    testRoutine2Run=3
+    testRoutine2Run=2
     
     if testRoutine2Run==1:
         
@@ -1245,6 +1308,10 @@ if __name__ == "__main__":
             
         # Plot mesh
         meshObj1.plot(plot_axes=True)
+        
+        # Print locations
+        print(meshObj1.locations)
+        
         
     if testRoutine2Run==3:
         
