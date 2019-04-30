@@ -10,7 +10,7 @@ import pandas
 from itertools import count
 from inspect import getmro
 from numpy.linalg import norm
-from common import check_class, set_equal_aspect_3d
+from common import check_class, set_equal_aspect_3d, rotate_about_axis
 
 vertical_direction = npy.array([0.0,0.0,1.0])
 default_y_direction = npy.array([0.0,1.0,0.0])
@@ -489,10 +489,56 @@ class Mesh:
     def has_nodes(self):
         return len(self.node_objs)>=1
     
+    
     def has_elements(self):
         return len(self.element_objs)>=1
    
     
+    def get_object(self,obj_type:str,obj_name,raise_exception=True):
+        """
+        Returns object of name and type
+        """
+
+        obj_type = obj_type.lower()
+        
+        # Get object dict to search
+        if obj_type == 'element':
+            obj_dict = self.element_objs
+            
+        elif obj_type == 'node':
+            obj_dict = self.node_objs
+            
+        else:
+            raise ValueError("Unexpected object type requested")
+        
+        # Search for requested object
+        try:
+            obj = obj_dict[obj_name]
+        
+        except KeyError:
+            
+            if raise_exception:
+                raise KeyError("Could not find %s '%s' within mesh '%s'"
+                               % (obj_type, obj_name, self.name))
+                
+            obj = None
+            
+        return obj
+        
+    
+    def print_wind_sections(self):
+        """
+        Prints details of wind section objects associated with all elements 
+        in mesh
+        """
+        for element_obj in self.element_objs.values():
+    
+            ws1_name, ws2_name = [x.name for x in element_obj.wind_sections]
+            
+            print("Element: %s\tWind section 1: %s\tWind section 2: %s" 
+                  % (element_obj.name, ws1_name, ws2_name))
+    
+
 #%%
 class MeshChain(Mesh):
     """
@@ -528,8 +574,8 @@ class MeshChain(Mesh):
                          element_objs=element_list,
                          **kwargs)
     
-    
-#%%     
+
+#%%
 class Element:
     """
     Base class used to define elements, i.e. entities connecting nodes 
@@ -669,6 +715,50 @@ class LineElement(Element):
     """
     
     _nNodes_expected = 2
+
+
+    def __init__(self,parent_mesh,connected_nodes:list,
+                 skew_angle=0.0,**kwargs):
+        
+        self.skew_angle = skew_angle
+        """
+        Clockwise angle [radians] by which the local y- and -z axes of the 
+        element are rotated, about the local x-axis.
+        """
+        
+        super().__init__(parent_mesh, connected_nodes,**kwargs)
+        
+    
+    @property
+    def wind_sections(self):
+        """
+        Object list (len=2) of `WindSection` class instances, which 
+        define aerodynamic properties of element at each end.
+        """
+        return [self._wind_section_end1, self._wind_section_end2]
+    
+    
+    def define_wind_sections(self,obj_list):
+        """
+        Object or object list (len=2) of `WindSection` class instances, which 
+        define the aerodynamic properties of the line element.
+            
+        If an object is provided, section is considered 'uniform', i.e. has 
+        the same properties at both ends. Alternatively, if an object list is 
+        provided, this must be of length=2 and consist of a pair of objects 
+        to define wind section at each end of the element
+        """
+        # Duplicate WindSection object to define uniform cross-secton
+        if not isinstance(obj_list,list):
+            obj = obj_list
+            obj_list = [obj,obj]
+            
+        if len(obj_list)==1:
+            obj = obj_list[0]
+            obj_list = [obj,obj]
+                        
+        self._wind_section_end1 = obj_list[0]
+        self._wind_section_end2 = obj_list[1]
             
     
     def __init__(self, *args, **kwargs):
@@ -704,6 +794,12 @@ class LineElement(Element):
             
         # Calculate z-axis to be orthogonal to x and y
         z = npy.cross(x,y)
+        
+        # Rotate axes if required
+        phi = self.skew_angle
+        if phi != 0.0:
+            y = rotate_about_axis(y,x,phi)
+            z = rotate_about_axis(z,x,phi)
     
         return x, y, z
         
@@ -732,8 +828,8 @@ class LineElement(Element):
         """
         r1, r2 = self.get_end_positions()
         return 0.5*(r1+r2)
-        
-    
+
+
     def define_gauss_points(self,N_gp:int=3,verbose=False):
         """
         Defines gauss points to be associated with element
@@ -899,7 +995,6 @@ class Point:
         self._xyz = value
         
     
-#%%     
 class Node(Point):
     """
     Class used to define nodes i.e. points in space which define the 
@@ -1054,7 +1149,7 @@ class Location():
         
 #%%
 # ------------------- CLASSES TO STORE MESH RESULTS -----------------------
-        
+
 class MeshResults():
     """
     Base class used to store results with relation to mesh objects
@@ -1080,6 +1175,7 @@ class MeshResults():
         if verbose:
             print("New instance of '%s' created" % self.__class__.__name__)
             
+            
     def __repr__(self):
         
         print_str = ""
@@ -1088,6 +1184,7 @@ class MeshResults():
         print_str += "Shape of values array:\n{0}".format(self.values.shape)
         print_str += "\n"
         return print_str
+    
         
     @property
     def values(self):
@@ -1115,6 +1212,7 @@ class MeshResults():
             
         self._values = npy.vstack((self.values, new_results))
         
+        
     def clear(self):
         """
         Clears results held within object
@@ -1134,8 +1232,8 @@ class DispResults(MeshResults):
         
         super().__init__([node_obj], results_arr)
         
-
-#%%  
+        
+#%%
 class ReactionResults(MeshResults):
     """
     Class used to store reaction results, with relation to a given node
@@ -1297,7 +1395,7 @@ def integrate_gauss(f:callable,x,
     
     return integration_mesh, integral_vals
     
-             
+
 #%%    
 # ********************** TEST ROUTINES ****************************************
         
@@ -1322,6 +1420,7 @@ if __name__ == "__main__":
             
         # Plot mesh
         meshObj1.plot()
+        
         
     elif testRoutine2Run==2:
         
@@ -1360,7 +1459,7 @@ if __name__ == "__main__":
         
     elif testRoutine2Run==3:
         
-        print("*** TEST ROUTINE 2 COMMENCED *****")
+        print("*** TEST ROUTINE 3 COMMENCED *****")
         print("--- Test of integration by gauss quadrature ---")
         
         # Define arbitrary polynomial
@@ -1387,6 +1486,36 @@ if __name__ == "__main__":
         ax1.legend()
         ax2.legend()
         
+
+    elif testRoutine2Run==4:
+        
+        print("*** TEST ROUTINE 4 COMMENCED *****")
+        print("--- Test of element skew angles ---")
+        
+        # Define new mesh
+        meshObj1 = Mesh(name="Skew angles test")
+        
+        xyz = npy.array([[0,0,0],[1,1,1]])
+        offset = npy.array([0.0,0.5,0])
+        
+        nElements = 9
+        xyz_arr = npy.array([xyz+i*offset for i in range(nElements)])
+        
+        phi_vals = npy.deg2rad(npy.linspace(0,360,nElements))
+        
+        element_list = []
+        
+        for phi, (xyz1,xyz2) in zip(phi_vals,xyz_arr):
+            
+            node1 = Node(meshObj1,xyz1)
+            node2 = Node(meshObj1,xyz2)
+            element = LineElement(meshObj1,[node1,node2],skew_angle = phi)
+            element_list.append(element)
+        
+        # Plot mesh
+        meshObj1.plot(plot_axes=True)
+        
+            
     else:
         print("(No valid test routine selected)")
         

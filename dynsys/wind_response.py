@@ -21,6 +21,17 @@ class _ModalWindResponse():
     """
     
     def __init__(self,sys,wind_env):
+        """
+        Defines analysis
+        
+        ***
+        Required:
+            
+        * `sys`, instance of `ModalSys` class. Note: a modal system with 
+          multiple sub-systems (e.g. TMDs) appended is permitted
+          
+        * `wind_env`, instance of `WindEnv` class (or derived classes)
+        """
         
         # Prevent direct instatiation of this class
         if type(self) ==  _ModalWindResponse:
@@ -113,7 +124,8 @@ class Buffeting(_ModalWindResponse):
         Produces plots required to document buffeting analysis
         """
         
-        if verbose: print("Producing summary plots to document analysis...")
+        if verbose:
+            print("Producing summary plots from buffeting analysis...")
         
         # Define default plot settings
         settings = {}
@@ -132,7 +144,12 @@ class Buffeting(_ModalWindResponse):
         return fig_list
         
         
-    
+    def run(self):
+        """
+        Runs analysis
+        """
+        print("Running buffeting analysis...")
+        print("**** UNDER DEVELOPMENT ****")
 
 #%%
         

@@ -1242,7 +1242,7 @@ table {
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">count</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">getmro</span>
 <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
-<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">check_class</span><span class="p">,</span> <span class="n">set_equal_aspect_3d</span>
+<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">check_class</span><span class="p">,</span> <span class="n">set_equal_aspect_3d</span><span class="p">,</span> <span class="n">rotate_about_axis</span>
 
 <span class="n">vertical_direction</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">])</span>
 <span class="n">default_y_direction</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">])</span>
@@ -1846,6 +1846,18 @@ table {
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">_nNodes_expected</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent_mesh</span><span class="p">,</span><span class="n">connected_nodes</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span>
+                 <span class="n">skew_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">skew_angle</span> <span class="o">=</span> <span class="n">skew_angle</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clockwise angle [radians] by which the local y- and -z axes of the </span>
+<span class="sd">        element are rotated, about the local x-axis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent_mesh</span><span class="p">,</span> <span class="n">connected_nodes</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             
 
     <span class="k">def</span> <span class="nf">get_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
@@ -1870,6 +1882,12 @@ table {
             
         <span class="c1"># Calculate z-axis to be orthogonal to x and y</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+        
+        <span class="c1"># Rotate axes if required</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skew_angle</span>
+        <span class="k">if</span> <span class="n">phi</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">rotate_about_axis</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">phi</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">rotate_about_axis</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">phi</span><span class="p">)</span>
     
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
         
@@ -2432,7 +2450,7 @@ table {
         
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     
-    <span class="n">testRoutine2Run</span><span class="o">=</span><span class="mi">3</span>
+    <span class="n">testRoutine2Run</span><span class="o">=</span><span class="mi">4</span>
     
     <span class="k">if</span> <span class="n">testRoutine2Run</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
         
@@ -2480,7 +2498,7 @@ table {
         
     <span class="k">if</span> <span class="n">testRoutine2Run</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;*** TEST ROUTINE 2 COMMENCED *****&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;*** TEST ROUTINE 3 COMMENCED *****&quot;</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;--- Test of integration by gauss quadrature ---&quot;</span><span class="p">)</span>
         
         <span class="c1"># Define arbitrary polynomial</span>
@@ -2507,7 +2525,33 @@ table {
         <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
         <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
         
-        <span class="c1"># Define some nodes</span>
+    <span class="k">if</span> <span class="n">testRoutine2Run</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+        
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;*** TEST ROUTINE 4 COMMENCED *****&quot;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;--- Test of element skew angles ---&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Define new mesh</span>
+        <span class="n">meshObj1</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Skew angles test&quot;</span><span class="p">)</span>
+        
+        <span class="n">xyz</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+        
+        <span class="n">nElements</span> <span class="o">=</span> <span class="mi">9</span>
+        <span class="n">xyz_arr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xyz</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="n">offset</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nElements</span><span class="p">)])</span>
+        
+        <span class="n">phi_vals</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">npy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">360</span><span class="p">,</span><span class="n">nElements</span><span class="p">))</span>
+        
+        <span class="n">element_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">phi</span><span class="p">,</span> <span class="p">(</span><span class="n">xyz1</span><span class="p">,</span><span class="n">xyz2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">phi_vals</span><span class="p">,</span><span class="n">xyz_arr</span><span class="p">):</span>
+            
+            <span class="n">node1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">meshObj1</span><span class="p">,</span><span class="n">xyz1</span><span class="p">)</span>
+            <span class="n">node2</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">meshObj1</span><span class="p">,</span><span class="n">xyz2</span><span class="p">)</span>
+            <span class="n">element</span> <span class="o">=</span> <span class="n">LineElement</span><span class="p">(</span><span class="n">meshObj1</span><span class="p">,[</span><span class="n">node1</span><span class="p">,</span><span class="n">node2</span><span class="p">],</span><span class="n">skew_angle</span> <span class="o">=</span> <span class="n">phi</span><span class="p">)</span>
+            <span class="n">element_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+        
+        <span class="c1"># Plot mesh</span>
+        <span class="n">meshObj1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plot_axes</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         
             
 <span class="c1">#        # Define some elements</span>
@@ -3792,6 +3836,18 @@ integration by gauss quadrature</p></div>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">_nNodes_expected</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent_mesh</span><span class="p">,</span><span class="n">connected_nodes</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span>
+                 <span class="n">skew_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">skew_angle</span> <span class="o">=</span> <span class="n">skew_angle</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clockwise angle [radians] by which the local y- and -z axes of the </span>
+<span class="sd">        element are rotated, about the local x-axis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent_mesh</span><span class="p">,</span> <span class="n">connected_nodes</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             
 
     <span class="k">def</span> <span class="nf">get_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
@@ -3816,6 +3872,12 @@ integration by gauss quadrature</p></div>
             
         <span class="c1"># Calculate z-axis to be orthogonal to x and y</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+        
+        <span class="c1"># Rotate axes if required</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skew_angle</span>
+        <span class="k">if</span> <span class="n">phi</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">rotate_about_axis</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">phi</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">rotate_about_axis</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">phi</span><span class="p">)</span>
     
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
         
@@ -3926,62 +3988,26 @@ integration by gauss quadrature</p></div>
             
   <div class="item">
     <div class="name def" id="mesh.LineElement.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, parent_mesh, connected_nodes, name=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, parent_mesh, connected_nodes, skew_angle=0.0, **kwargs)</p>
     </div>
     
-    <p class="inheritance">
-     <strong>Inheritance:</strong>
-       <code><a href="#mesh.Element">Element</a></code>.<code><a href="#mesh.Element.__init__">__init__</a></code>
-    </p>
 
     
   
-    <div class="desc inherited"><p>Creates new element, in the context of <code>parent_mesh</code></p></div>
+    <div class="desc"><p>Creates new element, in the context of <code>parent_mesh</code></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-mesh.LineElement.__init__', this);">Show source &equiv;</a></p>
   <div id="source-mesh.LineElement.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_mesh</span><span class="p">,</span> <span class="n">connected_nodes</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">parent_mesh</span><span class="p">,</span><span class="n">connected_nodes</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span>
+             <span class="n">skew_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    
+    <span class="bp">self</span><span class="o">.</span><span class="n">skew_angle</span> <span class="o">=</span> <span class="n">skew_angle</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates new element, in the context of `parent_mesh`</span>
+<span class="sd">    Clockwise angle [radians] by which the local y- and -z axes of the </span>
+<span class="sd">    element are rotated, about the local x-axis.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="c1"># Prevent direct instatiation of this class</span>
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="n">Element</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;&lt;Element&gt; must be subclassed.&quot;</span><span class="p">)</span>
-            
-    <span class="bp">self</span><span class="o">.</span><span class="n">parent_mesh</span> <span class="o">=</span> <span class="n">parent_mesh</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parent mesh to which element directly relates</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ids</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Sequential integer ID, assigned to uniquely identify object</span>
-<span class="sd">    &quot;&quot;&quot;</span>        
-    
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        
-    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    User-assigned name, usually of _string_ type</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="bp">self</span><span class="o">.</span><span class="n">connected_nodes</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    List of node objects connecting to this element. Keys are node names</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="bp">self</span><span class="o">.</span><span class="n">gauss_points</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    List of gauss point objects associated with this element</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Connect to parent mesh</span>
-    <span class="k">if</span> <span class="n">parent_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parent_mesh</span><span class="o">.</span><span class="n">append_objs</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
-    <span class="c1"># Connect any nodes passed in as list</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">connect_nodes</span><span class="p">(</span><span class="n">connected_nodes</span><span class="p">)</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent_mesh</span><span class="p">,</span> <span class="n">connected_nodes</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -4144,6 +4170,12 @@ integration by gauss quadrature</p></div>
         
     <span class="c1"># Calculate z-axis to be orthogonal to x and y</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    
+    <span class="c1"># Rotate axes if required</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">skew_angle</span>
+    <span class="k">if</span> <span class="n">phi</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">rotate_about_axis</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">rotate_about_axis</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">phi</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
 </pre></div>
@@ -4255,6 +4287,19 @@ integration by gauss quadrature</p></div>
 
   </div>
   
+          <h3>Instance variables</h3>
+            <div class="item">
+            <p id="mesh.LineElement.skew_angle" class="name">var <span class="ident">skew_angle</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Clockwise angle [radians] by which the local y- and -z axes of the 
+element are rotated, about the local x-axis.</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
       </div>
       </div>
       
