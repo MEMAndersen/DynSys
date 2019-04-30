@@ -12,26 +12,21 @@ from wind_env import WindEnv
 
 #%%
 
-class Buffeting():
+class _ModalWindResponse():
     """
-    Class to implement gust-buffeting response analysis
+    Base class to implement analyses concerned with calculating response of a 
+    system to wind actions
+    
+    _Note: implemented as an abstract class. Objects cannot be instantiated_
     """
     
     def __init__(self,sys,wind_env):
-        """
-        Defines analysis
         
-        ***
-        Required:
-            
-        * `sys`, instance of `ModalSys` class. Note: a modal system with 
-          multiple sub-systems (e.g. TMDs) appended is permitted
-          
-        * `wind_env`, instance of `WindEnv` class (or derived classes)
-        """
-        
-        print("**** UNDER DEVELOPMENT ****")
-        
+        # Prevent direct instatiation of this class
+        if type(self) ==  _ModalWindResponse:
+            raise NotImplementedError("< _ModalWindResponse> to be subclassed")
+    
+        # Define objects
         self.sys = sys
         self.wind_env = wind_env
         
@@ -42,8 +37,7 @@ class Buffeting():
                              "store and handle results etc.)")
             
 
-        
-    # -------
+    # ------------------ CLASS ATTRIBUTES -------------------------------------
     @property
     def sys(self):
         """
@@ -68,6 +62,49 @@ class Buffeting():
     def wind_env(self,obj):
         check_class(obj,WindEnv)
         self._wind_env = obj
+        
+    # ------------------ CLASS METHODS ----------------------------------------
+    
+    def plot(self):
+        """
+        Prepares plots to document analysis
+        """
+        raise NotImplementedError("plot() method to be implemented by " +
+                                  "derived class")
+    
+    def run(self):
+        """
+        Runs analysis
+        """
+        raise NotImplementedError("run() method to be implemented by " +
+                                  "derived class")
+
+
+#%%
+class Buffeting(_ModalWindResponse):
+    """
+    Class to implement gust-buffeting response analysis
+    """
+    
+    def __init__(self,sys,wind_env):
+        """
+        Defines analysis
+        
+        ***
+        Required:
+            
+        * `sys`, instance of `ModalSys` class. Note: a modal system with 
+          multiple sub-systems (e.g. TMDs) appended is permitted
+          
+        * `wind_env`, instance of `WindEnv` class (or derived classes)
+        """
+        
+        print("**** UNDER DEVELOPMENT ****")
+        
+        # Call parent init method first
+        super().__init__(sys,wind_env)
+        
+        
     
     # -------
             
@@ -95,16 +132,28 @@ class Buffeting():
         return fig_list
         
         
-    def run(self):
-        """
-        Runs analysis
-        """
-        pass
+    
 
 #%%
         
-class VIV():
+class VIV(_ModalWindResponse):
     """
     Class to implement vortex-induced vibrations response analysis
     """
-    pass
+    def __init__(self,sys,wind_env):
+        """
+        Initialise self
+        
+        ***
+        Required:
+            
+        * `sys`, instance of `ModalSys` class. Note: a modal system with 
+          multiple sub-systems (e.g. TMDs) appended is permitted
+          
+        * `wind_env`, instance of `WindEnv` class (or derived classes)
+        """
+        
+        print("**** UNDER DEVELOPMENT ****")
+        
+        # Call parent init method first
+        super().__init__(sys,wind_env)
