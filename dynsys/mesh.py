@@ -97,6 +97,15 @@ class Mesh:
         self._locations[obj.get_objects()] = obj
         
         
+    def get_location_names(self):
+        """
+        Returns list of tuples of location (element,point) names
+        """
+        return [(element.name, point.name)
+                for (element,point) in self.locations.keys()]
+            
+        
+        
     def __del__(self):
         pass
     
@@ -568,10 +577,7 @@ class Element:
         List of node objects connecting to this element. Keys are node names
         """
         
-        self.gauss_points = []
-        """
-        List of gauss point objects associated with this element
-        """
+        self._gauss_points = []
         
         # Connect to parent mesh
         if parent_mesh is not None:
@@ -580,8 +586,27 @@ class Element:
         # Connect any nodes passed in as list
         self.connect_nodes(connected_nodes)
         
+        
     
     # -----
+    
+    @property
+    def gauss_points(self):
+        """
+        Returns list of gauss point objects associated with this element
+        """
+        return self._gauss_points
+        
+        
+    def add_gauss_point(self,obj):
+        
+        check_class(obj,GaussPoint)
+        
+        self._gauss_points.append(obj)
+        
+        # Define new location and associate with parent mesh
+        location_obj = Location(element=self,point=obj)
+        self.parent_mesh.add_location(location_obj)
           
     
     def connect_nodes(self,node_objs:list):
@@ -614,6 +639,11 @@ class Element:
                 raise ValueError("Unexpected number of nodes supplied "
                                  "to define element!")
                 
+        # Check nodes are unique
+        node_set = set(node_objs)
+        if len(node_set) != len(node_objs):
+            raise ValueError("Nodes are not unique!")
+                
             
     def get_connected_node(node_index:int):
         
@@ -640,6 +670,15 @@ class LineElement(Element):
     
     _nNodes_expected = 2
             
+    
+    def __init__(self, *args, **kwargs):
+        
+        super().__init__(*args,**kwargs)
+        
+        # Check element length is not zero
+        if self.length() == 0:
+            raise ValueError("Element '%s' has zero length!" % self.name)
+    
 
     def get_axes(self,verbose=False):
         """
@@ -649,7 +688,9 @@ class LineElement(Element):
         # Calculate x-axis, taking as being direction vector from end1 to end2
         r1, r2 = self.get_end_positions()
         x = r2 - r1
-        x /= norm(x)
+        
+        # Normalise as unit vector
+        x = x / norm(x)
         
         # Calculate y-axis
         # y to lie in horizontal plane orthogonal to x
@@ -691,7 +732,7 @@ class LineElement(Element):
         """
         r1, r2 = self.get_end_positions()
         return 0.5*(r1+r2)
-    
+        
     
     def define_gauss_points(self,N_gp:int=3,verbose=False):
         """
@@ -746,14 +787,13 @@ class LineElement(Element):
         r1, r2 = self.get_end_positions()
         r12 = r2 - r1
             
-        self.gauss_points = []
         for (loc,weight) in zip(locs,weights):
             
             # Calculate position of gauss point
             xyz = r1 + loc * r12
             
-            # Define new GaussPoint object and append to list
-            self.gauss_points.append(GaussPoint(loc=loc,weight=weight,xyz=xyz))
+            # Define new GaussPoint object and associated with element
+            self.add_gauss_point(GaussPoint(loc=loc,weight=weight,xyz=xyz))
             
         return self.gauss_points
          
@@ -1283,7 +1323,7 @@ if __name__ == "__main__":
         # Plot mesh
         meshObj1.plot()
         
-    if testRoutine2Run==2:
+    elif testRoutine2Run==2:
         
         print("*** TEST ROUTINE 2 COMMENCED *****")
         print("--- Test of local element axes ---")
@@ -1293,27 +1333,32 @@ if __name__ == "__main__":
         meshObj1 = Mesh(name="Element axes test")
         
         # Define some nodes
-        xyz = npy.asarray([[0,0,0],[0,0,1.1],[0,1,0],[0.5,0.5,1],[0,1,-1],[2,0,0]])
-        Nn = xyz.shape[0]
+        xyz_list = [[0,0,0],[0,0,1.1],[0,1,0],[0.5,0.5,1],[0,1,-1],[2,0,0]]
         
-        for n in range(Nn):
-            Node(meshObj1,xyz=xyz[n,:],name=n)
+        node_objs = []
+        for xyz in xyz_list:
+            node_objs.append(Node(meshObj1,xyz=xyz))
             
         # Define some elements
+        Nn = len(node_objs)
+        element_objs = []
         for n in range(1,Nn):
             
-            node1 = meshObj1.node_objs[0]
-            node2 = meshObj1.node_objs[n]
-            LineElement(meshObj1,[node1,node2])
+            node1 = node_objs[0]
+            node2 = node_objs[n]
+            element_objs.append(LineElement(meshObj1,[node1,node2]))
+            
+        # Define gauss points for mesh
+        meshObj1.define_gauss_points()
             
         # Plot mesh
         meshObj1.plot(plot_axes=True)
         
         # Print locations
-        print(meshObj1.locations)
+        print(meshObj1.get_location_names())
         
         
-    if testRoutine2Run==3:
+    elif testRoutine2Run==3:
         
         print("*** TEST ROUTINE 2 COMMENCED *****")
         print("--- Test of integration by gauss quadrature ---")
@@ -1342,125 +1387,6 @@ if __name__ == "__main__":
         ax1.legend()
         ax2.legend()
         
-        # Define some nodes
-        
-            
-#        # Define some elements
-#        elemTopo = npy.asarray([[0,1],[1,2],[0,2]])
-#        Ne = elemTopo.shape[0]
-#        
-#        for e in range(Ne):
-#            Element(meshObj1,elemTopo[e,:],name="Element %d" (e+1))
-#            
-#        # Define a mesh of meshes
-#        meshObj2 = Mesh(name="myMeshOfMeshes")
-#        meshObj2.appendObjs("mesh",meshObj1)
-#        meshObj2.printAttrs()
-#        
-#        # Define deformed configuration of mesh
-#        #vMask="101"
-#        meshObj1.nodeObjs[0].setDeformedPos([0.2,0.1],vmask="101")
-#        meshObj1.nodeObjs[1].setDeformedPos([-0.2,0.2,-0.1])
-#        meshObj1.nodeObjs[2].setDeformedPos([0.2,0.5],vmask="110")
-#        meshObj1.nodeObjs[3].setDeformedPos([-0.2,-0.4,0.1])
-#        
-#        # Produce 3D plot of mesh
-#        fig = plt.figure()
-#        ax = fig.gca(projection='3d')
-#        meshObj2.plot(ax,plotDeformed=True)
-#        plt.show()
-##        
-#    elif testRoutine2Run==2:
-#        
-#        print("*** TEST ROUTINE 2 COMMENCED ***")
-#        print("")
-#        
-#        # Define new mesh, reading data from file
-#        meshObj3 = mesh(name="myCoolMesh")
-#        meshObj3.defineFromFiles()
-#        
-#        # Read deformations from file
-#        meshObj3.readDeformations("Step2")
-#        
-#        # Produce 3D plot of mesh
-#        fig = plt.figure(figsize=(9,9))
-#        ax = fig.gca(projection='3d')
-#        dwgObjs=meshObj3.plot(ax,printOutput=False,plotDeformed=True)
-#        plt.show()
-#        
-#        # Read deformations from file and update plot
-#        meshObj3.readDeformations("Step3")
-#        dwgObjs=meshObj3.plot(ax,updatePlot=True,dwgObjs=dwgObjs,printOutput=False,plotDeformed=True)
-#        
-#    elif testRoutine2Run==3:
-#        
-#        print("*** TEST ROUTINE 2 COMMENCED ***")
-#        print("")
-#        
-#        # Define new mesh, reading data from file
-#        meshObj1 = mesh(name="myCoolMesh")
-#        meshObj1.defineFromFiles()
-#        
-#        # Create new figure with 3D axes system
-#        fig = plt.figure(figsize=(9,9))
-#        ax = fig.gca(projection='3d')
-#        
-#        # Set appropriate limits for plot
-#        xyz_min,xyz_max=[-10,-10,0],[10,10,10]
-#        ax.set_xlim([xyz_min[0],xyz_max[0]])
-#        ax.set_ylim([xyz_min[1],xyz_max[1]])
-#        ax.set_zlim([xyz_min[2],xyz_max[2]])
-#        
-#         # Set axes labels etc.
-#        ax.set_xlabel("x")
-#        ax.set_ylabel("y")
-#        ax.set_zlabel("z")
-#        ax.set_title("My mesh animation")
-#        
-#        # Create drawing objects (with no data)
-#        dwgObjs=meshObj1.plot(ax,
-#                              printOutput=False,plotNull=True,
-#                              plotDeformed=True,
-#                              plotNodes=False,plotElements=True,
-#                              elementLineStyle_undeformed='--',
-#                              elementLineStyle_deformed='-',
-#                              nodeStyle='.',nodeColor='m')
-#        time_template = 'Time = %.3fs'
-#        time_text = ax.text(0.05, 0.9, 0,'', transform=ax.transAxes)
-#        
-#        # Define function used to draw a clear frame
-#        def init():
-#            return animate(0,dt,dwgObjs,time_text)
-#            
-#        # Define function to run repeatedly to create animation
-#        def animate(i,dt,dwgObjs,time_text):
-#            
-#            t_val=i*dt
-#            
-#            # Read deformations from file
-#            meshObj1.readDeformations("Step{0}".format(i+1),printOutput=False)
-#        
-#            # Update plot
-#            dwgObjs=meshObj1.plot(ax,
-#                                  updatePlot=True,dwgObjs=dwgObjs,
-#                                  printOutput=False,plotDeformed=True,
-#                                  plotNodes=False,plotElements=True)
-#            
-#            # Update time lobel
-#            time_text.set_text(time_template % t_val)
-#        
-#            return dwgObjs,time_text
-#        
-#        dt=1
-#        delay=2
-#        ani = animation.FuncAnimation(fig, animate,
-#                                      frames=3,
-#                                      fargs=(dt,dwgObjs,time_text,),
-#                                      interval=dt*1000,
-#                                      repeat=True,repeat_delay=delay*1000,
-#                                      init_func=init)
-#        plt.show()
-    
     else:
         print("(No valid test routine selected)")
         
