@@ -6,7 +6,6 @@ Classes used to define wind cross-sections
 @author: RIHY
 """
 
-import inspect
 import numpy
 import scipy
 from scipy.interpolate import CubicSpline
@@ -676,6 +675,25 @@ def test_calc_C_d():
     ax.set_title("Drag coefficients for circles\n" + 
                  "according to Fig 7.28, BS EN 1991-1-4:2005")
 
+
+def define_cylinders(fname,mesh_obj=None):
+    """
+    Read file containing definitions of cylindrical wind sections
+    
+    ***
+    Required:
+        
+    * `fname`, filename string
+    
+    ***
+    Optional:
+        
+    * `mesh_obj`, instance of `Mesh()` class. If provided, wind sections will 
+      be associated with distinct mesh locations
+    
+    """
+    raise NotImplementedError("Not yet implemented!")
+    
 
 
 # ---------------- TEST ROUTINES ----------------------------------------------
