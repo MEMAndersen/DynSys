@@ -1065,24 +1065,6 @@ def _derivative_func(val,alpha,order=1):
         raise ValueError("Unexpected type. Cannot evaluate derivative\n" + 
                          "{0}".format(type(val)))
 
-def define_cylinders(fname,mesh_obj=None):
-    """
-    Read file containing definitions of cylindrical wind sections
-    
-    ***
-    Required:
-        
-    * `fname`, filename string
-    
-    ***
-    Optional:
-        
-    * `mesh_obj`, instance of `Mesh()` class. If provided, wind sections will 
-      be associated with distinct mesh locations
-    
-    """
-    raise NotImplementedError("Not yet implemented!")
-    
 
 
 #%%
