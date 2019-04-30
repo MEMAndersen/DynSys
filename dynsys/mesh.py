@@ -1406,7 +1406,8 @@ if __name__ == "__main__":
     
     def test1():
         
-        print("*** TEST ROUTINE 1 COMMENCED ***")
+        print("\n*** TEST ROUTINE 1 COMMENCED ***")
+        print("--- Test of defining nodes and associating with mesh ---")
         print("")
     
         # Define new mesh
@@ -1423,9 +1424,10 @@ if __name__ == "__main__":
         meshObj1.plot()
         
         
+        
     def test2():
         
-        print("*** TEST ROUTINE 2 COMMENCED *****")
+        print("\n*** TEST ROUTINE 2 COMMENCED *****")
         print("--- Test of local element axes ---")
         print("")
     
@@ -1460,8 +1462,9 @@ if __name__ == "__main__":
         
     def test3():
         
-        print("*** TEST ROUTINE 3 COMMENCED *****")
+        print("\n*** TEST ROUTINE 3 COMMENCED *****")
         print("--- Test of integration by gauss quadrature ---")
+        print("")
         
         # Define arbitrary polynomial
         p = npy.poly1d([3,2, 1, 2, -5])
@@ -1470,12 +1473,18 @@ if __name__ == "__main__":
         ax1.plot(x,p(x))
         
         # Perform integration over an uneven mesh using just two elements
+        
         x_salient = [x[0],0.1,x[-1]]
         ax1.plot(x_salient,p(x_salient),'r.')
         ax1.axhline(0.0,color='k',alpha=0.3) # overlay y=0 line
         
+        n_gp = 3
+        
+        print("Integrating polynomial by Gauss Quadrature " + 
+              "with %d gauss points per element" % n_gp)
+        
         mesh, integral_vals = integrate_gauss(p,x_salient,
-                                              n_gp=3,
+                                              n_gp=n_gp,
                                               cumulative=True,
                                               make_plot=True,
                                               ax_list=[ax1,ax2])
@@ -1490,8 +1499,9 @@ if __name__ == "__main__":
 
     def test4():
         
-        print("*** TEST ROUTINE 4 COMMENCED *****")
+        print("\n*** TEST ROUTINE 4 COMMENCED *****")
         print("--- Test of element skew angles ---")
+        print("")
         
         # Define new mesh
         meshObj1 = Mesh(name="Skew angles test")
@@ -1519,10 +1529,12 @@ if __name__ == "__main__":
         
     def run_all_tests():
         
+        print("Running all test methods:")
         test1()
         test2()
         test3()
         test4()
+        print("\nAll tests complete!")
             
             
     # Select test to run
