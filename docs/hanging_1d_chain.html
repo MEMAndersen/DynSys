@@ -1,4 +1,4 @@
-Version: 1.7.2
+Version: 1.7.4
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1032,6 +1032,9 @@ table {
     }
   }
   </script>
+  
+  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -3574,7 +3577,13 @@ will be ignored.</p>
     <span class="n">input_names</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">nDOF</span><span class="p">):</span>
-            <span class="n">input_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> : Force </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;ModalSys&#39;</span><span class="p">:</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;Modal&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            
+            <span class="n">input_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> : </span><span class="si">%s</span><span class="s2"> Force </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">prefix</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
     
     <span class="c1"># Return values as class instance</span>
     <span class="n">obj</span> <span class="o">=</span> <span class="n">FreqResponse_Results</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fVals</span><span class="p">,</span>
@@ -3839,8 +3848,10 @@ Define frequency values to evaluate frequency response G(f) at</p>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">state_variables_only</span><span class="p">:</span>
         <span class="n">output_mtrx_full</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">output_mtrx_full</span><span class="p">,</span><span class="n">accn_cols_full</span><span class="p">))</span>
     
-    <span class="c1"># Convert list of names to array format</span>
-    <span class="n">output_names_arr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">output_names_list</span><span class="p">)</span> 
+    <span class="c1"># Convert list of names to list of list format</span>
+    <span class="n">output_names_arr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">output_names_list</span><span class="p">:</span>
+        <span class="n">output_names_arr</span> <span class="o">+=</span> <span class="n">x</span>
     
     <span class="c1"># Return matrix and row names for full system</span>
     <span class="k">return</span> <span class="n">output_mtrx_full</span><span class="p">,</span> <span class="n">output_names_arr</span>
