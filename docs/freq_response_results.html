@@ -1,4 +1,4 @@
-Version: 1.7.2
+Version: 1.7.4
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1031,6 +1031,9 @@ table {
     }
   }
   </script>
+  
+  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -1102,6 +1105,7 @@ table {
         
         <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Output </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Gf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+            
         <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List of output names, length No</span>
@@ -1109,6 +1113,7 @@ table {
         
         <span class="k">if</span> <span class="n">input_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Input </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Gf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span>
+            
         <span class="bp">self</span><span class="o">.</span><span class="n">input_names</span> <span class="o">=</span> <span class="n">input_names</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List of input names, length Ni</span>
@@ -1158,34 +1163,36 @@ table {
     
     <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">i</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">j</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">positive_f_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{},</span>
+             <span class="n">logy</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to plot frequency response matrix (f,G_f)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="n">default_subplot_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;sharex&#39;</span><span class="p">:</span><span class="s1">&#39;col&#39;</span><span class="p">,</span><span class="s1">&#39;sharey&#39;</span><span class="p">:</span><span class="s1">&#39;row&#39;</span><span class="p">}</span>
+        <span class="n">subplot_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">default_subplot_kwargs</span><span class="p">,</span><span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">}</span>
+        
         <span class="c1"># Define rows/columns to plot</span>
         <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">i</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">j</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">j</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-        
+                                    
         <span class="c1"># Create plots</span>
         <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">sharey</span><span class="o">=</span><span class="s1">&#39;row&#39;</span><span class="p">)</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">)</span>
+            <span class="n">axarr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
             
         <span class="k">else</span><span class="p">:</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
             
-        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
-        
-        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
-        
-        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Plot of G(f) frequency response matrix&quot;</span><span class="p">)</span>
-        
         <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
             
             <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">_j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+                
+                <span class="c1"># Make plot</span>
                 
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">row</span><span class="p">,</span><span class="n">col</span><span class="p">]</span>
@@ -1197,7 +1204,17 @@ table {
                                     <span class="n">plotPhase</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 
-            
+                <span class="c1"># Customise axes format etc</span>
+                
+                <span class="k">if</span> <span class="n">logy</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_yaxis</span><span class="p">()</span><span class="o">.</span><span class="n">get_scale</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                    <span class="n">logy</span> <span class="o">=</span> <span class="bp">True</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">logy</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;sci&#39;</span><span class="p">,</span><span class="n">scilimits</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+                    
                 <span class="c1"># Tidy-up plot, removing labels etc.</span>
                 
                 <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -1210,9 +1227,6 @@ table {
                     
                 <span class="k">if</span> <span class="n">row</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">col</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-                        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
                         
                 <span class="c1"># Define formatting of labels etc</span>
                 
@@ -1227,9 +1241,16 @@ table {
                              <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
                              <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
                              <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-                        
-            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+                
+        <span class="c1"># Customise figure</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Plot of G(f) frequency response matrix&quot;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">logy</span><span class="p">:</span>
+            <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()]</span>
                     
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span>
                                     
@@ -1397,6 +1418,7 @@ table {
         
         <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Output </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Gf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+            
         <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List of output names, length No</span>
@@ -1404,6 +1426,7 @@ table {
         
         <span class="k">if</span> <span class="n">input_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Input </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Gf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span>
+            
         <span class="bp">self</span><span class="o">.</span><span class="n">input_names</span> <span class="o">=</span> <span class="n">input_names</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List of input names, length Ni</span>
@@ -1453,34 +1476,36 @@ table {
     
     <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">i</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">j</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">positive_f_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+             <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{},</span>
+             <span class="n">logy</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
              <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to plot frequency response matrix (f,G_f)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
+        <span class="n">default_subplot_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;sharex&#39;</span><span class="p">:</span><span class="s1">&#39;col&#39;</span><span class="p">,</span><span class="s1">&#39;sharey&#39;</span><span class="p">:</span><span class="s1">&#39;row&#39;</span><span class="p">}</span>
+        <span class="n">subplot_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">default_subplot_kwargs</span><span class="p">,</span><span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">}</span>
+        
         <span class="c1"># Define rows/columns to plot</span>
         <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">i</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">j</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">j</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-        
+                                    
         <span class="c1"># Create plots</span>
         <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">sharey</span><span class="o">=</span><span class="s1">&#39;row&#39;</span><span class="p">)</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">)</span>
+            <span class="n">axarr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
             
         <span class="k">else</span><span class="p">:</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
             
-        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
-        
-        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
-        
-        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Plot of G(f) frequency response matrix&quot;</span><span class="p">)</span>
-        
         <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
             
             <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">_j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+                
+                <span class="c1"># Make plot</span>
                 
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">row</span><span class="p">,</span><span class="n">col</span><span class="p">]</span>
@@ -1492,7 +1517,17 @@ table {
                                     <span class="n">plotPhase</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 
-            
+                <span class="c1"># Customise axes format etc</span>
+                
+                <span class="k">if</span> <span class="n">logy</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_yaxis</span><span class="p">()</span><span class="o">.</span><span class="n">get_scale</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                    <span class="n">logy</span> <span class="o">=</span> <span class="bp">True</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">logy</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;sci&#39;</span><span class="p">,</span><span class="n">scilimits</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+                    
                 <span class="c1"># Tidy-up plot, removing labels etc.</span>
                 
                 <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -1505,9 +1540,6 @@ table {
                     
                 <span class="k">if</span> <span class="n">row</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">col</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-                        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
                         
                 <span class="c1"># Define formatting of labels etc</span>
                 
@@ -1522,9 +1554,16 @@ table {
                              <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
                              <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
                              <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-                        
-            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+                
+        <span class="c1"># Customise figure</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Plot of G(f) frequency response matrix&quot;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">logy</span><span class="p">:</span>
+            <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()]</span>
                     
         <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span>
                                     
@@ -1698,6 +1737,7 @@ table {
     
     <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Output </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Gf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+        
     <span class="bp">self</span><span class="o">.</span><span class="n">output_names</span> <span class="o">=</span> <span class="n">output_names</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    List of output names, length No</span>
@@ -1705,6 +1745,7 @@ table {
     
     <span class="k">if</span> <span class="n">input_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Input </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Gf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span>
+        
     <span class="bp">self</span><span class="o">.</span><span class="n">input_names</span> <span class="o">=</span> <span class="n">input_names</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    List of input names, length Ni</span>
@@ -1719,7 +1760,7 @@ table {
             
   <div class="item">
     <div class="name def" id="freq_response_results.FreqResponse_Results.plot">
-    <p>def <span class="ident">plot</span>(</p><p>self, i=None, j=None, positive_f_only=True, axarr=None, **kwargs)</p>
+    <p>def <span class="ident">plot</span>(</p><p>self, i=None, j=None, positive_f_only=True, subplot_kwargs={}, logy=False, axarr=None, **kwargs)</p>
     </div>
     
 
@@ -1731,34 +1772,36 @@ table {
   <div id="source-freq_response_results.FreqResponse_Results.plot" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">i</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">j</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
          <span class="n">positive_f_only</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+         <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{},</span>
+         <span class="n">logy</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
          <span class="n">axarr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
          <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to plot frequency response matrix (f,G_f)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
+    <span class="n">default_subplot_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;sharex&#39;</span><span class="p">:</span><span class="s1">&#39;col&#39;</span><span class="p">,</span><span class="s1">&#39;sharey&#39;</span><span class="p">:</span><span class="s1">&#39;row&#39;</span><span class="p">}</span>
+    <span class="n">subplot_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">default_subplot_kwargs</span><span class="p">,</span><span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">}</span>
+    
     <span class="c1"># Define rows/columns to plot</span>
     <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">i</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">j</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">j</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-    
+                                
     <span class="c1"># Create plots</span>
     <span class="k">if</span> <span class="n">axarr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">sharey</span><span class="o">=</span><span class="s1">&#39;row&#39;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">)</span>
+        <span class="n">axarr</span> <span class="o">=</span> <span class="n">npy</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">axarr</span><span class="p">)</span>
         
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fig</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
         
-    <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
-    
-    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
-    
-    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Plot of G(f) frequency response matrix&quot;</span><span class="p">)</span>
-    
     <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
         
         <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">_j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+            
+            <span class="c1"># Make plot</span>
             
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">row</span><span class="p">,</span><span class="n">col</span><span class="p">]</span>
@@ -1770,7 +1813,17 @@ table {
                                 <span class="n">plotPhase</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             
-        
+            <span class="c1"># Customise axes format etc</span>
+            
+            <span class="k">if</span> <span class="n">logy</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_yaxis</span><span class="p">()</span><span class="o">.</span><span class="n">get_scale</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+                <span class="n">logy</span> <span class="o">=</span> <span class="bp">True</span>
+            
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">logy</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;sci&#39;</span><span class="p">,</span><span class="n">scilimits</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+                
             <span class="c1"># Tidy-up plot, removing labels etc.</span>
             
             <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -1783,9 +1836,6 @@ table {
                 
             <span class="k">if</span> <span class="n">row</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">col</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
                     
             <span class="c1"># Define formatting of labels etc</span>
             
@@ -1800,9 +1850,16 @@ table {
                          <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span>
                          <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
                          <span class="n">wrap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-                    
-        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+            
+    <span class="c1"># Customise figure</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Plot of G(f) frequency response matrix&quot;</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">logy</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_axes</span><span class="p">()]</span>
                 
     <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span>
 </pre></div>
