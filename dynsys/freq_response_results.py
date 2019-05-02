@@ -108,15 +108,11 @@ class FreqResponse_Results():
         else:
             fig = axarr[0,0].get_figure()
             
-        fig.set_size_inches((14,8))
-        
-        fig.subplots_adjust(hspace=0.0,wspace=0.4)
-        
-        fig.suptitle("Plot of G(f) frequency response matrix")
-        
         for row, _i in enumerate(i):
             
             for col, _j in enumerate(j):
+                
+                # Make plot
                 
                 try:
                     ax = axarr[row,col]
@@ -128,6 +124,8 @@ class FreqResponse_Results():
                                     plotPhase=False,
                                     **kwargs)
                 
+                # Customise axes format etc
+                
                 if logy:
                     ax.set_yscale('log')
                 
@@ -136,8 +134,7 @@ class FreqResponse_Results():
                 
                 if not logy:
                     ax.ticklabel_format(axis='y',style='sci',scilimits=(0,0))
-                    ax.set_ylim([0.0,ax.get_ylim()[1]])
-            
+                    
                 # Tidy-up plot, removing labels etc.
                 
                 if col==0:
@@ -164,9 +161,16 @@ class FreqResponse_Results():
                              fontsize='x-small',
                              horizontalAlignment='center',
                              wrap=True)
-                        
-            fig.subplots_adjust(left=0.20)
-            fig.align_ylabels()
+                
+        # Customise figure
+        fig.set_size_inches((14,8))
+        fig.subplots_adjust(hspace=0.0,wspace=0.4)
+        fig.suptitle("Plot of G(f) frequency response matrix")
+        fig.subplots_adjust(left=0.20)
+        fig.align_ylabels()
+        
+        if not logy:
+            [ax.set_ylim(bottom=0.0) for ax in fig.get_axes()]
                     
         return fig, axarr
                                     

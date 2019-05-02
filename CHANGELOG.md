@@ -14,6 +14,9 @@ and this project adheres to:
 
 * Bug when running analysis for 1dof modal systems fixed
 
+* Issue with automatic forcing of ylim in `freq_response_results.plot()` fixed 
+  (this had been causing plots to go off-scale previously)
+
 ## [1.7.3] - 2019-04-05 - RIHY
 
 ### Fixed
