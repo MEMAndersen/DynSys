@@ -8,6 +8,12 @@ and this project adheres to:
 
 ***
 
+## Unreleased
+
+### Fixed
+
+* Bug when running analysis for 1dof modal systems fixed
+
 ## [1.7.3] - 2019-04-05 - RIHY
 
 ### Fixed
