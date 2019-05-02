@@ -216,16 +216,18 @@ class ModalSys(DynSys):
             
             vals = mp_dict[attr]
             
-            if nDOF==1 :
-                if not isinstance(vals,(int,float)):
-                    raise ValueError("Error: float expected for '%s' value" 
-                                     % attr)
+            if vals.shape!=(nDOF,):
+                raise ValueError("Error: shape of '%s' array " % attr + 
+                                 "does not agree with expected nDOF!")
             
-            else:
-                
-                if vals.shape!=(nDOF,):
-                    raise ValueError("Error: shape of '%s' array " % attr + 
-                                     "does not agree with expected nDOF!")
+#            if nDOF==1 :
+#                if not isinstance(vals,(int,float)):
+#                    raise ValueError("Error: float expected for '%s' value" 
+#                                     % attr)
+#            
+#            else:
+#                
+#            
                     
         # Update class attribute
         self.modalParams_dict = mp_dict
