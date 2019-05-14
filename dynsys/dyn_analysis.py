@@ -509,8 +509,11 @@ class Multiple():
         
         Optional:
         
-        * `stat_name`, name of statistic to be plotted
-        * `x_variable`, name of key within `kwargs2permute` list
+        * `stat`, name of statistic to be plotted (e.g. 'max', 'min')
+        
+        * `sys`, instance of `DynSys` class, used to select system whose 
+          outputs are to be plotted, If None then seperate figures will be 
+          produced for each subsystem.
         
         """
         
@@ -526,39 +529,47 @@ class Multiple():
         except KeyError:
             raise KeyError("Invalid statistic selected!")
                         
-                    # Get cross-section of df for the requested system
+        # Get list of system names to loop over
         if sys is None:
-            sys_name = stats_df.index.levels[0][0] # get first system
+            sys_names = stats_df.index.levels[0] # all systems
         else:
-            sys_name = sys.name
+            sys_names = [sys] # list of length 1
             
-        stats_df = stats_df.xs(sys_name,level=0,axis=0)
-            
-        # Obtain responses names
-        response_names = stats_df.index.values
-        print(response_names)
+        # Produce a seperate figure for each sub-system responses
+        fig_list = []
         
-        # Create figure
-        fig, axlist = plt.subplots(len(response_names),
-                                   sharex=True,
-                                   **subplot_kwargs)
-         
-        for i, ax in enumerate(axlist):
+        for sys_name in sys_names:
+                
+            # Get stats for just this system
+            df_thissys = stats_df.xs(sys_name,level=0,axis=0)
+                
+            # Obtain responses names for this subsystem
+            response_names = df_thissys.index.values
+                        
+            # Create figure, with one subplot per response
+            fig, axlist = plt.subplots(len(response_names),
+                                       sharex=True,
+                                       **subplot_kwargs)
             
-            # Get series for this response
-            df = stats_df.iloc[i,:]
+            fig_list.append(fig)
             
-            # Reshape
-            df = df.unstack()
+            for i, ax in enumerate(axlist):
+                
+                # Get series for this response
+                df = df_thissys.iloc[i,:]
+                
+                # Reshape
+                df = df.unstack()
+                
+                # Make plot
+                ax = df.plot(ax=ax,legend=False)
+                
+                if i==0:
+                    # Add legend to figure
+                    fig.legend(ax.lines, df.columns,fontsize='x-small')
             
-            # Make plot
-            ax = df.plot(ax=ax,legend=False)
-            
-            if i==0:
-                # Add legend to figure
-                fig.legend(ax.lines, df.columns,fontsize='x-small')
-            
-        return fig
+        # Return list of figures, one for each subsystem
+        return fig_list
             
     
     def _pickle_fName(self,fName):

@@ -97,7 +97,8 @@ multipleAnalyses.run(save=False)
 multipleAnalyses.stats_df.to_csv('stats_results.csv')
 
 #%%
-fig = multipleAnalyses.plot_stats(subplot_kwargs={'sharey':True});
+fig = multipleAnalyses.plot_stats(stat='absmax',
+                                  subplot_kwargs={'sharey':True})[0]
 
 # Customise figure
 fig.set_size_inches((10,6))
