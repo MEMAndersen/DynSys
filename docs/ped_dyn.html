@@ -1,4 +1,4 @@
-Version: 1.7.4
+Version: 1.7.5
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1033,9 +1033,6 @@ table {
     }
   }
   </script>
-  
-  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
-  
 </head>
 <body>
 <a href="#" id="top">Top</a>
@@ -8975,14 +8972,23 @@ efficient slicing operations, for example</p></div>
         
         <span class="c1"># Loop over all tstep_results objects</span>
         <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">results_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results_list</span><span class="p">):</span>
             
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">stats_dict</span> <span class="ow">in</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                
-                <span class="n">stats_vals</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
-                <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
-        
+            <span class="c1"># Get DataFrame of stats</span>
+            <span class="n">stats_df</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">get_response_stats_df</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># this is a hack, ceed to consider what to do when system </span>
+            <span class="c1"># comprises multiple subsystems</span>
+            
+            <span class="c1"># Get series for specified statistic</span>
+            <span class="n">stats_series</span> <span class="o">=</span> <span class="n">stats_df</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span>
+            
+            <span class="c1"># Append to list</span>
+            <span class="n">stats_vals</span> <span class="o">=</span> <span class="n">stats_series</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
         <span class="c1"># Flatten nested list</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">stats_list</span><span class="p">)</span>
         
@@ -9005,7 +9011,7 @@ efficient slicing operations, for example</p></div>
 
         <span class="c1"># Loop over all response stats types, e.g. &#39;max&#39;, &#39;min&#39; etc.</span>
         <span class="n">stats_dict_inner</span><span class="o">=</span><span class="p">{}</span>
-        <span class="n">stats_names_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">response_stats_dict</span><span class="p">[</span><span class="n">dynsys_obj</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">stats_names_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;max&#39;</span><span class="p">,</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span><span class="s1">&#39;min&#39;</span><span class="p">,</span><span class="s1">&#39;std&#39;</span><span class="p">,</span><span class="s1">&#39;absmax&#39;</span><span class="p">]</span>
         
         <span class="k">for</span> <span class="n">stats_name</span> <span class="ow">in</span> <span class="n">stats_names_list</span><span class="p">:</span>
             

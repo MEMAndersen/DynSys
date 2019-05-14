@@ -7,6 +7,16 @@ and this project adheres to:
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ***
+## [1.7.5] - 2019-05-14 - RIHY
+
+### Fixed
+
+* Commented-out sections of Train Analysis example script resurrected. This 
+  involved updating the `collate_stats()` method of the `Multiple()` class, 
+  to make use of updated internal methods for handling results from 
+  time-stepping analyses. Needs some further work to handle the case of systems 
+  comprising multiple sub-systems however, as indicated by comments in the code.
+
 
 ## [1.7.4] - 2019-05-02 - RIHY
 
