@@ -12,12 +12,14 @@ import timeit
 import itertools
 import matplotlib.pyplot as plt
 import dill
+import pandas as pd
 #import multiprocessing   # does not work with Spyder!
 
 import tstep
 import loading
 import msd_chain
 
+#%%
 
 class Dyn_Analysis():
     """
@@ -422,7 +424,7 @@ class Multiple():
         """
         Class name of `dyn_analysis` derived class
         """
-            
+                    
         self.vals2permute = vals2permute
         """
         Dictionary of keywords and values to permute in the multiple analyses 
@@ -498,77 +500,77 @@ class Multiple():
             self.save()
     
     
-    def plot_stats(self,stat_name='absmax',
-                   key2plot='loadVel',
-                   xConversionFactor:float=1.0,
-                   xlabel=None,
-                   figsize_inches=(14,8)):
+    def plot_stats(self,
+                   stat='absmax',
+                   sys=None,
+                   subplot_kwargs={}):
         """
         Produces a plot of a given taken across multiple analyses
         
         Optional:
         
-        * `stat_name`, name of statistic to be plotted
-        * `key2plot`, name of key within `vals2permute` dict to be used
-          as x-axis in plot
-        """
+        * `stat`, name of statistic to be plotted (e.g. 'max', 'min')
         
-        raise ValueError("UNFINISHED: DO NOT USE!")
+        * `sys`, instance of `DynSys` class, used to select system whose 
+          outputs are to be plotted, If None then seperate figures will be 
+          produced for each subsystem.
+        
+        """
         
         # Re-collate statistics as required
-        if self.stats_dict is None:
+        if self.stats_df is None:
             self.collate_stats()
+        
+        stats_df = self.stats_df
+        
+        # Slice for requested stat
+        try:
+            stats_df = stats_df.xs(stat,level=-1,axis=1)
+        except KeyError:
+            raise KeyError("Invalid statistic selected!")
+                        
+        # Get list of system names to loop over
+        if sys is None:
+            sys_names = stats_df.index.levels[0] # all systems
+        else:
+            sys_names = [sys] # list of length 1
             
-        # Check requested stats is in dict
-        if not stat_name in self.stats_dict:
-            raise ValueError("Invalid statistic selected!")
-            
-        # Obtain responses names
-        responseNames = self.dynsys_obj.output_names_list
-        print(responseNames)
-        
-        # Get index and value to use along x-axis
-        #kwargs2permute = list(self.vals2permute.keys())
-        #key2plot_index=[i for i, x in enumerate(kwargs2permute) if x==key2plot][0]
-        
-        x_vals = xConversionFactor * numpy.array(self.vals2permute[key2plot])
-
-        # Retrieve stats to plot
-        stats_arr = self.stats_dict[stat_name]
-        print("stats_arr.shape: {0}".format(stats_arr.shape))
-        
-        """
-        Current manual workaround to produce load vs velocity plot!
-        (Code should be tidied to be more generic)
-        """
-        
-        # Create figure for each set of responses
-        nFigures = len(responseNames)
+        # Produce a seperate figure for each sub-system responses
         fig_list = []
         
-        for fig_index in range(nFigures):
+        for sys_name in sys_names:
                 
-            nSubplots = len(responseNames[fig_index])
-            
-            fig, axarr = plt.subplots(nSubplots, sharex=True)
-            fig.set_size_inches(figsize_inches)
+            # Get stats for just this system
+            df_thissys = stats_df.xs(sys_name,level=0,axis=0)
+                
+            # Obtain responses names for this subsystem
+            response_names = df_thissys.index.values
+                        
+            # Create figure, with one subplot per response
+            fig, axlist = plt.subplots(len(response_names),
+                                       sharex=True,
+                                       **subplot_kwargs)
             
             fig_list.append(fig)
             
-            # Create subplots for each response
-            for splt_index in range(nSubplots):
+            for i, ax in enumerate(axlist):
                 
-                r = splt_index
-                ax = axarr[splt_index]
-                vals2plot = stats_arr[:,:,r]
+                # Get series for this response
+                df = df_thissys.iloc[i,:]
                 
-                ax.plot(x_vals,vals2plot)
-                ax.set_title(responseNames[fig_index][r])
+                # Reshape
+                df = df.unstack()
                 
-                if (xlabel is not None) and (splt_index==nSubplots-1):
-                    ax.set_xlabel(xlabel)
+                # Make plot
+                ax = df.plot(ax=ax,legend=False)
                 
+                if i==0:
+                    # Add legend to figure
+                    fig.legend(ax.lines, df.columns,fontsize='x-small')
+            
+        # Return list of figures, one for each subsystem
         return fig_list
+            
     
     def _pickle_fName(self,fName):
         """
@@ -601,8 +603,20 @@ class Multiple():
     
     def collate_stats(self):
         """
-        Collates computed statistics into a dict of ndarrays, to faciliate 
-        efficient slicing operations, for example
+        Collates computed statistics into a Pandas DataFrame, as follows:
+            
+        * Index is a MultiIndex, comprising the following levels:
+            
+            * 0 : Name of sub-system
+            
+            * 1 : Name of output / response
+            
+        * Columns are a MultiIndex comprising the following levels:
+            
+            * 0 to -2 : Variables of analysis `vals2permute`
+            
+            * -1 : Statistic name (e.g. 'max', 'min')
+            
         """
         
         print("Collating statistics...")
@@ -611,70 +625,52 @@ class Multiple():
         if self.results_arr is None:
             raise ValueError("self.results_arr=None! No results to collate!")
         
-        results_list = numpy.ravel(self.results_arr).tolist()
+        # Get lists of inputs permuted for analyses
+        kwargs2permute = list(self.vals2permute.keys())
+        vals2permute = list(self.vals2permute.values())
         
-        def collate_specified_stats(stats_name = 'max'):
-            """
-            Function to collate specified stats, across all results objects
-            """
+        # Where list contains objects, get their names
+        for i in range(len(vals2permute)):
             
-            # Loop over all tstep_results objects
-            stats_list = []
-            
-            for i, results_obj in enumerate(results_list):
-                
-                # Get DataFrame of stats
-                stats_df = results_obj.get_response_stats_df()[0]
-                # this is a hack, ceed to consider what to do when system 
-                # comprises multiple subsystems
-                
-                # Get series for specified statistic
-                stats_series = stats_df[stats_name]
-                
-                # Append to list
-                stats_vals = stats_series.values
-                stats_list.append(stats_vals)
-                
-                if i==0:
-                    nResponses = len(stats_vals)
-
-            # Flatten nested list
-            arr = numpy.ravel(stats_list)
-            
-            # Reshape as ndarray
-            newshape = self.vals2permute_shape + (nResponses,)
-            arr = numpy.reshape(arr,newshape)
-            
-            print("`{0}` stats saved as {1} ndarray".format(stats_name,arr.shape))
-            
-            return arr
+            if hasattr(vals2permute[i][0],'name'):
+                vals2permute[i] = [x.name for x in vals2permute[i]]
         
-        # Loop over all systems and subsystems
-        stats_dict_outer={}
+        # Get list of systems and subsystems
+        DynSys_list = self.dynsys_obj.DynSys_list
         
-        DynSys_list = results_list[0].tstep_obj.dynsys_obj.DynSys_list
+        stats_df = None
         
-        for dynsys_obj in DynSys_list:
+        for i, (index, results_obj) in enumerate(numpy.ndenumerate(self.results_arr)):
             
-            print("Collating response stats for system '%s'" % dynsys_obj.name)
-    
-            # Loop over all response stats types, e.g. 'max', 'min' etc.
-            stats_dict_inner={}
-            stats_names_list = ['max','mean','min','std','absmax']
+            # Get combination of vals2permute for results_obj
+            combination = [vals[i] for i, vals in zip(index, vals2permute)]
             
-            for stats_name in stats_names_list:
+            # Get stats from results_obj
+            stats_df_inner = results_obj.get_response_stats_df()
+            
+            # Loop over all sub-systems
+            for df, sys in zip(stats_df_inner,DynSys_list):
                 
-                stats_dict_inner[stats_name] = collate_specified_stats(stats_name)
+                # Prepend system to index
+                df = pd.concat([df],
+                               axis=0,
+                               keys=[sys.name],
+                               names=['System','Response'])
                 
-            stats_dict_outer[dynsys_obj] = stats_dict_inner
+                # Prepare combination values to column MultiIndex
+                tuples = [(*combination,col) for col in df.columns]
+                df.columns = pd.MultiIndex.from_tuples(tuples)
+                df.columns.names = [*kwargs2permute,'Statistic']
                 
-        # Save as attribute
-        self.stats_dict = stats_dict_outer
-        
-        return stats_dict_outer
+                # Append results to DataFrame
+                stats_df = pd.concat([stats_df, df],axis=1)
+            
+        self.stats_df = stats_df
+            
+        return stats_df
     
     
-    
+   #%% 
 
         
         

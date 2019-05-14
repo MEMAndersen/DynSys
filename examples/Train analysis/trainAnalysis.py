@@ -13,7 +13,7 @@ import modalsys
     
 #%%
 # Define system to analyse
-bridge_sys = modalsys.ModalSys()
+bridge_sys = modalsys.ModalSys(name='My Bridge')
 bridge_sys.AddOutputMtrx()
 
 """
@@ -93,97 +93,17 @@ multipleAnalyses = dyn_analysis.Multiple(dyn_analysis.MovingLoadAnalysis,
                                          writeResults2File=False)
 multipleAnalyses.run(save=False)
 
+# Write statistics DataFrame to csv file
+multipleAnalyses.stats_df.to_csv('stats_results.csv')
 
 #%%
-def PlotStats(trainSpeeds_kmph,
-              trainCodes,
-              statsData,
-              responseNames,
-              ylim=[0,5.0],
-              xlabel="Train speed [km/hr]",
-              supTitle=""):
-    """
-    statsData is expected to be ndarray
-        axis 0: speeds
-        axis 1: trains
-        axis 2: responses
-    """
-    
-    # Convert types
-    trainCodes=numpy.asarray(trainCodes)
-    trainSpeeds_kmph=numpy.asarray(trainSpeeds_kmph)
-    
-    # Counters
-    nSpeeds, nTrains, nResponses = statsData.shape
-    
-    # Check shape of ndarray agrees with inputs
-    if trainCodes.shape[0]!=nTrains:
-        raise ValueError("trainCodes.shape[0]!=nTrains\n"+
-                         "trainCodes.shape: {0}\n".format(trainCodes.shape)+
-                         "statsData.shape: {0}".format(statsData.shape))
-        
-    if trainSpeeds_kmph.shape[0]!=nSpeeds:
-        raise ValueError("trainSpeeds_kmph.shape[0]!=nSpeeds\n"+
-                         "trainSpeeds_kmph.shape: {0}\n".format(trainSpeeds_kmph.shape)+
-                         "statsData.shape: {0}".format(statsData.shape))
-        
-    # Create new figure
-    fig, axarr = plt.subplots(nResponses, sharex=True)
-    fig.set_size_inches(16,10)
-    
-    fig.suptitle(supTitle)
-    
-    for r in range(nResponses):
-        
-        ax = axarr[r]
-    
-        ax.plot(trainSpeeds_kmph,statsData[:,:,r],label=trainCodes)
-        
-        handles, labels = ax.get_legend_handles_labels()
-        
-        if r==0:
-            fig.legend(handles, trainCodes,
-                       loc='upper right',
-                       fontsize='x-small',
-                       ncol=5)
+fig = multipleAnalyses.plot_stats(stat='absmax',
+                                  subplot_kwargs={'sharey':True})[0]
 
-        ax.set_xlim([trainSpeeds_kmph.min(),trainSpeeds_kmph.max()])
-        ax.set_ylim(ylim)
-        
-        ax.set_title(responseNames[r],fontsize='x-small')
-        
-        if r==nResponses-1:
-            ax.set_xlabel(xlabel)
-            
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.93)        # create space for suptitle
-    fig.subplots_adjust(bottom=0.15)      # create space for figlegend
-    
-    return fig, axarr
-
-#%%
-
-## Reload pickled results
-#structureCode = "LRN"
-#massCode = "min"
-#pkl_fName = 'Multiple_MovingLoadAnalysis_{0}_{1}.pkl'.format(structureCode,massCode)
-#multipleAnalyses = dyn_analysis.load(fName=pkl_fName)
-
-#%%
-
-# Extract data to plot
-absmax_stats = multipleAnalyses.stats_dict[bridge_sys]["absmax"]
-trainNames = [x.name for x in multipleAnalyses.vals2permute["loadtrain_obj"]]
-speeds_kmph = (3600/1000 * numpy.array(multipleAnalyses.vals2permute["loadVel"])).tolist()
-responseNames = multipleAnalyses.dynsys_obj.output_names[0]
-sys_name = multipleAnalyses.dynsys_obj.name
-
-# Plot stats, using function defined above
-fig, axarr = PlotStats(trainSpeeds_kmph=speeds_kmph,
-                       trainCodes=trainNames,
-                       statsData=absmax_stats,
-                       responseNames=responseNames,
-                       supTitle="Maximum acceleration responses for {0}".format(sys_name))
-#fig.savefig("MaxAccSummary.png")
-
+# Customise figure
+fig.set_size_inches((10,6))
+axlist = fig.get_axes()
+[ax.set_ylim([0,2.0]) for ax in axlist]
+axlist[-1].set_xlabel("Train speed (m/s)")
+fig.suptitle("Response versus speed, for various trains")
 
