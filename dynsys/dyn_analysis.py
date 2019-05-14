@@ -620,14 +620,24 @@ class Multiple():
             
             # Loop over all tstep_results objects
             stats_list = []
+            
             for i, results_obj in enumerate(results_list):
                 
-                for key, stats_dict in results_obj.response_stats_dict.items():
-                    
-                    stats_vals = stats_dict[stats_name].tolist()
-                    if i==0: nResponses = len(stats_vals)
-                    stats_list.append(stats_vals)
-            
+                # Get DataFrame of stats
+                stats_df = results_obj.get_response_stats_df()[0]
+                # this is a hack, ceed to consider what to do when system 
+                # comprises multiple subsystems
+                
+                # Get series for specified statistic
+                stats_series = stats_df[stats_name]
+                
+                # Append to list
+                stats_vals = stats_series.values
+                stats_list.append(stats_vals)
+                
+                if i==0:
+                    nResponses = len(stats_vals)
+
             # Flatten nested list
             arr = numpy.ravel(stats_list)
             
@@ -650,7 +660,7 @@ class Multiple():
     
             # Loop over all response stats types, e.g. 'max', 'min' etc.
             stats_dict_inner={}
-            stats_names_list = list(results_list[0].response_stats_dict[dynsys_obj].keys())
+            stats_names_list = ['max','mean','min','std','absmax']
             
             for stats_name in stats_names_list:
                 
