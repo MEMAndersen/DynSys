@@ -500,77 +500,66 @@ class Multiple():
             self.save()
     
     
-    def plot_stats(self,stat_name='absmax',
-                   key2plot='loadVel',
-                   xConversionFactor:float=1.0,
-                   xlabel=None,
-                   figsize_inches=(14,8)):
+    def plot_stats(self,
+                   stat='absmax',
+                   sys=None,
+                   subplot_kwargs={}):
         """
         Produces a plot of a given taken across multiple analyses
         
         Optional:
         
         * `stat_name`, name of statistic to be plotted
-        * `key2plot`, name of key within `vals2permute` dict to be used
-          as x-axis in plot
-        """
+        * `x_variable`, name of key within `kwargs2permute` list
         
-        raise ValueError("UNFINISHED: DO NOT USE!")
+        """
         
         # Re-collate statistics as required
-        if self.stats_dict is None:
+        if self.stats_df is None:
             self.collate_stats()
+        
+        stats_df = self.stats_df
+        
+        # Slice for requested stat
+        try:
+            stats_df = stats_df.xs(stat,level=-1,axis=1)
+        except KeyError:
+            raise KeyError("Invalid statistic selected!")
+                        
+                    # Get cross-section of df for the requested system
+        if sys is None:
+            sys_name = stats_df.index.levels[0][0] # get first system
+        else:
+            sys_name = sys.name
             
-        # Check requested stats is in dict
-        if not stat_name in self.stats_dict:
-            raise ValueError("Invalid statistic selected!")
+        stats_df = stats_df.xs(sys_name,level=0,axis=0)
             
         # Obtain responses names
-        responseNames = self.dynsys_obj.output_names_list
-        print(responseNames)
+        response_names = stats_df.index.values
+        print(response_names)
         
-        # Get index and value to use along x-axis
-        #kwargs2permute = list(self.vals2permute.keys())
-        #key2plot_index=[i for i, x in enumerate(kwargs2permute) if x==key2plot][0]
-        
-        x_vals = xConversionFactor * numpy.array(self.vals2permute[key2plot])
-
-        # Retrieve stats to plot
-        stats_arr = self.stats_dict[stat_name]
-        print("stats_arr.shape: {0}".format(stats_arr.shape))
-        
-        """
-        Current manual workaround to produce load vs velocity plot!
-        (Code should be tidied to be more generic)
-        """
-        
-        # Create figure for each set of responses
-        nFigures = len(responseNames)
-        fig_list = []
-        
-        for fig_index in range(nFigures):
-                
-            nSubplots = len(responseNames[fig_index])
+        # Create figure
+        fig, axlist = plt.subplots(len(response_names),
+                                   sharex=True,
+                                   **subplot_kwargs)
+         
+        for i, ax in enumerate(axlist):
             
-            fig, axarr = plt.subplots(nSubplots, sharex=True)
-            fig.set_size_inches(figsize_inches)
+            # Get series for this response
+            df = stats_df.iloc[i,:]
             
-            fig_list.append(fig)
+            # Reshape
+            df = df.unstack()
             
-            # Create subplots for each response
-            for splt_index in range(nSubplots):
-                
-                r = splt_index
-                ax = axarr[splt_index]
-                vals2plot = stats_arr[:,:,r]
-                
-                ax.plot(x_vals,vals2plot)
-                ax.set_title(responseNames[fig_index][r])
-                
-                if (xlabel is not None) and (splt_index==nSubplots-1):
-                    ax.set_xlabel(xlabel)
-                
-        return fig_list
+            # Make plot
+            ax = df.plot(ax=ax,legend=False)
+            
+            if i==0:
+                # Add legend to figure
+                fig.legend(ax.lines, df.columns,fontsize='x-small')
+            
+        return fig
+            
     
     def _pickle_fName(self,fName):
         """
@@ -633,7 +622,6 @@ class Multiple():
         for i in range(len(vals2permute)):
             
             if hasattr(vals2permute[i][0],'name'):
-                print("Getting names...")
                 vals2permute[i] = [x.name for x in vals2permute[i]]
         
         # Get list of systems and subsystems
