@@ -12,12 +12,14 @@ import timeit
 import itertools
 import matplotlib.pyplot as plt
 import dill
+import pandas as pd
 #import multiprocessing   # does not work with Spyder!
 
 import tstep
 import loading
 import msd_chain
 
+#%%
 
 class Dyn_Analysis():
     """
@@ -422,7 +424,7 @@ class Multiple():
         """
         Class name of `dyn_analysis` derived class
         """
-            
+                    
         self.vals2permute = vals2permute
         """
         Dictionary of keywords and values to permute in the multiple analyses 
@@ -601,8 +603,20 @@ class Multiple():
     
     def collate_stats(self):
         """
-        Collates computed statistics into a dict of ndarrays, to faciliate 
-        efficient slicing operations, for example
+        Collates computed statistics into a Pandas DataFrame, as follows:
+            
+        * Index is a MultiIndex, comprising the following levels:
+            
+            * 0 : Name of sub-system
+            
+            * 1 : Name of output / response
+            
+        * Columns are a MultiIndex comprising the following levels:
+            
+            * 0 to -2 : Variables of analysis `vals2permute`
+            
+            * -1 : Statistic name (e.g. 'max', 'min')
+            
         """
         
         print("Collating statistics...")
@@ -611,70 +625,53 @@ class Multiple():
         if self.results_arr is None:
             raise ValueError("self.results_arr=None! No results to collate!")
         
-        results_list = numpy.ravel(self.results_arr).tolist()
+        # Get lists of inputs permuted for analyses
+        kwargs2permute = list(self.vals2permute.keys())
+        vals2permute = list(self.vals2permute.values())
         
-        def collate_specified_stats(stats_name = 'max'):
-            """
-            Function to collate specified stats, across all results objects
-            """
+        # Where list contains objects, get their names
+        for i in range(len(vals2permute)):
             
-            # Loop over all tstep_results objects
-            stats_list = []
-            
-            for i, results_obj in enumerate(results_list):
-                
-                # Get DataFrame of stats
-                stats_df = results_obj.get_response_stats_df()[0]
-                # this is a hack, ceed to consider what to do when system 
-                # comprises multiple subsystems
-                
-                # Get series for specified statistic
-                stats_series = stats_df[stats_name]
-                
-                # Append to list
-                stats_vals = stats_series.values
-                stats_list.append(stats_vals)
-                
-                if i==0:
-                    nResponses = len(stats_vals)
-
-            # Flatten nested list
-            arr = numpy.ravel(stats_list)
-            
-            # Reshape as ndarray
-            newshape = self.vals2permute_shape + (nResponses,)
-            arr = numpy.reshape(arr,newshape)
-            
-            print("`{0}` stats saved as {1} ndarray".format(stats_name,arr.shape))
-            
-            return arr
+            if hasattr(vals2permute[i][0],'name'):
+                print("Getting names...")
+                vals2permute[i] = [x.name for x in vals2permute[i]]
         
-        # Loop over all systems and subsystems
-        stats_dict_outer={}
+        # Get list of systems and subsystems
+        DynSys_list = self.dynsys_obj.DynSys_list
         
-        DynSys_list = results_list[0].tstep_obj.dynsys_obj.DynSys_list
+        stats_df = None
         
-        for dynsys_obj in DynSys_list:
+        for i, (index, results_obj) in enumerate(numpy.ndenumerate(self.results_arr)):
             
-            print("Collating response stats for system '%s'" % dynsys_obj.name)
-    
-            # Loop over all response stats types, e.g. 'max', 'min' etc.
-            stats_dict_inner={}
-            stats_names_list = ['max','mean','min','std','absmax']
+            # Get combination of vals2permute for results_obj
+            combination = [vals[i] for i, vals in zip(index, vals2permute)]
             
-            for stats_name in stats_names_list:
+            # Get stats from results_obj
+            stats_df_inner = results_obj.get_response_stats_df()
+            
+            # Loop over all sub-systems
+            for df, sys in zip(stats_df_inner,DynSys_list):
                 
-                stats_dict_inner[stats_name] = collate_specified_stats(stats_name)
+                # Prepend system to index
+                df = pd.concat([df],
+                               axis=0,
+                               keys=[sys.name],
+                               names=['System','Response'])
                 
-            stats_dict_outer[dynsys_obj] = stats_dict_inner
+                # Prepare combination values to column MultiIndex
+                tuples = [(*combination,col) for col in df.columns]
+                df.columns = pd.MultiIndex.from_tuples(tuples)
+                df.columns.names = [*kwargs2permute,'Statistic']
                 
-        # Save as attribute
-        self.stats_dict = stats_dict_outer
-        
-        return stats_dict_outer
+                # Append results to DataFrame
+                stats_df = pd.concat([stats_df, df],axis=1)
+            
+        self.stats_df = stats_df
+            
+        return stats_df
     
     
-    
+   #%% 
 
         
         
