@@ -7,6 +7,22 @@ and this project adheres to:
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ***
+
+## [1.7.6] - 2019-05-14 - RIHY
+
+### Added
+
+* `plot_stats()` method added to `Multiple()` class in `dyn_analysis` module. 
+  This can be used to present results from multiple time-stepping analysese. 
+  Refer Train Analysis example script for demo of its usage.
+  
+### Changed
+
+* `collate_stats()` method of `Multiple()` class in `dyn_analysis` module now 
+  returns a Pandas DataFrame, with MultiIndex columns and index to organise 
+  data hierachically
+  
+
 ## [1.7.5] - 2019-05-14 - RIHY
 
 ### Fixed
