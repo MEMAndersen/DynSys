@@ -551,7 +551,7 @@ class Multiple():
     
     
     def plot_stats_for_system(self,sys_name,stat,
-                              max_responses_per_fig:int=None,
+                              max_responses_per_fig:int=5,
                               subplot_kwargs={}
                               ):
         """
@@ -568,7 +568,11 @@ class Multiple():
             
         * `max_responses_per_fig`, integer to denote maximum number of 
           responses to be plotted in each figure. If None, all responses will 
-          be plotted via a single figure
+          be plotted via a single figure. Default value (=4) should give 
+          nice plots in most cases.
+          
+          _Users are advised to tweak the appearance 
+          of figures, e.g. using the `pyplot.subplots_adjust()` method._
           
         * `subplot_kwargs`, dict of keyword arguments to be passed to 
           `pyplot.subplots()` method, to customise subplots (e.g. share axes)        

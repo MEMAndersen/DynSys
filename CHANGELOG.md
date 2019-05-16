@@ -8,7 +8,7 @@ and this project adheres to:
 
 ***
 
-## [1.7.6] - 2019-05-14 - RIHY
+## Unreleased
 
 ### Added
 
