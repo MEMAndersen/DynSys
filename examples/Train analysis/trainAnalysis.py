@@ -97,13 +97,18 @@ multipleAnalyses.run(save=False)
 multipleAnalyses.stats_df.to_csv('stats_results.csv')
 
 #%%
-fig = multipleAnalyses.plot_stats(stat='absmax',
-                                  subplot_kwargs={'sharey':True})[0]
 
-# Customise figure
-fig.set_size_inches((10,6))
-axlist = fig.get_axes()
-[ax.set_ylim([0,2.0]) for ax in axlist]
-axlist[-1].set_xlabel("Train speed (m/s)")
-fig.suptitle("Response versus speed, for various trains")
+fig_list = multipleAnalyses.plot_stats(stat='absmax',
+                                       max_responses_per_fig=4)[0]
+
+# Customise figures
+for fig in fig_list:
+    
+    fig.subplots_adjust(left=0.17)
+    fig.set_size_inches((10,6))
+    axlist = fig.get_axes()
+    [ax.set_ylim([0,2.0]) for ax in axlist]
+    axlist[-1].set_xlabel("Train speed (m/s)")
+    fig.suptitle("Mid-span acceleration response\n" + 
+                 "versus speed, for various trains")
 
