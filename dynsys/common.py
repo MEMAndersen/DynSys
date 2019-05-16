@@ -172,6 +172,16 @@ def read_block(f, start_str, end_str):
             
     return data
 
+
+
+def chunks(l:list, n:int):
+    """
+    Generator, breaks a list `l` into set of lists each of max length `n`
+    """
+    for i in range(0, len(l), n):
+        yield l[i:i+n]
+        
+
 # ------------ PLOTTING --------------
     
 def set_equal_aspect_3d(ax,axis_limits):

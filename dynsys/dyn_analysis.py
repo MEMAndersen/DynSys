@@ -18,6 +18,7 @@ import pandas as pd
 import tstep
 import loading
 import msd_chain
+from common import chunks
 
 #%%
 
@@ -503,74 +504,136 @@ class Multiple():
     def plot_stats(self,
                    stat='absmax',
                    sys=None,
-                   subplot_kwargs={}):
+                   **kwargs):
         """
-        Produces a plot of a given taken across multiple analyses
+        Produces a plot of a given statistic, taken across multiple analyses
         
         Optional:
         
         * `stat`, name of statistic to be plotted (e.g. 'max', 'min')
         
-        * `sys`, instance of `DynSys` class, used to select system whose 
-          outputs are to be plotted, If None then seperate figures will be 
-          produced for each subsystem.
+        * `sys`, instance of `DynSys` class, or string to denote name of system,
+          used to select system whose outputs are to be plotted. 
+          If None then seperate figures will be produced for each subsystem.
+          
+        _See docstring for `plot_stats_for_system()` for other keyword 
+        arguments that may be passed._
         
+        """
+        
+        # Get list of system names to loop over
+        if sys is None:
+            sys_names = [obj.name for obj in self.dynsys_obj.DynSys_list]
+        else:
+            
+            # Get name of system
+            if isinstance(sys,str):
+                sys_name = sys
+            else:
+                sys_name = sys.name # get name from object
+            
+            sys_names = [sys_name] # list of length 1
+            
+        # Produce a seperate figure for each sub-system responses
+        fig_list = []
+        
+        fig_list = []
+        for sys_name in sys_names:
+            
+            _fig_list = self.plot_stats_for_system(sys_name=sys_name,
+                                                   stat=stat,
+                                                   **kwargs)
+            
+            fig_list.append(_fig_list)
+            
+        # Return list of figures, one for each subsystem
+        return fig_list
+    
+    
+    def plot_stats_for_system(self,sys_name,stat,
+                              max_responses_per_fig:int=None,
+                              subplot_kwargs={}
+                              ):
+        """
+        Produces a plot of a given statistic, taken across multiple analyses
+        for a specified sub-system
+        
+        Required:
+        
+        * `sys_name`, string giving name of system
+        
+        * `stat`, string to specify statistic to be plotted. E.g. 'absmax'
+        
+        Optional:
+            
+        * `max_responses_per_fig`, integer to denote maximum number of 
+          responses to be plotted in each figure. If None, all responses will 
+          be plotted via a single figure
+          
+        * `subplot_kwargs`, dict of keyword arguments to be passed to 
+          `pyplot.subplots()` method, to customise subplots (e.g. share axes)        
+          
         """
         
         # Re-collate statistics as required
         if self.stats_df is None:
-            self.collate_stats()
-        
-        stats_df = self.stats_df
+            stats_df = self.collate_stats()
+        else:
+            stats_df = self.stats_df
         
         # Slice for requested stat
         try:
             stats_df = stats_df.xs(stat,level=-1,axis=1)
         except KeyError:
             raise KeyError("Invalid statistic selected!")
-                        
-        # Get list of system names to loop over
-        if sys is None:
-            sys_names = stats_df.index.levels[0] # all systems
-        else:
-            sys_names = [sys] # list of length 1
             
-        # Produce a seperate figure for each sub-system responses
+        # Get stats for just this system
+        df_thissys = stats_df.xs(sys_name,level=0,axis=0)
+            
+        # Obtain responses names for this subsystem
+        response_names = df_thissys.index.values
+        nResponses = len(response_names)
+        
+        if max_responses_per_fig is None:
+            max_responses_per_fig = nResponses
+        
         fig_list = []
         
-        for sys_name in sys_names:
-                
-            # Get stats for just this system
-            df_thissys = stats_df.xs(sys_name,level=0,axis=0)
-                
-            # Obtain responses names for this subsystem
-            response_names = df_thissys.index.values
-                        
+        for _response_names in chunks(response_names,max_responses_per_fig):
+            
             # Create figure, with one subplot per response
-            fig, axlist = plt.subplots(len(response_names),
+            fig, axlist = plt.subplots(len(_response_names),
                                        sharex=True,
                                        **subplot_kwargs)
             
             fig_list.append(fig)
-            
-            for i, ax in enumerate(axlist):
-                
+        
+            for i, (r,ax) in enumerate(zip(_response_names,axlist)):
+                                
                 # Get series for this response
-                df = df_thissys.iloc[i,:]
+                df = df_thissys.loc[r]
                 
-                # Reshape
+                # Reshape such that index will be x-variable for plot
                 df = df.unstack()
                 
                 # Make plot
                 ax = df.plot(ax=ax,legend=False)
                 
+                ax.set_ylabel(r,
+                              rotation=0,
+                              fontsize='small',
+                              horizontalAlignment='right',
+                              verticalAlignment='center')
+                
                 if i==0:
                     # Add legend to figure
-                    fig.legend(ax.lines, df.columns,fontsize='x-small')
-            
-        # Return list of figures, one for each subsystem
-        return fig_list
-            
+                    fig.legend(ax.lines, df.columns,fontsize='x-small') 
+                    
+            fig.subplots_adjust(left=0.15,right=0.95)
+            fig.align_ylabels()
+                    
+        return fig_list            
+        
     
     def _pickle_fName(self,fName):
         """
