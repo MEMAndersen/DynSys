@@ -27,12 +27,15 @@ dt_reqd = 0.01#(1/max_fn)/2 # sampling freq to be 10x maximum modal freq - rule 
 #%%
 
 ## Run moving load analysis for specified speed
+train_code='trainA6'
 speed_kmph=450
-loading_obj = loading.LoadTrain(fName="train_defs/trainA6.csv",name="trainA6")
+loading_obj = loading.LoadTrain(fName="train_defs/%s.csv" % train_code,
+                                name=train_code)
         
-
+analysis_name = '%s, %.0f kmph' % (train_code,speed_kmph)
 
 ML_analysis = dyn_analysis.MovingLoadAnalysis(modalsys_obj=bridge_sys,
+                                              name=analysis_name,
                                               dt=dt_reqd,
                                               max_dt=dt_reqd,
                                               loadVel=speed_kmph*1000/3600,
@@ -58,8 +61,13 @@ results_fig = results_obj.plot_response_results()
 #%%
 # Produce animation of displacement results
 anim = results_obj.AnimateResults(SysPlot_kwargs={'y_lim':(-0.005,0.005)},
+                                  fig_size=(14,6),
                                   FuncAnimation_kwargs={'repeat':True,
                                                         'repeat_delay':1000})
+
+#%%
+#from matplotlib.animation import PillowWriter
+#anim.save("%s.gif" % train_code, writer=PillowWriter(fps=15))
 
 #%%
 # Plot periodogram (power spectral density estimate) of results
