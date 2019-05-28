@@ -66,8 +66,8 @@ anim = results_obj.AnimateResults(SysPlot_kwargs={'y_lim':(-0.005,0.005)},
                                                         'repeat_delay':1000})
 
 #%%
-#from matplotlib.animation import PillowWriter
-#anim.save("%s.gif" % train_code, writer=PillowWriter(fps=15))
+from matplotlib.animation import PillowWriter
+anim.save("%s.gif" % train_code, writer=PillowWriter(fps=15))
 
 #%%
 # Plot periodogram (power spectral density estimate) of results
