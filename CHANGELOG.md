@@ -22,6 +22,8 @@ and this project adheres to:
   returns a Pandas DataFrame, with MultiIndex columns and index to organise 
   data hierachically
   
+* `dashpot` argument added to `TMD().__init___()` method, to allow dashpot of 
+  TMDs to be defined (rather than TMD damping ratio) 
 
 ## [1.7.5] - 2019-05-14 - RIHY
 

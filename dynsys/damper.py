@@ -26,6 +26,7 @@ class TMD(msd_chain.MSD_Chain):
     
     def __init__(self,sprung_mass:float,nat_freq:float,
                  fixed_mass:float=None,damping_ratio:float=0.0,
+                 dashpot:float=None,
                  outputs:dict={},
                  **kwargs):
         """
@@ -57,7 +58,11 @@ class TMD(msd_chain.MSD_Chain):
               will be assumed to be 1/100th of the sprung mass
           
         * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system 
-          in isolation
+          in isolation. Alternatively `dashpot` argument can be used to define 
+          the TMD damping
+          
+        * `dashpot`, _float_, defines dashpot rate (in Ns/m). Use in place of 
+          `damping_ratio` argument.
           
         Additional keyword arguments may be provided; these will be passed to 
         `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) 
@@ -80,7 +85,11 @@ class TMD(msd_chain.MSD_Chain):
                 
         # Define masses, stiffnesses and damping dashpot of msd_chain system
         K = SDOF_stiffness(M=sprung_mass,f=nat_freq)
-        C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
+        
+        if dashpot is None:
+            C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
+        else:
+            C = dashpot
         
         M_vals = [fixed_mass,sprung_mass]
         K_vals = [0.0,K]
