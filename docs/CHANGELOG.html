@@ -5,7 +5,7 @@
 and this project adheres to: 
 <a href="http://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <hr />
-<h2>[1.7.6] - 2019-05-14 - RIHY</h2>
+<h2>Unreleased</h2>
 <h3>Added</h3>
 <ul>
 <li><code>plot_stats()</code> method added to <code>Multiple()</code> class in <code>dyn_analysis</code> module. 
@@ -14,9 +14,19 @@ and this project adheres to:
 </ul>
 <h3>Changed</h3>
 <ul>
-<li><code>collate_stats()</code> method of <code>Multiple()</code> class in <code>dyn_analysis</code> module now 
+<li>
+<p><code>collate_stats()</code> method of <code>Multiple()</code> class in <code>dyn_analysis</code> module now 
   returns a Pandas DataFrame, with MultiIndex columns and index to organise 
-  data hierachically</li>
+  data hierachically</p>
+</li>
+<li>
+<p><code>dashpot</code> argument added to <code>TMD().__init___()</code> method, to allow dashpot of 
+  TMDs to be defined (rather than TMD damping ratio) </p>
+</li>
+<li>
+<p>Inputs used to define TMDs are now recorded as class attributes, to allow 
+  later retrieval (but not editing - no public setter methods provided)</p>
+</li>
 </ul>
 <h2>[1.7.5] - 2019-05-14 - RIHY</h2>
 <h3>Fixed</h3>
