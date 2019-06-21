@@ -15,7 +15,7 @@ import pandas
 
 # DynSys imports
 import msd_chain
-from dynsys import SDOF_stiffness, SDOF_dashpot
+from dynsys import SDOF_stiffness, SDOF_dashpot, SDOF_dampingRatio
 
 class TMD(msd_chain.MSD_Chain):
     """
@@ -131,41 +131,26 @@ class TMD(msd_chain.MSD_Chain):
                 
         
     def _define_properties(self,fixed_mass,sprung_mass,
-                           nat_freq,damping_ratio,dashpot):
+                           nat_freq,damping_ratio,C):
         """
         Define key properties of the damper, given inputs provided
         
         Refer docstring for __init__() method for details of inputs
         """
-        
-        if fixed_mass is None:
-            fixed_mass = sprung_mass / 100 # reasonable value, non-zero required
-        
-        if fixed_mass == 0.0:
-            raise ValueError("`fixed_mass` cannot be zero!")
                 
         # Define masses, stiffnesses and damping dashpot of msd_chain system
         K = SDOF_stiffness(M=sprung_mass,f=nat_freq)
         
-        if dashpot is None:
+        if C is None:
             C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
         else:
-            C = dashpot
+            damping_ratio = SDOF_dampingRatio(sprung_mass,K,C)
             
         if fixed_mass is None:
             fixed_mass = sprung_mass / 100 # reasonable value, non-zero required
-        
-        if fixed_mass == 0.0:
+        elif fixed_mass == 0.0:
             raise ValueError("`fixed_mass` cannot be zero!")
-                
-        # Define masses, stiffnesses and damping dashpot of msd_chain system
-        K = SDOF_stiffness(M=sprung_mass,f=nat_freq)
         
-        if dashpot is None:
-            C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
-        else:
-            C = dashpot
-            
         # Store inputs as attributes
         self._M = sprung_mass
         self._M_fixed = fixed_mass
