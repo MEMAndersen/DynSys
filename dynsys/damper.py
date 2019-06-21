@@ -70,6 +70,7 @@ class TMD(msd_chain.MSD_Chain):
         
         """
         
+        
         # Define default outputs and merge with any passed-in
         default_outputs = {}
         default_outputs['disp'] = True
@@ -90,12 +91,18 @@ class TMD(msd_chain.MSD_Chain):
             C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
         else:
             C = dashpot
+            
+        # Keep a record of the key inputs
+        self.sprung_mass = sprung_mass
+        self.fixed_mass = fixed_mass
+        self.nat_freq = nat_freq
+        self.damping_ratio = damping_ratio
+        self.dashpot = C
         
+        # Invoke msd_chain's init method
         M_vals = [fixed_mass,sprung_mass]
         K_vals = [0.0,K]
         C_vals = [0.0,C]
-    
-        # Invoke msd_chain's init method
         super().__init__(M_vals=M_vals,K_vals=K_vals,C_vals=C_vals,**kwargs)
         
         # Add output matrix entry to compute relative displacement
