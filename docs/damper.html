@@ -1147,6 +1147,7 @@ be appended to another system (e.g. a modal system)</p>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
                  <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">dashpot</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">outputs</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1178,13 +1179,48 @@ be appended to another system (e.g. a modal system)</p>
 <span class="sd">              will be assumed to be 1/100th of the sprung mass</span>
 <span class="sd">          </span>
 <span class="sd">        * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system </span>
-<span class="sd">          in isolation</span>
+<span class="sd">          in isolation. Alternatively `dashpot` argument can be used to define </span>
+<span class="sd">          the TMD damping</span>
+<span class="sd">          </span>
+<span class="sd">        * `dashpot`, _float_, defines dashpot rate (in Ns/m). Use in place of </span>
+<span class="sd">          `damping_ratio` argument.</span>
 <span class="sd">          </span>
 <span class="sd">        Additional keyword arguments may be provided; these will be passed to </span>
 <span class="sd">        `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) </span>
 <span class="sd">        for that class for further details</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span>
+                         <span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">,</span><span class="n">outputs</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+                
+                
+    <span class="k">def</span> <span class="nf">_initialise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span>
+                    <span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">,</span><span class="n">outputs</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method used to actually initialise class. This is called from </span>
+<span class="sd">        __init__().</span>
+<span class="sd">        </span>
+<span class="sd">        The reason for defining as seperate (private) method is to allow </span>
+<span class="sd">        re-initialisation of properties, e.g. for when defining damper in a </span>
+<span class="sd">        probabilistic (Monte Carlo) sense</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Manipulate inputs as necessary, to define key properties of damper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_define_properties</span><span class="p">(</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span>
+                                <span class="n">nat_freq</span><span class="p">,</span>
+                                <span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">)</span>
+        
+        <span class="c1"># Invoke msd_chain&#39;s init method</span>
+        <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">M_fixed</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">M_sprung</span><span class="p">]</span>
+        <span class="n">K</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">C</span>
+        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
+        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="c1"># Add output matrix entry to compute relative displacement</span>
+        <span class="c1"># (as this is commonly of interest)</span>
         
         <span class="c1"># Define default outputs and merge with any passed-in</span>
         <span class="n">default_outputs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1193,25 +1229,6 @@ be appended to another system (e.g. a modal system)</p>
         <span class="n">default_outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">default_outputs</span><span class="p">,</span> <span class="o">**</span><span class="n">outputs</span><span class="p">}</span>
         
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
-                
-        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
-        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
-        <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
-        
-        <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">]</span>
-        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
-        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
-    
-        <span class="c1"># Invoke msd_chain&#39;s init method</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        
-        <span class="c1"># Add output matrix entry to compute relative displacement</span>
-        <span class="c1"># (as this is commonly of interest)</span>
         <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="c1">#print(&quot;Defining default output matrices for &#39;%s&#39;...&quot; % self.name)</span>
@@ -1231,6 +1248,95 @@ be appended to another system (e.g. a modal system)</p>
             <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
+                
+                
+        
+    <span class="k">def</span> <span class="nf">_define_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span>
+                           <span class="n">nat_freq</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define key properties of the damper, given inputs provided</span>
+<span class="sd">        </span>
+<span class="sd">        Refer docstring for __init__() method for details of inputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
+        
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
+                
+        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
+            
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
+        
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
+                
+        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
+            
+        <span class="c1"># Store inputs as attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="n">sprung_mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_M_fixed</span> <span class="o">=</span> <span class="n">fixed_mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span> <span class="o">=</span> <span class="n">nat_freq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eta</span> <span class="o">=</span> <span class="n">damping_ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_C</span> <span class="o">=</span> <span class="n">C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">M_sprung</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sprung component of TMD mass [kg]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">M_fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fixed component of TMD mass [kg] (e.g. mass of attachment assembly)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M_fixed</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Undamped natural frequency [Hz] of TMD when taken in isolation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">damping_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Damping ratio (critical=1) for TMD taken in isolation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eta</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">C</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Viscous dashpot rate [Ns/m] for TMD linkage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_C</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Spring rate [N/m] for TMD linkage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span>
         
         
     <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span>
@@ -1612,6 +1718,7 @@ are defined using inputs read-in from .csv file</p>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
                  <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">dashpot</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                  <span class="n">outputs</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1643,13 +1750,48 @@ are defined using inputs read-in from .csv file</p>
 <span class="sd">              will be assumed to be 1/100th of the sprung mass</span>
 <span class="sd">          </span>
 <span class="sd">        * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system </span>
-<span class="sd">          in isolation</span>
+<span class="sd">          in isolation. Alternatively `dashpot` argument can be used to define </span>
+<span class="sd">          the TMD damping</span>
+<span class="sd">          </span>
+<span class="sd">        * `dashpot`, _float_, defines dashpot rate (in Ns/m). Use in place of </span>
+<span class="sd">          `damping_ratio` argument.</span>
 <span class="sd">          </span>
 <span class="sd">        Additional keyword arguments may be provided; these will be passed to </span>
 <span class="sd">        `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) </span>
 <span class="sd">        for that class for further details</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span>
+                         <span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">,</span><span class="n">outputs</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+                
+                
+    <span class="k">def</span> <span class="nf">_initialise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span>
+                    <span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">,</span><span class="n">outputs</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method used to actually initialise class. This is called from </span>
+<span class="sd">        __init__().</span>
+<span class="sd">        </span>
+<span class="sd">        The reason for defining as seperate (private) method is to allow </span>
+<span class="sd">        re-initialisation of properties, e.g. for when defining damper in a </span>
+<span class="sd">        probabilistic (Monte Carlo) sense</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Manipulate inputs as necessary, to define key properties of damper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_define_properties</span><span class="p">(</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span>
+                                <span class="n">nat_freq</span><span class="p">,</span>
+                                <span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">)</span>
+        
+        <span class="c1"># Invoke msd_chain&#39;s init method</span>
+        <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">M_fixed</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">M_sprung</span><span class="p">]</span>
+        <span class="n">K</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">C</span>
+        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
+        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="c1"># Add output matrix entry to compute relative displacement</span>
+        <span class="c1"># (as this is commonly of interest)</span>
         
         <span class="c1"># Define default outputs and merge with any passed-in</span>
         <span class="n">default_outputs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1658,25 +1800,6 @@ are defined using inputs read-in from .csv file</p>
         <span class="n">default_outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">default_outputs</span><span class="p">,</span> <span class="o">**</span><span class="n">outputs</span><span class="p">}</span>
         
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
-                
-        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
-        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
-        <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
-        
-        <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">]</span>
-        <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
-        <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
-    
-        <span class="c1"># Invoke msd_chain&#39;s init method</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        
-        <span class="c1"># Add output matrix entry to compute relative displacement</span>
-        <span class="c1"># (as this is commonly of interest)</span>
         <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="c1">#print(&quot;Defining default output matrices for &#39;%s&#39;...&quot; % self.name)</span>
@@ -1696,6 +1819,95 @@ are defined using inputs read-in from .csv file</p>
             <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
+                
+                
+        
+    <span class="k">def</span> <span class="nf">_define_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span>
+                           <span class="n">nat_freq</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define key properties of the damper, given inputs provided</span>
+<span class="sd">        </span>
+<span class="sd">        Refer docstring for __init__() method for details of inputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
+        
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
+                
+        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
+            
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
+        
+        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
+                
+        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
+            
+        <span class="c1"># Store inputs as attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="n">sprung_mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_M_fixed</span> <span class="o">=</span> <span class="n">fixed_mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span> <span class="o">=</span> <span class="n">nat_freq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eta</span> <span class="o">=</span> <span class="n">damping_ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_C</span> <span class="o">=</span> <span class="n">C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">M_sprung</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sprung component of TMD mass [kg]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">M_fixed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fixed component of TMD mass [kg] (e.g. mass of attachment assembly)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M_fixed</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Undamped natural frequency [Hz] of TMD when taken in isolation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">damping_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Damping ratio (critical=1) for TMD taken in isolation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eta</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">C</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Viscous dashpot rate [Ns/m] for TMD linkage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_C</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Spring rate [N/m] for TMD linkage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span>
         
         
     <span class="k">def</span> <span class="nf">PlotSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="p">,</span><span class="n">v</span><span class="p">,</span>
@@ -1779,7 +1991,7 @@ are defined using inputs read-in from .csv file</p>
             
   <div class="item">
     <div class="name def" id="damper.TMD.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, sprung_mass, nat_freq, fixed_mass=None, damping_ratio=0.0, outputs={}, **kwargs)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, sprung_mass, nat_freq, fixed_mass=None, damping_ratio=0.0, dashpot=None, outputs={}, **kwargs)</p>
     </div>
     
 
@@ -1820,7 +2032,12 @@ ordinarily be appended to another system (e.g. modal system)</p>
 </li>
 <li>
 <p><code>damping_ratio</code>, <em>float</em>, damping ratio (1.0=critical) of TMD system 
-  in isolation</p>
+  in isolation. Alternatively <code>dashpot</code> argument can be used to define 
+  the TMD damping</p>
+</li>
+<li>
+<p><code>dashpot</code>, <em>float</em>, defines dashpot rate (in Ns/m). Use in place of 
+  <code>damping_ratio</code> argument.</p>
 </li>
 </ul>
 <p>Additional keyword arguments may be provided; these will be passed to 
@@ -1831,6 +2048,7 @@ for that class for further details</p></div>
   <div id="source-damper.TMD.__init__" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span>
              <span class="n">fixed_mass</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+             <span class="n">dashpot</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
              <span class="n">outputs</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="p">{},</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1862,7 +2080,11 @@ for that class for further details</p></div>
 <span class="sd">          will be assumed to be 1/100th of the sprung mass</span>
 <span class="sd">      </span>
 <span class="sd">    * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system </span>
-<span class="sd">      in isolation</span>
+<span class="sd">      in isolation. Alternatively `dashpot` argument can be used to define </span>
+<span class="sd">      the TMD damping</span>
+<span class="sd">      </span>
+<span class="sd">    * `dashpot`, _float_, defines dashpot rate (in Ns/m). Use in place of </span>
+<span class="sd">      `damping_ratio` argument.</span>
 <span class="sd">      </span>
 <span class="sd">    Additional keyword arguments may be provided; these will be passed to </span>
 <span class="sd">    `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) </span>
@@ -1870,51 +2092,8 @@ for that class for further details</p></div>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="c1"># Define default outputs and merge with any passed-in</span>
-    <span class="n">default_outputs</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">default_outputs</span><span class="p">[</span><span class="s1">&#39;disp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
-    <span class="n">default_outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
-    <span class="n">default_outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">default_outputs</span><span class="p">,</span> <span class="o">**</span><span class="n">outputs</span><span class="p">}</span>
-    
-    <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
-    
-    <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
-            
-    <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
-    <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
-    
-    <span class="n">M_vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">]</span>
-    <span class="n">K_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">K</span><span class="p">]</span>
-    <span class="n">C_vals</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="n">C</span><span class="p">]</span>
-
-    <span class="c1"># Invoke msd_chain&#39;s init method</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M_vals</span><span class="o">=</span><span class="n">M_vals</span><span class="p">,</span><span class="n">K_vals</span><span class="o">=</span><span class="n">K_vals</span><span class="p">,</span><span class="n">C_vals</span><span class="o">=</span><span class="n">C_vals</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    
-    <span class="c1"># Add output matrix entry to compute relative displacement</span>
-    <span class="c1"># (as this is commonly of interest)</span>
-    <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        
-        <span class="c1">#print(&quot;Defining default output matrices for &#39;%s&#39;...&quot; % self.name)</span>
-        
-        <span class="c1"># Add output matrix for sprung mass displacement</span>
-        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;disp&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Disp [m]&quot;</span><span class="p">])</span>
-        
-        <span class="c1"># Add output matrix for relative displacement with attachment point</span>
-        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rel disp&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Relative disp [m]&quot;</span><span class="p">])</span>
-        
-        <span class="c1"># Add output matrix to compute damper force</span>
-        <span class="c1"># given by K.v_relative + C.vdot_relative</span>
-        <span class="k">if</span> <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;linkage force&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_outputs</span><span class="p">(</span><span class="n">output_mtrx</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">K</span><span class="p">,</span><span class="o">+</span><span class="n">K</span><span class="p">,</span><span class="o">-</span><span class="n">C</span><span class="p">,</span><span class="o">+</span><span class="n">C</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;TMD linkage force [N]&quot;</span><span class="p">])</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_initialise</span><span class="p">(</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">nat_freq</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span>
+                     <span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">,</span><span class="n">outputs</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -4324,6 +4503,72 @@ Define frequency values to evaluate frequency response G(f) at</p>
   </div>
   
           <h3>Instance variables</h3>
+            <div class="item">
+            <p id="damper.TMD.C" class="name">var <span class="ident">C</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Viscous dashpot rate [Ns/m] for TMD linkage</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="damper.TMD.K" class="name">var <span class="ident">K</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Spring rate [N/m] for TMD linkage</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="damper.TMD.M_fixed" class="name">var <span class="ident">M_fixed</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Fixed component of TMD mass [kg] (e.g. mass of attachment assembly)</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="damper.TMD.M_sprung" class="name">var <span class="ident">M_sprung</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Sprung component of TMD mass [kg]</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="damper.TMD.damping_ratio" class="name">var <span class="ident">damping_ratio</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Damping ratio (critical=1) for TMD taken in isolation</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="damper.TMD.fn" class="name">var <span class="ident">fn</span></p>
+            
+
+            
+  
+    <div class="desc"><p>Undamped natural frequency [Hz] of TMD when taken in isolation</p></div>
+  <div class="source_cont">
+</div>
+
+            </div>
             <div class="item">
             <p id="damper.TMD.mesh" class="name">var <span class="ident">mesh</span></p>
             

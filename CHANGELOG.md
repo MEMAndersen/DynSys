@@ -24,6 +24,9 @@ and this project adheres to:
   
 * `dashpot` argument added to `TMD().__init___()` method, to allow dashpot of 
   TMDs to be defined (rather than TMD damping ratio) 
+  
+* Inputs used to define TMDs are now recorded as class attributes, to allow 
+  later retrieval (but not editing - no public setter methods provided)
 
 ## [1.7.5] - 2019-05-14 - RIHY
 

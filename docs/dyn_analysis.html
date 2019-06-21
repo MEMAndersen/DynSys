@@ -1094,6 +1094,7 @@ table {
     <li class="mono"><a href="#dyn_analysis.Multiple.__init__">__init__</a></li>
     <li class="mono"><a href="#dyn_analysis.Multiple.collate_stats">collate_stats</a></li>
     <li class="mono"><a href="#dyn_analysis.Multiple.plot_stats">plot_stats</a></li>
+    <li class="mono"><a href="#dyn_analysis.Multiple.plot_stats_for_system">plot_stats_for_system</a></li>
     <li class="mono"><a href="#dyn_analysis.Multiple.run">run</a></li>
     <li class="mono"><a href="#dyn_analysis.Multiple.save">save</a></li>
   </ul>
@@ -1139,6 +1140,7 @@ table {
 <span class="kn">import</span> <span class="nn">tstep</span>
 <span class="kn">import</span> <span class="nn">loading</span>
 <span class="kn">import</span> <span class="nn">msd_chain</span>
+<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">chunks</span>
 
 <span class="c1">#%%</span>
 
@@ -1624,74 +1626,140 @@ table {
     <span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">stat</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
                    <span class="n">sys</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                   <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Produces a plot of a given taken across multiple analyses</span>
+<span class="sd">        Produces a plot of a given statistic, taken across multiple analyses</span>
 <span class="sd">        </span>
 <span class="sd">        Optional:</span>
 <span class="sd">        </span>
 <span class="sd">        * `stat`, name of statistic to be plotted (e.g. &#39;max&#39;, &#39;min&#39;)</span>
 <span class="sd">        </span>
-<span class="sd">        * `sys`, instance of `DynSys` class, used to select system whose </span>
-<span class="sd">          outputs are to be plotted, If None then seperate figures will be </span>
-<span class="sd">          produced for each subsystem.</span>
+<span class="sd">        * `sys`, instance of `DynSys` class, or string to denote name of system,</span>
+<span class="sd">          used to select system whose outputs are to be plotted. </span>
+<span class="sd">          If None then seperate figures will be produced for each subsystem.</span>
+<span class="sd">          </span>
+<span class="sd">        _See docstring for `plot_stats_for_system()` for other keyword </span>
+<span class="sd">        arguments that may be passed._</span>
 <span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get list of system names to loop over</span>
+        <span class="k">if</span> <span class="n">sys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="c1"># Get name of system</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+                <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">name</span> <span class="c1"># get name from object</span>
+            
+            <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys_name</span><span class="p">]</span> <span class="c1"># list of length 1</span>
+            
+        <span class="c1"># Produce a seperate figure for each sub-system responses</span>
+        <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sys_name</span> <span class="ow">in</span> <span class="n">sys_names</span><span class="p">:</span>
+            
+            <span class="n">_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_stats_for_system</span><span class="p">(</span><span class="n">sys_name</span><span class="o">=</span><span class="n">sys_name</span><span class="p">,</span>
+                                                   <span class="n">stat</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span>
+                                                   <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+            <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_fig_list</span><span class="p">)</span>
+            
+        <span class="c1"># Return list of figures, one for each subsystem</span>
+        <span class="k">return</span> <span class="n">fig_list</span>
+    
+    
+    <span class="k">def</span> <span class="nf">plot_stats_for_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sys_name</span><span class="p">,</span><span class="n">stat</span><span class="p">,</span>
+                              <span class="n">max_responses_per_fig</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                              <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{}</span>
+                              <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produces a plot of a given statistic, taken across multiple analyses</span>
+<span class="sd">        for a specified sub-system</span>
+<span class="sd">        </span>
+<span class="sd">        Required:</span>
+<span class="sd">        </span>
+<span class="sd">        * `sys_name`, string giving name of system</span>
+<span class="sd">        </span>
+<span class="sd">        * `stat`, string to specify statistic to be plotted. E.g. &#39;absmax&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * `max_responses_per_fig`, integer to denote maximum number of </span>
+<span class="sd">          responses to be plotted in each figure. If None, all responses will </span>
+<span class="sd">          be plotted via a single figure. Default value (=4) should give </span>
+<span class="sd">          nice plots in most cases.</span>
+<span class="sd">          </span>
+<span class="sd">          _Users are advised to tweak the appearance </span>
+<span class="sd">          of figures, e.g. using the `pyplot.subplots_adjust()` method._</span>
+<span class="sd">          </span>
+<span class="sd">        * `subplot_kwargs`, dict of keyword arguments to be passed to </span>
+<span class="sd">          `pyplot.subplots()` method, to customise subplots (e.g. share axes)        </span>
+<span class="sd">          </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Re-collate statistics as required</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
-        
-        <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span>
+            <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span>
         
         <span class="c1"># Slice for requested stat</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">stats_df</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span><span class="n">level</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid statistic selected!&quot;</span><span class="p">)</span>
-                        
-        <span class="c1"># Get list of system names to loop over</span>
-        <span class="k">if</span> <span class="n">sys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">sys_names</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># all systems</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys</span><span class="p">]</span> <span class="c1"># list of length 1</span>
             
-        <span class="c1"># Produce a seperate figure for each sub-system responses</span>
+        <span class="c1"># Get stats for just this system</span>
+        <span class="n">df_thissys</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">sys_name</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            
+        <span class="c1"># Obtain responses names for this subsystem</span>
+        <span class="n">response_names</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">response_names</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">max_responses_per_fig</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">max_responses_per_fig</span> <span class="o">=</span> <span class="n">nResponses</span>
+        
         <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
         
-        <span class="k">for</span> <span class="n">sys_name</span> <span class="ow">in</span> <span class="n">sys_names</span><span class="p">:</span>
-                
-            <span class="c1"># Get stats for just this system</span>
-            <span class="n">df_thissys</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">sys_name</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                
-            <span class="c1"># Obtain responses names for this subsystem</span>
-            <span class="n">response_names</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
-                        
+        <span class="k">for</span> <span class="n">_response_names</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">(</span><span class="n">response_names</span><span class="p">,</span><span class="n">max_responses_per_fig</span><span class="p">):</span>
+            
             <span class="c1"># Create figure, with one subplot per response</span>
-            <span class="n">fig</span><span class="p">,</span> <span class="n">axlist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">response_names</span><span class="p">),</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axlist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_response_names</span><span class="p">),</span>
                                        <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                                        <span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">)</span>
             
             <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-            
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axlist</span><span class="p">):</span>
-                
+        
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">ax</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">_response_names</span><span class="p">,</span><span class="n">axlist</span><span class="p">)):</span>
+                                
                 <span class="c1"># Get series for this response</span>
-                <span class="n">df</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
                 
-                <span class="c1"># Reshape</span>
+                <span class="c1"># Reshape such that index will be x-variable for plot</span>
                 <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
                 
                 <span class="c1"># Make plot</span>
                 <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
                 
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">r</span><span class="p">,</span>
+                              <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                              <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;small&#39;</span><span class="p">,</span>
+                              <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                              <span class="n">verticalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+                
                 <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                     <span class="c1"># Add legend to figure</span>
-                    <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">)</span>
-            
-        <span class="c1"># Return list of figures, one for each subsystem</span>
-        <span class="k">return</span> <span class="n">fig_list</span>
-            
+                    <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">)</span> 
+                    
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+                    
+        <span class="k">return</span> <span class="n">fig_list</span>            
+        
     
     <span class="k">def</span> <span class="nf">_pickle_fName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -3532,74 +3600,140 @@ systematic manner</p></div>
     <span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">stat</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
                    <span class="n">sys</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                   <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+                   <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Produces a plot of a given taken across multiple analyses</span>
+<span class="sd">        Produces a plot of a given statistic, taken across multiple analyses</span>
 <span class="sd">        </span>
 <span class="sd">        Optional:</span>
 <span class="sd">        </span>
 <span class="sd">        * `stat`, name of statistic to be plotted (e.g. &#39;max&#39;, &#39;min&#39;)</span>
 <span class="sd">        </span>
-<span class="sd">        * `sys`, instance of `DynSys` class, used to select system whose </span>
-<span class="sd">          outputs are to be plotted, If None then seperate figures will be </span>
-<span class="sd">          produced for each subsystem.</span>
+<span class="sd">        * `sys`, instance of `DynSys` class, or string to denote name of system,</span>
+<span class="sd">          used to select system whose outputs are to be plotted. </span>
+<span class="sd">          If None then seperate figures will be produced for each subsystem.</span>
+<span class="sd">          </span>
+<span class="sd">        _See docstring for `plot_stats_for_system()` for other keyword </span>
+<span class="sd">        arguments that may be passed._</span>
 <span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get list of system names to loop over</span>
+        <span class="k">if</span> <span class="n">sys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="c1"># Get name of system</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+                <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">name</span> <span class="c1"># get name from object</span>
+            
+            <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys_name</span><span class="p">]</span> <span class="c1"># list of length 1</span>
+            
+        <span class="c1"># Produce a seperate figure for each sub-system responses</span>
+        <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sys_name</span> <span class="ow">in</span> <span class="n">sys_names</span><span class="p">:</span>
+            
+            <span class="n">_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_stats_for_system</span><span class="p">(</span><span class="n">sys_name</span><span class="o">=</span><span class="n">sys_name</span><span class="p">,</span>
+                                                   <span class="n">stat</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span>
+                                                   <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+            <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_fig_list</span><span class="p">)</span>
+            
+        <span class="c1"># Return list of figures, one for each subsystem</span>
+        <span class="k">return</span> <span class="n">fig_list</span>
+    
+    
+    <span class="k">def</span> <span class="nf">plot_stats_for_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sys_name</span><span class="p">,</span><span class="n">stat</span><span class="p">,</span>
+                              <span class="n">max_responses_per_fig</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                              <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{}</span>
+                              <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produces a plot of a given statistic, taken across multiple analyses</span>
+<span class="sd">        for a specified sub-system</span>
+<span class="sd">        </span>
+<span class="sd">        Required:</span>
+<span class="sd">        </span>
+<span class="sd">        * `sys_name`, string giving name of system</span>
+<span class="sd">        </span>
+<span class="sd">        * `stat`, string to specify statistic to be plotted. E.g. &#39;absmax&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        Optional:</span>
+<span class="sd">            </span>
+<span class="sd">        * `max_responses_per_fig`, integer to denote maximum number of </span>
+<span class="sd">          responses to be plotted in each figure. If None, all responses will </span>
+<span class="sd">          be plotted via a single figure. Default value (=4) should give </span>
+<span class="sd">          nice plots in most cases.</span>
+<span class="sd">          </span>
+<span class="sd">          _Users are advised to tweak the appearance </span>
+<span class="sd">          of figures, e.g. using the `pyplot.subplots_adjust()` method._</span>
+<span class="sd">          </span>
+<span class="sd">        * `subplot_kwargs`, dict of keyword arguments to be passed to </span>
+<span class="sd">          `pyplot.subplots()` method, to customise subplots (e.g. share axes)        </span>
+<span class="sd">          </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="c1"># Re-collate statistics as required</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
-        
-        <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span>
+            <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span>
         
         <span class="c1"># Slice for requested stat</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">stats_df</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span><span class="n">level</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid statistic selected!&quot;</span><span class="p">)</span>
-                        
-        <span class="c1"># Get list of system names to loop over</span>
-        <span class="k">if</span> <span class="n">sys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">sys_names</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># all systems</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys</span><span class="p">]</span> <span class="c1"># list of length 1</span>
             
-        <span class="c1"># Produce a seperate figure for each sub-system responses</span>
+        <span class="c1"># Get stats for just this system</span>
+        <span class="n">df_thissys</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">sys_name</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            
+        <span class="c1"># Obtain responses names for this subsystem</span>
+        <span class="n">response_names</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">response_names</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">max_responses_per_fig</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">max_responses_per_fig</span> <span class="o">=</span> <span class="n">nResponses</span>
+        
         <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
         
-        <span class="k">for</span> <span class="n">sys_name</span> <span class="ow">in</span> <span class="n">sys_names</span><span class="p">:</span>
-                
-            <span class="c1"># Get stats for just this system</span>
-            <span class="n">df_thissys</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">sys_name</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                
-            <span class="c1"># Obtain responses names for this subsystem</span>
-            <span class="n">response_names</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
-                        
+        <span class="k">for</span> <span class="n">_response_names</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">(</span><span class="n">response_names</span><span class="p">,</span><span class="n">max_responses_per_fig</span><span class="p">):</span>
+            
             <span class="c1"># Create figure, with one subplot per response</span>
-            <span class="n">fig</span><span class="p">,</span> <span class="n">axlist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">response_names</span><span class="p">),</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axlist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_response_names</span><span class="p">),</span>
                                        <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                                        <span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">)</span>
             
             <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-            
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axlist</span><span class="p">):</span>
-                
+        
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">ax</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">_response_names</span><span class="p">,</span><span class="n">axlist</span><span class="p">)):</span>
+                                
                 <span class="c1"># Get series for this response</span>
-                <span class="n">df</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
                 
-                <span class="c1"># Reshape</span>
+                <span class="c1"># Reshape such that index will be x-variable for plot</span>
                 <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
                 
                 <span class="c1"># Make plot</span>
                 <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
                 
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">r</span><span class="p">,</span>
+                              <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                              <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;small&#39;</span><span class="p">,</span>
+                              <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                              <span class="n">verticalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+                
                 <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                     <span class="c1"># Add legend to figure</span>
-                    <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">)</span>
-            
-        <span class="c1"># Return list of figures, one for each subsystem</span>
-        <span class="k">return</span> <span class="n">fig_list</span>
-            
+                    <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">)</span> 
+                    
+            <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+                    
+        <span class="k">return</span> <span class="n">fig_list</span>            
+        
     
     <span class="k">def</span> <span class="nf">_pickle_fName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fName</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -4004,97 +4138,206 @@ memory demands.</p></div>
             
   <div class="item">
     <div class="name def" id="dyn_analysis.Multiple.plot_stats">
-    <p>def <span class="ident">plot_stats</span>(</p><p>self, stat=&#39;absmax&#39;, sys=None, subplot_kwargs={})</p>
+    <p>def <span class="ident">plot_stats</span>(</p><p>self, stat=&#39;absmax&#39;, sys=None, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Produces a plot of a given taken across multiple analyses</p>
+    <div class="desc"><p>Produces a plot of a given statistic, taken across multiple analyses</p>
 <p>Optional:</p>
 <ul>
 <li>
 <p><code>stat</code>, name of statistic to be plotted (e.g. 'max', 'min')</p>
 </li>
 <li>
-<p><code>sys</code>, instance of <code>DynSys</code> class, used to select system whose 
-  outputs are to be plotted, If None then seperate figures will be 
-  produced for each subsystem.</p>
+<p><code>sys</code>, instance of <code>DynSys</code> class, or string to denote name of system,
+  used to select system whose outputs are to be plotted. 
+  If None then seperate figures will be produced for each subsystem.</p>
 </li>
-</ul></div>
+</ul>
+<p><em>See docstring for <code>plot_stats_for_system()</code> for other keyword 
+arguments that may be passed.</em></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.Multiple.plot_stats', this);">Show source &equiv;</a></p>
   <div id="source-dyn_analysis.Multiple.plot_stats" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                <span class="n">stat</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
                <span class="n">sys</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-               <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+               <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Produces a plot of a given taken across multiple analyses</span>
+<span class="sd">    Produces a plot of a given statistic, taken across multiple analyses</span>
 <span class="sd">    </span>
 <span class="sd">    Optional:</span>
 <span class="sd">    </span>
 <span class="sd">    * `stat`, name of statistic to be plotted (e.g. &#39;max&#39;, &#39;min&#39;)</span>
 <span class="sd">    </span>
-<span class="sd">    * `sys`, instance of `DynSys` class, used to select system whose </span>
-<span class="sd">      outputs are to be plotted, If None then seperate figures will be </span>
-<span class="sd">      produced for each subsystem.</span>
+<span class="sd">    * `sys`, instance of `DynSys` class, or string to denote name of system,</span>
+<span class="sd">      used to select system whose outputs are to be plotted. </span>
+<span class="sd">      If None then seperate figures will be produced for each subsystem.</span>
+<span class="sd">      </span>
+<span class="sd">    _See docstring for `plot_stats_for_system()` for other keyword </span>
+<span class="sd">    arguments that may be passed._</span>
 <span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Get list of system names to loop over</span>
+    <span class="k">if</span> <span class="n">sys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="c1"># Get name of system</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">name</span> <span class="c1"># get name from object</span>
+        
+        <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys_name</span><span class="p">]</span> <span class="c1"># list of length 1</span>
+        
+    <span class="c1"># Produce a seperate figure for each sub-system responses</span>
+    <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sys_name</span> <span class="ow">in</span> <span class="n">sys_names</span><span class="p">:</span>
+        
+        <span class="n">_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_stats_for_system</span><span class="p">(</span><span class="n">sys_name</span><span class="o">=</span><span class="n">sys_name</span><span class="p">,</span>
+                                               <span class="n">stat</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span>
+                                               <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_fig_list</span><span class="p">)</span>
+        
+    <span class="c1"># Return list of figures, one for each subsystem</span>
+    <span class="k">return</span> <span class="n">fig_list</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="dyn_analysis.Multiple.plot_stats_for_system">
+    <p>def <span class="ident">plot_stats_for_system</span>(</p><p>self, sys_name, stat, max_responses_per_fig=5, subplot_kwargs={})</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Produces a plot of a given statistic, taken across multiple analyses
+for a specified sub-system</p>
+<p>Required:</p>
+<ul>
+<li>
+<p><code>sys_name</code>, string giving name of system</p>
+</li>
+<li>
+<p><code>stat</code>, string to specify statistic to be plotted. E.g. 'absmax'</p>
+</li>
+</ul>
+<p>Optional:</p>
+<ul>
+<li><code>max_responses_per_fig</code>, integer to denote maximum number of 
+  responses to be plotted in each figure. If None, all responses will 
+  be plotted via a single figure. Default value (=4) should give 
+  nice plots in most cases.</li>
+</ul>
+<p><em>Users are advised to tweak the appearance 
+  of figures, e.g. using the <code>pyplot.subplots_adjust()</code> method.</em></p>
+<ul>
+<li><code>subplot_kwargs</code>, dict of keyword arguments to be passed to 
+  <code>pyplot.subplots()</code> method, to customise subplots (e.g. share axes)</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-dyn_analysis.Multiple.plot_stats_for_system', this);">Show source &equiv;</a></p>
+  <div id="source-dyn_analysis.Multiple.plot_stats_for_system" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_stats_for_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sys_name</span><span class="p">,</span><span class="n">stat</span><span class="p">,</span>
+                          <span class="n">max_responses_per_fig</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                          <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{}</span>
+                          <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a plot of a given statistic, taken across multiple analyses</span>
+<span class="sd">    for a specified sub-system</span>
+<span class="sd">    </span>
+<span class="sd">    Required:</span>
+<span class="sd">    </span>
+<span class="sd">    * `sys_name`, string giving name of system</span>
+<span class="sd">    </span>
+<span class="sd">    * `stat`, string to specify statistic to be plotted. E.g. &#39;absmax&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `max_responses_per_fig`, integer to denote maximum number of </span>
+<span class="sd">      responses to be plotted in each figure. If None, all responses will </span>
+<span class="sd">      be plotted via a single figure. Default value (=4) should give </span>
+<span class="sd">      nice plots in most cases.</span>
+<span class="sd">      </span>
+<span class="sd">      _Users are advised to tweak the appearance </span>
+<span class="sd">      of figures, e.g. using the `pyplot.subplots_adjust()` method._</span>
+<span class="sd">      </span>
+<span class="sd">    * `subplot_kwargs`, dict of keyword arguments to be passed to </span>
+<span class="sd">      `pyplot.subplots()` method, to customise subplots (e.g. share axes)        </span>
+<span class="sd">      </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Re-collate statistics as required</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
-    
-    <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span>
+        <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span>
     
     <span class="c1"># Slice for requested stat</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">stats_df</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span><span class="n">level</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid statistic selected!&quot;</span><span class="p">)</span>
-                    
-    <span class="c1"># Get list of system names to loop over</span>
-    <span class="k">if</span> <span class="n">sys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">sys_names</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># all systems</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys</span><span class="p">]</span> <span class="c1"># list of length 1</span>
         
-    <span class="c1"># Produce a seperate figure for each sub-system responses</span>
+    <span class="c1"># Get stats for just this system</span>
+    <span class="n">df_thissys</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">sys_name</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+    <span class="c1"># Obtain responses names for this subsystem</span>
+    <span class="n">response_names</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">response_names</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">max_responses_per_fig</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">max_responses_per_fig</span> <span class="o">=</span> <span class="n">nResponses</span>
+    
     <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
     
-    <span class="k">for</span> <span class="n">sys_name</span> <span class="ow">in</span> <span class="n">sys_names</span><span class="p">:</span>
-            
-        <span class="c1"># Get stats for just this system</span>
-        <span class="n">df_thissys</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">sys_name</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            
-        <span class="c1"># Obtain responses names for this subsystem</span>
-        <span class="n">response_names</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
-                    
+    <span class="k">for</span> <span class="n">_response_names</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">(</span><span class="n">response_names</span><span class="p">,</span><span class="n">max_responses_per_fig</span><span class="p">):</span>
+        
         <span class="c1"># Create figure, with one subplot per response</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">axlist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">response_names</span><span class="p">),</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axlist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_response_names</span><span class="p">),</span>
                                    <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
                                    <span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">)</span>
         
         <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-        
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axlist</span><span class="p">):</span>
-            
+    
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">ax</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">_response_names</span><span class="p">,</span><span class="n">axlist</span><span class="p">)):</span>
+                            
             <span class="c1"># Get series for this response</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
             
-            <span class="c1"># Reshape</span>
+            <span class="c1"># Reshape such that index will be x-variable for plot</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
             
             <span class="c1"># Make plot</span>
             <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">r</span><span class="p">,</span>
+                          <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                          <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;small&#39;</span><span class="p">,</span>
+                          <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                          <span class="n">verticalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+            
             <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
                 <span class="c1"># Add legend to figure</span>
-                <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">)</span>
-        
-    <span class="c1"># Return list of figures, one for each subsystem</span>
-    <span class="k">return</span> <span class="n">fig_list</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">)</span> 
+                
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+                
+    <span class="k">return</span> <span class="n">fig_list</span>            
 </pre></div>
 
   </div>
