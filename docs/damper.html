@@ -1,4 +1,4 @@
-Version: 1.7.5
+Version: 1.8.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1136,7 +1136,7 @@ be appended to another system (e.g. a modal system)</p>
 
 <span class="c1"># DynSys imports</span>
 <span class="kn">import</span> <span class="nn">msd_chain</span>
-<span class="kn">from</span> <span class="nn">dynsys</span> <span class="kn">import</span> <span class="n">SDOF_stiffness</span><span class="p">,</span> <span class="n">SDOF_dashpot</span>
+<span class="kn">from</span> <span class="nn">dynsys</span> <span class="kn">import</span> <span class="n">SDOF_stiffness</span><span class="p">,</span> <span class="n">SDOF_dashpot</span><span class="p">,</span> <span class="n">SDOF_dampingRatio</span>
 
 <span class="k">class</span> <span class="nc">TMD</span><span class="p">(</span><span class="n">msd_chain</span><span class="o">.</span><span class="n">MSD_Chain</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1252,41 +1252,26 @@ be appended to another system (e.g. a modal system)</p>
                 
         
     <span class="k">def</span> <span class="nf">_define_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span>
-                           <span class="n">nat_freq</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">):</span>
+                           <span class="n">nat_freq</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">,</span><span class="n">C</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Define key properties of the damper, given inputs provided</span>
 <span class="sd">        </span>
 <span class="sd">        Refer docstring for __init__() method for details of inputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
                 
         <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
         <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
         
-        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
+            <span class="n">damping_ratio</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
             
         <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
-                
-        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
-        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
         
-        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
-            
         <span class="c1"># Store inputs as attributes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="n">sprung_mass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_M_fixed</span> <span class="o">=</span> <span class="n">fixed_mass</span>
@@ -1823,41 +1808,26 @@ are defined using inputs read-in from .csv file</p>
                 
         
     <span class="k">def</span> <span class="nf">_define_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fixed_mass</span><span class="p">,</span><span class="n">sprung_mass</span><span class="p">,</span>
-                           <span class="n">nat_freq</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">,</span><span class="n">dashpot</span><span class="p">):</span>
+                           <span class="n">nat_freq</span><span class="p">,</span><span class="n">damping_ratio</span><span class="p">,</span><span class="n">C</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Define key properties of the damper, given inputs provided</span>
 <span class="sd">        </span>
 <span class="sd">        Refer docstring for __init__() method for details of inputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
                 
         <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
         <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
         
-        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
+            <span class="n">damping_ratio</span> <span class="o">=</span> <span class="n">SDOF_dampingRatio</span><span class="p">(</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
             
         <span class="k">if</span> <span class="n">fixed_mass</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">fixed_mass</span> <span class="o">=</span> <span class="n">sprung_mass</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># reasonable value, non-zero required</span>
-        
-        <span class="k">if</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">fixed_mass</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`fixed_mass` cannot be zero!&quot;</span><span class="p">)</span>
-                
-        <span class="c1"># Define masses, stiffnesses and damping dashpot of msd_chain system</span>
-        <span class="n">K</span> <span class="o">=</span> <span class="n">SDOF_stiffness</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">f</span><span class="o">=</span><span class="n">nat_freq</span><span class="p">)</span>
         
-        <span class="k">if</span> <span class="n">dashpot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">SDOF_dashpot</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="n">sprung_mass</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span><span class="n">eta</span><span class="o">=</span><span class="n">damping_ratio</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">C</span> <span class="o">=</span> <span class="n">dashpot</span>
-            
         <span class="c1"># Store inputs as attributes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="n">sprung_mass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_M_fixed</span> <span class="o">=</span> <span class="n">fixed_mass</span>
