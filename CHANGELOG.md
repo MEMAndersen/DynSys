@@ -26,7 +26,9 @@ and this project adheres to:
   TMDs to be defined (rather than TMD damping ratio) 
   
 * Inputs used to define TMDs are now recorded as class attributes, to allow 
-  later retrieval (but not editing - no public setter methods provided)
+  later retrieval (but not editing; no set methods are provided)
+  
+* Tutorial updated, with HTML export file included for accessibility
 
 ## [1.7.5] - 2019-05-14 - RIHY
 
