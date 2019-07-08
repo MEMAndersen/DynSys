@@ -806,6 +806,7 @@ class TStep_Results:
     def AnimateResults(self,
                        dynsys_obj=None,
                        ax=None,
+                       fig_size=(10,6),
                        SysPlot_kwargs={},
                        FuncAnimation_kwargs={}):
         """
@@ -829,7 +830,7 @@ class TStep_Results:
         if ax is None:
             
             fig, ax = plt.subplots()
-            fig.set_size_inches((10,6))
+            fig.set_size_inches(fig_size)
             
         else:
             

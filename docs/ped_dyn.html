@@ -1,4 +1,4 @@
-Version: 1.7.5
+Version: 1.8.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1118,6 +1118,7 @@ table {
     <li class="mono"><a href="#ped_dyn.PedestrianDynamics_transientAnalyses.plot_modal_params">plot_modal_params</a></li>
     <li class="mono"><a href="#ped_dyn.PedestrianDynamics_transientAnalyses.plot_response_stats">plot_response_stats</a></li>
     <li class="mono"><a href="#ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats">plot_stats</a></li>
+    <li class="mono"><a href="#ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats_for_system">plot_stats_for_system</a></li>
     <li class="mono"><a href="#ped_dyn.PedestrianDynamics_transientAnalyses.run">run</a></li>
     <li class="mono"><a href="#ped_dyn.PedestrianDynamics_transientAnalyses.save">save</a></li>
   </ul>
@@ -8946,15 +8947,50 @@ i.e. transient analyses for both walkers and joggers, for all modes</p></div>
 
     
   
-    <div class="desc"><p>Collates computed statistics into a dict of ndarrays, to faciliate 
-efficient slicing operations, for example</p></div>
+    <div class="desc"><p>Collates computed statistics into a Pandas DataFrame, as follows:</p>
+<ul>
+<li>
+<p>Index is a MultiIndex, comprising the following levels:</p>
+<ul>
+<li>
+<p>0 : Name of sub-system</p>
+</li>
+<li>
+<p>1 : Name of output / response</p>
+</li>
+</ul>
+</li>
+<li>
+<p>Columns are a MultiIndex comprising the following levels:</p>
+<ul>
+<li>
+<p>0 to -2 : Variables of analysis <code>vals2permute</code></p>
+</li>
+<li>
+<p>-1 : Statistic name (e.g. 'max', 'min')</p>
+</li>
+</ul>
+</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.PedestrianDynamics_transientAnalyses.collate_stats', this);">Show source &equiv;</a></p>
   <div id="source-ped_dyn.PedestrianDynamics_transientAnalyses.collate_stats" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">collate_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Collates computed statistics into a dict of ndarrays, to faciliate </span>
-<span class="sd">    efficient slicing operations, for example</span>
+<span class="sd">    Collates computed statistics into a Pandas DataFrame, as follows:</span>
+<span class="sd">        </span>
+<span class="sd">    * Index is a MultiIndex, comprising the following levels:</span>
+<span class="sd">        </span>
+<span class="sd">        * 0 : Name of sub-system</span>
+<span class="sd">        </span>
+<span class="sd">        * 1 : Name of output / response</span>
+<span class="sd">        </span>
+<span class="sd">    * Columns are a MultiIndex comprising the following levels:</span>
+<span class="sd">        </span>
+<span class="sd">        * 0 to -2 : Variables of analysis `vals2permute`</span>
+<span class="sd">        </span>
+<span class="sd">        * -1 : Statistic name (e.g. &#39;max&#39;, &#39;min&#39;)</span>
+<span class="sd">        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Collating statistics...&quot;</span><span class="p">)</span>
@@ -8963,66 +8999,49 @@ efficient slicing operations, for example</p></div>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_arr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;self.results_arr=None! No results to collate!&quot;</span><span class="p">)</span>
     
-    <span class="n">results_list</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_arr</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="c1"># Get lists of inputs permuted for analyses</span>
+    <span class="n">kwargs2permute</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals2permute</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">vals2permute</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals2permute</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
     
-    <span class="k">def</span> <span class="nf">collate_specified_stats</span><span class="p">(</span><span class="n">stats_name</span> <span class="o">=</span> <span class="s1">&#39;max&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function to collate specified stats, across all results objects</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="c1"># Where list contains objects, get their names</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vals2permute</span><span class="p">)):</span>
         
-        <span class="c1"># Loop over all tstep_results objects</span>
-        <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
-        
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">results_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results_list</span><span class="p">):</span>
-            
-            <span class="c1"># Get DataFrame of stats</span>
-            <span class="n">stats_df</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">get_response_stats_df</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="c1"># this is a hack, ceed to consider what to do when system </span>
-            <span class="c1"># comprises multiple subsystems</span>
-            
-            <span class="c1"># Get series for specified statistic</span>
-            <span class="n">stats_series</span> <span class="o">=</span> <span class="n">stats_df</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span>
-            
-            <span class="c1"># Append to list</span>
-            <span class="n">stats_vals</span> <span class="o">=</span> <span class="n">stats_series</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
-            
-            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-                <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats_vals</span><span class="p">)</span>
-        <span class="c1"># Flatten nested list</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">stats_list</span><span class="p">)</span>
-        
-        <span class="c1"># Reshape as ndarray</span>
-        <span class="n">newshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals2permute_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">nResponses</span><span class="p">,)</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span><span class="n">newshape</span><span class="p">)</span>
-        
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;`{0}` stats saved as {1} ndarray&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stats_name</span><span class="p">,</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-        
-        <span class="k">return</span> <span class="n">arr</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">vals2permute</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;name&#39;</span><span class="p">):</span>
+            <span class="n">vals2permute</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vals2permute</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
     
-    <span class="c1"># Loop over all systems and subsystems</span>
-    <span class="n">stats_dict_outer</span><span class="o">=</span><span class="p">{}</span>
+    <span class="c1"># Get list of systems and subsystems</span>
+    <span class="n">DynSys_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span>
     
-    <span class="n">DynSys_list</span> <span class="o">=</span> <span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tstep_obj</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span>
+    <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">None</span>
     
-    <span class="k">for</span> <span class="n">dynsys_obj</span> <span class="ow">in</span> <span class="n">DynSys_list</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">results_obj</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndenumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_arr</span><span class="p">)):</span>
         
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Collating response stats for system &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">dynsys_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="c1"># Loop over all response stats types, e.g. &#39;max&#39;, &#39;min&#39; etc.</span>
-        <span class="n">stats_dict_inner</span><span class="o">=</span><span class="p">{}</span>
-        <span class="n">stats_names_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;max&#39;</span><span class="p">,</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span><span class="s1">&#39;min&#39;</span><span class="p">,</span><span class="s1">&#39;std&#39;</span><span class="p">,</span><span class="s1">&#39;absmax&#39;</span><span class="p">]</span>
+        <span class="c1"># Get combination of vals2permute for results_obj</span>
+        <span class="n">combination</span> <span class="o">=</span> <span class="p">[</span><span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vals</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">vals2permute</span><span class="p">)]</span>
         
-        <span class="k">for</span> <span class="n">stats_name</span> <span class="ow">in</span> <span class="n">stats_names_list</span><span class="p">:</span>
+        <span class="c1"># Get stats from results_obj</span>
+        <span class="n">stats_df_inner</span> <span class="o">=</span> <span class="n">results_obj</span><span class="o">.</span><span class="n">get_response_stats_df</span><span class="p">()</span>
+        
+        <span class="c1"># Loop over all sub-systems</span>
+        <span class="k">for</span> <span class="n">df</span><span class="p">,</span> <span class="n">sys</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stats_df_inner</span><span class="p">,</span><span class="n">DynSys_list</span><span class="p">):</span>
             
-            <span class="n">stats_dict_inner</span><span class="p">[</span><span class="n">stats_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">collate_specified_stats</span><span class="p">(</span><span class="n">stats_name</span><span class="p">)</span>
+            <span class="c1"># Prepend system to index</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">],</span>
+                           <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                           <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+                           <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;System&#39;</span><span class="p">,</span><span class="s1">&#39;Response&#39;</span><span class="p">])</span>
             
-        <span class="n">stats_dict_outer</span><span class="p">[</span><span class="n">dynsys_obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats_dict_inner</span>
+            <span class="c1"># Prepare combination values to column MultiIndex</span>
+            <span class="n">tuples</span> <span class="o">=</span> <span class="p">[(</span><span class="o">*</span><span class="n">combination</span><span class="p">,</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span><span class="n">tuples</span><span class="p">)</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">kwargs2permute</span><span class="p">,</span><span class="s1">&#39;Statistic&#39;</span><span class="p">]</span>
             
-    <span class="c1"># Save as attribute</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">stats_dict</span> <span class="o">=</span> <span class="n">stats_dict_outer</span>
-    
-    <span class="k">return</span> <span class="n">stats_dict_outer</span>
+            <span class="c1"># Append results to DataFrame</span>
+            <span class="n">stats_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">stats_df</span><span class="p">,</span> <span class="n">df</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+    <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span> <span class="o">=</span> <span class="n">stats_df</span>
+        
+    <span class="k">return</span> <span class="n">stats_df</span>
 </pre></div>
 
   </div>
@@ -9250,92 +9269,206 @@ efficient slicing operations, for example</p></div>
             
   <div class="item">
     <div class="name def" id="ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats">
-    <p>def <span class="ident">plot_stats</span>(</p><p>self, stat_name=&#39;absmax&#39;, key2plot=&#39;loadVel&#39;, xConversionFactor=1.0, xlabel=None, figsize_inches=(14, 8))</p>
+    <p>def <span class="ident">plot_stats</span>(</p><p>self, stat=&#39;absmax&#39;, sys=None, **kwargs)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Produces a plot of a given taken across multiple analyses</p>
+    <div class="desc"><p>Produces a plot of a given statistic, taken across multiple analyses</p>
 <p>Optional:</p>
 <ul>
-<li><code>stat_name</code>, name of statistic to be plotted</li>
-<li><code>key2plot</code>, name of key within <code>vals2permute</code> dict to be used
-  as x-axis in plot</li>
-</ul></div>
+<li>
+<p><code>stat</code>, name of statistic to be plotted (e.g. 'max', 'min')</p>
+</li>
+<li>
+<p><code>sys</code>, instance of <code>DynSys</code> class, or string to denote name of system,
+  used to select system whose outputs are to be plotted. 
+  If None then seperate figures will be produced for each subsystem.</p>
+</li>
+</ul>
+<p><em>See docstring for <code>plot_stats_for_system()</code> for other keyword 
+arguments that may be passed.</em></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats', this);">Show source &equiv;</a></p>
   <div id="source-ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">stat_name</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
-               <span class="n">key2plot</span><span class="o">=</span><span class="s1">&#39;loadVel&#39;</span><span class="p">,</span>
-               <span class="n">xConversionFactor</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-               <span class="n">xlabel</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-               <span class="n">figsize_inches</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">8</span><span class="p">)):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+               <span class="n">stat</span><span class="o">=</span><span class="s1">&#39;absmax&#39;</span><span class="p">,</span>
+               <span class="n">sys</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Produces a plot of a given taken across multiple analyses</span>
+<span class="sd">    Produces a plot of a given statistic, taken across multiple analyses</span>
 <span class="sd">    </span>
 <span class="sd">    Optional:</span>
 <span class="sd">    </span>
-<span class="sd">    * `stat_name`, name of statistic to be plotted</span>
-<span class="sd">    * `key2plot`, name of key within `vals2permute` dict to be used</span>
-<span class="sd">      as x-axis in plot</span>
+<span class="sd">    * `stat`, name of statistic to be plotted (e.g. &#39;max&#39;, &#39;min&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">    * `sys`, instance of `DynSys` class, or string to denote name of system,</span>
+<span class="sd">      used to select system whose outputs are to be plotted. </span>
+<span class="sd">      If None then seperate figures will be produced for each subsystem.</span>
+<span class="sd">      </span>
+<span class="sd">    _See docstring for `plot_stats_for_system()` for other keyword </span>
+<span class="sd">    arguments that may be passed._</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UNFINISHED: DO NOT USE!&quot;</span><span class="p">)</span>
-    
-    <span class="c1"># Re-collate statistics as required</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_dict</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
+    <span class="c1"># Get list of system names to loop over</span>
+    <span class="k">if</span> <span class="n">sys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">DynSys_list</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
         
-    <span class="c1"># Check requested stats is in dict</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">stat_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_dict</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid statistic selected!&quot;</span><span class="p">)</span>
+        <span class="c1"># Get name of system</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys_name</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">name</span> <span class="c1"># get name from object</span>
         
-    <span class="c1"># Obtain responses names</span>
-    <span class="n">responseNames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynsys_obj</span><span class="o">.</span><span class="n">output_names_list</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">responseNames</span><span class="p">)</span>
-    
-    <span class="c1"># Get index and value to use along x-axis</span>
-    <span class="c1">#kwargs2permute = list(self.vals2permute.keys())</span>
-    <span class="c1">#key2plot_index=[i for i, x in enumerate(kwargs2permute) if x==key2plot][0]</span>
-    
-    <span class="n">x_vals</span> <span class="o">=</span> <span class="n">xConversionFactor</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals2permute</span><span class="p">[</span><span class="n">key2plot</span><span class="p">])</span>
-    <span class="c1"># Retrieve stats to plot</span>
-    <span class="n">stats_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_dict</span><span class="p">[</span><span class="n">stat_name</span><span class="p">]</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;stats_arr.shape: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stats_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-    
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Current manual workaround to produce load vs velocity plot!</span>
-<span class="sd">    (Code should be tidied to be more generic)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="c1"># Create figure for each set of responses</span>
-    <span class="n">nFigures</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">responseNames</span><span class="p">)</span>
+        <span class="n">sys_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys_name</span><span class="p">]</span> <span class="c1"># list of length 1</span>
+        
+    <span class="c1"># Produce a seperate figure for each sub-system responses</span>
     <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
     
-    <span class="k">for</span> <span class="n">fig_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nFigures</span><span class="p">):</span>
-            
-        <span class="n">nSubplots</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">responseNames</span><span class="p">[</span><span class="n">fig_index</span><span class="p">])</span>
+    <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sys_name</span> <span class="ow">in</span> <span class="n">sys_names</span><span class="p">:</span>
         
-        <span class="n">fig</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nSubplots</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="n">figsize_inches</span><span class="p">)</span>
+        <span class="n">_fig_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_stats_for_system</span><span class="p">(</span><span class="n">sys_name</span><span class="o">=</span><span class="n">sys_name</span><span class="p">,</span>
+                                               <span class="n">stat</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span>
+                                               <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_fig_list</span><span class="p">)</span>
+        
+    <span class="c1"># Return list of figures, one for each subsystem</span>
+    <span class="k">return</span> <span class="n">fig_list</span>
+</pre></div>
+
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats_for_system">
+    <p>def <span class="ident">plot_stats_for_system</span>(</p><p>self, sys_name, stat, max_responses_per_fig=5, subplot_kwargs={})</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Produces a plot of a given statistic, taken across multiple analyses
+for a specified sub-system</p>
+<p>Required:</p>
+<ul>
+<li>
+<p><code>sys_name</code>, string giving name of system</p>
+</li>
+<li>
+<p><code>stat</code>, string to specify statistic to be plotted. E.g. 'absmax'</p>
+</li>
+</ul>
+<p>Optional:</p>
+<ul>
+<li><code>max_responses_per_fig</code>, integer to denote maximum number of 
+  responses to be plotted in each figure. If None, all responses will 
+  be plotted via a single figure. Default value (=4) should give 
+  nice plots in most cases.</li>
+</ul>
+<p><em>Users are advised to tweak the appearance 
+  of figures, e.g. using the <code>pyplot.subplots_adjust()</code> method.</em></p>
+<ul>
+<li><code>subplot_kwargs</code>, dict of keyword arguments to be passed to 
+  <code>pyplot.subplots()</code> method, to customise subplots (e.g. share axes)</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats_for_system', this);">Show source &equiv;</a></p>
+  <div id="source-ped_dyn.PedestrianDynamics_transientAnalyses.plot_stats_for_system" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">plot_stats_for_system</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sys_name</span><span class="p">,</span><span class="n">stat</span><span class="p">,</span>
+                          <span class="n">max_responses_per_fig</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                          <span class="n">subplot_kwargs</span><span class="o">=</span><span class="p">{}</span>
+                          <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a plot of a given statistic, taken across multiple analyses</span>
+<span class="sd">    for a specified sub-system</span>
+<span class="sd">    </span>
+<span class="sd">    Required:</span>
+<span class="sd">    </span>
+<span class="sd">    * `sys_name`, string giving name of system</span>
+<span class="sd">    </span>
+<span class="sd">    * `stat`, string to specify statistic to be plotted. E.g. &#39;absmax&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    Optional:</span>
+<span class="sd">        </span>
+<span class="sd">    * `max_responses_per_fig`, integer to denote maximum number of </span>
+<span class="sd">      responses to be plotted in each figure. If None, all responses will </span>
+<span class="sd">      be plotted via a single figure. Default value (=4) should give </span>
+<span class="sd">      nice plots in most cases.</span>
+<span class="sd">      </span>
+<span class="sd">      _Users are advised to tweak the appearance </span>
+<span class="sd">      of figures, e.g. using the `pyplot.subplots_adjust()` method._</span>
+<span class="sd">      </span>
+<span class="sd">    * `subplot_kwargs`, dict of keyword arguments to be passed to </span>
+<span class="sd">      `pyplot.subplots()` method, to customise subplots (e.g. share axes)        </span>
+<span class="sd">      </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Re-collate statistics as required</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_stats</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">stats_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_df</span>
+    
+    <span class="c1"># Slice for requested stat</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">stats_df</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span><span class="n">level</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid statistic selected!&quot;</span><span class="p">)</span>
+        
+    <span class="c1"># Get stats for just this system</span>
+    <span class="n">df_thissys</span> <span class="o">=</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">sys_name</span><span class="p">,</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+    <span class="c1"># Obtain responses names for this subsystem</span>
+    <span class="n">response_names</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">nResponses</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">response_names</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">max_responses_per_fig</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">max_responses_per_fig</span> <span class="o">=</span> <span class="n">nResponses</span>
+    
+    <span class="n">fig_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">_response_names</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">(</span><span class="n">response_names</span><span class="p">,</span><span class="n">max_responses_per_fig</span><span class="p">):</span>
+        
+        <span class="c1"># Create figure, with one subplot per response</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axlist</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_response_names</span><span class="p">),</span>
+                                   <span class="n">sharex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                   <span class="o">**</span><span class="n">subplot_kwargs</span><span class="p">)</span>
         
         <span class="n">fig_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-        
-        <span class="c1"># Create subplots for each response</span>
-        <span class="k">for</span> <span class="n">splt_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nSubplots</span><span class="p">):</span>
+    
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">ax</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">_response_names</span><span class="p">,</span><span class="n">axlist</span><span class="p">)):</span>
+                            
+            <span class="c1"># Get series for this response</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df_thissys</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
             
-            <span class="n">r</span> <span class="o">=</span> <span class="n">splt_index</span>
-            <span class="n">ax</span> <span class="o">=</span> <span class="n">axarr</span><span class="p">[</span><span class="n">splt_index</span><span class="p">]</span>
-            <span class="n">vals2plot</span> <span class="o">=</span> <span class="n">stats_arr</span><span class="p">[:,:,</span><span class="n">r</span><span class="p">]</span>
+            <span class="c1"># Reshape such that index will be x-variable for plot</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
             
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_vals</span><span class="p">,</span><span class="n">vals2plot</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">responseNames</span><span class="p">[</span><span class="n">fig_index</span><span class="p">][</span><span class="n">r</span><span class="p">])</span>
+            <span class="c1"># Make plot</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             
-            <span class="k">if</span> <span class="p">(</span><span class="n">xlabel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">splt_index</span><span class="o">==</span><span class="n">nSubplots</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">r</span><span class="p">,</span>
+                          <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                          <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;small&#39;</span><span class="p">,</span>
+                          <span class="n">horizontalAlignment</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span>
+                          <span class="n">verticalAlignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
             
-    <span class="k">return</span> <span class="n">fig_list</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Add legend to figure</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">)</span> 
+                
+        <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">align_ylabels</span><span class="p">()</span>
+                
+    <span class="k">return</span> <span class="n">fig_list</span>            
 </pre></div>
 
   </div>

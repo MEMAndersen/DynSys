@@ -15,7 +15,7 @@ import pandas
 
 # DynSys imports
 import msd_chain
-from dynsys import SDOF_stiffness, SDOF_dashpot
+from dynsys import SDOF_stiffness, SDOF_dashpot, SDOF_dampingRatio
 
 class TMD(msd_chain.MSD_Chain):
     """
@@ -26,6 +26,7 @@ class TMD(msd_chain.MSD_Chain):
     
     def __init__(self,sprung_mass:float,nat_freq:float,
                  fixed_mass:float=None,damping_ratio:float=0.0,
+                 dashpot:float=None,
                  outputs:dict={},
                  **kwargs):
         """
@@ -57,13 +58,48 @@ class TMD(msd_chain.MSD_Chain):
               will be assumed to be 1/100th of the sprung mass
           
         * `damping_ratio`, _float_, damping ratio (1.0=critical) of TMD system 
-          in isolation
+          in isolation. Alternatively `dashpot` argument can be used to define 
+          the TMD damping
+          
+        * `dashpot`, _float_, defines dashpot rate (in Ns/m). Use in place of 
+          `damping_ratio` argument.
           
         Additional keyword arguments may be provided; these will be passed to 
         `MSD_Chain.__init__()` method; refer [docs](..\docs\msd_chain.html) 
         for that class for further details
         
         """
+        
+        self._initialise(sprung_mass,nat_freq,fixed_mass,
+                         damping_ratio,dashpot,outputs,**kwargs)
+    
+                
+                
+    def _initialise(self,sprung_mass,nat_freq,fixed_mass,
+                    damping_ratio,dashpot,outputs,**kwargs):
+        """
+        Method used to actually initialise class. This is called from 
+        __init__().
+        
+        The reason for defining as seperate (private) method is to allow 
+        re-initialisation of properties, e.g. for when defining damper in a 
+        probabilistic (Monte Carlo) sense
+        """
+        
+        # Manipulate inputs as necessary, to define key properties of damper
+        self._define_properties(fixed_mass,sprung_mass,
+                                nat_freq,
+                                damping_ratio,dashpot)
+        
+        # Invoke msd_chain's init method
+        M_vals = [self.M_fixed,self.M_sprung]
+        K, C = self.K, self.C
+        K_vals = [0.0,K]
+        C_vals = [0.0,C]
+        super().__init__(M_vals=M_vals,K_vals=K_vals,C_vals=C_vals,**kwargs)
+        
+        # Add output matrix entry to compute relative displacement
+        # (as this is commonly of interest)
         
         # Define default outputs and merge with any passed-in
         default_outputs = {}
@@ -72,25 +108,6 @@ class TMD(msd_chain.MSD_Chain):
         default_outputs['linkage force'] = False
         outputs = {**default_outputs, **outputs}
         
-        if fixed_mass is None:
-            fixed_mass = sprung_mass / 100 # reasonable value, non-zero required
-        
-        if fixed_mass == 0.0:
-            raise ValueError("`fixed_mass` cannot be zero!")
-                
-        # Define masses, stiffnesses and damping dashpot of msd_chain system
-        K = SDOF_stiffness(M=sprung_mass,f=nat_freq)
-        C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
-        
-        M_vals = [fixed_mass,sprung_mass]
-        K_vals = [0.0,K]
-        C_vals = [0.0,C]
-    
-        # Invoke msd_chain's init method
-        super().__init__(M_vals=M_vals,K_vals=K_vals,C_vals=C_vals,**kwargs)
-        
-        # Add output matrix entry to compute relative displacement
-        # (as this is commonly of interest)
         if outputs is not None:
             
             #print("Defining default output matrices for '%s'..." % self.name)
@@ -110,6 +127,80 @@ class TMD(msd_chain.MSD_Chain):
             if outputs['linkage force']:
                 self.add_outputs(output_mtrx=[-K,+K,-C,+C,0,0],
                                    output_names=["TMD linkage force [N]"])
+                
+                
+        
+    def _define_properties(self,fixed_mass,sprung_mass,
+                           nat_freq,damping_ratio,C):
+        """
+        Define key properties of the damper, given inputs provided
+        
+        Refer docstring for __init__() method for details of inputs
+        """
+                
+        # Define masses, stiffnesses and damping dashpot of msd_chain system
+        K = SDOF_stiffness(M=sprung_mass,f=nat_freq)
+        
+        if C is None:
+            C = SDOF_dashpot(M=sprung_mass,K=K,eta=damping_ratio)
+        else:
+            damping_ratio = SDOF_dampingRatio(sprung_mass,K,C)
+            
+        if fixed_mass is None:
+            fixed_mass = sprung_mass / 100 # reasonable value, non-zero required
+        elif fixed_mass == 0.0:
+            raise ValueError("`fixed_mass` cannot be zero!")
+        
+        # Store inputs as attributes
+        self._M = sprung_mass
+        self._M_fixed = fixed_mass
+        self._fn = nat_freq
+        self._eta = damping_ratio
+        self._C = C
+        self._K = K
+        
+        
+    @property
+    def M_sprung(self):
+        """
+        Sprung component of TMD mass [kg]
+        """
+        return self._M
+    
+    @property
+    def M_fixed(self):
+        """
+        Fixed component of TMD mass [kg] (e.g. mass of attachment assembly)
+        """
+        return self._M_fixed
+    
+    @property
+    def fn(self):
+        """
+        Undamped natural frequency [Hz] of TMD when taken in isolation
+        """
+        return self._fn
+    
+    @property
+    def damping_ratio(self):
+        """
+        Damping ratio (critical=1) for TMD taken in isolation
+        """
+        return self._eta
+    
+    @property
+    def C(self):
+        """
+        Viscous dashpot rate [Ns/m] for TMD linkage
+        """
+        return self._C
+        
+    @property
+    def K(self):
+        """
+        Spring rate [N/m] for TMD linkage
+        """
+        return self._K
         
         
     def PlotSystem(self,ax,v,

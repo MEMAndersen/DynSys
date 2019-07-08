@@ -1,4 +1,4 @@
-Version: 1.7.5
+Version: 1.8.0
 <!doctype html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -1936,6 +1936,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
     <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                        <span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                        <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">fig_size</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span>
                        <span class="n">SysPlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
                        <span class="n">FuncAnimation_kwargs</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1959,7 +1960,7 @@ time-stepping analysis methods as implemented in <code>tstep</code> module</p>
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="n">fig_size</span><span class="p">)</span>
             
         <span class="k">else</span><span class="p">:</span>
             
@@ -4019,6 +4020,7 @@ analysis as carried out by <code>TStep</code></p></div>
     <span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                        <span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                        <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">fig_size</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span>
                        <span class="n">SysPlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
                        <span class="n">FuncAnimation_kwargs</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -4042,7 +4044,7 @@ analysis as carried out by <code>TStep</code></p></div>
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             
             <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="n">fig_size</span><span class="p">)</span>
             
         <span class="k">else</span><span class="p">:</span>
             
@@ -4624,7 +4626,7 @@ always be re-calculated using <code>calc_responses()</code> method</p>
             
   <div class="item">
     <div class="name def" id="tstep_results.TStep_Results.AnimateResults">
-    <p>def <span class="ident">AnimateResults</span>(</p><p>self, dynsys_obj=None, ax=None, SysPlot_kwargs={}, FuncAnimation_kwargs={})</p>
+    <p>def <span class="ident">AnimateResults</span>(</p><p>self, dynsys_obj=None, ax=None, fig_size=(10, 6), SysPlot_kwargs={}, FuncAnimation_kwargs={})</p>
     </div>
     
 
@@ -4647,6 +4649,7 @@ at each time step</p>
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">AnimateResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">dynsys_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                    <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                   <span class="n">fig_size</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span>
                    <span class="n">SysPlot_kwargs</span><span class="o">=</span><span class="p">{},</span>
                    <span class="n">FuncAnimation_kwargs</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -4670,7 +4673,7 @@ at each time step</p>
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="n">fig_size</span><span class="p">)</span>
         
     <span class="k">else</span><span class="p">:</span>
         
